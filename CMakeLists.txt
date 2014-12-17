@@ -1,0 +1,44 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(walkman-ecat)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+find_path(RTNET_INCLUDE_DIR NAMES rtnet.h PATH_SUFFIXES rtnet/include)
+set(ENABLE_RTNET  ON)
+
+if(ENABLE_RTNET AND RTNET_INCLUDE_DIR)
+  message("Found RTNET: ${RTNET_INCLUDE_DIR}")
+  include_directories(${RTNET_INCLUDE_DIR})
+  # try Xenomai
+  execute_process(COMMAND xeno-config --skin=posix --cflags OUTPUT_VARIABLE XENO_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND xeno-config --skin=posix --ldflags OUTPUT_VARIABLE XENO_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${XENO_CFLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${XENO_CFLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -L../../soem_1-3-0/build")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -lnative")
+endif()
+
+set(HEADER_INSTALL_ROOT /usr/local/include/ CACHE PATH "Where to install the headers")
+set(LIB_INSTALL_ROOT    /usr/local/lib/     CACHE PATH "Where to install the libraries")
+set(SOEM_ROOT           $ENV{SOEM_ROOT}     CACHE PATH "Base path of the SOEM headers")
+
+###########
+## Build ##
+###########
+
+include_directories(./include)
+include_directories(${SOEM_ROOT}) # not to break the includes of the soem headers themselves
+
+add_executable(
+    walkman_test
+    src/rt_ipc.cpp
+    src/ec_boards_iface.cpp
+    walkman_test.cpp)
+
+target_link_libraries(
+    walkman_test
+    iitecat_iface soem pthread json)
+
+
+# Install
+install(DIRECTORY include/  DESTINATION ${HEADER_INSTALL_ROOT})
