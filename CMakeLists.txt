@@ -28,10 +28,12 @@ set(SOEM_ROOT           $ENV{SOEM_ROOT}     CACHE PATH "Base path of the SOEM he
 
 include_directories(./include)
 include_directories(${SOEM_ROOT}) # not to break the includes of the soem headers themselves
-
+link_directories(${SOEM_ROOT}/../lib/)
 add_executable(
     walkman_test
-    src/rt_ipc.cpp
+#     src/rt_ipc.cpp
+    src/mc_hipwr_esc.cpp
+    include/json_serialization.hpp
     src/ec_boards_iface.cpp
     walkman_test.cpp)
 
