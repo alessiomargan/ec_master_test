@@ -2,7 +2,7 @@
 #define __RT_IPC_H__
 
 #include <stddef.h>
-
+DELETE THIS FILE PLEASE
 /*
 XDDP stands for "cross-domain datagram protocol", i.e. to exchange
 datagrams between the Xenomai (primary) real-time domain, and the Linux

@@ -10,7 +10,7 @@
  *  Created on: Dec 2014
  *      Author: alessio margan
  */
-
+DELETE THIS FILE PLEASE
 #ifndef __IIT_ECAT_ADVR_MC_LOPWR_ESC_H__
 #define __IIT_ECAT_ADVR_MC_LOPWR_ESC_H__
 
