@@ -2,7 +2,11 @@
 #define __PIPES_H__
 
 #include <sys/socket.h>
-
+#include <sys/stat.h>
+#include <string>
+#include <fcntl.h>
+#include <assert.h>
+#include <unistd.h>
 #ifdef __XENO__
     #include <iit/ecat/advr/rt_ipc.h>
 #endif

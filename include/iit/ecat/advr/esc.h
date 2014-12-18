@@ -9,6 +9,7 @@
 #define __IIT_ECAT_ADVR_ESC_H__
 
 #include <iit/ecat/slave_wrapper.h>
+#include <stdint.h>
 
 namespace iit {
 namespace ecat {
