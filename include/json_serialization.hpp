@@ -1,7 +1,7 @@
 #ifndef JSON_SERIALIZATION_H
 #define JSON_SERIALIZATION_H
 
-#include <json/json.h>
+#include <json-c/json.h>
 #include "iit/ecat/advr/types.h"
 #define var2string(x) #x
 
@@ -68,43 +68,46 @@ public:
     
     void serializeToJson(iit::ecat::advr::McESCTypes::pdo_tx& tx, json_object* jObj)
     {
-	/*
-	float        pos_ref;
-	float        tor_ref;
-	float        direct_ref;
-	uint64_t    ts;
+    /* 
+    float	    pos_ref;
+    float		tor_offs;
+    float		PosGainP;
+    float		PosGainI;
+    float		PosGainD;
+    uint64_t	ts;
 	*/
 
 	add_object(var2string(pos_ref),tx.pos_ref,jObj);
-	add_object(var2string(tor_ref),tx.tor_ref,jObj);
-	add_object(var2string(direct_ref),tx.direct_ref,jObj);
-	add_object(var2string(ts),tx.ts,jObj);
+	add_object(var2string(tor_offs),tx.tor_offs,jObj);
+	add_object(var2string(PosGainP),tx.PosGainP,jObj);
+    add_object(var2string(PosGainI),tx.PosGainI,jObj);
+    add_object(var2string(PosGainD),tx.PosGainD,jObj);
+    add_object(var2string(ts),tx.ts,jObj);
 	
     }
 
     void serializeToJson(iit::ecat::advr::McESCTypes::pdo_rx& rx, json_object* jObj)
     {
-	/*
-	float        position;   // rad
-	float        velocity;   // rad/s
-	float        torque;     // Nm
-	float        torque_D;   // Nm/s
-	float        direct_out; // A in AC or V in DC
-	uint16_t    fault;
-	uint64_t    rtt;        // ns 
+    /* 
+    float	    position;   		// rad
+    float		velocity;   		// rad/s
+    float		torque;     		// Nm
+    float		max_temperature; 	// C
+    uint16_t    fault;
+    uint64_t	rtt;        		// ns 
+     
 	*/
 
 	add_object(var2string(position),rx.position,jObj);
 	add_object(var2string(velocity),rx.velocity,jObj);
 	add_object(var2string(torque),rx.torque,jObj);
-	add_object(var2string(torque_D),rx.torque_D,jObj);
-	add_object(var2string(direct_out),rx.direct_out,jObj);
+	add_object(var2string(max_temperature),rx.max_temperature,jObj);
 	add_object(var2string(fault),rx.fault,jObj);
 	add_object(var2string(rtt),rx.fault,jObj);
 	
     }
-/*
-    void serializeToJson(tDriveParameters& tdrive, json_object* jObj)
+
+    void serializeToJson(iit::ecat::advr::tDriveParameters& tdrive, json_object* jObj)
     {
 	/*
 	unsigned long Sensor_type;
@@ -129,16 +132,16 @@ public:
 	float Max_vel;
 	float Max_cur;
 
-	long Enc_offset_1;    // 32 bit
-	long Enc_offset_2;    // 32 bit
+	float Enc_offset;
+    float Enc_relative_offset;
 
 	float Phase_angle;
 	*/
-/*
+
 	add_object(var2string(Sensor_type),tdrive.Sensor_type,jObj);
-	add_object(var2string(PosGainP),tdrive.PosGainP,jObj);
-	add_object(var2string(PosGainI),tdrive.PosGainI,jObj);
-	add_object(var2string(PosGainD),tdrive.PosGainD,jObj);
+	//add_object(var2string(PosGainP),tdrive.PosGainP,jObj);
+	//add_object(var2string(PosGainI),tdrive.PosGainI,jObj);
+	//add_object(var2string(PosGainD),tdrive.PosGainD,jObj);
 	add_object(var2string(TorGainP),tdrive.TorGainP,jObj);
 	add_object(var2string(TorGainI),tdrive.TorGainI,jObj);
 	add_object(var2string(TorGainD),tdrive.TorGainD,jObj);
@@ -150,49 +153,51 @@ public:
 	add_object(var2string(Max_tor),tdrive.Max_tor,jObj);
 	add_object(var2string(Max_vel),tdrive.Max_vel,jObj);
 	add_object(var2string(Max_cur),tdrive.Max_cur,jObj);
-	add_object(var2string(Enc_offset_1),tdrive.Enc_offset_1,jObj);
-	add_object(var2string(Enc_offset_2),tdrive.Enc_offset_2,jObj);
+	add_object(var2string(Enc_offset),tdrive.Enc_offset,jObj);
+	add_object(var2string(Enc_relative_offset),tdrive.Enc_relative_offset,jObj);
 	add_object(var2string(Phase_angle),tdrive.Phase_angle,jObj);
 	
     }
-*/
+
     void deSerializeToJson(iit::ecat::advr::McESCTypes::pdo_tx& tx, json_object* jObj)
     {
 	/*
-	float        pos_ref;
-	float        tor_ref;
-	float        direct_ref;
-	uint64_t    ts;
+	ffloat	    pos_ref;
+    float		tor_offs;
+    float		PosGainP;
+    float		PosGainI;
+    float		PosGainD;
+    uint64_t	ts;
 	*/
 
 	get_object(var2string(pos_ref),&tx.pos_ref,jObj);
-	get_object(var2string(tor_ref),&tx.tor_ref,jObj);
-	get_object(var2string(direct_ref),&tx.direct_ref,jObj);
-	get_object(var2string(ts),&tx.ts,jObj);
+	get_object(var2string(tor_offs),&tx.tor_offs,jObj);
+	get_object(var2string(PosGainP),&tx.PosGainP,jObj);
+    get_object(var2string(PosGainI),&tx.PosGainI,jObj);
+    get_object(var2string(PosGainD),&tx.PosGainD,jObj);
+    get_object(var2string(ts),&tx.ts,jObj);
     }
 
     void deSerializeToJson(iit::ecat::advr::McESCTypes::pdo_rx& rx, json_object* jObj)
     {
-	/*
-	float        position;   // rad
-	float        velocity;   // rad/s
-	float        torque;     // Nm
-	float        torque_D;   // Nm/s
-	float        direct_out; // A in AC or V in DC
-	uint16_t    fault;
-	uint64_t    rtt;        // ns 
+    /* 
+    float	    position;   		// rad
+    float		velocity;   		// rad/s
+    float		torque;     		// Nm
+    float		max_temperature; 	// C
+    uint16_t    fault;
+    uint64_t	rtt;        		// ns 
 	*/
 
 	get_object(var2string(position),&(rx.position),jObj);
 	get_object(var2string(velocity),&(rx.velocity),jObj);
 	get_object(var2string(torque),&(rx.torque),jObj);
-	get_object(var2string(torque_D),&(rx.torque_D),jObj);
-	get_object(var2string(direct_out),&(rx.direct_out),jObj);
+	get_object(var2string(max_temperature),&(rx.max_temperature),jObj);
 	get_object(var2string(fault),&(rx.fault),jObj);
 	get_object(var2string(rtt),&(rx.rtt),jObj);
     }
-/*
-    void deSerializeToJson(tDriveParameters& tdrive, json_object* jObj)
+
+    void deSerializeToJson(iit::ecat::advr::tDriveParameters& tdrive, json_object* jObj)
     {
       /*
 	unsigned long Sensor_type;
@@ -217,16 +222,16 @@ public:
 	float Max_vel;
 	float Max_cur;
 
-	long Enc_offset_1;    // 32 bit
-	long Enc_offset_2;    // 32 bit
+	float Enc_offset;
+    float Enc_relative_offset;
 
 	float Phase_angle;
 	*/
-/*
+
 	get_object(var2string(Sensor_type),&(tdrive.Sensor_type),jObj);
-	get_object(var2string(PosGainP),&(tdrive.PosGainP),jObj);
-	get_object(var2string(PosGainI),&(tdrive.PosGainI),jObj);
-	get_object(var2string(PosGainD),&(tdrive.PosGainD),jObj);
+	//get_object(var2string(PosGainP),&(tdrive.PosGainP),jObj);
+	//get_object(var2string(PosGainI),&(tdrive.PosGainI),jObj);
+	//get_object(var2string(PosGainD),&(tdrive.PosGainD),jObj);
 	get_object(var2string(TorGainP),&(tdrive.TorGainP),jObj);
 	get_object(var2string(TorGainI),&(tdrive.TorGainI),jObj);
 	get_object(var2string(TorGainD),&(tdrive.TorGainD),jObj);
@@ -238,10 +243,10 @@ public:
 	get_object(var2string(Max_tor),&(tdrive.Max_tor),jObj);
 	get_object(var2string(Max_vel),&(tdrive.Max_vel),jObj);
 	get_object(var2string(Max_cur),&(tdrive.Max_cur),jObj);
-	get_object(var2string(Enc_offset_1),&(tdrive.Enc_offset_1),jObj);
-	get_object(var2string(Enc_offset_2),&(tdrive.Enc_offset_2),jObj);
+	get_object(var2string(Enc_offset),&(tdrive.Enc_offset),jObj);
+	get_object(var2string(Enc_relative_offset),&(tdrive.Enc_relative_offset),jObj);
 	get_object(var2string(Phase_angle),&(tdrive.Phase_angle),jObj);
-    }*/
+    }
 };
 
 #endif //JSON_SERIALIZATION_H

@@ -39,7 +39,7 @@ add_executable(
 
 target_link_libraries(
     walkman_test
-    iitecat_iface soem pthread json)
+    iitecat_iface soem pthread json-c)
 
 
 # Install

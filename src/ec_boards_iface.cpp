@@ -1,4 +1,5 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
+#include "iit/mc_tm4c/objectlist.h"
 
 #include <math.h>
 
@@ -12,13 +13,14 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
 
     eth_if = std::string(config_file);
 
-    sync_cycle_time_ns = 1e6;     //   1ms
-    //sync_cycle_time_ns = 0;         //   no dc 
+    //sync_cycle_time_ns = 1e6;     //   1ms
+    //sync_cycle_time_ns = 100e6;     //   100ms
+    sync_cycle_time_ns = 0;         //   no dc 
     sync_cycle_offset_ns = 500e6;   // 500ms
 
-    std::string pipe_name = "get_param";
+    std::string pipe_name = "/home/amargan/get_param";
     get_param_pipe = new Write_XDDP_pipe(pipe_name, 16384);
-    pipe_name = "set_param";
+    pipe_name = "/home/amargan/set_param";
     set_param_pipe = new Read_XDDP_pipe(pipe_name, 16384);
 
 }
@@ -26,6 +28,10 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 
     iit::ecat::finalize();
+
+    for (auto it = slaves.begin(); it != slaves.end(); it++) {
+        delete it->second.get();
+    }
 }
 
 int Ec_Boards_ctrl::init(void) {
@@ -87,6 +93,13 @@ void Ec_Boards_ctrl::configure_boards(void) {
         DPRINTF("fail sdo write\n");
     }
     DPRINTF("FW ver %s\n", fw_ver);
+
+    tDriveParameters tdrive;
+    size = 4;
+    wkc = get_param(3, 0x8000, 0x1, &size, &tdrive.TorGainP);
+    if (wkc <= 0 ) { DPRINTF("fail sdo write\n"); }
+    DPRINTF("TorGainP %d %f\n", size, &tdrive.TorGainP);
+
 
 }
 
@@ -157,3 +170,111 @@ int Ec_Boards_ctrl::send_to_slaves() {
 
 }
 
+bool get_info(std::string token,int& sub_index, int& size)
+{
+    const objd * lookup_table = SDO8000;
+    int table_size = lookup_table[0].value;
+    for (int i=1;i<table_size;i++)
+    {
+        std::string temp=(char*)lookup_table[i].data;
+        if (temp==token)
+        {
+            std::cout<<token<<" at "<<lookup_table[i].subindex<<" size:"<<lookup_table[i].bitlength<<std::endl;
+            sub_index=lookup_table[i].subindex;
+            size=lookup_table[i].bitlength;
+            return true;
+        }
+    }
+    return false;
+}
+
+
+int Ec_Boards_ctrl::handle_SDO(void) {
+
+    char buffer[4096]; 
+    int i = 0;
+    ssize_t nbytes = 0;
+    int wkc;
+    char value[1024];
+    void * pvalue = value;
+
+    memset(buffer, 0, sizeof(buffer));
+
+    // NON-BLOCKING read
+    nbytes = set_param_pipe->read((void*)buffer, sizeof(buffer));
+
+    if (nbytes > 0) {
+
+        DPRINTF("read  %ld %s\n", nbytes, buffer);
+        json_object * jObj = json_tokener_parse(buffer);
+        DPRINTF( "JSON parse : %s\n", json_object_to_json_string(jObj));
+
+        struct json_object_iterator it;
+        struct json_object_iterator itEnd;
+        it = json_object_iter_begin(jObj);
+        itEnd = json_object_iter_end(jObj);
+        while (!json_object_iter_equal(&it, &itEnd)) {
+            std::string token=json_object_iter_peek_name(&it);
+            json_object *jn;
+            bool result=json_object_object_get_ex(jObj,token.c_str(),&jn);
+            int size;
+            int sub_index;
+            get_info(token,sub_index,size);
+            auto type=json_object_get_type(jn);
+
+            DPRINTF( "type %s\n", json_type_to_name(type) );
+
+            if (type==json_type_double)
+            {
+                float value = json_object_get_double(jn);
+                wkc = set_param(3, 0x8000, sub_index, size/8, &value);
+                DPRINTF( "wkc %d %f\n", wkc,value );
+            } else if (type==json_type_int)
+            {
+                int value = json_object_get_int(jn);
+                wkc = set_param(3, 0x8000, sub_index, size/8, &value);
+                DPRINTF( "wkc %d %d\n", wkc,value );
+            } else if (type==json_type_string)
+            {
+                std::string value=json_object_get_string(jn);
+                DPRINTF( "wkc %d %s\n", wkc,value.c_str() );
+            } else {
+
+               DPRINTF( "Unknown type %s\n", json_type_to_name(type) );
+            }
+            
+
+            json_object_iter_next(&it);
+        }
+
+    }
+
+    /////////////////////////
+    ///
+    /////////////////////////
+    tDriveParameters tdrive;
+    json_serializer serializer;
+    int tdrive_size = 4;
+
+    // 
+    wkc = ec_SDOread(3, 0x8000, 0x2, false, &tdrive_size, &tdrive.TorGainP, EC_TIMEOUTRXM);
+    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
+    sleep(0.1);
+    wkc = ec_SDOread(3, 0x8000, 0x3, false, &tdrive_size, &tdrive.TorGainI, EC_TIMEOUTRXM);
+    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
+    sleep(0.1);
+    wkc = ec_SDOread(3, 0x8000, 0x4, false, &tdrive_size, &tdrive.TorGainD, EC_TIMEOUTRXM);
+    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
+        
+    json_object * jObj = json_object_new_object();
+    //void serializeToJson(tDriveParameters& tdrive, json_object* jObj)
+    serializer.serializeToJson(tdrive,jObj);
+    std::string json_str;
+    json_str = json_object_to_json_string(jObj);
+    json_str += "\n";
+
+
+    nbytes = get_param_pipe->write((void*)json_str.c_str(), json_str.length());
+
+
+}

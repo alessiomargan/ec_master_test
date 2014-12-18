@@ -20,7 +20,6 @@
 #include <iit/ecat/advr/pipes.h>
 #include <json_serialization.hpp>
 #include <iit/ecat/advr/types.h>
-#include <iit/mc_tm4c/objectlist.h>
 #include <json/json.h>
 #include <map>
 
@@ -40,11 +39,16 @@ public:
     McESC(const ec_slavet& slave_descriptor) :
            Base(slave_descriptor) {
 
-        std::string pipe_name = "from_esc_" + std::to_string(position);
+        std::string pipe_name = "/home/amargan/from_esc_" + std::to_string(position);
         xddp_wr = new Write_XDDP_pipe(pipe_name, 16384);
-        pipe_name = "to_esc_" + std::to_string(position);
+        pipe_name = "/home/amargan/to_esc_" + std::to_string(position);
         xddp_rd = new Read_XDDP_pipe(pipe_name, 16384);
 
+    }
+
+    virtual ~McESC(void) {
+        delete xddp_wr;
+        delete xddp_rd;
     }
 
     int write_pdo_to_pipe();
@@ -55,7 +59,6 @@ public:
 
 private:
     json_serializer serializer;
-    SDO8000 lookup_table;
     bool get_info(std::string token,int& sub_index, int& size);
 };
 

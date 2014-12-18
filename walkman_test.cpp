@@ -100,13 +100,15 @@ int main(int argc, char **argv)
         return 0;
     }
     
+    int cnt = 0;
     while ( run_loop ) {
 
         ec_boards_ctrl->recv_from_slaves();
         
-
-
-
+        if ( cnt++ % 100 ) {
+            ec_boards_ctrl->handle_SDO();
+        }
+      
         ec_boards_ctrl->send_to_slaves();
    
     }

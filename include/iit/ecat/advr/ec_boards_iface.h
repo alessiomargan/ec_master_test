@@ -50,6 +50,8 @@ public:
 
     int send_to_slaves(void);
 
+    int handle_SDO(void);
+
 #if 0
     int set_position(int *, int);
     int set_velocity(short *, int);
