@@ -20,6 +20,7 @@
 #include <iit/ecat/advr/pipes.h>
 #include <json_serialization.hpp>
 #include <iit/ecat/advr/types.h>
+#include <iit/mc_tm4c/objectlist.h>
 #include <json/json.h>
 #include <map>
 
@@ -54,6 +55,8 @@ public:
 
 private:
     json_serializer serializer;
+    SDO8000 lookup_table;
+    bool get_info(std::string token,int& sub_index, int& size);
 };
 
 

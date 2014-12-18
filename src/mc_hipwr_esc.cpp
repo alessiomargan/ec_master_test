@@ -21,6 +21,23 @@ int McESC::write_pdo_to_pipe() {
     
 }
 
+bool McESC::get_info(std::string token,int& sub_index, int& size)
+{
+    int size=lookup_table[0].value;
+    for (int i=1;i<size;i++)
+    {
+        std::string temp=(char*)lookup_table[i].data;
+        if (temp==token)
+        {
+            std::cout<<token<<" at "<<lookup_table[i].subindex<<" size:"<<lookup_table[i].bitlength<<std::endl;
+            sub_index=lookup_table[i].subindex;
+            size=lookup_table[i].bitlength;
+            return true;
+        }
+    }
+    return false;
+}
+
 int McESC::read_pdo_from_pipe() {
     char buffer[4096]; 
     int i = 0;
