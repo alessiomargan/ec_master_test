@@ -22,7 +22,7 @@ public:
 #ifdef __XENO__
         fd = xddp_bind(pipe_name.c_str(), pool_size);
 #else
-        std::string pipe = pipe_prefix + pipe_name;
+        std::string pipe = pipe_name;
         mkfifo(pipe.c_str(), S_IRWXU|S_IRWXG);
         fd = open(pipe.c_str(), O_RDWR | O_NONBLOCK);
 #endif
@@ -33,7 +33,7 @@ public:
     {
         close(fd);
 #ifndef __XENO__
-        std::string pipe = pipe_prefix + pipe_name;
+        std::string pipe = pipe_name;
         unlink(pipe.c_str());
 #endif
 
