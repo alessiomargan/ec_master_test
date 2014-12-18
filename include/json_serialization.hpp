@@ -4,10 +4,10 @@
 #include <json-c/json.h>
 #include "iit/ecat/advr/types.h"
 #define var2string(x) #x
-
+#include <string>
 class json_serializer
 {
-private:
+public:
     void add_object(std::string name, float value, json_object* jobj)
     {
 	json_object *jfloat  = json_object_new_double(value);
