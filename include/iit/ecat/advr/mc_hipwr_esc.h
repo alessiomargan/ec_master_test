@@ -27,8 +27,6 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-typedef std::map<std::string, std::string> pdo_map_t;
-
 /**
  *  
  **/ 
@@ -56,9 +54,6 @@ public:
 
 private:
     json_serializer serializer;
-    pdo_map_t      mc_pdo_map;
-
-
 };
 
 

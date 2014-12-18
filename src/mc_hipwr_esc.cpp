@@ -4,7 +4,6 @@
 using namespace iit::ecat::advr;
 
 int McESC::write_pdo_to_pipe() {
-    
     json_object * jObj = json_object_new_object();
     serializer.serializeToJson(rx_pdo,jObj);
     std::string json_str;
@@ -23,25 +22,21 @@ int McESC::write_pdo_to_pipe() {
 }
 
 int McESC::read_pdo_from_pipe() {
-    
     char buffer[4096]; 
     int i = 0;
     ssize_t nbytes = 0;
-    
-    advr::McESC::pdo_tx_t tmp_tx;
-    
+
     memset(buffer, 0, sizeof(buffer));
-    
+
     // NON-BLOCKING : read binary data
     nbytes = xddp_rd->read((void*)buffer, sizeof(buffer));
-    
-    
+
     if (nbytes > 0) {
         DPRINTF("read  %ld %s\n", nbytes, buffer);
-        
+
         json_object * jObj = json_tokener_parse(buffer);
         serializer.deSerializeToJson(tx_pdo,jObj);
-        
+
         DPRINTF( "JSON parse : %s\n", json_object_to_json_string(jObj));
     }
 }

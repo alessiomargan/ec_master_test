@@ -6,8 +6,6 @@ namespace iit {
     namespace ecat {
         namespace advr {
             
-            typedef std::map<std::string, std::string> pdo_map_t;
-            
             /**
              *  
              **/ 
