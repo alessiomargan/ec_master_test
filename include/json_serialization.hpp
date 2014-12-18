@@ -32,29 +32,36 @@ private:
 	json_object_object_add(jobj,name.c_str(),jn);
     }
 
-    void get_object(std::string name, float* value, json_object* jobj)
+    bool get_object(std::string name, float* value, json_object* jobj)
     {
-	json_object *jfloat;
-	json_object_object_get_ex(jobj,name.c_str(),&jfloat);
-	*value = json_object_get_double(jfloat);
+	json_object *jn;
+	bool result=json_object_object_get_ex(jobj,name.c_str(),&jn);
+	*value = json_object_get_double(jn);
+        return result;
     }
 
-    void get_object(std::string name, uint64_t* value, json_object* jobj)
+    bool get_object(std::string name, uint64_t* value, json_object* jobj)
     {
-	json_object *jn  = json_object_object_get(jobj,name.c_str());
+	json_object *jn;
+        bool result=json_object_object_get_ex(jobj,name.c_str(),&jn);
 	*value = json_object_get_int64(jn);
+        return result;
     }
 
-    void get_object(std::string name, uint16_t* value, json_object* jobj)
+    bool get_object(std::string name, uint16_t* value, json_object* jobj)
     {
-	json_object *jn  = json_object_object_get(jobj,name.c_str());
+	json_object *jn;
+        bool result=json_object_object_get_ex(jobj,name.c_str(),&jn);
 	*value = json_object_get_int(jn);
+        return result;
     }
 
-    void get_object(std::string name, long* value, json_object* jobj)
+    bool get_object(std::string name, long* value, json_object* jobj)
     {
-	json_object *jn  = json_object_object_get(jobj,name.c_str());
+	json_object *jn;
+        bool result=json_object_object_get_ex(jobj,name.c_str(),&jn);
 	*value = json_object_get_int(jn);
+        return result;
     }
     
 public:   
