@@ -1,3 +1,5 @@
+#ifdef __XENO__
+
 #include <iit/ecat/advr/rt_ipc.h>
 
 #include <sys/mman.h>
@@ -8,7 +10,6 @@
 #include <malloc.h>
 #include <fcntl.h>
 #include <errno.h>
-DELETE THIS FILE PLEASE
 #include <rtdk.h>
 #include <rtdm/rtipc.h>
 
@@ -126,3 +127,4 @@ int xddp_connect(const char * label)
 
     return s;
 }
+#endif
