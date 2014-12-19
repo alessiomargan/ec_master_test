@@ -265,22 +265,22 @@ int Ec_Boards_ctrl::handle_SDO(void) {
             get_info(token,main_index,sub_index,size);
             auto type=json_object_get_type(jn);
 
-            DPRINTF( "type %s\n", json_type_to_name(type) );
+//             DPRINTF( "type %s\n", json_type_to_name(type) );
 
             if (type==json_type_double)
             {
                 float value = json_object_get_double(jn);
                 wkc = set_param(1, main_index, sub_index, size/8, &value);
-                DPRINTF( "wkc %d %f\n", wkc,value );
+//                 DPRINTF( "wkc %d %f\n", wkc,value );
             } else if (type==json_type_int)
             {
                 int value = json_object_get_int(jn);
                 wkc = set_param(1, main_index, sub_index, size/8, &value);
-                DPRINTF( "wkc %d %d\n", wkc,value );
+//                 DPRINTF( "wkc %d %d\n", wkc,value );
             } else if (type==json_type_string)
             {
                 std::string value=json_object_get_string(jn);
-                DPRINTF( "wkc %d %s\n", wkc,value.c_str() );
+//                 DPRINTF( "wkc %d %s\n", wkc,value.c_str() );
             } else {
 
                DPRINTF( "Unknown type %s\n", json_type_to_name(type) );
@@ -331,11 +331,13 @@ int Ec_Boards_ctrl::handle_SDO(void) {
     std::string json_str;
     json_str = json_object_to_json_string(jObj);
     json_str += "\n";
+    std::cout<<"sending"<<json_str<<std::endl;
     nbytes = get_param_pipe->write((void*)json_str.c_str(), json_str.length());
     json_object * jObj1 = json_object_new_object();
     serializer.serializeToJson(t8001,jObj1);
     json_str = json_object_to_json_string(jObj1);
     json_str += "\n";
+    std::cout<<"sending"<<json_str<<std::endl;
     nbytes = get_param_pipe->write((void*)json_str.c_str(), json_str.length());
     
 
