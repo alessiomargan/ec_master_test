@@ -101,7 +101,7 @@ private:
     Read_XDDP_pipe *  set_param_pipe;
 
     void lookup_read(std::string token, float* data );
-    
+    void lookup_read(std::string token, uint16* data );
 };
 
 

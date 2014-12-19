@@ -3,7 +3,7 @@
 
 #include <math.h>
 #include <pwd.h>
-
+#include "iit/ecat/advr/types.h"
 
 using namespace iit::ecat::advr;
 
@@ -175,9 +175,11 @@ int Ec_Boards_ctrl::send_to_slaves() {
 
 }
 
-bool get_info(std::string token,int& sub_index, int& size)
+bool get_info(std::string token,int& main_index,int& sub_index, int& size)
 {
     const objd * lookup_table = SDO8000;
+    const objd * lookup_table1 = SDO8001;
+    
     int table_size = lookup_table[0].value;
     for (int i=1;i<table_size;i++)
     {
@@ -187,6 +189,20 @@ bool get_info(std::string token,int& sub_index, int& size)
             std::cout<<token<<" at "<<lookup_table[i].subindex<<" size:"<<lookup_table[i].bitlength<<std::endl;
             sub_index=lookup_table[i].subindex;
             size=lookup_table[i].bitlength;
+            main_index=0x8000;
+            return true;
+        }
+    }
+    table_size = lookup_table1[0].value;
+    for (int i=1;i<table_size;i++)
+    {
+        std::string temp=(char*)lookup_table1[i].data;
+        if (temp==token)
+        {
+            std::cout<<token<<" at "<<lookup_table1[i].subindex<<" size:"<<lookup_table1[i].bitlength<<std::endl;
+            sub_index=lookup_table1[i].subindex;
+            size=lookup_table1[i].bitlength;
+            main_index=0x8001;
             return true;
         }
     }
@@ -198,10 +214,22 @@ void Ec_Boards_ctrl::lookup_read(std::string token, float* data )
 {
     int sub_index=0;
     int size=0;
-    get_info(token,sub_index,size);
-    int wkc = ec_SDOread(1, 0x8000, sub_index, false, &size, data, EC_TIMEOUTRXM);
+    int main_index=0;
+    get_info(token,main_index,sub_index,size);
+    int wkc = ec_SDOread(1, main_index, sub_index, false, &size, data, EC_TIMEOUTRXM);
     if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
 }
+
+void Ec_Boards_ctrl::lookup_read(std::string token, uint16* data )
+{
+    int sub_index=0;
+    int size=0;
+    int main_index=0;
+    get_info(token,main_index,sub_index,size);
+    int wkc = ec_SDOread(1, main_index, sub_index, false, &size, data, EC_TIMEOUTRXM);
+    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
+}
+
 
 int Ec_Boards_ctrl::handle_SDO(void) {
 
@@ -233,25 +261,26 @@ int Ec_Boards_ctrl::handle_SDO(void) {
             bool result=json_object_object_get_ex(jObj,token.c_str(),&jn);
             int size;
             int sub_index;
-            get_info(token,sub_index,size);
+            int main_index;
+            get_info(token,main_index,sub_index,size);
             auto type=json_object_get_type(jn);
 
-            DPRINTF( "type %s\n", json_type_to_name(type) );
+//             DPRINTF( "type %s\n", json_type_to_name(type) );
 
             if (type==json_type_double)
             {
                 float value = json_object_get_double(jn);
-                wkc = set_param(1, 0x8000, sub_index, size/8, &value);
-                DPRINTF( "wkc %d %f\n", wkc,value );
+                wkc = set_param(1, main_index, sub_index, size/8, &value);
+//                 DPRINTF( "wkc %d %f\n", wkc,value );
             } else if (type==json_type_int)
             {
                 int value = json_object_get_int(jn);
-                wkc = set_param(1, 0x8000, sub_index, size/8, &value);
-                DPRINTF( "wkc %d %d\n", wkc,value );
+                wkc = set_param(1, main_index, sub_index, size/8, &value);
+//                 DPRINTF( "wkc %d %d\n", wkc,value );
             } else if (type==json_type_string)
             {
                 std::string value=json_object_get_string(jn);
-                DPRINTF( "wkc %d %s\n", wkc,value.c_str() );
+//                 DPRINTF( "wkc %d %s\n", wkc,value.c_str() );
             } else {
 
                DPRINTF( "Unknown type %s\n", json_type_to_name(type) );
@@ -267,6 +296,7 @@ int Ec_Boards_ctrl::handle_SDO(void) {
     ///
     /////////////////////////
     tDriveParameters tdrive;
+    parameters8001 t8001;
     json_serializer serializer;
 #define params(x) #x,&tdrive.x
    lookup_read(params( TorGainP));
@@ -283,17 +313,32 @@ int Ec_Boards_ctrl::handle_SDO(void) {
    lookup_read(params(Enc_offset));
    lookup_read(params(Enc_relative_offset));
    lookup_read(params( Phase_angle));
-
+#undef params
+#define params(x) #x,&t8001.x
+//    lookup_read(params( firmware_version));
+//    lookup_read(params(all));
+   lookup_read(params(Direct_ref));
+//    lookup_read(params(V_batt_filt_100ms));
+   lookup_read(params(Board_Temperature));
+//    lookup_read(params(T_mot1_filt_100ms));
+//    lookup_read(params(ctrl_status_cmd));
+   lookup_read(params(ctrl_status_cmd_ack));
+//    lookup_read(params(flash_params_cmd));
+   lookup_read(params(flash_params_cmd_ack));
 #undef params
     json_object * jObj = json_object_new_object();
-    //void serializeToJson(tDriveParameters& tdrive, json_object* jObj)
     serializer.serializeToJson(tdrive,jObj);
     std::string json_str;
     json_str = json_object_to_json_string(jObj);
     json_str += "\n";
-
-
+    std::cout<<"sending"<<json_str<<std::endl;
     nbytes = get_param_pipe->write((void*)json_str.c_str(), json_str.length());
-
+    json_object * jObj1 = json_object_new_object();
+    serializer.serializeToJson(t8001,jObj1);
+    json_str = json_object_to_json_string(jObj1);
+    json_str += "\n";
+    std::cout<<"sending"<<json_str<<std::endl;
+    nbytes = get_param_pipe->write((void*)json_str.c_str(), json_str.length());
+    
 
 }

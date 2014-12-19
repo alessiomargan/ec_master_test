@@ -31,6 +31,12 @@ public:
 	json_object *jn  = json_object_new_int(value);
 	json_object_object_add(jobj,name.c_str(),jn);
     }
+    
+    void add_object(std::string name, std::string value, json_object* jobj)
+    {
+        json_object *jn  = json_object_new_string(value.c_str());
+        json_object_object_add(jobj,name.c_str(),jn);
+    }
 
     bool get_object(std::string name, float* value, json_object* jobj)
     {
@@ -61,6 +67,14 @@ public:
 	json_object *jn;
         bool result=json_object_object_get_ex(jobj,name.c_str(),&jn);
 	*value = json_object_get_int(jn);
+        return result;
+    }
+    
+    bool get_object(std::string name, std::string* value, json_object* jobj)
+    {
+        json_object *jn;
+        bool result=json_object_object_get_ex(jobj,name.c_str(),&jn);
+        *value = json_object_get_string(jn);
         return result;
     }
     
@@ -152,7 +166,36 @@ public:
 	add_object(var2string(Phase_angle),tdrive.Phase_angle,jObj);
 	
     }
-
+    void serializeToJson(iit::ecat::advr::parameters8001& p8001, json_object* jObj)
+    {
+        
+        /*
+         *               std::string firmware_version[8];
+         *               uint16_t all;
+         *               float Direct_ref;
+         *               float V_batt_filt_100ms;
+         *               float Board_Temperature;
+         *               float T_mot1_filt_100ms;
+         *               uint16_t ctrl_status_cmd;
+         *               uint16_t ctrl_status_cmd_ack;
+         *               uint16_t flash_params_cmd;
+         *               uint16_t flash_params_cmd_ack;
+         * 
+         */
+        
+        add_object(var2string(firmware_version),p8001.firmware_version,jObj);
+        add_object(var2string(all),p8001.all,jObj);
+        add_object(var2string(Direct_ref),p8001.Direct_ref,jObj);
+        add_object(var2string(V_batt_filt_100ms),p8001.V_batt_filt_100ms,jObj);
+        add_object(var2string(Board_Temperature),p8001.Board_Temperature,jObj);
+        add_object(var2string(T_mot1_filt_100ms),p8001.T_mot1_filt_100ms,jObj);
+        add_object(var2string(ctrl_status_cmd),p8001.ctrl_status_cmd,jObj);
+        add_object(var2string(ctrl_status_cmd_ack),p8001.ctrl_status_cmd_ack,jObj);
+        add_object(var2string(flash_params_cmd),p8001.flash_params_cmd,jObj);
+        add_object(var2string(flash_params_cmd_ack),p8001.flash_params_cmd_ack,jObj);
+        
+    }
+    
     void deSerializeToJson(iit::ecat::advr::McESCTypes::pdo_tx& tx, json_object* jObj)
     {
 	/*
@@ -234,6 +277,33 @@ public:
 	get_object(var2string(Enc_relative_offset),&(tdrive.Enc_relative_offset),jObj);
 	get_object(var2string(Phase_angle),&(tdrive.Phase_angle),jObj);
     }
+    void deSerializeToJson(iit::ecat::advr::parameters8001& p8001, json_object* jObj)
+    {
+        /*
+         *              char firmware_version[8];
+         *              uint16_t all;
+         *              float Direct_ref;
+         *              float V_batt_filt_100ms;
+         *              float Board_Temperature;
+         *              float T_mot1_filt_100ms;
+         *              uint16_t ctrl_status_cmd;
+         *              uint16_t ctrl_status_cmd_ack;
+         *              uint16_t flash_params_cmd;
+         *              uint16_t flash_params_cmd_ack;
+         */
+        
+        get_object(var2string(firmware_version),&(p8001.firmware_version),jObj);
+        get_object(var2string(all),&(p8001.all),jObj);
+        get_object(var2string(Direct_ref),&(p8001.Direct_ref),jObj);
+        get_object(var2string(V_batt_filt_100ms),&(p8001.V_batt_filt_100ms),jObj);
+        get_object(var2string(Board_Temperature),&(p8001.Board_Temperature),jObj);
+        get_object(var2string(T_mot1_filt_100ms),&(p8001.T_mot1_filt_100ms),jObj);
+        get_object(var2string(ctrl_status_cmd),&(p8001.ctrl_status_cmd),jObj);
+        get_object(var2string(ctrl_status_cmd_ack),&(p8001.ctrl_status_cmd_ack),jObj);
+        get_object(var2string(flash_params_cmd),&(p8001.flash_params_cmd),jObj);
+        get_object(var2string(flash_params_cmd_ack),&(p8001.flash_params_cmd_ack),jObj);
+    }
+    
 };
 
 #endif //JSON_SERIALIZATION_H
