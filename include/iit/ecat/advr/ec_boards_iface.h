@@ -17,9 +17,6 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/mc_hipwr_esc.h>
-//#include <iit/ecat/advr/mc_lopwr_esc.h>
-
-#include <iit/ecat/advr/pipes.h>
 
 #include <string>
 
@@ -28,6 +25,12 @@ namespace ecat {
 namespace advr {
 
 
+struct info_item
+{
+    int index;
+    int sub_index;
+    int size;
+};
 
 /**
  * @class Ec_Boards_ctrl
@@ -49,33 +52,12 @@ public:
     int recv_from_slaves(void);
 
     int send_to_slaves(void);
+    
+    int mailbox_recv_from_slaves(int slave_index, std::string token, void* data);
+    
+    int mailbox_send_to_slaves(int slave_index, std::string token, void* data);
 
-    int handle_SDO(void);
-
-#if 0
-    int set_position(int *, int);
-    int set_velocity(short *, int);
-    int set_torque(short *, int);
-    int set_position_velocity(int *, short *, int);
-    int set_gravity_compensation(int *des_gc, int nbytes);
-    int set_stiffness_damping(int *des_stiff, int *des_damp, int nElem);
-    int set_pid_offset(short *, int);
-
-    int set_position_group(const uint8_t *, const int *, const int nElem);
-    int set_velocity_group(const uint8_t *, const short *, const int nElem);
-    int set_torque_group(const uint8_t *, const short *, const int nElem);
-    int set_position_velocity_group(const uint8_t *, const int *, const short *, const int nElem);
-    int set_stiffness_damping_group(const uint8_t *, const int *, const int *, const int nElem);
-    int set_gravity_compensation_group(const uint8_t *, const int *, const int nElem);
-
-    int set_position_group(const group_ref_t &);
-    int set_velocity_group(const group_ref_t &);
-    int set_torque_group(const group_ref_t &);
-    int set_position_velocity_group(const group_ref_comp_t &);
-    int set_stiffness_damping_group(const group_ref_comp_t &);
-    int set_gravity_compensation_group(const group_ref_t &);
-#endif
-
+    inline int get_number_of_boards(){return slaves.size();};
 protected:
 
     void factory_board(void);
@@ -87,8 +69,6 @@ protected:
 
 private:
 
-    //YAML::Node doc;
-
     int             expected_wkc;
     ec_timing_t     timing;
 
@@ -96,12 +76,13 @@ private:
 
     uint64_t    sync_cycle_time_ns;
     uint64_t    sync_cycle_offset_ns;
+    std::map<int,McESCTypes::pdo_rx> RxPDO_map;
+    std::map<int,McESCTypes::pdo_tx> TxPDO_map;
+    std::map<std::string, info_item> info_map;
 
-    Write_XDDP_pipe * get_param_pipe;
-    Read_XDDP_pipe *  set_param_pipe;
-
-    void lookup_read(std::string token, float* data );
-    void lookup_read(std::string token, uint16* data );
+    bool get_info(std::string token,int& main_index,int& sub_index, int& size);
+    void set_info_table();
+    
 };
 
 

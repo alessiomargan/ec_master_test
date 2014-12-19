@@ -16,11 +16,7 @@
 
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
-
-#include <iit/ecat/advr/pipes.h>
-#include <json_serialization.hpp>
-#include <iit/ecat/advr/types.h>
-#include <json/json.h>
+#include <iit/mc_tm4c/types.h>
 #include <map>
 #include <pwd.h>
 
@@ -39,31 +35,12 @@ public:
 public:
     McESC(const ec_slavet& slave_descriptor) :
            Base(slave_descriptor) {
-        const char *homedir;
-        if ((homedir = getenv("HOME")) == NULL) {
-            homedir = getpwuid(getuid())->pw_dir;
-        }
-        std::string pipe_name = homedir; pipe_name+= "/from_esc_" + std::to_string(position);
-        xddp_wr = new Write_XDDP_pipe(pipe_name, 16384);
-        pipe_name = homedir; pipe_name+= "/to_esc_" + std::to_string(position);
-        xddp_rd = new Read_XDDP_pipe(pipe_name, 16384);
-
     }
 
     virtual ~McESC(void) {
-        delete xddp_wr;
-        delete xddp_rd;
     }
 
-    int write_pdo_to_pipe();
-    int read_pdo_from_pipe();
-
-    Write_XDDP_pipe *   xddp_wr;
-    Read_XDDP_pipe *    xddp_rd;
-
 private:
-    json_serializer serializer;
-    bool get_info(std::string token,int& sub_index, int& size);
 };
 
 

@@ -3,7 +3,7 @@
 
 #include <math.h>
 #include <pwd.h>
-#include "iit/ecat/advr/types.h"
+#include "iit/mc_tm4c/types.h"
 
 using namespace iit::ecat::advr;
 
@@ -11,24 +11,12 @@ using namespace iit::ecat::advr;
 Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
 
     // read conf file .....
-    
-    const char *homedir;
-    
-    if ((homedir = getenv("HOME")) == NULL) {
-        homedir = getpwuid(getuid())->pw_dir;
-    }
     eth_if = std::string(config_file);
 
     //sync_cycle_time_ns = 1e6;     //   1ms
     //sync_cycle_time_ns = 100e6;     //   100ms
     sync_cycle_time_ns = 0;         //   no dc 
     sync_cycle_offset_ns = 500e6;   // 500ms
-
-    std::string pipe_name = homedir; pipe_name+= "/get_param";
-    get_param_pipe = new Write_XDDP_pipe(pipe_name, 16384);
-    pipe_name = homedir; pipe_name+= "/set_param";
-    set_param_pipe = new Read_XDDP_pipe(pipe_name, 16384);
-
 }
 
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
@@ -58,9 +46,10 @@ void Ec_Boards_ctrl::factory_board(void) {
     //advr::TestESC *             test_slave_1 = new advr::TestESC(ec_slave[1]);
     //slaves[1] = ESCPtr(test_slave_1);
     
-    advr::McESC *               mc_slave = new advr::McESC(ec_slave[1]);
+    advr::McESC *mc_slave = new advr::McESC(ec_slave[1]);
     slaves[1] = ESCPtr(mc_slave);
 
+    TxPDO_map[1];
     //advr::McESC *               mc2_slave = new advr::McESC(ec_slave[3]);
     //slaves[3] = ESCPtr(mc2_slave);
 
@@ -80,39 +69,12 @@ int Ec_Boards_ctrl::get_param(int slave_pos, int index, int subindex, int *size,
 }
 
 void Ec_Boards_ctrl::configure_boards(void) {
-
-    int wkc;
-    int size;
-
-    //short int controller_status = 2;
-    //int wkc = ec_SDOwrite(2, 0x8001, 0x3, FALSE, sizeof(controller_status), &controller_status, EC_TIMEOUTRXM);
-    //int wkc = set_param(2, 0x8001, 0x3, sizeof(controller_status), &controller_status);
-    //if (wkc <= 0 ) {
-    //    DPRINTF("fail sdo write\n");
-    //}
-    /*
-    char fw_ver[16];
-    int size = 8;
-    wkc = get_param(2, 0x8001, 0x1, &size, fw_ver);
-    if (wkc <= 0 ) {
-        DPRINTF("fail sdo write\n");
-    }
-    DPRINTF("FW ver %s\n", fw_ver);
-    */
-    tDriveParameters tdrive;
-    size = 4;
-    wkc = get_param(1, 0x8000, 0x2, &size, &tdrive.TorGainP);
-    if (wkc <= 0 ) { DPRINTF("fail sdo write\n"); }
-    DPRINTF("TorGainP %d %f\n", size, &tdrive.TorGainP);
-
-
 }
 
 
 int Ec_Boards_ctrl::set_operative() {
 
     expected_wkc = iit::ecat::operational(&sync_cycle_time_ns, &sync_cycle_offset_ns);
-    
     return expected_wkc;
 }
 
@@ -133,12 +95,9 @@ int Ec_Boards_ctrl::recv_from_slaves() {
         
         McESC * s = dynamic_cast<McESC*>(it->second.get());
         if (s) {
-            s->write_pdo_to_pipe();
+            RxPDO_map[it->first]=s->getRxPDO();
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-
 
     return 1;
 }
@@ -151,7 +110,7 @@ int Ec_Boards_ctrl::send_to_slaves() {
         
         McESC * s = dynamic_cast<McESC*>(it->second.get());
         if (s) {
-            s->read_pdo_from_pipe();
+            s->setTxPDO(TxPDO_map[it->first]);
         }
     }
     //////////////
@@ -172,10 +131,30 @@ int Ec_Boards_ctrl::send_to_slaves() {
     }
 
     return retry;
-
 }
 
-bool get_info(std::string token,int& main_index,int& sub_index, int& size)
+int Ec_Boards_ctrl::mailbox_recv_from_slaves(int slave_index,std::string token, void* data){
+    int sub_index=0;
+    int size=0;
+    int main_index=0;
+    get_info(token,main_index,sub_index,size);
+    int final_size=size;
+    int wkc = get_param(slave_index, main_index, sub_index, &final_size,data);
+    if (wkc <= 0 || final_size!=size) { DPRINTF("fail sdo read\n"); }
+    return wkc;
+}
+
+int Ec_Boards_ctrl::mailbox_send_to_slaves(int slave_index,std::string token, void* data){
+    int sub_index=0;
+    int size=0;
+    int main_index=0;
+    get_info(token,main_index,sub_index,size);
+    int wkc = set_param(slave_index, main_index, sub_index, size, data);
+    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
+    return wkc;
+}
+
+void Ec_Boards_ctrl::set_info_table()
 {
     const objd * lookup_table = SDO8000;
     const objd * lookup_table1 = SDO8001;
@@ -184,161 +163,27 @@ bool get_info(std::string token,int& main_index,int& sub_index, int& size)
     for (int i=1;i<table_size;i++)
     {
         std::string temp=(char*)lookup_table[i].data;
-        if (temp==token)
-        {
-            std::cout<<token<<" at "<<lookup_table[i].subindex<<" size:"<<lookup_table[i].bitlength<<std::endl;
-            sub_index=lookup_table[i].subindex;
-            size=lookup_table[i].bitlength;
-            main_index=0x8000;
-            return true;
-        }
+        info_map[temp].index=0x8000;
+        info_map[temp].sub_index=lookup_table[i].subindex;
+        info_map[temp].size=lookup_table[i].bitlength/8;
+        std::cout<<temp<<" at "<<lookup_table[i].subindex<<" size:"<<lookup_table[i].bitlength<<std::endl;
     }
     table_size = lookup_table1[0].value;
     for (int i=1;i<table_size;i++)
     {
         std::string temp=(char*)lookup_table1[i].data;
-        if (temp==token)
-        {
-            std::cout<<token<<" at "<<lookup_table1[i].subindex<<" size:"<<lookup_table1[i].bitlength<<std::endl;
-            sub_index=lookup_table1[i].subindex;
-            size=lookup_table1[i].bitlength;
-            main_index=0x8001;
-            return true;
-        }
+        info_map[temp].index=0x8000;
+        info_map[temp].sub_index=lookup_table1[i].subindex;
+        info_map[temp].size=lookup_table1[i].bitlength/8;
+        std::cout<<temp<<" at "<<lookup_table1[i].subindex<<" size:"<<lookup_table1[i].bitlength<<std::endl;
     }
-    return false;
 }
 
-
-void Ec_Boards_ctrl::lookup_read(std::string token, float* data )
+bool Ec_Boards_ctrl::get_info(std::string token,int& main_index,int& sub_index, int& size)
 {
-    int sub_index=0;
-    int size=0;
-    int main_index=0;
-    get_info(token,main_index,sub_index,size);
-    int wkc = ec_SDOread(1, main_index, sub_index, false, &size, data, EC_TIMEOUTRXM);
-    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
-}
-
-void Ec_Boards_ctrl::lookup_read(std::string token, uint16* data )
-{
-    int sub_index=0;
-    int size=0;
-    int main_index=0;
-    get_info(token,main_index,sub_index,size);
-    int wkc = ec_SDOread(1, main_index, sub_index, false, &size, data, EC_TIMEOUTRXM);
-    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
-}
-
-
-int Ec_Boards_ctrl::handle_SDO(void) {
-
-    char buffer[4096]; 
-    int i = 0;
-    ssize_t nbytes = 0;
-    int wkc;
-    char value[1024];
-    void * pvalue = value;
-
-    memset(buffer, 0, sizeof(buffer));
-
-    // NON-BLOCKING read
-    nbytes = set_param_pipe->read((void*)buffer, sizeof(buffer));
-
-    if (nbytes > 0) {
-
-        DPRINTF("read  %ld %s\n", nbytes, buffer);
-        json_object * jObj = json_tokener_parse(buffer);
-        DPRINTF( "JSON parse : %s\n", json_object_to_json_string(jObj));
-
-        struct json_object_iterator it;
-        struct json_object_iterator itEnd;
-        it = json_object_iter_begin(jObj);
-        itEnd = json_object_iter_end(jObj);
-        while (!json_object_iter_equal(&it, &itEnd)) {
-            std::string token=json_object_iter_peek_name(&it);
-            json_object *jn;
-            bool result=json_object_object_get_ex(jObj,token.c_str(),&jn);
-            int size;
-            int sub_index;
-            int main_index;
-            get_info(token,main_index,sub_index,size);
-            auto type=json_object_get_type(jn);
-
-//             DPRINTF( "type %s\n", json_type_to_name(type) );
-
-            if (type==json_type_double)
-            {
-                float value = json_object_get_double(jn);
-                wkc = set_param(1, main_index, sub_index, size/8, &value);
-//                 DPRINTF( "wkc %d %f\n", wkc,value );
-            } else if (type==json_type_int)
-            {
-                int value = json_object_get_int(jn);
-                wkc = set_param(1, main_index, sub_index, size/8, &value);
-//                 DPRINTF( "wkc %d %d\n", wkc,value );
-            } else if (type==json_type_string)
-            {
-                std::string value=json_object_get_string(jn);
-//                 DPRINTF( "wkc %d %s\n", wkc,value.c_str() );
-            } else {
-
-               DPRINTF( "Unknown type %s\n", json_type_to_name(type) );
-            }
-            
-
-            json_object_iter_next(&it);
-        }
-
-    }
-
-    /////////////////////////
-    ///
-    /////////////////////////
-    tDriveParameters tdrive;
-    parameters8001 t8001;
-    json_serializer serializer;
-#define params(x) #x,&tdrive.x
-   lookup_read(params( TorGainP));
-   lookup_read(params(TorGainI));
-   lookup_read(params(TorGainD));
-   lookup_read(params( TorGainFF));
-   //lookup_read(params( Pos_I_lim));
-   //lookup_read(params( Tor_I_lim));
-   //lookup_read(params( Min_pos));
-   //lookup_read(params(Max_pos));
-   //lookup_read(params(Max_vel));
-   //lookup_read(params(Max_tor));
-   //lookup_read(params(Max_cur));
-   lookup_read(params(Enc_offset));
-   lookup_read(params(Enc_relative_offset));
-   lookup_read(params( Phase_angle));
-#undef params
-#define params(x) #x,&t8001.x
-//    lookup_read(params( firmware_version));
-//    lookup_read(params(all));
-   lookup_read(params(Direct_ref));
-//    lookup_read(params(V_batt_filt_100ms));
-   lookup_read(params(Board_Temperature));
-//    lookup_read(params(T_mot1_filt_100ms));
-//    lookup_read(params(ctrl_status_cmd));
-   lookup_read(params(ctrl_status_cmd_ack));
-//    lookup_read(params(flash_params_cmd));
-   lookup_read(params(flash_params_cmd_ack));
-#undef params
-    json_object * jObj = json_object_new_object();
-    serializer.serializeToJson(tdrive,jObj);
-    std::string json_str;
-    json_str = json_object_to_json_string(jObj);
-    json_str += "\n";
-    std::cout<<"sending"<<json_str<<std::endl;
-    nbytes = get_param_pipe->write((void*)json_str.c_str(), json_str.length());
-    json_object * jObj1 = json_object_new_object();
-    serializer.serializeToJson(t8001,jObj1);
-    json_str = json_object_to_json_string(jObj1);
-    json_str += "\n";
-    std::cout<<"sending"<<json_str<<std::endl;
-    nbytes = get_param_pipe->write((void*)json_str.c_str(), json_str.length());
-    
-
+    if (!info_map.count(token)) return false;
+    sub_index=info_map[token].sub_index;
+    size=info_map[token].size;
+    main_index=info_map[token].index;
+    return true;
 }

@@ -10,6 +10,29 @@ typedef struct
     const char *data;
 } objd;
 
+/*
+FLASHSTORE _objd SDO6000[] =
+{
+    {0x0, DTYPE_UNSIGNED8,   8, ATYPE_RO, acName6000_0, 6, nil},
+    {0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_1, 0, &tx_pdo.position},
+    {0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_2, 0, &tx_pdo.velocity},
+    {0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_3, 0, &tx_pdo.torque},
+    {0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_4, 0, &tx_pdo.max_temperature},
+    {0x5, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_5, 0, &tx_pdo.fault},
+    {0x6, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_6, 0, &tx_pdo.rtt},
+};
+
+FLASHSTORE _objd SDO7000[] =
+{
+    {0x0, DTYPE_UNSIGNED8,   8, ATYPE_RO, acName7000_0, 6, nil},
+    {0x1, DTYPE_REAL32,     32, ATYPE_RW, acName7000_1, 0, &rx_pdo.pos_ref},
+    {0x2, DTYPE_REAL32,     32, ATYPE_RW, acName7000_2, 0, &rx_pdo.tor_offs},
+    {0x3, DTYPE_REAL32,     32, ATYPE_RW, acName7000_3, 0, &rx_pdo.PosGainP},
+    {0x4, DTYPE_REAL32,     32, ATYPE_RW, acName7000_4, 0, &rx_pdo.PosGainI},
+    {0x5, DTYPE_REAL32,     32, ATYPE_RW, acName7000_5, 0, &rx_pdo.PosGainD},
+    {0x6, DTYPE_UNSIGNED64, 64, ATYPE_RW, acName7000_6, 0, &rx_pdo.ts},
+};
+*/
 objd SDO8000[] =
 {
     {0x0, 8, 15, ""},

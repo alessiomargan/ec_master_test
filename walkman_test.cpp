@@ -106,7 +106,12 @@ int main(int argc, char **argv)
         ec_boards_ctrl->recv_from_slaves();
         
         if ( cnt++ % 100 ) {
-            ec_boards_ctrl->handle_SDO();
+            //TODO write and read some mailbox parameters here, just to show how to
+            /*
+             * 
+             * 
+             * 
+             * */
         }
       
         ec_boards_ctrl->send_to_slaves();
