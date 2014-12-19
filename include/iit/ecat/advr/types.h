@@ -98,6 +98,20 @@ namespace iit {
 
             }
             tDriveParameters;
+
+        typedef struct 
+        {
+            std::string firmware_version;
+            uint16_t all;
+            float Direct_ref;
+            float V_batt_filt_100ms;
+            float Board_Temperature;
+            float T_mot1_filt_100ms;
+            uint16_t ctrl_status_cmd;
+            uint16_t ctrl_status_cmd_ack;
+            uint16_t flash_params_cmd;
+            uint16_t flash_params_cmd_ack;
+        } parameters8001;
         }
     }
 }
