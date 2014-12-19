@@ -54,15 +54,15 @@ int Ec_Boards_ctrl::init(void) {
 
 void Ec_Boards_ctrl::factory_board(void) {
 
-    advr::TestESCTypes::pdo_tx  test_slave_1_tx_pdo;
-    advr::TestESC *             test_slave_1 = new advr::TestESC(ec_slave[1]);
-    slaves[1] = ESCPtr(test_slave_1);
+    //advr::TestESCTypes::pdo_tx  test_slave_1_tx_pdo;
+    //advr::TestESC *             test_slave_1 = new advr::TestESC(ec_slave[1]);
+    //slaves[1] = ESCPtr(test_slave_1);
     
-    advr::McESC *               mc_slave = new advr::McESC(ec_slave[2]);
-    slaves[2] = ESCPtr(mc_slave);
+    advr::McESC *               mc_slave = new advr::McESC(ec_slave[1]);
+    slaves[1] = ESCPtr(mc_slave);
 
-    advr::McESC *               mc2_slave = new advr::McESC(ec_slave[3]);
-    slaves[3] = ESCPtr(mc2_slave);
+    //advr::McESC *               mc2_slave = new advr::McESC(ec_slave[3]);
+    //slaves[3] = ESCPtr(mc2_slave);
 
     iit::ecat::setExpectedSlaves(slaves);
 
@@ -81,17 +81,16 @@ int Ec_Boards_ctrl::get_param(int slave_pos, int index, int subindex, int *size,
 
 void Ec_Boards_ctrl::configure_boards(void) {
 
-    for (auto it = slaves.begin(); it != slaves.end(); it++) {
-        
-        //it->second-> 
-    }
+    int wkc;
+    int size;
 
-    short int controller_status = 2;
+    //short int controller_status = 2;
     //int wkc = ec_SDOwrite(2, 0x8001, 0x3, FALSE, sizeof(controller_status), &controller_status, EC_TIMEOUTRXM);
-    int wkc = set_param(2, 0x8001, 0x3, sizeof(controller_status), &controller_status);
-    if (wkc <= 0 ) {
-        DPRINTF("fail sdo write\n");
-    }
+    //int wkc = set_param(2, 0x8001, 0x3, sizeof(controller_status), &controller_status);
+    //if (wkc <= 0 ) {
+    //    DPRINTF("fail sdo write\n");
+    //}
+    /*
     char fw_ver[16];
     int size = 8;
     wkc = get_param(2, 0x8001, 0x1, &size, fw_ver);
@@ -99,10 +98,10 @@ void Ec_Boards_ctrl::configure_boards(void) {
         DPRINTF("fail sdo write\n");
     }
     DPRINTF("FW ver %s\n", fw_ver);
-
+    */
     tDriveParameters tdrive;
     size = 4;
-    wkc = get_param(3, 0x8000, 0x1, &size, &tdrive.TorGainP);
+    wkc = get_param(1, 0x8000, 0x2, &size, &tdrive.TorGainP);
     if (wkc <= 0 ) { DPRINTF("fail sdo write\n"); }
     DPRINTF("TorGainP %d %f\n", size, &tdrive.TorGainP);
 
@@ -200,7 +199,7 @@ void Ec_Boards_ctrl::lookup_read(std::string token, float* data )
     int sub_index=0;
     int size=0;
     get_info(token,sub_index,size);
-    int wkc = ec_SDOread(3, 0x8000, sub_index, false, &size, data, EC_TIMEOUTRXM);
+    int wkc = ec_SDOread(1, 0x8000, sub_index, false, &size, data, EC_TIMEOUTRXM);
     if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
 }
 
@@ -242,12 +241,12 @@ int Ec_Boards_ctrl::handle_SDO(void) {
             if (type==json_type_double)
             {
                 float value = json_object_get_double(jn);
-                wkc = set_param(3, 0x8000, sub_index, size/8, &value);
+                wkc = set_param(1, 0x8000, sub_index, size/8, &value);
                 DPRINTF( "wkc %d %f\n", wkc,value );
             } else if (type==json_type_int)
             {
                 int value = json_object_get_int(jn);
-                wkc = set_param(3, 0x8000, sub_index, size/8, &value);
+                wkc = set_param(1, 0x8000, sub_index, size/8, &value);
                 DPRINTF( "wkc %d %d\n", wkc,value );
             } else if (type==json_type_string)
             {
@@ -274,16 +273,17 @@ int Ec_Boards_ctrl::handle_SDO(void) {
    lookup_read(params(TorGainI));
    lookup_read(params(TorGainD));
    lookup_read(params( TorGainFF));
-   lookup_read(params( Pos_I_lim));
-   lookup_read(params( Tor_I_lim));
-   lookup_read(params( Min_pos));
-   lookup_read(params(Max_pos));
-   lookup_read(params(Max_vel));
-   lookup_read(params(Max_tor));
-   lookup_read(params(Max_cur));
+   //lookup_read(params( Pos_I_lim));
+   //lookup_read(params( Tor_I_lim));
+   //lookup_read(params( Min_pos));
+   //lookup_read(params(Max_pos));
+   //lookup_read(params(Max_vel));
+   //lookup_read(params(Max_tor));
+   //lookup_read(params(Max_cur));
    lookup_read(params(Enc_offset));
    lookup_read(params(Enc_relative_offset));
    lookup_read(params( Phase_angle));
+
 #undef params
     json_object * jObj = json_object_new_object();
     //void serializeToJson(tDriveParameters& tdrive, json_object* jObj)
