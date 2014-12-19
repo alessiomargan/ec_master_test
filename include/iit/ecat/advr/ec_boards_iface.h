@@ -100,7 +100,8 @@ private:
     Write_XDDP_pipe * get_param_pipe;
     Read_XDDP_pipe *  set_param_pipe;
 
-
+    void lookup_read(std::string token, float* data );
+    
 };
 
 

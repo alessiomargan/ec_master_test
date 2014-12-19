@@ -109,39 +109,33 @@ public:
 
     void serializeToJson(iit::ecat::advr::tDriveParameters& tdrive, json_object* jObj)
     {
-	/*
-	unsigned long Sensor_type;
 
-	float PosGainP;
-	float PosGainI;
-	float PosGainD;
+        /*
+                         unsigned long Sensor_type;      // Sensor type: NOT USED
 
-	float TorGainP;
-	float TorGainI;
-	float TorGainD;
+                float TorGainP;
+                float TorGainI;
+                float TorGainD;
 
-	float TorGainFF;
+                float TorGainFF;
 
-	float Pos_I_lim;
-	float Tor_I_lim;
+                float Pos_I_lim;                // Integral limit: NOT USED
+                float Tor_I_lim;                // Integral limit: NOT USED
 
-	float Min_pos;
-	float Max_pos;
+                float Min_pos;
+                float Max_pos;
 
-	float Max_tor;
-	float Max_vel;
-	float Max_cur;
+                float Max_vel;
+                float Max_tor;
+                float Max_cur;
 
-	float Enc_offset;
-    float Enc_relative_offset;
+                float Enc_offset;
+                float Enc_relative_offset;
 
-	float Phase_angle;
-	*/
+                float Phase_angle;
 
-	add_object(var2string(Sensor_type),tdrive.Sensor_type,jObj);
-	//add_object(var2string(PosGainP),tdrive.PosGainP,jObj);
-	//add_object(var2string(PosGainI),tdrive.PosGainI,jObj);
-	//add_object(var2string(PosGainD),tdrive.PosGainD,jObj);
+         */
+        add_object(var2string(Sensor_type),tdrive.Sensor_type,jObj);
 	add_object(var2string(TorGainP),tdrive.TorGainP,jObj);
 	add_object(var2string(TorGainI),tdrive.TorGainI,jObj);
 	add_object(var2string(TorGainD),tdrive.TorGainD,jObj);
@@ -150,8 +144,8 @@ public:
 	add_object(var2string(Tor_I_lim),tdrive.Tor_I_lim,jObj);
 	add_object(var2string(Min_pos),tdrive.Min_pos,jObj);
 	add_object(var2string(Max_pos),tdrive.Max_pos,jObj);
-	add_object(var2string(Max_tor),tdrive.Max_tor,jObj);
 	add_object(var2string(Max_vel),tdrive.Max_vel,jObj);
+	add_object(var2string(Max_tor),tdrive.Max_tor,jObj);
 	add_object(var2string(Max_cur),tdrive.Max_cur,jObj);
 	add_object(var2string(Enc_offset),tdrive.Enc_offset,jObj);
 	add_object(var2string(Enc_relative_offset),tdrive.Enc_relative_offset,jObj);
@@ -200,38 +194,31 @@ public:
     void deSerializeToJson(iit::ecat::advr::tDriveParameters& tdrive, json_object* jObj)
     {
       /*
-	unsigned long Sensor_type;
+        unsigned long Sensor_type;      // Sensor type: NOT USED
 
-	float PosGainP;
-	float PosGainI;
-	float PosGainD;
+        float TorGainP;
+        float TorGainI;
+        float TorGainD;
 
-	float TorGainP;
-	float TorGainI;
-	float TorGainD;
+        float TorGainFF;
 
-	float TorGainFF;
+        float Pos_I_lim;                // Integral limit: NOT USED
+        float Tor_I_lim;                // Integral limit: NOT USED
 
-	float Pos_I_lim;
-	float Tor_I_lim;
+        float Min_pos;
+        float Max_pos;
 
-	float Min_pos;
-	float Max_pos;
+        float Max_vel;
+        float Max_tor;
+        float Max_cur;
 
-	float Max_tor;
-	float Max_vel;
-	float Max_cur;
+        float Enc_offset;
+        float Enc_relative_offset;
 
-	float Enc_offset;
-    float Enc_relative_offset;
-
-	float Phase_angle;
+        float Phase_angle;
 	*/
 
 	get_object(var2string(Sensor_type),&(tdrive.Sensor_type),jObj);
-	//get_object(var2string(PosGainP),&(tdrive.PosGainP),jObj);
-	//get_object(var2string(PosGainI),&(tdrive.PosGainI),jObj);
-	//get_object(var2string(PosGainD),&(tdrive.PosGainD),jObj);
 	get_object(var2string(TorGainP),&(tdrive.TorGainP),jObj);
 	get_object(var2string(TorGainI),&(tdrive.TorGainI),jObj);
 	get_object(var2string(TorGainD),&(tdrive.TorGainD),jObj);
@@ -240,8 +227,8 @@ public:
 	get_object(var2string(Tor_I_lim),&(tdrive.Tor_I_lim),jObj);
 	get_object(var2string(Min_pos),&(tdrive.Min_pos),jObj);
 	get_object(var2string(Max_pos),&(tdrive.Max_pos),jObj);
-	get_object(var2string(Max_tor),&(tdrive.Max_tor),jObj);
-	get_object(var2string(Max_vel),&(tdrive.Max_vel),jObj);
+	get_object(var2string(Max_tor),&(tdrive.Max_vel),jObj);
+	get_object(var2string(Max_vel),&(tdrive.Max_tor),jObj);
 	get_object(var2string(Max_cur),&(tdrive.Max_cur),jObj);
 	get_object(var2string(Enc_offset),&(tdrive.Enc_offset),jObj);
 	get_object(var2string(Enc_relative_offset),&(tdrive.Enc_relative_offset),jObj);

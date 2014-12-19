@@ -189,6 +189,15 @@ bool get_info(std::string token,int& sub_index, int& size)
 }
 
 
+void Ec_Boards_ctrl::lookup_read(std::string token, float* data )
+{
+    int sub_index=0;
+    int size=0;
+    get_info(token,sub_index,size);
+    int wkc = ec_SDOread(3, 0x8000, sub_index, false, &size, data, EC_TIMEOUTRXM);
+    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
+}
+
 int Ec_Boards_ctrl::handle_SDO(void) {
 
     char buffer[4096]; 
@@ -254,18 +263,22 @@ int Ec_Boards_ctrl::handle_SDO(void) {
     /////////////////////////
     tDriveParameters tdrive;
     json_serializer serializer;
-    int tdrive_size = 4;
-
-    // 
-    wkc = ec_SDOread(3, 0x8000, 0x2, false, &tdrive_size, &tdrive.TorGainP, EC_TIMEOUTRXM);
-    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
-    sleep(0.1);
-    wkc = ec_SDOread(3, 0x8000, 0x3, false, &tdrive_size, &tdrive.TorGainI, EC_TIMEOUTRXM);
-    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
-    sleep(0.1);
-    wkc = ec_SDOread(3, 0x8000, 0x4, false, &tdrive_size, &tdrive.TorGainD, EC_TIMEOUTRXM);
-    if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
-        
+#define params(x) #x,&tdrive.x
+   lookup_read(params( TorGainP));
+   lookup_read(params(TorGainI));
+   lookup_read(params(TorGainD));
+   lookup_read(params( TorGainFF));
+   lookup_read(params( Pos_I_lim));
+   lookup_read(params( Tor_I_lim));
+   lookup_read(params( Min_pos));
+   lookup_read(params(Max_pos));
+   lookup_read(params(Max_vel));
+   lookup_read(params(Max_tor));
+   lookup_read(params(Max_cur));
+   lookup_read(params(Enc_offset));
+   lookup_read(params(Enc_relative_offset));
+   lookup_read(params( Phase_angle));
+#undef params
     json_object * jObj = json_object_new_object();
     //void serializeToJson(tDriveParameters& tdrive, json_object* jObj)
     serializer.serializeToJson(tdrive,jObj);
