@@ -111,8 +111,8 @@ namespace iit {
             uint16_t ctrl_status_cmd_ack;
             uint16_t flash_params_cmd;
             uint16_t flash_params_cmd_ack;
-            int abs_enc_mot;
-            int abs_enc_load;     
+            uint64_t abs_enc_mot;
+            uint64_t abs_enc_load;     
         } parameters8001;
         }
     }

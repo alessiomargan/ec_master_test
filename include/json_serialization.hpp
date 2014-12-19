@@ -193,6 +193,8 @@ public:
         add_object(var2string(ctrl_status_cmd_ack),p8001.ctrl_status_cmd_ack,jObj);
         add_object(var2string(flash_params_cmd),p8001.flash_params_cmd,jObj);
         add_object(var2string(flash_params_cmd_ack),p8001.flash_params_cmd_ack,jObj);
+        add_object(var2string(abs_enc_mot),p8001.abs_enc_mot,jObj);
+        add_object(var2string(abs_enc_load),p8001.abs_enc_load,jObj);
         
     }
     
@@ -302,6 +304,8 @@ public:
         get_object(var2string(ctrl_status_cmd_ack),&(p8001.ctrl_status_cmd_ack),jObj);
         get_object(var2string(flash_params_cmd),&(p8001.flash_params_cmd),jObj);
         get_object(var2string(flash_params_cmd_ack),&(p8001.flash_params_cmd_ack),jObj);
+        get_object(var2string(abs_enc_mot),&(p8001.abs_enc_mot),jObj);
+        get_object(var2string(abs_enc_load),&(p8001.abs_enc_load),jObj);
     }
     
 };
