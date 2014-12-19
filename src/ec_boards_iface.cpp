@@ -2,6 +2,7 @@
 #include "iit/mc_tm4c/objectlist.h"
 
 #include <math.h>
+#include <pwd.h>
 
 
 using namespace iit::ecat::advr;
@@ -10,7 +11,12 @@ using namespace iit::ecat::advr;
 Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
 
     // read conf file .....
-
+    
+    const char *homedir;
+    
+    if ((homedir = getenv("HOME")) == NULL) {
+        homedir = getpwuid(getuid())->pw_dir;
+    }
     eth_if = std::string(config_file);
 
     //sync_cycle_time_ns = 1e6;     //   1ms
@@ -18,9 +24,9 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
     sync_cycle_time_ns = 0;         //   no dc 
     sync_cycle_offset_ns = 500e6;   // 500ms
 
-    std::string pipe_name = "/home/amargan/get_param";
+    std::string pipe_name = homedir; pipe_name+= "/get_param";
     get_param_pipe = new Write_XDDP_pipe(pipe_name, 16384);
-    pipe_name = "/home/amargan/set_param";
+    pipe_name = homedir; pipe_name+= "/set_param";
     set_param_pipe = new Read_XDDP_pipe(pipe_name, 16384);
 
 }

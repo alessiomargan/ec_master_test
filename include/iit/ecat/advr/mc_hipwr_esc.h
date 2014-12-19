@@ -22,6 +22,7 @@
 #include <iit/ecat/advr/types.h>
 #include <json/json.h>
 #include <map>
+#include <pwd.h>
 
 namespace iit {
 namespace ecat {
@@ -38,10 +39,13 @@ public:
 public:
     McESC(const ec_slavet& slave_descriptor) :
            Base(slave_descriptor) {
-
-        std::string pipe_name = "/home/amargan/from_esc_" + std::to_string(position);
+        const char *homedir;
+        if ((homedir = getenv("HOME")) == NULL) {
+            homedir = getpwuid(getuid())->pw_dir;
+        }
+        std::string pipe_name = homedir; pipe_name+= "/from_esc_" + std::to_string(position);
         xddp_wr = new Write_XDDP_pipe(pipe_name, 16384);
-        pipe_name = "/home/amargan/to_esc_" + std::to_string(position);
+        pipe_name = homedir; pipe_name+= "/to_esc_" + std::to_string(position);
         xddp_rd = new Read_XDDP_pipe(pipe_name, 16384);
 
     }
