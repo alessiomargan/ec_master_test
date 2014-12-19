@@ -1,76 +1,85 @@
 #ifndef __objectlist__
 #define __objectlist__
 
+#define DTYPE_UNSIGNED8 0
+#define DTYPE_UNSIGNED16 1
+#define DTYPE_INTEGER16 2
+#define DTYPE_UNSIGNED64 3
+#define DTYPE_REAL32 4
+#define DTYPE_VISIBLE_STRING 5
+
+#define ATYPE_RO 17
+#define ATYPE_RW 18
 
 typedef struct
 {
-    int subindex;
-    int bitlength;
-    int value;
-    const char *data;
+   int subindex;
+   int datatype;
+   int bitlength;
+   int access;
+   int value;
+   const char *data;
 } objd;
 
-/*
-FLASHSTORE _objd SDO6000[] =
+objd SDO6000[] =
 {
-    {0x0, DTYPE_UNSIGNED8,   8, ATYPE_RO, acName6000_0, 6, nil},
-    {0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_1, 0, &tx_pdo.position},
-    {0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_2, 0, &tx_pdo.velocity},
-    {0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_3, 0, &tx_pdo.torque},
-    {0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_4, 0, &tx_pdo.max_temperature},
-    {0x5, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_5, 0, &tx_pdo.fault},
-    {0x6, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_6, 0, &tx_pdo.rtt},
+    {0x0, DTYPE_UNSIGNED8,   8, ATYPE_RO, 6, ""},
+    {0x1, DTYPE_REAL32,      32, ATYPE_RO, 0, "position"},
+    {0x2, DTYPE_REAL32,      32, ATYPE_RO, 0, "velocity"},
+    {0x3, DTYPE_REAL32,      32, ATYPE_RO, 0, "torque"},
+    {0x4, DTYPE_REAL32,      32, ATYPE_RO, 0, "max_temperature"},
+    {0x5, DTYPE_UNSIGNED16,  16, ATYPE_RO, 0, "fault"},
+    {0x6, DTYPE_UNSIGNED64,  64, ATYPE_RO, 0, "rtt"},
 };
 
-FLASHSTORE _objd SDO7000[] =
+objd SDO7000[] =
 {
-    {0x0, DTYPE_UNSIGNED8,   8, ATYPE_RO, acName7000_0, 6, nil},
-    {0x1, DTYPE_REAL32,     32, ATYPE_RW, acName7000_1, 0, &rx_pdo.pos_ref},
-    {0x2, DTYPE_REAL32,     32, ATYPE_RW, acName7000_2, 0, &rx_pdo.tor_offs},
-    {0x3, DTYPE_REAL32,     32, ATYPE_RW, acName7000_3, 0, &rx_pdo.PosGainP},
-    {0x4, DTYPE_REAL32,     32, ATYPE_RW, acName7000_4, 0, &rx_pdo.PosGainI},
-    {0x5, DTYPE_REAL32,     32, ATYPE_RW, acName7000_5, 0, &rx_pdo.PosGainD},
-    {0x6, DTYPE_UNSIGNED64, 64, ATYPE_RW, acName7000_6, 0, &rx_pdo.ts},
+    {0x0, DTYPE_UNSIGNED8,   8, ATYPE_RO, 6, ""},
+    {0x1, DTYPE_REAL32,     32, ATYPE_RW, 0, "pos_ref"},
+    {0x2, DTYPE_REAL32,     32, ATYPE_RW, 0, "tor_offs"},
+    {0x3, DTYPE_REAL32,     32, ATYPE_RW, 0, "PosGainP"},
+    {0x4, DTYPE_REAL32,     32, ATYPE_RW, 0, "PosGainI"},
+    {0x5, DTYPE_REAL32,     32, ATYPE_RW, 0, "PosGainD"},
+    {0x6, DTYPE_UNSIGNED64, 64, ATYPE_RW, 0, "ts"},
 };
-*/
+
 objd SDO8000[] =
 {
-    {0x0, 8, 15, ""},
-    {0x1, 32, 0, "Sensor_type"},
-    {0x2, 32, 0, "TorGainP"},
-    {0x3, 32, 0, "TorGainI"},
-    {0x4, 32, 0, "TorGainD"},
-    {0x5, 32, 0, "TorGainFF"},
-    {0x6, 32, 0, "Pos_I_lim"},
-    {0x7, 32, 0, "Tor_I_lim"},
-    {0x8, 32, 0, "Min_pos"},
-    {0x9, 32, 0, "Max_pos"},
-    {0xa, 32, 0, "Max_vel"},
-    {0xb, 32, 0, "Max_tor"},
-    {0xc, 32, 0, "Max_cur"},
-    {0xd, 32, 0, "Enc_offset"},
-    {0xe, 32, 0, "Enc_relative_offset"},
-    {0xf, 32, 0, "Phase_angle"},
+    {0x0, DTYPE_UNSIGNED8, 8,  ATYPE_RO, 15, ""},
+    {0x1, DTYPE_REAL32, 32, ATYPE_RW, 0, "Sensor_type"},
+    {0x2, DTYPE_REAL32, 32, ATYPE_RW, 0, "TorGainP"},
+    {0x3, DTYPE_REAL32, 32, ATYPE_RW, 0, "TorGainI"},
+    {0x4, DTYPE_REAL32, 32, ATYPE_RW, 0, "TorGainD"},
+    {0x5, DTYPE_REAL32, 32, ATYPE_RW, 0, "TorGainFF"},
+    {0x6, DTYPE_REAL32, 32, ATYPE_RW, 0, "Pos_I_lim"},
+    {0x7, DTYPE_REAL32, 32, ATYPE_RW, 0, "Tor_I_lim"},
+    {0x8, DTYPE_REAL32, 32, ATYPE_RW, 0, "Min_pos"},
+    {0x9, DTYPE_REAL32, 32, ATYPE_RW, 0, "Max_pos"},
+    {0xa, DTYPE_REAL32, 32, ATYPE_RW, 0, "Max_vel"},
+    {0xb, DTYPE_REAL32, 32, ATYPE_RW, 0, "Max_tor"},
+    {0xc, DTYPE_REAL32, 32, ATYPE_RW, 0, "Max_cur"},
+    {0xd, DTYPE_REAL32, 32, ATYPE_RO, 0, "Enc_offset"},
+    {0xe, DTYPE_REAL32, 32, ATYPE_RO, 0, "Enc_relative_offset"},
+    {0xf, DTYPE_REAL32, 32, ATYPE_RW, 0, "Phase_angle"},
 };
 
 objd SDO8001[] =
 {
-    {0x0,  8,  12, ""},
-    {0x1,  64,  0, "firmware_version"},
-    {0x2,  16,  0, "all"},
-    {0x3,  32,  0, "Direct_ref"},
-    {0x4,  32,  0, "V_batt_filt_100ms"},
-    {0x5,  32,  0, "Board_Temperature"},
-    {0x6,  32,  0, "T_mot1_filt_100ms"},
-    {0x7,  16,  0, "ctrl_status_cmd"},
-    {0x8,  16,  0, "ctrl_status_cmd_ack"},
-    {0x9,  16,  0, "flash_params_cmd"},
-    {0xa,  16,  0, "flash_params_cmd_ack"},
-    {0xb,  32,  0, "abs_enc_mot"},
-    {0xc,  32,  0, "abs_enc_load"},
+    {0x0, DTYPE_UNSIGNED8,      8,	ATYPE_RO,	14, ""},
+    {0x1, DTYPE_VISIBLE_STRING, 64,	ATYPE_RO,	0, "firmware_version"},
+    {0x2, DTYPE_INTEGER16,      16,	ATYPE_RW,	0, "all"},
+    {0x3, DTYPE_REAL32,  	32,  	ATYPE_RW,	0, "Direct_ref"},
+    {0x4, DTYPE_REAL32,  	32,	ATYPE_RO,  	0, "V_batt_filt_100ms"},
+    {0x5, DTYPE_REAL32,  	32,  	ATYPE_RO,	0, "Board_Temperature"},
+    {0x6, DTYPE_REAL32,  	32,  	ATYPE_RO,	0, "T_mot1_filt_100ms"},
+    {0x7, DTYPE_INTEGER16,  	16,  	ATYPE_RW,	0, "ctrl_status_cmd"},
+    {0x8, DTYPE_INTEGER16,  	16,  	ATYPE_RO,	0, "ctrl_status_cmd_ack"},
+    {0x9, DTYPE_INTEGER16,  	16,  	ATYPE_RW,	0, "flash_params_cmd"},
+    {0xa, DTYPE_INTEGER16,  	16,  	ATYPE_RO,	0, "flash_params_cmd_ack"},
+    {0xb, DTYPE_REAL32,  	32,  	ATYPE_RO,	0, "abs_enc_mot"},
+    {0xc, DTYPE_REAL32,  	32,  	ATYPE_RO,	0, "abs_enc_load"},
+    {0xd, DTYPE_REAL32,         32, 	ATYPE_RO, 	0, "angle_enc_mot"},
+    {0xe, DTYPE_REAL32, 	32,	ATYPE_RO,	0, "angle_enc_load"},
 };
-
-
-
 
 #endif
