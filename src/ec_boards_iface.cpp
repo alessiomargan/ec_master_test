@@ -1,9 +1,10 @@
-#include <iit/ecat/advr/ec_boards_iface.h>
+#include "iit/ecat/advr/ec_boards_iface.h"
 #include "iit/mc_tm4c/objectlist.h"
 
 #include <math.h>
 #include <pwd.h>
 #include "iit/mc_tm4c/types.h"
+#include <mutex>
 
 using namespace iit::ecat::advr;
 
@@ -80,6 +81,18 @@ int Ec_Boards_ctrl::set_operative() {
     return expected_wkc;
 }
 
+const McESCTypes::pdo_rx& Ec_Boards_ctrl::getRxPDO(int slave_index)
+{
+    std::unique_lock<std::mutex> (rd_mtx);
+    return RxPDO_map[slave_index];
+}
+
+void Ec_Boards_ctrl::setTxPDO(int slave_index, McESCTypes::pdo_tx pdo)
+{
+    std::unique_lock<std::mutex> (wr_mtx);
+    TxPDO_map[slave_index]=pdo;
+}
+
 
 int Ec_Boards_ctrl::recv_from_slaves() {
 
@@ -91,7 +104,8 @@ int Ec_Boards_ctrl::recv_from_slaves() {
         DPRINTF("fail recv_from_slaves\n");
         return 0;
     }
-
+    std::unique_lock<std::mutex> (rd_mtx);
+    
     ///////////////////////////////////////////////////////////////////////////
     for (auto it = slaves.begin(); it != slaves.end(); it++) {
         
@@ -107,13 +121,16 @@ int Ec_Boards_ctrl::recv_from_slaves() {
 int Ec_Boards_ctrl::send_to_slaves() {
 
     int wkc, retry = 2;
-
+    {
+    std::unique_lock<std::mutex> (wr_mtx);
+    
     for (auto it = slaves.begin(); it != slaves.end(); it++) {
         
         McESC * s = dynamic_cast<McESC*>(it->second.get());
         if (s) {
             s->setTxPDO(TxPDO_map[it->first]);
         }
+    }
     }
     //////////////
     //McESC * s = dynamic_cast<McESC*>(slaves[2].get());
@@ -164,6 +181,10 @@ int Ec_Boards_ctrl::mailbox_recv_from_slaves(int slave_index,std::string token, 
     int main_index=0;
     get_info(token,main_index,sub_index,size);
     int final_size=size;
+    std::string temp; temp.resize(9); temp[4]='\0';temp[8]='\0';
+    temp[0]=((char*)data)[0];temp[1]=((char*)data)[1];temp[2]=((char*)data)[2];temp[3]=((char*)data)[3];
+    if (final_size>4) temp[4]=((char*)data)[4];temp[5]=((char*)data)[5];temp[6]=((char*)data)[6];temp[7]=((char*)data)[7];
+    std::cout<<token<<" "<<main_index<<":"<<sub_index<<" =char "<<temp<<" =int "<<(int*)data<<" =float"<<(float*)data<<std::endl;
     int wkc = get_param(slave_index, main_index, sub_index, &final_size,data);
     if (wkc <= 0 || final_size!=size) { DPRINTF("fail sdo read\n"); }
     

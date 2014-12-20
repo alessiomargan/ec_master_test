@@ -19,6 +19,7 @@
 #include <iit/ecat/advr/mc_hipwr_esc.h>
 
 #include <string>
+#include <mutex>
 
 namespace iit {
 namespace ecat {
@@ -49,8 +50,10 @@ public:
 
     int set_operative();
 
+    const McESCTypes::pdo_rx& getRxPDO(int slave_index);
+    void setTxPDO(int slave_index, McESCTypes::pdo_tx pdo);
+    
     int recv_from_slaves(void);
-
     int send_to_slaves(void);
     
     uint64_t mailbox_recv_from_slaves_as_int(int slave_index, std::string token);
@@ -83,7 +86,8 @@ private:
     std::map<int,McESCTypes::pdo_rx> RxPDO_map;
     std::map<int,McESCTypes::pdo_tx> TxPDO_map;
     std::map<std::string, info_item> info_map;
-
+    std::mutex rd_mtx, wr_mtx;
+    
     bool get_info(std::string token,int& main_index,int& sub_index, int& size);
     void set_info_table();
     
