@@ -53,6 +53,10 @@ public:
 
     int send_to_slaves(void);
     
+    uint64_t mailbox_recv_from_slaves_as_int(int slave_index, std::string token);
+    std::string mailbox_recv_from_slaves_as_string(int slave_index, std::string token);
+    float mailbox_recv_from_slaves_as_float(int slave_index, std::string token);
+    
     int mailbox_recv_from_slaves(int slave_index, std::string token, void* data);
     
     int mailbox_send_to_slaves(int slave_index, std::string token, void* data);

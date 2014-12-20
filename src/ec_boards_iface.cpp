@@ -135,6 +135,29 @@ int Ec_Boards_ctrl::send_to_slaves() {
     return retry;
 }
 
+inline float Ec_Boards_ctrl::mailbox_recv_from_slaves_as_float(int slave_index,std::string token)
+{
+    float temp;
+    mailbox_recv_from_slaves(slave_index,token,(void*)&temp);
+    return temp;
+}
+
+inline std::string Ec_Boards_ctrl::mailbox_recv_from_slaves_as_string(int slave_index,std::string token)
+{
+    char temp[9];
+    mailbox_recv_from_slaves(slave_index,token,(void*)&temp);
+    temp[8]='\n';
+    return temp;
+}
+
+inline uint64_t Ec_Boards_ctrl::mailbox_recv_from_slaves_as_int(int slave_index,std::string token)
+{
+    uint64_t temp;
+    mailbox_recv_from_slaves(slave_index,token,(void*)&temp);
+    return temp;
+}
+
+
 int Ec_Boards_ctrl::mailbox_recv_from_slaves(int slave_index,std::string token, void* data){
     int sub_index=0;
     int size=0;
