@@ -182,6 +182,9 @@ int Ec_Boards_ctrl::mailbox_send_to_slaves(int slave_index,std::string token, vo
     get_info(token,main_index,sub_index,size);
     int wkc = set_param(slave_index, main_index, sub_index, size, data);
     if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
+    
+//     std::cout<<"-- sending token: "<<token<<"<--"<<std::endl;
+    
     return wkc;
 }
 
