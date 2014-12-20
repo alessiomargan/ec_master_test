@@ -17,6 +17,8 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
     //sync_cycle_time_ns = 100e6;     //   100ms
     sync_cycle_time_ns = 0;         //   no dc 
     sync_cycle_offset_ns = 500e6;   // 500ms
+    
+    set_info_table();
 }
 
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
@@ -141,6 +143,12 @@ int Ec_Boards_ctrl::mailbox_recv_from_slaves(int slave_index,std::string token, 
     int final_size=size;
     int wkc = get_param(slave_index, main_index, sub_index, &final_size,data);
     if (wkc <= 0 || final_size!=size) { DPRINTF("fail sdo read\n"); }
+    
+//     std::string temp; temp.resize(9); temp[4]='\0';temp[8]='\0';
+//     temp[0]=((char*)data)[0];temp[1]=((char*)data)[1];temp[2]=((char*)data)[2];temp[3]=((char*)data)[3];
+//     if (final_size>4) temp[4]=((char*)data)[4];temp[5]=((char*)data)[5];temp[6]=((char*)data)[6];temp[7]=((char*)data)[7];
+//     std::cout<<token<<" "<<main_index<<":"<<sub_index<<" =char "<<temp<<" =int "<<*(int*)data<<" =float"<<*(float*)data<<std::endl;
+  
     return wkc;
 }
 
@@ -172,7 +180,7 @@ void Ec_Boards_ctrl::set_info_table()
     for (int i=1;i<table_size;i++)
     {
         std::string temp=(char*)lookup_table1[i].data;
-        info_map[temp].index=0x8000;
+        info_map[temp].index=0x8001;
         info_map[temp].sub_index=lookup_table1[i].subindex;
         info_map[temp].size=lookup_table1[i].bitlength/8;
         std::cout<<temp<<" at "<<lookup_table1[i].subindex<<" size:"<<lookup_table1[i].bitlength<<std::endl;
