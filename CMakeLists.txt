@@ -32,6 +32,7 @@ link_directories(${SOEM_ROOT}/../lib/)
 
 add_library(walkman_master
                 src/ec_boards_iface.cpp
+                include/iit/mc_tm4c/objectlist.cpp
 )
 
 add_executable(
