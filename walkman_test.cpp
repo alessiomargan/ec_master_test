@@ -2,6 +2,7 @@
 #include <sys/mman.h>
 #include <execinfo.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #ifdef __XENO__
     #include <rtdk.h>
@@ -101,26 +102,26 @@ int main(int argc, char **argv)
     }
     
     int cnt = 0;
+    uint16_t  cmd = CTRL_POWER_MOD_OFF;
     while ( run_loop ) {
 
         ec_boards_ctrl->recv_from_slaves();
         
-        if ( cnt++ % 100 ) {
-            //TODO write and read some mailbox parameters here, just to show how to
-            /*
-             * 
-             * 
-             * 
-             * */
+        if ( (cnt % 1000) == 0) {
+            if (cmd == CTRL_POWER_MOD_OFF) {
+                cmd = CTRL_POWER_MOD_ON;
+            } else {
+                cmd = CTRL_POWER_MOD_OFF;
+            }
+            ec_boards_ctrl->set_ctrl_status(3,cmd);
         }
-      
+        cnt++;
+
         ec_boards_ctrl->send_to_slaves();
    
     }
 
-
-    finalize();
-
+    delete ec_boards_ctrl;
 
     return 0;
 }

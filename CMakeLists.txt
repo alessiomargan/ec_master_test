@@ -22,6 +22,8 @@ set(HEADER_INSTALL_ROOT /usr/local/include/ CACHE PATH "Where to install the hea
 set(LIB_INSTALL_ROOT    /usr/local/lib/     CACHE PATH "Where to install the libraries")
 set(SOEM_ROOT           $ENV{SOEM_ROOT}     CACHE PATH "Base path of the SOEM headers")
 
+add_definitions(-DKEEP_POWER_ON)
+
 ###########
 ## Build ##
 ###########
@@ -31,7 +33,8 @@ include_directories(${SOEM_ROOT}) # not to break the includes of the soem header
 link_directories(${SOEM_ROOT}/../lib/)
 
 add_library(walkman_master
-                src/ec_boards_iface.cpp
+    src/ec_boards_iface.cpp
+    src/mc_hipwr_esc.cpp
 )
 
 add_executable(

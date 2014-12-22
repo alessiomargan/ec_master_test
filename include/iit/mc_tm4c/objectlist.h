@@ -65,21 +65,21 @@ objd SDO8000[] =
 
 objd SDO8001[] =
 {
-    {0x0, DTYPE_UNSIGNED8,      8,	ATYPE_RO,	14, ""},
-    {0x1, DTYPE_VISIBLE_STRING, 64,	ATYPE_RO,	0, "firmware_version"},
-    {0x2, DTYPE_INTEGER16,      16,	ATYPE_RW,	0, "all"},
-    {0x3, DTYPE_REAL32,  	32,  	ATYPE_RW,	0, "Direct_ref"},
-    {0x4, DTYPE_REAL32,  	32,	ATYPE_RO,  	0, "V_batt_filt_100ms"},
-    {0x5, DTYPE_REAL32,  	32,  	ATYPE_RO,	0, "Board_Temperature"},
-    {0x6, DTYPE_REAL32,  	32,  	ATYPE_RO,	0, "T_mot1_filt_100ms"},
+    {0x0, DTYPE_UNSIGNED8,      8,	    ATYPE_RO,	14, ""},
+    {0x1, DTYPE_VISIBLE_STRING, 64,	    ATYPE_RO,	0, "firmware_version"},
+    {0x2, DTYPE_INTEGER16,      16,	    ATYPE_RW,	0, "all"},
+    {0x3, DTYPE_REAL32,  	    32,  	ATYPE_RW,	0, "Direct_ref"},
+    {0x4, DTYPE_REAL32,  	    32,	    ATYPE_RO,  	0, "V_batt_filt_100ms"},
+    {0x5, DTYPE_REAL32,  	    32,  	ATYPE_RO,	0, "Board_Temperature"},
+    {0x6, DTYPE_REAL32,  	    32,  	ATYPE_RO,	0, "T_mot1_filt_100ms"},
     {0x7, DTYPE_INTEGER16,  	16,  	ATYPE_RW,	0, "ctrl_status_cmd"},
     {0x8, DTYPE_INTEGER16,  	16,  	ATYPE_RO,	0, "ctrl_status_cmd_ack"},
     {0x9, DTYPE_INTEGER16,  	16,  	ATYPE_RW,	0, "flash_params_cmd"},
     {0xa, DTYPE_INTEGER16,  	16,  	ATYPE_RO,	0, "flash_params_cmd_ack"},
-    {0xb, DTYPE_REAL32,  	32,  	ATYPE_RO,	0, "abs_enc_mot"},
-    {0xc, DTYPE_REAL32,  	32,  	ATYPE_RO,	0, "abs_enc_load"},
+    {0xb, DTYPE_REAL32,  	    32,  	ATYPE_RO,	0, "abs_enc_mot"},
+    {0xc, DTYPE_REAL32,  	    32,  	ATYPE_RO,	0, "abs_enc_load"},
     {0xd, DTYPE_REAL32,         32, 	ATYPE_RO, 	0, "angle_enc_mot"},
-    {0xe, DTYPE_REAL32, 	32,	ATYPE_RO,	0, "angle_enc_load"},
+    {0xe, DTYPE_REAL32, 	    32,	    ATYPE_RO,	0, "angle_enc_load"},
 };
 
 #endif

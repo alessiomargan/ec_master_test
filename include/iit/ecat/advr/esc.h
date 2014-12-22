@@ -9,11 +9,26 @@
 #define __IIT_ECAT_ADVR_ESC_H__
 
 #include <iit/ecat/slave_wrapper.h>
-#include <stdint.h>
+#include <iit/ecat/utils.h>
+
+//#include <stdint.h>
 
 namespace iit {
 namespace ecat {
 namespace advr {
+
+#define ATYPE_RO 17
+#define ATYPE_RW 18
+
+typedef struct
+{
+    int index;
+    int subindex;
+    int bitlength;
+    int access;
+    void * data;
+    const char * name;
+} objd_t;
 
 
 struct TestESCTypes {
@@ -56,6 +71,7 @@ public:
     TestESC(const ec_slavet& slave_descriptor) :
            Base(slave_descriptor)
        {}
+    virtual ~TestESC(void) { DPRINTF("~TestESC %d\n", position); }
 };
 
 

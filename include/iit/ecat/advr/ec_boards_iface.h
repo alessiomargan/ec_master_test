@@ -24,6 +24,30 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
+/*
+CTRL_SET_DIRECT_MODE correnti nulle
+CTRL_POWER_MOD_ON 
+tx_pdo.pos_ref = rx_pdo.position 
+CTRL_SET_POS_MODE / CTRL_SET_IMPED_MODE
+*/
+
+// Control commands
+#define CTRL_POWER_MOD_ON		0x00A5
+#define CTRL_POWER_MOD_OFF		0x005A
+#define CTRL_SET_IMPED_MODE		0x00D4
+#define CTRL_SET_POS_MODE		0x003B
+#define CTRL_SET_DIRECT_MODE	0x004F
+#define CTRL_FAN_ON				0x0026
+#define CTRL_FAN_OFF			0x0062
+#define CTRL_LED_ON				0x0019
+#define CTRL_LED_OFF			0x0091
+#define CTRL_ALIGN_ENCODERS		0x00B2
+#define CTRL_SET_ZERO_POSITION	0x00AB
+#define CTRL_REMOVE_TORQUE_OFFS	0x00CD
+
+#define CTRL_CMD_DONE			0x7800
+#define CTRL_CMD_ERROR			0xAA00
+
 
 struct info_item
 {
@@ -57,18 +81,25 @@ public:
     
     int mailbox_send_to_slaves(int slave_index, std::string token, void* data);
 
-    inline int get_number_of_boards(){return slaves.size();};
+    inline int get_number_of_boards() {return slaves.size(); };
+
+    int set_ctrl_status(uint16_t sPos, uint16_t cmd);
+
 protected:
 
     void factory_board(void);
 
-    int set_param(int slave_pos, int index, int subindex, int size, void *data);
-    int get_param(int slave_pos, int index, int subindex, int *size, void *data);
+    int set_SDO(int slave_pos, int index, int subindex, int size, void *data);
+    int set_SDO(int slave_pos, const objd_t *sdo);
+
+    int get_SDO(int slave_pos, int index, int subindex, int *size, void *data);
+    int get_SDO(int slave_pos, const objd_t *sdo);
 
     SlavesMap slaves;
 
 private:
 
+    int             slave_cnt;
     int             expected_wkc;
     ec_timing_t     timing;
 
@@ -76,6 +107,9 @@ private:
 
     uint64_t    sync_cycle_time_ns;
     uint64_t    sync_cycle_offset_ns;
+
+    std::map<int,McESC *> mcSlaves;
+
     std::map<int,McESCTypes::pdo_rx> RxPDO_map;
     std::map<int,McESCTypes::pdo_tx> TxPDO_map;
     std::map<std::string, info_item> info_map;

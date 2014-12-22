@@ -13,19 +13,21 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
     // read conf file .....
     eth_if = std::string(config_file);
 
-    //sync_cycle_time_ns = 1e6;     //   1ms
-    //sync_cycle_time_ns = 100e6;     //   100ms
-    sync_cycle_time_ns = 0;         //   no dc 
+    sync_cycle_time_ns = 1e6;     //   1ms
+    //sync_cycle_time_ns = 10e6;      //  10ms
+    //sync_cycle_time_ns = 0;         //   no dc 
     sync_cycle_offset_ns = 500e6;   // 500ms
 }
 
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 
+    // std::shared_ptr slaves 
+
+#ifndef KEEP_POWER_ON
+    iit::ecat::power_off();
+#endif
     iit::ecat::finalize();
 
-    for (auto it = slaves.begin(); it != slaves.end(); it++) {
-        delete it->second.get();
-    }
 }
 
 int Ec_Boards_ctrl::init(void) {
@@ -42,33 +44,178 @@ int Ec_Boards_ctrl::init(void) {
 
 void Ec_Boards_ctrl::factory_board(void) {
 
-    //advr::TestESCTypes::pdo_tx  test_slave_1_tx_pdo;
-    //advr::TestESC *             test_slave_1 = new advr::TestESC(ec_slave[1]);
-    //slaves[1] = ESCPtr(test_slave_1);
-    
-    advr::McESC *mc_slave = new advr::McESC(ec_slave[1]);
-    slaves[1] = ESCPtr(mc_slave);
+    slave_cnt = ec_slavecount;
 
-    TxPDO_map[1];
-    //advr::McESC *               mc2_slave = new advr::McESC(ec_slave[3]);
-    //slaves[3] = ESCPtr(mc2_slave);
+    for (int i=1; i<=slave_cnt; i++) {
+        
+        if ( ec_slave[i].eep_id == 6 ) {
+            McESC * mc_slave = new McESC(ec_slave[i]);
+            slaves[i] = ESCPtr(mc_slave);
+            mcSlaves[i] = mc_slave;
+        }
+        if ( ec_slave[i].eep_id == 1234 ) {
+            TestESC * test_slave = new TestESC(ec_slave[i]);
+            slaves[i] = ESCPtr(test_slave);
+        }
+    }
 
     iit::ecat::setExpectedSlaves(slaves);
 
 
 }
 
-int Ec_Boards_ctrl::set_param(int slave_pos, int index, int subindex, int size, void *data) {
+int Ec_Boards_ctrl::set_SDO(int slave_pos, int index, int subindex, int size, void *data) {
 
-    return ec_SDOwrite(slave_pos, index, subindex, FALSE, size, data, EC_TIMEOUTRXM);
+    return ec_SDOwrite(slave_pos, index, subindex, false, size, data, EC_TIMEOUTRXM);
+}
+int Ec_Boards_ctrl::set_SDO(int slave_pos, const objd_t *sdo) {
+
+    //DPRINTF("set_SDO %s [%d.0x%04X.0x%02X]\n", sdo->name, slave_pos, sdo->index, sdo->subindex);
+
+    ec_errort ec_error;
+    int final_size = sdo->bitlength/8;
+    int wkc = ec_SDOwrite(slave_pos, sdo->index, sdo->subindex, false, final_size, sdo->data, EC_TIMEOUTRXM);
+    if (wkc <= 0) {
+        char * err =  ec_elist2string();
+        DPRINTF("Ec_error : %s\n", err);
+        //sleep(0.5);
+    } else if ( final_size!=sdo->bitlength/8 ) {
+        DPRINTF("SDO write fail : %d != %d\n", final_size, sdo->bitlength/8);
+        //sleep(0.5);
+    } else {
+        // OK ....
+    }
+
+    return wkc; 
 }
 
-int Ec_Boards_ctrl::get_param(int slave_pos, int index, int subindex, int *size, void *data) {
+int Ec_Boards_ctrl::get_SDO(int slave_pos, int index, int subindex, int *size, void *data) {
 
     return ec_SDOread(slave_pos, index, subindex, FALSE, size, data, EC_TIMEOUTRXM);
 }
+int Ec_Boards_ctrl::get_SDO(int slave_pos, const objd_t *sdo) {
+
+    //DPRINTF("get_SDO %s [%d.0x%04X.0x%02X]\n", sdo->name, slave_pos, sdo->index, sdo->subindex);
+
+    ec_errort ec_error;
+    int final_size = sdo->bitlength/8;
+    int wkc = ec_SDOread(slave_pos, sdo->index, sdo->subindex, false, &final_size, sdo->data, EC_TIMEOUTRXM);
+    if (wkc <= 0) {
+        char * err =  ec_elist2string();
+        DPRINTF("Ec_error : %s\n", err);
+        //sleep(0.5);
+    } else if ( final_size!=sdo->bitlength/8 ) {
+        DPRINTF("SDO read fail : [%d,0x%04X,0x%02X] %d != %d\n", slave_pos, sdo->index, sdo->subindex, final_size, sdo->bitlength/8);
+        //sleep(0.5);
+    } else {
+        // OK ....
+    }
+
+    return wkc; 
+}
 
 void Ec_Boards_ctrl::configure_boards(void) {
+
+    const McESC  * mc;
+    const objd_t * sdo = 0;
+
+    for (auto it = slaves.begin(); it != slaves.end(); it++) {
+        DPRINTF("Get SDOs from %d\n", it->first);
+        if ( (mc = dynamic_cast<McESC*>(it->second.get())) ) {
+            sdo = mc->SDOs;
+        } else if ( dynamic_cast<TestESC*>(it->second.get()) ) {
+            sdo = 0;
+        }
+        while ( sdo && sdo->index ) {
+
+            get_SDO(it->first, sdo);
+            sdo ++;
+        }
+    }
+    DPRINTF("End GET all SDOs\n");
+
+    /**
+     * set params ....
+     */
+    for (auto it = mcSlaves.begin(); it != mcSlaves.end(); it++) {
+
+        mc = it->second;
+        //mc->param. 
+    }
+    /**
+     * 
+     */
+#if 1
+    for (auto it = slaves.begin(); it != slaves.end(); it++) {
+        if ( (mc = dynamic_cast<McESC*>(it->second.get())) ) {
+            sdo = mc->SDOs;
+        } else if ( dynamic_cast<TestESC*>(it->second.get()) ) {
+            sdo = 0;
+        }
+        while ( sdo && sdo->index ) {
+            if (sdo->access == ATYPE_RW) {
+                set_SDO(it->first, sdo);
+            }
+            sdo ++;
+        }
+    }
+    DPRINTF("End SET all SDOs\n");
+#else
+    /*
+    mcSlaves[2]->param.ctrl_status_cmd = 2;
+    sdo = mcSlaves[2]->SDOs;
+    while ( sdo && strcmp(sdo->name,"pos_ref") ) { sdo ++; }
+    DPRINTF("SDOs idx %d %s\n", sdo - s->SDOs, sdo->name);
+    while ( sdo && strcmp(sdo->name,"Sensor_type") ) { sdo ++; }
+    DPRINTF("SDOs idx %d %s\n", sdo - s->SDOs, sdo->name);
+    while ( sdo && strcmp(sdo->name,"firmware_version") ) { sdo ++; }
+    DPRINTF("SDOs idx %d %s\n", sdo - s->SDOs, sdo->name);
+    while ( sdo && strcmp(sdo->name,"ctrl_status_cmd") ) { sdo ++; }
+    */
+    for (auto it = mcSlaves.begin(); it != mcSlaves.end(); it++) {
+
+        mc = it->second;
+        mc->param.ctrl_status_cmd = 2;
+        sdo = mc->SDOs8001 + 6;
+        if (sdo) {
+            DPRINTF("SDOs idx %d %s\n", sdo - mc->SDOs, sdo->name);
+            set_SDO(it->first, sdo);
+        }
+    }
+#endif
+
+
+}
+
+int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
+
+    const objd_t * sdo = 0;
+    const McESC * mc = mcSlaves[sPos];
+
+    if (!mc) {
+        return 0;
+    }
+    mc->param.ctrl_status_cmd = cmd & 0x00FF;
+    sdo = mc->SDOs8001 + 6;
+    if (sdo) {
+        DPRINTF("SDOs idx %d %s\n", sdo - mc->SDOs, sdo->name);
+        set_SDO(sPos, sdo);
+    }
+    sdo = mc->SDOs8001 + 7;
+    if (sdo) {
+        DPRINTF("SDOs idx %d %s\n", sdo - mc->SDOs, sdo->name);
+        get_SDO(sPos, sdo);
+    }
+
+    DPRINTF("set_ctrl_status ");
+    if ( mc->param.ctrl_status_cmd_ack == ((cmd & 0x00FF) | CTRL_CMD_DONE) ) {
+        DPRINTF("DONE\n");
+    } else if ( mc->param.ctrl_status_cmd_ack == ((cmd & 0x00FF) | CTRL_CMD_ERROR) ){
+        DPRINTF("FAIL\n");
+    } else {
+        DPRINTF("PROTOCOL FAILURE !!!\n");
+    }
+    
 }
 
 
@@ -95,7 +242,7 @@ int Ec_Boards_ctrl::recv_from_slaves() {
         
         McESC * s = dynamic_cast<McESC*>(it->second.get());
         if (s) {
-            RxPDO_map[it->first]=s->getRxPDO();
+            RxPDO_map[it->first] = s->getRxPDO();
         }
     }
 
@@ -106,6 +253,16 @@ int Ec_Boards_ctrl::send_to_slaves() {
 
     int wkc, retry = 2;
 
+#if 1
+    //////////////
+    static double time;
+    TxPDO_map[2].ts = get_time_ns();
+    TxPDO_map[2].pos_ref = 3000 * sinf(2*M_PI*time);
+    time += 0.001;
+    ////////////////////
+#endif
+
+
     for (auto it = slaves.begin(); it != slaves.end(); it++) {
         
         McESC * s = dynamic_cast<McESC*>(it->second.get());
@@ -113,15 +270,6 @@ int Ec_Boards_ctrl::send_to_slaves() {
             s->setTxPDO(TxPDO_map[it->first]);
         }
     }
-    //////////////
-    //McESC * s = dynamic_cast<McESC*>(slaves[2].get());
-    //advr::McESCTypes::pdo_tx    mc_tx_pdo;
-    //static double time;
-    //mc_tx_pdo.ts = get_time_ns();
-    //mc_tx_pdo.direct_ref = 3000 * sinf(2*M_PI*time);
-    //time += 0.001;
-    //s->setTxPDO(mc_tx_pdo);
-    ////////////////////
 
     wkc = iit::ecat::send_to_slaves();
 
@@ -133,13 +281,21 @@ int Ec_Boards_ctrl::send_to_slaves() {
     return retry;
 }
 
+
+
+/**
+ *  
+ *  
+ *  
+ */
+
 int Ec_Boards_ctrl::mailbox_recv_from_slaves(int slave_index,std::string token, void* data){
     int sub_index=0;
     int size=0;
     int main_index=0;
     get_info(token,main_index,sub_index,size);
     int final_size=size;
-    int wkc = get_param(slave_index, main_index, sub_index, &final_size,data);
+    int wkc = get_SDO(slave_index, main_index, sub_index, &final_size,data);
     if (wkc <= 0 || final_size!=size) { DPRINTF("fail sdo read\n"); }
     return wkc;
 }
@@ -149,7 +305,7 @@ int Ec_Boards_ctrl::mailbox_send_to_slaves(int slave_index,std::string token, vo
     int size=0;
     int main_index=0;
     get_info(token,main_index,sub_index,size);
-    int wkc = set_param(slave_index, main_index, sub_index, size, data);
+    int wkc = set_SDO(slave_index, main_index, sub_index, size, data);
     if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
     return wkc;
 }
