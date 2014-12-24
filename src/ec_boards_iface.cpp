@@ -8,6 +8,7 @@
 using namespace iit::ecat::advr;
 
 
+
 Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
 
     // read conf file .....
@@ -43,10 +44,11 @@ int Ec_Boards_ctrl::init(void) {
 }
 
 void Ec_Boards_ctrl::factory_board(void) {
-
+    
+    int i;
     slave_cnt = ec_slavecount;
 
-    for (int i=1; i<=slave_cnt; i++) {
+    for (i=1; i<=slave_cnt; i++) {
         
         if ( ec_slave[i].eep_id == 6 ) {
             McESC * mc_slave = new McESC(ec_slave[i]);
@@ -57,6 +59,7 @@ void Ec_Boards_ctrl::factory_board(void) {
             TestESC * test_slave = new TestESC(ec_slave[i]);
             slaves[i] = ESCPtr(test_slave);
         }
+
     }
 
     iit::ecat::setExpectedSlaves(slaves);
@@ -71,17 +74,18 @@ int Ec_Boards_ctrl::set_SDO(int slave_pos, int index, int subindex, int size, vo
 int Ec_Boards_ctrl::set_SDO(int slave_pos, const objd_t *sdo) {
 
     //DPRINTF("set_SDO %s [%d.0x%04X.0x%02X]\n", sdo->name, slave_pos, sdo->index, sdo->subindex);
-
-    ec_errort ec_error;
+    char * err;
+    ec_errort   ec_error;
     int final_size = sdo->bitlength/8;
-    int wkc = ec_SDOwrite(slave_pos, sdo->index, sdo->subindex, false, final_size, sdo->data, EC_TIMEOUTRXM);
-    if (wkc <= 0) {
-        char * err =  ec_elist2string();
-        DPRINTF("Ec_error : %s\n", err);
-        //sleep(0.5);
-    } else if ( final_size!=sdo->bitlength/8 ) {
-        DPRINTF("SDO write fail : %d != %d\n", final_size, sdo->bitlength/8);
-        //sleep(0.5);
+    int wkc = set_SDO(slave_pos, sdo->index, sdo->subindex, final_size, sdo->data);
+    if (wkc <= 0 || final_size!=sdo->bitlength/8 ) {
+        DPRINTF("Slave %d >> ", slave_pos);
+        if ( wkc <= 0 ) {
+            err =  ec_elist2string();
+            DPRINTF("Ec_error : %s\n", err);
+        } else {
+            DPRINTF("SDO write fail : %d != %d\n", final_size, sdo->bitlength/8);
+        }
     } else {
         // OK ....
     }
@@ -97,16 +101,18 @@ int Ec_Boards_ctrl::get_SDO(int slave_pos, const objd_t *sdo) {
 
     //DPRINTF("get_SDO %s [%d.0x%04X.0x%02X]\n", sdo->name, slave_pos, sdo->index, sdo->subindex);
 
+    char * err;
     ec_errort ec_error;
     int final_size = sdo->bitlength/8;
-    int wkc = ec_SDOread(slave_pos, sdo->index, sdo->subindex, false, &final_size, sdo->data, EC_TIMEOUTRXM);
-    if (wkc <= 0) {
-        char * err =  ec_elist2string();
-        DPRINTF("Ec_error : %s\n", err);
-        //sleep(0.5);
-    } else if ( final_size!=sdo->bitlength/8 ) {
-        DPRINTF("SDO read fail : [%d,0x%04X,0x%02X] %d != %d\n", slave_pos, sdo->index, sdo->subindex, final_size, sdo->bitlength/8);
-        //sleep(0.5);
+    int wkc = get_SDO(slave_pos, sdo->index, sdo->subindex, &final_size, sdo->data);
+    if (wkc <= 0 || final_size!=sdo->bitlength/8 ) {
+        DPRINTF("Slave %d >> ", slave_pos);
+        if ( wkc <= 0 ) {
+            err =  ec_elist2string();
+            DPRINTF("Ec_error : %s\n", err);
+        } else {
+            DPRINTF("SDO read fail : %d != %d\n", final_size, sdo->bitlength/8);
+        }
     } else {
         // OK ....
     }
@@ -147,6 +153,7 @@ void Ec_Boards_ctrl::configure_boards(void) {
      */
 #if 1
     for (auto it = slaves.begin(); it != slaves.end(); it++) {
+        DPRINTF("Set SDOs from %d\n", it->first);
         if ( (mc = dynamic_cast<McESC*>(it->second.get())) ) {
             sdo = mc->SDOs;
         } else if ( dynamic_cast<TestESC*>(it->second.get()) ) {
@@ -186,7 +193,14 @@ void Ec_Boards_ctrl::configure_boards(void) {
 
 
 }
-
+/**
+ *  McESC objects !!!!
+ * 
+ * @param sPos 
+ * @param cmd 
+ * 
+ * @return int 
+ */
 int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
 
     const objd_t * sdo = 0;
@@ -195,18 +209,24 @@ int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
     if (!mc) {
         return 0;
     }
+    // set ctrl_status_cmd value
     mc->param.ctrl_status_cmd = cmd & 0x00FF;
+    // get ctrl_status_cmd sdo pointer
     sdo = mc->SDOs8001 + 6;
     if (sdo) {
         DPRINTF("SDOs idx %d %s\n", sdo - mc->SDOs, sdo->name);
+        // set value to slave
         set_SDO(sPos, sdo);
     }
+    // get ctrl_status_cmd_Ack sdo pointer
     sdo = mc->SDOs8001 + 7;
     if (sdo) {
         DPRINTF("SDOs idx %d %s\n", sdo - mc->SDOs, sdo->name);
+        // get value from slave
         get_SDO(sPos, sdo);
     }
 
+    // check 
     DPRINTF("set_ctrl_status ");
     if ( mc->param.ctrl_status_cmd_ack == ((cmd & 0x00FF) | CTRL_CMD_DONE) ) {
         DPRINTF("DONE\n");
@@ -216,6 +236,31 @@ int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
         DPRINTF("PROTOCOL FAILURE !!!\n");
     }
     
+}
+
+
+
+int Ec_Boards_ctrl::check_sanity(void) {
+
+    const objd_t * sdo = 0;
+    const McESC * mc = 0;
+
+    // V_batt_filt_100ms , Board_Temperature , T_mot1_filt_100ms
+    const std::vector<int> x8001_offsets = {3,4,5};
+
+    for (auto sl_it = mcSlaves.begin(); sl_it != mcSlaves.end(); sl_it++) {
+        mc = sl_it->second;
+        for (auto it = x8001_offsets.begin(); it != x8001_offsets.end(); it++  ) {
+            sdo = mc->SDOs8001 + *it;
+            if (sdo) {
+                // get value from slave
+                if ( get_SDO(sl_it->first, sdo) <= 0 ) {
+                    ; // error
+                }
+            }
+        }
+    }
+
 }
 
 
@@ -262,9 +307,9 @@ int Ec_Boards_ctrl::send_to_slaves() {
     ////////////////////
 #endif
 
-
+    
     for (auto it = slaves.begin(); it != slaves.end(); it++) {
-        
+
         McESC * s = dynamic_cast<McESC*>(it->second.get());
         if (s) {
             s->setTxPDO(TxPDO_map[it->first]);

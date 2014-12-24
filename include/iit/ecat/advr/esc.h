@@ -71,7 +71,7 @@ public:
     TestESC(const ec_slavet& slave_descriptor) :
            Base(slave_descriptor)
        {}
-    virtual ~TestESC(void) { DPRINTF("~TestESC %d\n", position); }
+    virtual ~TestESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
 };
 
 

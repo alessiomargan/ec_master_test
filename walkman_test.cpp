@@ -96,6 +96,7 @@ int main(int argc, char **argv)
 
     ec_boards_ctrl->configure_boards();
 
+
     if ( ec_boards_ctrl->set_operative() <= 0) {
         delete ec_boards_ctrl;
         return 0;
@@ -106,17 +107,21 @@ int main(int argc, char **argv)
     while ( run_loop ) {
 
         ec_boards_ctrl->recv_from_slaves();
-        
-        if ( (cnt % 1000) == 0) {
+
+        if ( (cnt % 10) == 0) {
+            /*
             if (cmd == CTRL_POWER_MOD_OFF) {
                 cmd = CTRL_POWER_MOD_ON;
             } else {
                 cmd = CTRL_POWER_MOD_OFF;
             }
+            ec_boards_ctrl->set_ctrl_status(2,cmd);
             ec_boards_ctrl->set_ctrl_status(3,cmd);
+            */
+            ec_boards_ctrl->check_sanity();
         }
         cnt++;
-
+        
         ec_boards_ctrl->send_to_slaves();
    
     }

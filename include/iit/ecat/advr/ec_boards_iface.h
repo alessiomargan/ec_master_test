@@ -56,9 +56,17 @@ struct info_item
     int size;
 };
 
+
+
 /**
+ * TODO .... The Facade Pattern provides a unified interface to 
+ * a set of interfaces in a subsystem. Facade defines a 
+ * higher-level interface that makes the subsystem easier to 
+ * use. 
+ *  
  * @class Ec_Boards_ctrl
- * @brief Boards_ctrl class
+ *  
+ * @brief Boards_ctrl 
  */
 
 class Ec_Boards_ctrl {
@@ -85,6 +93,8 @@ public:
 
     int set_ctrl_status(uint16_t sPos, uint16_t cmd);
 
+    int check_sanity();
+
 protected:
 
     void factory_board(void);
@@ -95,7 +105,8 @@ protected:
     int get_SDO(int slave_pos, int index, int subindex, int *size, void *data);
     int get_SDO(int slave_pos, const objd_t *sdo);
 
-    SlavesMap slaves;
+    SlavesMap   slaves;
+    McSlavesMap mcSlaves;
 
 private:
 
@@ -108,7 +119,6 @@ private:
     uint64_t    sync_cycle_time_ns;
     uint64_t    sync_cycle_offset_ns;
 
-    std::map<int,McESC *> mcSlaves;
 
     std::map<int,McESCTypes::pdo_rx> RxPDO_map;
     std::map<int,McESCTypes::pdo_tx> TxPDO_map;
@@ -116,7 +126,8 @@ private:
 
     bool get_info(std::string token,int& main_index,int& sub_index, int& size);
     void set_info_table();
-    
+   
+
 };
 
 

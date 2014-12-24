@@ -46,6 +46,7 @@ const objd_t McESC::SDOs[] =
     { 0x8000, 0xd, 32, ATYPE_RO,    (void*)&McESC::flash_param.Enc_offset            ,  "Enc_offset"          },
     { 0x8000, 0xe, 32, ATYPE_RO,    (void*)&McESC::flash_param.Enc_relative_offset   ,  "Enc_relative_offset" },
     { 0x8000, 0xf, 32, ATYPE_RW,    (void*)&McESC::flash_param.Phase_angle           ,  "Phase_angle"         },
+    { 0x8000, 0x10,32, ATYPE_RW,    (void*)&McESC::flash_param.Torque_lin_coeff      ,  "Torque_lin_coeff"    },
 
     // SD0 0x8001
     { 0x8001, 0x1, 64, ATYPE_RO,    (void*)&McESC::param.firmware_version            ,  "firmware_version"       },
@@ -69,6 +70,8 @@ const objd_t McESC::SDOs[] =
 
 const objd_t * McESC::SDOs6000 = &McESC::SDOs[0];   // #6
 const objd_t * McESC::SDOs7000 = &McESC::SDOs[6];   // #6
-const objd_t * McESC::SDOs8000 = &McESC::SDOs[12];  // #15
-const objd_t * McESC::SDOs8001 = &McESC::SDOs[27];  // #14
+const objd_t * McESC::SDOs8000 = &McESC::SDOs[12];  // #16
+const objd_t * McESC::SDOs8001 = &McESC::SDOs[28];  // #14
+
+
 

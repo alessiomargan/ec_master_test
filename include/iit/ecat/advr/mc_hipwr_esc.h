@@ -18,6 +18,7 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/utils.h>
 
+#include <map>
 
 namespace iit {
 namespace ecat {
@@ -68,8 +69,8 @@ typedef struct {
 
     float Enc_offset;
     float Enc_relative_offset;
-
     float Phase_angle;
+    float Torque_lin_coeff;
 
 } tFlashParameters;
 
@@ -98,7 +99,6 @@ typedef struct
 class McESC : public BasicEscWrapper<McESCTypes>
 {
 
-
 public:
     typedef BasicEscWrapper<McESCTypes> Base;
 public:
@@ -106,7 +106,11 @@ public:
            Base(slave_descriptor) {
     }
 
-    virtual ~McESC(void) { DPRINTF("~McESC %d\n", position); }
+    virtual ~McESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
+
+
+    int start(void);
+    int stop(void);
 
 public:
 
@@ -124,6 +128,8 @@ public:
     static const objd_t * SDOs8001;
 
 };
+
+typedef std::map<int, McESC *>  McSlavesMap;
 
 
 }
