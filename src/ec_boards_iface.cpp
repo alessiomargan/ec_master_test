@@ -1,9 +1,10 @@
-#include <iit/ecat/advr/ec_boards_iface.h>
+#include "iit/ecat/advr/ec_boards_iface.h"
 #include "iit/mc_tm4c/objectlist.h"
 
 #include <math.h>
 #include <pwd.h>
 #include "iit/mc_tm4c/types.h"
+#include <mutex>
 
 using namespace iit::ecat::advr;
 
@@ -18,6 +19,8 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
     //sync_cycle_time_ns = 10e6;      //  10ms
     //sync_cycle_time_ns = 0;         //   no dc 
     sync_cycle_offset_ns = 500e6;   // 500ms
+    
+    set_info_table();
 }
 
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
@@ -270,6 +273,18 @@ int Ec_Boards_ctrl::set_operative() {
     return expected_wkc;
 }
 
+const McESCTypes::pdo_rx& Ec_Boards_ctrl::getRxPDO(int slave_index)
+{
+    std::unique_lock<std::mutex> (rd_mtx);
+    return RxPDO_map[slave_index];
+}
+
+void Ec_Boards_ctrl::setTxPDO(int slave_index, McESCTypes::pdo_tx pdo)
+{
+    std::unique_lock<std::mutex> (wr_mtx);
+    TxPDO_map[slave_index]=pdo;
+}
+
 
 int Ec_Boards_ctrl::recv_from_slaves() {
 
@@ -281,7 +296,8 @@ int Ec_Boards_ctrl::recv_from_slaves() {
         DPRINTF("fail recv_from_slaves\n");
         return 0;
     }
-
+    std::unique_lock<std::mutex> (rd_mtx);
+    
     ///////////////////////////////////////////////////////////////////////////
     for (auto it = slaves.begin(); it != slaves.end(); it++) {
         
@@ -297,7 +313,9 @@ int Ec_Boards_ctrl::recv_from_slaves() {
 int Ec_Boards_ctrl::send_to_slaves() {
 
     int wkc, retry = 2;
-
+    {
+    std::unique_lock<std::mutex> (wr_mtx);
+    
 #if 1
     //////////////
     static double time;
@@ -315,6 +333,7 @@ int Ec_Boards_ctrl::send_to_slaves() {
             s->setTxPDO(TxPDO_map[it->first]);
         }
     }
+    }
 
     wkc = iit::ecat::send_to_slaves();
 
@@ -326,13 +345,28 @@ int Ec_Boards_ctrl::send_to_slaves() {
     return retry;
 }
 
+inline float Ec_Boards_ctrl::mailbox_recv_from_slaves_as_float(int slave_index,std::string token)
+{
+    float temp;
+    mailbox_recv_from_slaves(slave_index,token,(void*)&temp);
+    return temp;
+}
 
+inline std::string Ec_Boards_ctrl::mailbox_recv_from_slaves_as_string(int slave_index,std::string token)
+{
+    char temp[9];
+    mailbox_recv_from_slaves(slave_index,token,(void*)&temp);
+    temp[8]='\n';
+    return temp;
+}
 
-/**
- *  
- *  
- *  
- */
+inline uint64_t Ec_Boards_ctrl::mailbox_recv_from_slaves_as_int(int slave_index,std::string token)
+{
+    uint64_t temp;
+    mailbox_recv_from_slaves(slave_index,token,(void*)&temp);
+    return temp;
+}
+
 
 int Ec_Boards_ctrl::mailbox_recv_from_slaves(int slave_index,std::string token, void* data){
     int sub_index=0;
@@ -341,6 +375,12 @@ int Ec_Boards_ctrl::mailbox_recv_from_slaves(int slave_index,std::string token, 
     get_info(token,main_index,sub_index,size);
     int final_size=size;
     int wkc = get_SDO(slave_index, main_index, sub_index, &final_size,data);
+    //     std::string temp; temp.resize(9); temp[4]='\0';temp[8]='\0';
+    //     temp[0]=((char*)data)[0];temp[1]=((char*)data)[1];temp[2]=((char*)data)[2];temp[3]=((char*)data)[3];
+    //     if (final_size>4) temp[4]=((char*)data)[4];temp[5]=((char*)data)[5];temp[6]=((char*)data)[6];temp[7]=((char*)data)[7];
+    //     std::cout<<token<<" "<<main_index<<":"<<sub_index<<" =char "<<temp<<" =int "<<*(int*)data<<" =float"<<*(float*)data<<std::endl;
+    
+    
     if (wkc <= 0 || final_size!=size) { DPRINTF("fail sdo read\n"); }
     return wkc;
 }
@@ -352,6 +392,9 @@ int Ec_Boards_ctrl::mailbox_send_to_slaves(int slave_index,std::string token, vo
     get_info(token,main_index,sub_index,size);
     int wkc = set_SDO(slave_index, main_index, sub_index, size, data);
     if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
+    
+//     std::cout<<"-- sending token: "<<token<<"<--"<<std::endl;
+    
     return wkc;
 }
 
@@ -373,7 +416,7 @@ void Ec_Boards_ctrl::set_info_table()
     for (int i=1;i<table_size;i++)
     {
         std::string temp=(char*)lookup_table1[i].data;
-        info_map[temp].index=0x8000;
+        info_map[temp].index=0x8001;
         info_map[temp].sub_index=lookup_table1[i].subindex;
         info_map[temp].size=lookup_table1[i].bitlength/8;
         std::cout<<temp<<" at "<<lookup_table1[i].subindex<<" size:"<<lookup_table1[i].bitlength<<std::endl;

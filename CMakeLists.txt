@@ -30,11 +30,12 @@ add_definitions(-DKEEP_POWER_ON)
 
 include_directories(./include)
 include_directories(${SOEM_ROOT}) # not to break the includes of the soem headers themselves
-link_directories(${SOEM_ROOT}/../lib/)
+link_directories(${SOEM_ROOT})
 
-add_library(walkman_master
+add_library(walkman_master SHARED
     src/ec_boards_iface.cpp
     src/mc_hipwr_esc.cpp
+                include/iit/mc_tm4c/objectlist.cpp
 )
 
 add_executable(
