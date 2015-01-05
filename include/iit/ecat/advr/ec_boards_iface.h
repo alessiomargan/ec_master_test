@@ -76,30 +76,122 @@ public:
     Ec_Boards_ctrl(const char * config);
     ~Ec_Boards_ctrl();
 
+    /**
+     * @brief Initializes the ethercat driver and creates the boards pointers
+     * 
+     * @return 1 on success, 0 on failure
+     */
     int init(void);
 
+    /**
+     * @brief reads and sets SDO, configure boards parameters
+     * 
+     * @return void
+     */
     void configure_boards(void);
 
+    /**
+     * @brief Starts the communication of the ethercat slaves (moves from starting to operative)
+     * 
+     * @return int the number of boards that acknowledged the operative request
+     */
     int set_operative();
 
+    /**
+     * @brief returns the PDO of the slave @p slave_index
+     * @note This will not receive anything, it will just return a copy of the last PDO received!
+     * @param slave_index id of the slave
+     * @return const iit::ecat::advr::McESCTypes::pdo_rx&
+     */
     const McESCTypes::pdo_rx& getRxPDO(int slave_index);
+    /**
+     * @brief Sends a PDO to a slave
+     * @note This will not send anything, it will just copy the PDO so that send_to_slaves() can send it     * 
+     * @param slave_index id of the slave
+     * @param pdo data to write
+     * @return void
+     */
     void setTxPDO(int slave_index, McESCTypes::pdo_tx pdo);
     
+    /**
+     * @brief This will receive a running train from all the slaves, and will fill the RxPDO_map returned from getRxPDO()
+     * 
+     * @return int the number of boards that returned a PDO
+     */
     int recv_from_slaves(void);
+    /**
+     * @brief This will send a running train to all the slaves, using the TxPDO_map set with setTxPDO()
+     * 
+     * @return int the number of boards that received the PDO
+     */
     int send_to_slaves(void);
     
+    /**
+     * @brief Receives a specific parameter from the board @p slave_index
+     * @note This method send a request packet and receive a return packet, the frequency of the calls to this method should not be higher than 5 hz
+     * @param slave_index id of the slave
+     * @param token name of the parameter to receive
+     * @return uint64_t
+     */
     uint64_t mailbox_recv_from_slaves_as_int(int slave_index, std::string token);
+    /**
+     * @brief @see mailbox_recv_from_slaves_as_int
+     * 
+     * @param slave_index id of the slave
+     * @param token 
+     * @return std::string
+     */
     std::string mailbox_recv_from_slaves_as_string(int slave_index, std::string token);
+    /**
+     * @brief @see mailbox_recv_from_slaves_as_int
+     * 
+     * @param slave_index id of the slave
+     * @param token 
+     * @return float
+     */
     float mailbox_recv_from_slaves_as_float(int slave_index, std::string token);
     
+    /**
+     * @brief Receives the parameter @p token from the slave @p slave_index, putting it into @p data
+     * 
+     * @param slave_index id of the slave
+     * @param token name of the parameter to receive
+     * @param data[out] value of the parameter
+     * @return int number of slaves that provided the parameter (should be 1)
+     */
     int mailbox_recv_from_slaves(int slave_index, std::string token, void* data);
     
+    /**
+     * @brief Sends the parameter @p token with value @p data to the slave @p slave_index
+     * 
+     * @param slave_index id of the slave
+     * @param token name of the parameter to send
+     * @param data value of the parameter
+     * @return int number of slaves that received the parameter (should be 1)
+     */
     int mailbox_send_to_slaves(int slave_index, std::string token, void* data);
 
+    /**
+     * @brief 
+     * 
+     * @return int number of slaves
+     */
     inline int get_number_of_boards() {return slaves.size(); };
 
+    /**
+     * @brief 
+     * 
+     * @param sPos 
+     * @param cmd 
+     * @return int
+     */
     int set_ctrl_status(uint16_t sPos, uint16_t cmd);
 
+    /**
+     * @brief Checks if temperature and currents in the boards are fine
+     * 
+     * @return int
+     */
     int check_sanity();
 
 protected:
