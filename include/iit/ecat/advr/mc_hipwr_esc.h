@@ -17,8 +17,17 @@
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/utils.h>
-
 #include <map>
+
+#define DTYPE_UNSIGNED8 0
+#define DTYPE_UNSIGNED16 1
+#define DTYPE_INTEGER16 2
+#define DTYPE_UNSIGNED64 3
+#define DTYPE_REAL32 4
+#define DTYPE_VISIBLE_STRING 5
+
+#define ATYPE_RO 17
+#define ATYPE_RW 18
 
 namespace iit {
 namespace ecat {

@@ -17,13 +17,11 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-#define ATYPE_RO 17
-#define ATYPE_RW 18
-
 typedef struct
 {
     int index;
     int subindex;
+    int datatype;
     int bitlength;
     int access;
     void * data;
