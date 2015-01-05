@@ -52,6 +52,7 @@ CTRL_SET_POS_MODE / CTRL_SET_IMPED_MODE
 
 struct info_item
 {
+    const objd_t* sdo_ptr;
     int index;
     int sub_index;
     int size;

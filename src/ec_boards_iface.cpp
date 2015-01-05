@@ -1,5 +1,4 @@
 #include "iit/ecat/advr/ec_boards_iface.h"
-#include "iit/mc_tm4c/objectlist.h"
 
 #include <math.h>
 #include <pwd.h>
@@ -198,11 +197,6 @@ void Ec_Boards_ctrl::configure_boards(void) {
 }
 /**
  *  McESC objects !!!!
- * 
- * @param sPos 
- * @param cmd 
- * 
- * @return int 
  */
 int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
 
@@ -217,14 +211,14 @@ int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
     // get ctrl_status_cmd sdo pointer
     sdo = mc->SDOs8001 + 6;
     if (sdo) {
-        DPRINTF("SDOs idx %d %s\n", sdo - mc->SDOs, sdo->name);
+        DPRINTF("SDOs idx %ld %s\n", sdo - mc->SDOs, sdo->name);
         // set value to slave
         set_SDO(sPos, sdo);
     }
     // get ctrl_status_cmd_Ack sdo pointer
     sdo = mc->SDOs8001 + 7;
     if (sdo) {
-        DPRINTF("SDOs idx %d %s\n", sdo - mc->SDOs, sdo->name);
+        DPRINTF("SDOs idx %ld %s\n", sdo - mc->SDOs, sdo->name);
         // get value from slave
         get_SDO(sPos, sdo);
     }
@@ -238,7 +232,7 @@ int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
     } else {
         DPRINTF("PROTOCOL FAILURE !!!\n");
     }
-    
+    //TODO return something!!
 }
 
 
@@ -249,21 +243,23 @@ int Ec_Boards_ctrl::check_sanity(void) {
     const McESC * mc = 0;
 
     // V_batt_filt_100ms , Board_Temperature , T_mot1_filt_100ms
-    const std::vector<int> x8001_offsets = {3,4,5};
-
+    std::vector<const objd_t*> offsets;// = {3,4,5};
+    offsets.push_back(info_map["V_batt_filt_100ms"].sdo_ptr);
+    offsets.push_back(info_map["Board_Temperature"].sdo_ptr);
+    offsets.push_back(info_map["T_mot1_filt_100ms"].sdo_ptr);
+    
     for (auto sl_it = mcSlaves.begin(); sl_it != mcSlaves.end(); sl_it++) {
         mc = sl_it->second;
-        for (auto it = x8001_offsets.begin(); it != x8001_offsets.end(); it++  ) {
-            sdo = mc->SDOs8001 + *it;
-            if (sdo) {
+        for (auto it = offsets.begin(); it != offsets.end(); it++  ) {
+            if (*it) {
                 // get value from slave
-                if ( get_SDO(sl_it->first, sdo) <= 0 ) {
+                if ( get_SDO(sl_it->first, *it) <= 0 ) {
                     ; // error
                 }
             }
         }
     }
-
+    //TODO return something!!
 }
 
 
@@ -400,26 +396,16 @@ int Ec_Boards_ctrl::mailbox_send_to_slaves(int slave_index,std::string token, vo
 
 void Ec_Boards_ctrl::set_info_table()
 {
-    const objd * lookup_table = SDO8000;
-    const objd * lookup_table1 = SDO8001;
-    
-    int table_size = lookup_table[0].value;
-    for (int i=1;i<table_size;i++)
+    const objd_t *it=McESC::SDOs;
+    while (it!=0)
     {
-        std::string temp=(char*)lookup_table[i].data;
-        info_map[temp].index=0x8000;
-        info_map[temp].sub_index=lookup_table[i].subindex;
-        info_map[temp].size=lookup_table[i].bitlength/8;
-        std::cout<<temp<<" at "<<lookup_table[i].subindex<<" size:"<<lookup_table[i].bitlength<<std::endl;
-    }
-    table_size = lookup_table1[0].value;
-    for (int i=1;i<table_size;i++)
-    {
-        std::string temp=(char*)lookup_table1[i].data;
-        info_map[temp].index=0x8001;
-        info_map[temp].sub_index=lookup_table1[i].subindex;
-        info_map[temp].size=lookup_table1[i].bitlength/8;
-        std::cout<<temp<<" at "<<lookup_table1[i].subindex<<" size:"<<lookup_table1[i].bitlength<<std::endl;
+        std::string temp=(char*)it->name;
+        info_map[temp].sdo_ptr=it;
+        info_map[temp].index=it->index;
+        info_map[temp].sub_index=it->subindex;
+        info_map[temp].size=it->bitlength/8;
+        std::cout<<temp<<" at "<<it->subindex<<" size:"<<it->bitlength<<std::endl;
+        it++;
     }
 }
 
