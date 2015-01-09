@@ -4,10 +4,9 @@
 #include <pwd.h>
 #include "iit/mc_tm4c/types.h"
 #include <mutex>
+#include <iit/ecat/advr/esc.h>
 
 using namespace iit::ecat::advr;
-
-
 
 Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
 
@@ -19,7 +18,7 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
     //sync_cycle_time_ns = 0;         //   no dc 
     sync_cycle_offset_ns = 500e6;   // 500ms
     
-    set_info_table();
+    set_info_tables();
 }
 
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
@@ -53,13 +52,18 @@ void Ec_Boards_ctrl::factory_board(void) {
     for (i=1; i<=slave_cnt; i++) {
         
         if ( ec_slave[i].eep_id == 6 ) {
-            McESC * mc_slave = new McESC(ec_slave[i]);
-            slaves[i] = ESCPtr(mc_slave);
+            HPESC * mc_slave = new HPESC(ec_slave[i]);
+            slaves[i] = iit::ecat::ESCPtr(mc_slave);
+            mcSlaves[i] = mc_slave;
+        }
+        if ( ec_slave[i].eep_id == 7 ) {
+            LPESC * mc_slave = new LPESC(ec_slave[i]);
+            slaves[i] = iit::ecat::ESCPtr(mc_slave);
             mcSlaves[i] = mc_slave;
         }
         if ( ec_slave[i].eep_id == 1234 ) {
             TestESC * test_slave = new TestESC(ec_slave[i]);
-            slaves[i] = ESCPtr(test_slave);
+            slaves[i] = iit::ecat::ESCPtr(test_slave);
         }
 
     }
@@ -73,6 +77,7 @@ int Ec_Boards_ctrl::set_SDO(int slave_pos, int index, int subindex, int size, vo
 
     return ec_SDOwrite(slave_pos, index, subindex, false, size, data, EC_TIMEOUTRXM);
 }
+
 int Ec_Boards_ctrl::set_SDO(int slave_pos, const objd_t *sdo) {
 
     //DPRINTF("set_SDO %s [%d.0x%04X.0x%02X]\n", sdo->name, slave_pos, sdo->index, sdo->subindex);
@@ -99,6 +104,7 @@ int Ec_Boards_ctrl::get_SDO(int slave_pos, int index, int subindex, int *size, v
 
     return ec_SDOread(slave_pos, index, subindex, FALSE, size, data, EC_TIMEOUTRXM);
 }
+
 int Ec_Boards_ctrl::get_SDO(int slave_pos, const objd_t *sdo) {
 
     //DPRINTF("get_SDO %s [%d.0x%04X.0x%02X]\n", sdo->name, slave_pos, sdo->index, sdo->subindex);
@@ -122,15 +128,15 @@ int Ec_Boards_ctrl::get_SDO(int slave_pos, const objd_t *sdo) {
     return wkc; 
 }
 
-void Ec_Boards_ctrl::configure_boards(void) {
+int Ec_Boards_ctrl::configure_boards(void) {
 
-    const McESC  * mc;
+    McESC  * mc;
     const objd_t * sdo = 0;
 
     for (auto it = slaves.begin(); it != slaves.end(); it++) {
         DPRINTF("Get SDOs from %d\n", it->first);
         if ( (mc = dynamic_cast<McESC*>(it->second.get())) ) {
-            sdo = mc->SDOs;
+            sdo = mc->get_SDOs();
         } else if ( dynamic_cast<TestESC*>(it->second.get()) ) {
             sdo = 0;
         }
@@ -157,13 +163,17 @@ void Ec_Boards_ctrl::configure_boards(void) {
     for (auto it = slaves.begin(); it != slaves.end(); it++) {
         DPRINTF("Set SDOs from %d\n", it->first);
         if ( (mc = dynamic_cast<McESC*>(it->second.get())) ) {
-            sdo = mc->SDOs;
+            sdo = mc->get_SDOs();
         } else if ( dynamic_cast<TestESC*>(it->second.get()) ) {
             sdo = 0;
         }
         while ( sdo && sdo->index ) {
+	    int wkc = 0;
             if (sdo->access == ATYPE_RW) {
-                set_SDO(it->first, sdo);
+                wkc = set_SDO(it->first, sdo);
+		if( wkc <= 0 ) {
+		    DPRINTF("Error SETTING SDO on board %d\n", it->first);
+		}
             }
             sdo ++;
         }
@@ -192,16 +202,17 @@ void Ec_Boards_ctrl::configure_boards(void) {
         }
     }
 #endif
-
+    return slaves.size();
 
 }
+
 /**
- *  McESC objects !!!!
+ *  TODO: change to McESC objects !!!!
  */
 int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
 
     const objd_t * sdo = 0;
-    const McESC * mc = mcSlaves[sPos];
+    HPESC * mc = (HPESC*)mcSlaves[sPos];	//TODO has to be generic
 
     if (!mc) {
         return 0;
@@ -209,16 +220,16 @@ int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
     // set ctrl_status_cmd value
     mc->param.ctrl_status_cmd = cmd & 0x00FF;
     // get ctrl_status_cmd sdo pointer
-    sdo = mc->SDOs8001 + 6;
+    sdo = mc->get_SDOs8001() + 6;
     if (sdo) {
-        DPRINTF("SDOs idx %ld %s\n", sdo - mc->SDOs, sdo->name);
+        DPRINTF("SDOs idx %ld %s\n", sdo - mc->get_SDOs(), sdo->name);
         // set value to slave
         set_SDO(sPos, sdo);
     }
     // get ctrl_status_cmd_Ack sdo pointer
-    sdo = mc->SDOs8001 + 7;
+    sdo = mc->get_SDOs8001() + 7;
     if (sdo) {
-        DPRINTF("SDOs idx %ld %s\n", sdo - mc->SDOs, sdo->name);
+        DPRINTF("SDOs idx %ld %s\n", sdo - mc->get_SDOs(), sdo->name);
         // get value from slave
         get_SDO(sPos, sdo);
     }
@@ -236,20 +247,22 @@ int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
 }
 
 
-
+/**
+ *  TODO: change to McESC objects !!!!
+ */
 int Ec_Boards_ctrl::check_sanity(void) {
 
     const objd_t * sdo = 0;
-    const McESC * mc = 0;
+    HPESC * mc = 0;		//TODO has to be generic
 
     // V_batt_filt_100ms , Board_Temperature , T_mot1_filt_100ms
     std::vector<const objd_t*> offsets;// = {3,4,5};
-    offsets.push_back(info_map["V_batt_filt_100ms"].sdo_ptr);
-    offsets.push_back(info_map["Board_Temperature"].sdo_ptr);
-    offsets.push_back(info_map["T_mot1_filt_100ms"].sdo_ptr);
+    offsets.push_back(info_map[Board_type::HIGH_POWER]["V_batt_filt_100ms"].sdo_ptr); //TODO has to be generic
+    offsets.push_back(info_map[Board_type::HIGH_POWER]["Board_Temperature"].sdo_ptr); //TODO has to be generic
+    offsets.push_back(info_map[Board_type::HIGH_POWER]["T_mot1_filt_100ms"].sdo_ptr); //TODO has to be generic
     
     for (auto sl_it = mcSlaves.begin(); sl_it != mcSlaves.end(); sl_it++) {
-        mc = sl_it->second;
+        mc = (HPESC*)sl_it->second;	//TODO has to be generic
         for (auto it = offsets.begin(); it != offsets.end(); it++  ) {
             if (*it) {
                 // get value from slave
@@ -368,7 +381,7 @@ int Ec_Boards_ctrl::mailbox_recv_from_slaves(int slave_index,std::string token, 
     int sub_index=0;
     int size=0;
     int main_index=0;
-    get_info(token,main_index,sub_index,size);
+    get_info(Board_type::HIGH_POWER, token,main_index,sub_index,size); //TODO has to be generic
     int final_size=size;
     int wkc = get_SDO(slave_index, main_index, sub_index, &final_size,data);
     //     std::string temp; temp.resize(9); temp[4]='\0';temp[8]='\0';
@@ -385,7 +398,7 @@ int Ec_Boards_ctrl::mailbox_send_to_slaves(int slave_index,std::string token, vo
     int sub_index=0;
     int size=0;
     int main_index=0;
-    get_info(token,main_index,sub_index,size);
+    get_info(Board_type::HIGH_POWER, token,main_index,sub_index,size); //TODO has to be generic
     int wkc = set_SDO(slave_index, main_index, sub_index, size, data);
     if (wkc <= 0 ) { DPRINTF("fail sdo read\n"); }
     
@@ -394,26 +407,49 @@ int Ec_Boards_ctrl::mailbox_send_to_slaves(int slave_index,std::string token, vo
     return wkc;
 }
 
-void Ec_Boards_ctrl::set_info_table()
+void Ec_Boards_ctrl::set_info_table(Board_type board_type, const objd_t *it)
 {
-    const objd_t *it=McESC::SDOs;
-    while (it!=0)
+    while( it != NULL && !(is_objd_t_zeros(*it)) )
     {
-        std::string temp=(char*)it->name;
-        info_map[temp].sdo_ptr=it;
-        info_map[temp].index=it->index;
-        info_map[temp].sub_index=it->subindex;
-        info_map[temp].size=it->bitlength/8;
-        std::cout<<temp<<" at "<<it->subindex<<" size:"<<it->bitlength<<std::endl;
-        it++;
+	std::string temp=(char*)it->name;
+	info_map[board_type][temp].sdo_ptr=it;
+	info_map[board_type][temp].index=it->index;
+	info_map[board_type][temp].sub_index=it->subindex;
+	info_map[board_type][temp].size=it->bitlength/8;
+	std::cout<<temp<<" at "<<it->subindex<<" size:"<<it->bitlength<<std::endl;
+	it++;
     }
 }
 
-bool Ec_Boards_ctrl::get_info(std::string token,int& main_index,int& sub_index, int& size)
+void Ec_Boards_ctrl::set_info_tables()
 {
-    if (!info_map.count(token)) return false;
-    sub_index=info_map[token].sub_index;
-    size=info_map[token].size;
-    main_index=info_map[token].index;
+    const objd_t *it;
+    
+    // HIGH POWER boards
+    it = &HPESC::SDOs[0];
+    set_info_table(Board_type::HIGH_POWER, it);
+    // LOW POWER boards
+    it = &LPESC::SDOs[0];
+    set_info_table(Board_type::LOW_POWER, it);
+}
+
+
+bool Ec_Boards_ctrl::get_info(Board_type board_type, std::string token,int& main_index,int& sub_index, int& size)
+{
+    if (!info_map.count(board_type) && !info_map[board_type].count(token)) return false;
+    sub_index=info_map[board_type][token].sub_index;
+    size=info_map[board_type][token].size;
+    main_index=info_map[board_type][token].index;
     return true;
+}
+
+bool Ec_Boards_ctrl::is_objd_t_zeros(const objd_t& objd)
+{
+    return  (objd.index == 0) &&
+	    (objd.subindex == 0) &&
+	    (objd.datatype == 0) &&
+	    (objd.bitlength == 0) &&
+	    (objd.access == 0) &&
+	    (objd.data == 0) &&
+	    (objd.name == 0);
 }

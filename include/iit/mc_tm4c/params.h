@@ -39,36 +39,6 @@
 #define PARAMS_PHASE_ANGLE_MIN			(float32)(0.0)
 #define PARAMS_PHASE_ANGLE_MAX			(float32)(6.2831853071796)	// TWO PI
 
-
-typedef struct
-{
-
-    unsigned long Sensor_type; 		// Sensor type: NOT USED
-
-    float TorGainP;
-    float TorGainI;
-    float TorGainD;
-
-    float TorGainFF;
-
-    float Pos_I_lim;				// Integral limit: NOT USED
-    float Tor_I_lim;				// Integral limit: NOT USED
-
-    float Min_pos;
-    float Max_pos;
-
-    float Max_vel;
-    float Max_tor;
-    float Max_cur;
-
-    float Enc_offset;
-    float Enc_relative_offset;
-
-    float Phase_angle;
-
-}
-tDriveParameters;
-
 #define FLASH_PARAMS_VALID		0xCAFE
 
 #define CONTROL_ACTIVE			1

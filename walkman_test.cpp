@@ -90,6 +90,7 @@ int main(int argc, char **argv)
     Ec_Boards_ctrl * ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
 
     if ( ec_boards_ctrl->init() <= 0) {
+        std::cout << "Error in boards init()... cannot proceed!" << std::endl;		
         delete ec_boards_ctrl;
         return 0;
     }
@@ -98,6 +99,7 @@ int main(int argc, char **argv)
 
 
     if ( ec_boards_ctrl->set_operative() <= 0) {
+        std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl;	
         delete ec_boards_ctrl;
         return 0;
     }

@@ -17,6 +17,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/mc_hipwr_esc.h>
+#include <iit/ecat/advr/mc_lowpwr_esc.h>
 
 #include <string>
 #include <mutex>
@@ -59,6 +60,11 @@ struct info_item
 };
 
 
+enum class Board_type 
+{ 
+    HIGH_POWER,
+    LOW_POWER
+}; 
 
 /**
  * TODO .... The Facade Pattern provides a unified interface to 
@@ -89,7 +95,7 @@ public:
      * 
      * @return void
      */
-    void configure_boards(void);
+    int configure_boards(void);
 
     /**
      * @brief Starts the communication of the ethercat slaves (moves from starting to operative)
@@ -222,11 +228,16 @@ private:
 
     std::map<int,McESCTypes::pdo_rx> RxPDO_map;
     std::map<int,McESCTypes::pdo_tx> TxPDO_map;
-    std::map<std::string, info_item> info_map;
+    std::map<Board_type, std::map<std::string, info_item>> info_map;
     std::mutex rd_mtx, wr_mtx;
     
-    bool get_info(std::string token,int& main_index,int& sub_index, int& size);
-    void set_info_table();
+    bool get_info(Board_type board_type, std::string token,int& main_index,int& sub_index, int& size);
+    
+    void set_info_tables();
+    void set_info_table(Board_type board_type, const objd_t *it);
+    
+    //TODO move in the appropriate class
+    bool is_objd_t_zeros(const objd_t& objd);
    
 
 };

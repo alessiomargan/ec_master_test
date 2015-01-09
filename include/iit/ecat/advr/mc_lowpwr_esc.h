@@ -11,8 +11,8 @@
  *      Author: alessio margan
  */
 
-#ifndef __IIT_ECAT_ADVR_MC_HIPWR_ESC_H__
-#define __IIT_ECAT_ADVR_MC_HIPWR_ESC_H__
+#ifndef __IIT_ECAT_ADVR_MC_LOWPWR_ESC_H__
+#define __IIT_ECAT_ADVR_MC_LOWPWR_ESC_H__
 
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
@@ -23,67 +23,74 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-
 typedef struct {
-
-    unsigned long Sensor_type;      // Sensor type: NOT USED
-
+    int Block_control;
+    int nonius_offset_low;
+    float PosGainP;
+    float PosGainI;
+    float PosGainD;
     float TorGainP;
     float TorGainI;
     float TorGainD;
-    float TorGainFF;
-
-    float Pos_I_lim;                // Integral limit: NOT USED
-    float Tor_I_lim;                // Integral limit: NOT USED
-
+    float Torque_Mult;
+    float Pos_I_lim;
+    float Tor_I_lim;
     float Min_pos;
     float Max_pos;
-    float Max_vel;
+    int nonius_offset_high;
     float Max_tor;
     float Max_cur;
-
-    float Enc_offset;
-    float Enc_relative_offset;
-    float Phase_angle;
-    float Torque_lin_coeff;
-
-} HPtFlashParameters;
+    int Enc_offset_1;
+    int Enc_offset_2;
+    float Torque_Offset;
+    int16_t ConfigFlags;
+    int16_t ConfigFlags2;
+    int NumEncoderLines;
+    float ImpedancePosGainP;
+    int nonius_offset2_low;
+    float ImpedancePosGainD;
+    int Num_Abs_counts_rev;
+    int MaxPWM;
+    float Gearbox_ratio;
+    int ulCalPosition;
+    int Cal_Abs_Position;
+    int Cal_Abs2_Position;
+    int nonius_offset2_high;
+    
+} LPtFlashParameters;
 
 typedef struct 
 {
     char        firmware_version[8];
-    uint16_t    ack_board_fault_all;
-    float       Direct_ref;
+    uint16_t    ack_board_fault;
+    uint16_t    set_ctrl_status;
+    uint16_t    get_ctrl_status;
     float       V_batt_filt_100ms;
-    float       Board_Temperature;
+    float       T_inv_filt_100ms;
     float       T_mot1_filt_100ms;
-    uint16_t    ctrl_status_cmd;
-    uint16_t    ctrl_status_cmd_ack;
     uint16_t    flash_params_cmd;
-    uint16_t    flash_params_cmd_ack;
-    uint64_t    abs_enc_mot;
-    uint64_t    abs_enc_load;     
-    float       angle_enc_mot;
-    float       angle_enc_load;     
-} HPtParameters;
+    uint16_t    flash_params_cmd_ack;     
+} LPtParameters;
 
 /**
  *  
  **/ 
 
-class HPESC : public McESC
+class LPESC : public McESC
 {
+
 public:
-    HPESC(const ec_slavet& slave_descriptor) :
+    LPESC(const ec_slavet& slave_descriptor) :
            McESC(slave_descriptor) {
     }
 
-    virtual ~HPESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
+    virtual ~LPESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
 
 public:
 
-    static HPtFlashParameters flash_param;
-    static HPtParameters      param;
+    static LPtFlashParameters flash_param;
+    static LPtParameters      param;
+
 
     static const objd_t SDOs[];
     //
@@ -99,7 +106,6 @@ public:
     virtual const objd_t* get_SDOs8001() { return SDOs8001; };
 
 };
-
 
 
 }
