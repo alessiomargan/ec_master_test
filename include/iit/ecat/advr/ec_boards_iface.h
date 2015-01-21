@@ -16,8 +16,10 @@
 #include <iit/ecat/slave_wrapper.h>
 
 #include <iit/ecat/advr/esc.h>
+#include <iit/ecat/advr/test_esc.h>
 #include <iit/ecat/advr/mc_hipwr_esc.h>
 #include <iit/ecat/advr/mc_lowpwr_esc.h>
+#include <iit/ecat/advr/ft6_esc.h>
 
 #include <string>
 #include <mutex>
@@ -63,7 +65,8 @@ struct info_item
 enum class Board_type 
 { 
     HIGH_POWER,
-    LOW_POWER
+    LOW_POWER,
+    FT6
 }; 
 
 /**
@@ -110,7 +113,9 @@ public:
      * @param slave_index id of the slave
      * @return const iit::ecat::advr::McESCTypes::pdo_rx&
      */
-    const McESCTypes::pdo_rx& getRxPDO(int slave_index);
+    void getRxPDO(int slave_index, McESCTypes::pdo_rx &pdo);
+    void getRxPDO(int slave_index, FtESCTypes::pdo_rx &pdo);
+
     /**
      * @brief Sends a PDO to a slave
      * @note This will not send anything, it will just copy the PDO so that send_to_slaves() can send it     * 
@@ -119,7 +124,8 @@ public:
      * @return void
      */
     void setTxPDO(int slave_index, McESCTypes::pdo_tx pdo);
-    
+    void setTxPDO(int slave_index, FtESCTypes::pdo_tx pdo);
+
     /**
      * @brief This will receive a running train from all the slaves, and will fill the RxPDO_map returned from getRxPDO()
      * 
@@ -193,6 +199,8 @@ public:
      * @return int
      */
     int set_ctrl_status(uint16_t sPos, uint16_t cmd);
+    int set_flash_cmd(uint16_t sPos, uint16_t cmd);
+    int set_cal_matrix(uint16_t sPos, std::vector<std::vector<float>> &cal_matrix);
 
     /**
      * @brief Checks if temperature and currents in the boards are fine
@@ -200,6 +208,21 @@ public:
      * @return int
      */
     int check_sanity();
+
+    /**
+     * @brief update slave firmware using FOE
+     * 
+     * @return int
+     */
+    int update_board_firmware(uint16_t slave_pos, std::string firmware, uint32_t passwd_firm);
+
+    McESC * slave_as_MC(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<McESC*>(slaves[sPos].get()) : NULL;}
+    FtESC * slave_as_FT(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<FtESC*>(slaves[sPos].get()) : NULL;}
+
+    void rd_LOCK(void);
+    void rd_UNLOCK(void);
+    void wr_LOCK(void);
+    void wr_UNLOCK(void);
 
 protected:
 
@@ -213,6 +236,7 @@ protected:
 
     SlavesMap   slaves;
     McSlavesMap mcSlaves;
+    FtSlavesMap ftSlaves;
 
 private:
 
@@ -225,12 +249,20 @@ private:
     uint64_t    sync_cycle_time_ns;
     uint64_t    sync_cycle_offset_ns;
 
+    std::map<int,FtESCTypes::pdo_rx> FtRxPDO_map;
+    std::map<int,FtESCTypes::pdo_tx> FtTxPDO_map;
 
-    std::map<int,McESCTypes::pdo_rx> RxPDO_map;
-    std::map<int,McESCTypes::pdo_tx> TxPDO_map;
+    std::map<int,McESCTypes::pdo_rx> McRxPDO_map;
+    std::map<int,McESCTypes::pdo_tx> McTxPDO_map;
+
     std::map<Board_type, std::map<std::string, info_item>> info_map;
-    std::mutex rd_mtx, wr_mtx;
-    
+
+#ifdef __XENO__
+    pthread_mutex_t rd_mtx, wr_mtx;
+#else
+    std::mutex      rd_mtx, wr_mtx;
+#endif    
+
     bool get_info(Board_type board_type, std::string token,int& main_index,int& sub_index, int& size);
     
     void set_info_tables();
@@ -242,6 +274,38 @@ private:
 
 };
 
+
+inline void Ec_Boards_ctrl::rd_LOCK(void)
+{
+#ifdef __XENO__
+    pthread_mutex_lock(&rd_mtx);
+#else
+    std::unique_lock<std::mutex> (rd_mtx);
+#endif
+}
+
+inline void Ec_Boards_ctrl::rd_UNLOCK(void)
+{
+#ifdef __XENO__
+    pthread_mutex_unlock(&rd_mtx);
+#endif
+}
+
+inline void Ec_Boards_ctrl::wr_LOCK(void)
+{
+#ifdef __XENO__
+    pthread_mutex_lock(&rd_mtx);
+#else
+    std::unique_lock<std::mutex> (wr_mtx);
+#endif
+}
+
+inline void Ec_Boards_ctrl::wr_UNLOCK(void)
+{
+#ifdef __XENO__
+    pthread_mutex_unlock(&wr_mtx);
+#endif
+}
 
 } 
 }

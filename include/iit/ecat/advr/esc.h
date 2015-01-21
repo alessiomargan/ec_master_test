@@ -1,8 +1,7 @@
 /*
- * motor controller.h
  *
- *  Created on: Jun 26, 2014
- *      Author: mfrigerio
+ *  Created on: Dec, 2014
+ *      Author: alessio margan
  */
 
 #ifndef __IIT_ECAT_ADVR_ESC_H__
@@ -42,7 +41,7 @@ typedef struct
 struct McESCTypes {
     // TX  slave_input -- master output
     typedef struct {
-        float	    	pos_ref;
+        float	    pos_ref;
         float		tor_offs;
         float		PosGainP;
         float		PosGainI;
@@ -53,48 +52,19 @@ struct McESCTypes {
 
     // RX  slave_output -- master input
     typedef struct {
-        float	    	position;   		// rad
+        float		max_temperature; 	// C
+        float	    position;   		// rad
         float		velocity;   		// rad/s
         float		torque;     		// Nm
-        float		max_temperature; 	// C
-        uint16_t    	fault;
+        uint16_t    fault;
         uint64_t	rtt;        		// ns
+
+        void fprint(FILE *fp) {
+            fprintf(fp, "%f\t%f\t%f\t%f\t%d\t%lld\n", max_temperature,position,velocity,torque,fault,rtt);
+        }
+
     }  __attribute__((__packed__)) pdo_rx;
 };
-
-
-struct TestESCTypes {
-    // TX  slave_input -- master output
-    typedef struct {
-        uint16_t    _type;
-        int32_t     _value;
-        uint64_t    _ts;
-    } __attribute__((__packed__)) pdo_tx;
-
-
-    // RX  slave_output -- master input
-    typedef struct {
-        uint8_t     _bit_0:1;
-        uint8_t     _bit_1:1;
-        uint8_t     _bit_2:1;
-        uint8_t     _bit_3:1;
-        uint8_t     _bit_4:1;
-        uint8_t     _bit_5:1;
-        uint8_t     _bit_6:1;
-        uint8_t     _bit_7:1;
-        uint8_t     _bits;
-        int8_t      _sint;
-        uint8_t     _usint;
-        int16_t     _int;
-        uint16_t    _uint;
-        int32_t     _dint;
-        uint32_t    _udint;
-        int64_t     _lint;
-        uint64_t    _ulint;
-        float       _real;
-    } __attribute__((__packed__)) pdo_rx;
-};
-
 
 
 class McESC : public BasicEscWrapper<McESCTypes>
@@ -110,7 +80,7 @@ public:
     virtual ~McESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
 
 public:
-    
+   
     virtual const objd_t * get_SDOs() = 0;
     virtual const objd_t * get_SDOs6000() = 0;
     virtual const objd_t * get_SDOs7000() = 0;
@@ -126,24 +96,7 @@ public:
 // typedef std::shared_ptr<McESC>  McESCPtr;
 typedef std::map<int, McESC*>  McSlavesMap;
 
-
-
-
-
-
-
-class TestESC : public BasicEscWrapper<TestESCTypes>
-{
-public:
-    typedef BasicEscWrapper<TestESCTypes> Base;
-public:
-    TestESC(const ec_slavet& slave_descriptor) :
-           Base(slave_descriptor)
-       {}
-    virtual ~TestESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
-};
-
-
+    
 
 } 
 }

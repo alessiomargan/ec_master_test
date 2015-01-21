@@ -2,11 +2,6 @@
 #include <string>
 using namespace iit::ecat::advr;
 
-// LPtFlashParameters    LPESC::flash_param;
-// LPtParameters         LPESC::param; 
-// LPESCTypes::pdo_rx LPESC::sdo_rx_pdo;
-// LPESCTypes::pdo_tx LPESC::sdo_tx_pdo;
-
 char acName1000[] = "Device Type";
 char acName1000_0[] = "Device Type";
 char acName1008[] = "Manufacturer Device Name";
@@ -67,7 +62,6 @@ char acName7000_4[] = "IGain";
 char acName7000_5[] = "DGain";
 char acName7000_6[] = "ts";
 
-
 char acName8000[] = "Flash Parameter";
 char acName8000_0[] = "Number of Elements";
 char acName8000_1[] = "Block control";
@@ -114,6 +108,11 @@ char acName8001_6[] = "T_inv";
 char acName8001_7[] = "T_mot";
 char acName8001_8[] = "flash_parameters_command";
 char acName8001_9[] = "flash_parameters_command_ack";
+
+LPtFlashParameters  LPESC::flash_param;
+LPtParameters       LPESC::param; 
+//LPESCTypes::pdo_rx  LPESC::sdo_rx_pdo;
+//LPESCTypes::pdo_tx  LPESC::sdo_tx_pdo;
 
 const objd_t LPESC::SDOs[] =
 {
@@ -183,5 +182,5 @@ const objd_t LPESC::SDOs[] =
 
 const objd_t * LPESC::SDOs6000 = &LPESC::SDOs[0];   // #6
 const objd_t * LPESC::SDOs7000 = &LPESC::SDOs[6];   // #6
-const objd_t * LPESC::SDOs8000 = &LPESC::SDOs[12];  // #16
-const objd_t * LPESC::SDOs8001 = &LPESC::SDOs[28];  // #14
+const objd_t * LPESC::SDOs8000 = &LPESC::SDOs[12];  // #32
+const objd_t * LPESC::SDOs8001 = &LPESC::SDOs[44];  // #9

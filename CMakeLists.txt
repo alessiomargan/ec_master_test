@@ -37,17 +37,32 @@ add_library(walkman_master SHARED
     src/ec_boards_iface.cpp
     src/mc_hipwr_esc.cpp
     src/mc_lowpwr_esc.cpp
+    src/ft6_esc.cpp
+    src/test_esc.cpp
 )
-
-# add_executable(
-#     walkman_test
-#     walkman_test.cpp)
 
 target_link_libraries(walkman_master iitecat_iface soem pthread )
 
-# target_link_libraries(
-#     walkman_test walkman_master
-#     iitecat_iface soem pthread)
+
+add_executable(
+     ft_ati_test
+     src/ati_iface.cpp
+     ft_ati_test.cpp)
+
+target_link_libraries(ft_ati_test walkman_master iitecat_iface soem pthread)
+
+add_executable(
+     walkman_test
+     walkman_test.cpp)
+
+target_link_libraries(walkman_test walkman_master iitecat_iface soem pthread)
+
+
+add_executable(
+     firm_update
+     firm_update.cpp)
+
+target_link_libraries(firm_update walkman_master iitecat_iface soem pthread)
 
 
 # Install

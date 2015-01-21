@@ -1,11 +1,13 @@
 #include <iit/ecat/advr/mc_hipwr_esc.h>
 #include <string>
+
 using namespace iit::ecat::advr;
 
-// HPtFlashParameters    HPESC::flash_param;
-// HPtParameters         HPESC::param;
-// HPESCTypes::pdo_rx HPESC::sdo_rx_pdo;
-// HPESCTypes::pdo_tx HPESC::sdo_tx_pdo;
+HPtFlashParameters  HPESC::flash_param;
+HPtParameters       HPESC::param;
+
+McESCTypes::pdo_tx  McESC::sdo_tx_pdo;
+McESCTypes::pdo_rx  McESC::sdo_rx_pdo;
 
 const objd_t HPESC::SDOs[] =
 {
@@ -42,6 +44,8 @@ const objd_t HPESC::SDOs[] =
     { 0x8000, 0xe, DTYPE_REAL32,        32, ATYPE_RO,    "Enc_relative_offset"   ,(void*)&HPESC::flash_param.Enc_relative_offset },
     { 0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW,    "Phase_angle"           ,(void*)&HPESC::flash_param.Phase_angle         },
     { 0x8000, 0x10,DTYPE_REAL32,        32, ATYPE_RW,    "Torque_lin_coeff"      ,(void*)&HPESC::flash_param.Torque_lin_coeff    },
+    { 0x8000, 0x11,DTYPE_UNSIGNED64,    64, ATYPE_RW,    "Enc_mot_nonius_calib"  ,(void*)&HPESC::flash_param.Enc_mot_nonius_calib},
+    { 0x8000, 0x12,DTYPE_UNSIGNED64,    64, ATYPE_RW,    "Enc_load_nonius_calib" ,(void*)&HPESC::flash_param.Enc_load_nonius_calib},
 
     // SD0 0x8001
     { 0x8001, 0x1, DTYPE_VISIBLE_STRING,64, ATYPE_RO,    "firmware_version"  		 ,(void*)&HPESC::param.firmware_version       },
@@ -58,6 +62,8 @@ const objd_t HPESC::SDOs[] =
     { 0x8001, 0xc, DTYPE_REAL32,        32, ATYPE_RO,    "abs_enc_load"  		 ,(void*)&HPESC::param.abs_enc_load           },
     { 0x8001, 0xd, DTYPE_REAL32,        32, ATYPE_RO, 	 "angle_enc_mot" 		 ,(void*)&HPESC::param.angle_enc_mot          },
     { 0x8001, 0xe, DTYPE_REAL32,        32, ATYPE_RO,	 "angle_enc_load" 		 ,(void*)&HPESC::param.angle_enc_load         },
+    { 0x8001, 0xf, DTYPE_REAL32,        32, ATYPE_RO, 	 "angle_enc_diff" 		 ,(void*)&HPESC::param.angle_enc_diff          },
+    { 0x8001, 0x10,DTYPE_REAL32,        32, ATYPE_RO,	 "iq_ref" 		         ,(void*)&HPESC::param.iq_ref         },
     
     {0, 0, 0, 0, 0, 0}
 
@@ -65,8 +71,8 @@ const objd_t HPESC::SDOs[] =
 
 const objd_t * HPESC::SDOs6000 = &HPESC::SDOs[0];   // #6
 const objd_t * HPESC::SDOs7000 = &HPESC::SDOs[6];   // #6
-const objd_t * HPESC::SDOs8000 = &HPESC::SDOs[12];  // #16
-const objd_t * HPESC::SDOs8001 = &HPESC::SDOs[28];  // #14
+const objd_t * HPESC::SDOs8000 = &HPESC::SDOs[12];  // #18
+const objd_t * HPESC::SDOs8001 = &HPESC::SDOs[30];  // #16
 
 
 

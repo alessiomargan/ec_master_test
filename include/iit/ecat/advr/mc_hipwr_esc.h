@@ -47,6 +47,9 @@ typedef struct {
     float Phase_angle;
     float Torque_lin_coeff;
 
+    uint64_t   Enc_mot_nonius_calib;  
+    uint64_t   Enc_load_nonius_calib;  
+
 } HPtFlashParameters;
 
 typedef struct 
@@ -65,6 +68,8 @@ typedef struct
     uint64_t    abs_enc_load;     
     float       angle_enc_mot;
     float       angle_enc_load;     
+    float       angle_enc_diff;
+    float       iq_ref;     
 } HPtParameters;
 
 /**
