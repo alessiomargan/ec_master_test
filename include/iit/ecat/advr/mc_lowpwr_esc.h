@@ -23,7 +23,10 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-typedef struct {
+struct LoPwrEscSdoTypes {
+    
+    // flash
+
     int Block_control;
     int nonius_offset_low;
     float PosGainP;
@@ -56,11 +59,12 @@ typedef struct {
     int Cal_Abs_Position;
     int Cal_Abs2_Position;
     int nonius_offset2_high;
-    
-} LPtFlashParameters;
 
-typedef struct 
-{
+    int16_t     Joint_number;
+    int16_t     Joint_robot_id;
+
+    // ram
+
     char        firmware_version[8];
     uint16_t    ack_board_fault;
     uint16_t    set_ctrl_status;
@@ -70,42 +74,45 @@ typedef struct
     float       T_mot1_filt_100ms;
     uint16_t    flash_params_cmd;
     uint16_t    flash_params_cmd_ack;     
-} LPtParameters;
+};
 
 /**
  *  
  **/ 
 
-class LPESC : public McESC
+class LpESC : public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>
 {
-
 public:
-    LPESC(const ec_slavet& slave_descriptor) :
-           McESC(slave_descriptor) {
+    typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> Base;
+
+    LpESC(const ec_slavet& slave_descriptor) :
+           Base(slave_descriptor)
+    {
+        init_SDOs();
+        init_sdo_lookup();
+    }
+    virtual ~LpESC(void) { 
+        delete [] SDOs;
+        DPRINTF("~%s %d\n", typeid(this).name(), position);
     }
 
-    virtual ~LPESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
+    int16_t get_joint_robot_id() {
+        //assert(sdo.Joint_robot_id != -1);
+        return sdo.Joint_robot_id;
+    }
 
-public:
+    void print_info(void) {
+        DPRINTF("\n min pos %f\tmax pos %f \n", sdo.Min_pos, sdo.Max_pos);
+    }
 
-    static LPtFlashParameters flash_param;
-    static LPtParameters      param;
+    virtual const objd_t * get_SDO_objd() { return SDOs; }
+    virtual void init_SDOs(void);
 
-
-    static const objd_t SDOs[];
-    //
-    static const objd_t * SDOs6000;
-    static const objd_t * SDOs7000;
-    static const objd_t * SDOs8000;
-    static const objd_t * SDOs8001;
-    
-    virtual const objd_t* get_SDOs() { return SDOs; };
-    virtual const objd_t* get_SDOs6000() { return SDOs6000; };
-    virtual const objd_t* get_SDOs7000() { return SDOs7000; };
-    virtual const objd_t* get_SDOs8000() { return SDOs8000; };
-    virtual const objd_t* get_SDOs8001() { return SDOs8001; };
+private:
+    objd_t * SDOs;
 
 };
+
 
 
 }

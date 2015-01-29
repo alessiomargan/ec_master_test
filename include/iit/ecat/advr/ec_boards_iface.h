@@ -24,33 +24,11 @@
 #include <string>
 #include <mutex>
 
+#include <boost/variant.hpp>
+
 namespace iit {
 namespace ecat {
 namespace advr {
-
-/*
-CTRL_SET_DIRECT_MODE correnti nulle
-CTRL_POWER_MOD_ON 
-tx_pdo.pos_ref = rx_pdo.position 
-CTRL_SET_POS_MODE / CTRL_SET_IMPED_MODE
-*/
-
-// Control commands
-#define CTRL_POWER_MOD_ON		0x00A5
-#define CTRL_POWER_MOD_OFF		0x005A
-#define CTRL_SET_IMPED_MODE		0x00D4
-#define CTRL_SET_POS_MODE		0x003B
-#define CTRL_SET_DIRECT_MODE	0x004F
-#define CTRL_FAN_ON				0x0026
-#define CTRL_FAN_OFF			0x0062
-#define CTRL_LED_ON				0x0019
-#define CTRL_LED_OFF			0x0091
-#define CTRL_ALIGN_ENCODERS		0x00B2
-#define CTRL_SET_ZERO_POSITION	0x00AB
-#define CTRL_REMOVE_TORQUE_OFFS	0x00CD
-
-#define CTRL_CMD_DONE			0x7800
-#define CTRL_CMD_ERROR			0xAA00
 
 
 struct info_item
@@ -68,6 +46,33 @@ enum class Board_type
     LOW_POWER,
     FT6
 }; 
+
+
+enum class Robot_IDs : std::int32_t 
+{ 
+    RL_H_Y = 41,
+    RL_H_R,
+    RL_H_P,
+    RL_K,
+    RL_A_P,
+    RL_A_R,
+
+    LL_H_Y = 51,
+    LL_H_R,
+    LL_H_P,
+    LL_K,
+    LL_A_P,
+    LL_A_R,
+
+
+}; 
+
+
+typedef boost::variant<HpESC*, LpESC*, bool> McEscVar;
+typedef std::map<int, McEscVar>  McSlavesMap;
+
+typedef std::map<int, int>  Rid2PosMap;
+
 
 /**
  * TODO .... The Facade Pattern provides a unified interface to 
@@ -113,8 +118,8 @@ public:
      * @param slave_index id of the slave
      * @return const iit::ecat::advr::McESCTypes::pdo_rx&
      */
-    void getRxPDO(int slave_index, McESCTypes::pdo_rx &pdo);
-    void getRxPDO(int slave_index, FtESCTypes::pdo_rx &pdo);
+    void getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo);
+    void getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo);
 
     /**
      * @brief Sends a PDO to a slave
@@ -123,8 +128,8 @@ public:
      * @param pdo data to write
      * @return void
      */
-    void setTxPDO(int slave_index, McESCTypes::pdo_tx pdo);
-    void setTxPDO(int slave_index, FtESCTypes::pdo_tx pdo);
+    void setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo);
+    void setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo);
 
     /**
      * @brief This will receive a running train from all the slaves, and will fill the RxPDO_map returned from getRxPDO()
@@ -139,6 +144,7 @@ public:
      */
     int send_to_slaves(void);
     
+#if 0
     /**
      * @brief Receives a specific parameter from the board @p slave_index
      * @note This method send a request packet and receive a return packet, the frequency of the calls to this method should not be higher than 5 hz
@@ -184,6 +190,7 @@ public:
      */
     int mailbox_send_to_slaves(int slave_index, std::string token, void* data);
 
+#endif
     /**
      * @brief 
      * 
@@ -207,7 +214,7 @@ public:
      * 
      * @return int
      */
-    int check_sanity();
+    int check_sanity(uint16_t sPos);
 
     /**
      * @brief update slave firmware using FOE
@@ -216,8 +223,10 @@ public:
      */
     int update_board_firmware(uint16_t slave_pos, std::string firmware, uint32_t passwd_firm);
 
-    McESC * slave_as_MC(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<McESC*>(slaves[sPos].get()) : NULL;}
-    FtESC * slave_as_FT(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<FtESC*>(slaves[sPos].get()) : NULL;}
+    HpESC *  slave_as_HP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<HpESC*>(slaves[sPos].get()) : NULL;}
+    //MpESC *  slave_as_MP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<MpESC*>(slaves[sPos].get()) : NULL;}
+    LpESC *  slave_as_LP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<LpESC*>(slaves[sPos].get()) : NULL;}
+    Ft6ESC * slave_as_FT(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Ft6ESC*>(slaves[sPos].get()) : NULL;}
 
     void rd_LOCK(void);
     void rd_UNLOCK(void);
@@ -228,16 +237,10 @@ protected:
 
     void factory_board(void);
 
-    int set_SDO(int slave_pos, int index, int subindex, int size, void *data);
-    int set_SDO(int slave_pos, const objd_t *sdo);
-
-    int get_SDO(int slave_pos, int index, int subindex, int *size, void *data);
-    int get_SDO(int slave_pos, const objd_t *sdo);
-
     SlavesMap   slaves;
-    McSlavesMap mcSlaves;
+    //McSlavesMap mcSlaves;
     FtSlavesMap ftSlaves;
-
+    
 private:
 
     int             slave_cnt;
@@ -249,13 +252,11 @@ private:
     uint64_t    sync_cycle_time_ns;
     uint64_t    sync_cycle_offset_ns;
 
-    std::map<int,FtESCTypes::pdo_rx> FtRxPDO_map;
-    std::map<int,FtESCTypes::pdo_tx> FtTxPDO_map;
+    std::map<int,Ft6EscPdoTypes::pdo_rx> FtRxPDO_map;
+    std::map<int,Ft6EscPdoTypes::pdo_tx> FtTxPDO_map;
 
-    std::map<int,McESCTypes::pdo_rx> McRxPDO_map;
-    std::map<int,McESCTypes::pdo_tx> McTxPDO_map;
-
-    std::map<Board_type, std::map<std::string, info_item>> info_map;
+    std::map<int,McEscPdoTypes::pdo_rx> McRxPDO_map;
+    std::map<int,McEscPdoTypes::pdo_tx> McTxPDO_map;
 
 #ifdef __XENO__
     pthread_mutex_t rd_mtx, wr_mtx;
@@ -263,14 +264,6 @@ private:
     std::mutex      rd_mtx, wr_mtx;
 #endif    
 
-    bool get_info(Board_type board_type, std::string token,int& main_index,int& sub_index, int& size);
-    
-    void set_info_tables();
-    void set_info_table(Board_type board_type, const objd_t *it);
-    
-    //TODO move in the appropriate class
-    bool is_objd_t_zeros(const objd_t& objd);
-   
 
 };
 

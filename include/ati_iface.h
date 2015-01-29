@@ -8,7 +8,6 @@
 #include <boost/circular_buffer.hpp>
 
 #include <mutex>
-#include <fstream>
 #include <string>
 
 #include <iit/ecat/utils.h>
@@ -42,20 +41,6 @@ typedef struct {
 } ati_log_t ; // 36 bytes
 
 
-template <typename T>
-inline void dump_buffer(std::string filename, T t) {
-
-    char buffer[1024];
-    std::ofstream log_file(filename.c_str());
-
-    for ( typename T::iterator it=t.begin(); it!=t.end(); it++ ) {
-        (*it).sprint(buffer, sizeof(buffer));
-        log_file << std::string(buffer);
-    }
-    log_file << std::flush;
-    log_file.close();
-
-}
 
 
 class Ati_Sens  

@@ -9,6 +9,7 @@
 #endif
 
 #include <boost/circular_buffer.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
@@ -17,24 +18,35 @@ using namespace iit::ecat::advr;
 
 static int run_loop = 1;
 
+#define DEG2RAD(X)  ((float)X*M_PI)/180.0
 
-typedef struct {
-    uint64_t    ts;
-    float       ati[6];
-    float       iit[6];
-    float       dummy[6];
-    void sprint(char *buff, size_t size) {
-        snprintf(buff, size, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
-                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
-    }
-    void fprint(FILE *fp) {
-        fprintf(fp, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
-                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
-    }
-} sens_data_t ; 
 
+extern Rid2PosMap  rid2pos;
+
+
+static void load_trj(std::string filename, std::vector<std::vector<float>> &trj) {
+
+    std::string     line;
+    std::fstream    file(filename, std::ios::in);
+
+    typedef boost::tokenizer<boost::char_separator<char>> Tokenizer;
+    boost::char_separator<char> sep(",");
+
+    if (file) {
+        while (getline(file, line)) {
+            Tokenizer info(line, sep); // tokenize the line of data
+            std::vector<float> values;
+            for (Tokenizer::iterator it = info.begin(); it != info.end(); ++it) {
+                // convert data into double value, and store
+                values.push_back(atof(it->c_str()));
+            }
+            // store array of values
+            trj.push_back(values);
+        }
+    } else {
+        std::cerr << "Error: Unable to open file " << filename << std::endl;
+    }
+}
 
 
 static void warn_upon_switch(int sig __attribute__((unused)))
@@ -79,13 +91,10 @@ int main(int argc, char **argv)
 {
     int ret;
 
-    boost::circular_buffer<sens_data_t> sens_log;
-    sens_log.set_capacity(LOG_SIZE);
-
     set_signal_handler();
 
 #ifdef __XENO__
-    
+
     int policy = SCHED_FIFO;
     struct sched_param  schedparam;
     schedparam.sched_priority = sched_get_priority_max(policy);
@@ -107,7 +116,7 @@ int main(int argc, char **argv)
 #endif
 
     if ( argc != 2 ) {
-    printf("Usage: %s ifname\nifname = {eth0,rteth0} for example\n", argv[0]);
+        printf("Usage: %s ifname\nifname = {eth0,rteth0} for example\n", argv[0]);
         return 0;
     }
 
@@ -117,98 +126,268 @@ int main(int argc, char **argv)
 
     ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
 
-    if ( ec_boards_ctrl->init() <= 0) {
-        std::cout << "Error in boards init()... cannot proceed!" << std::endl;		
+    if ( ec_boards_ctrl->init() <= 0 ) {
+        std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
         delete ec_boards_ctrl;
         return 0;
     }
     ec_boards_ctrl->configure_boards();
 
-    if ( ec_boards_ctrl->set_operative() <= 0) {
-        std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl;	
+    if ( ec_boards_ctrl->set_operative() <= 0 ) {
+        std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl; 
         delete ec_boards_ctrl;
         return 0;
     }
-    
+
+
     int cnt = 0;
+    McEscPdoTypes::pdo_rx mc_pdo_rx;
+    McEscPdoTypes::pdo_tx mc_pdo_tx;
+
+    Ft6EscPdoTypes::pdo_rx ft_pdo_rx;
+    Ft6EscPdoTypes::pdo_tx ft_pdo_tx;
+
     uint16_t  cmd = CTRL_POWER_MOD_OFF;
 
-    static double time;
-    McESCTypes::pdo_rx mc_pdo_rx;
-    McESCTypes::pdo_tx mc_pdo_tx;
-
-    FtESCTypes::pdo_rx ft_pdo_rx;
-    FtESCTypes::pdo_tx ft_pdo_tx;
-
     uint64_t    start = get_time_ns();
+    uint64_t    dt;
+    double time = 0;
+    int sPos = 0;
+#if 0
+    std::vector<int> rIDs = {
+        41, 42, 43, 44, 45, 46,
+        51, 52, 53, 54, 55, 56
+    };
+#else
+    std::vector<int> rIDs = {
+        42, 43, 44, 45, 46,
+        52, 53, 54, 55, 56
+    };
+#endif
+    
+    std::map<int,int> rid2col;
+    rid2col[41] = 0;
+    rid2col[42] = 1;
+    rid2col[43] = 2;
+    rid2col[44] = 3;
+    rid2col[45] = 4;
+    rid2col[46] = 5;
+    rid2col[51] = 6;
+    rid2col[52] = 7;
+    rid2col[53] = 8;
+    rid2col[54] = 9;
+    rid2col[55] = 10;
+    rid2col[56] = 11;
 
-    ec_boards_ctrl->set_ctrl_status(7,CTRL_SET_DIRECT_MODE);
-    ec_boards_ctrl->set_ctrl_status(8,CTRL_SET_DIRECT_MODE);
-    ec_boards_ctrl->set_ctrl_status(7,CTRL_POWER_MOD_ON);
-    ec_boards_ctrl->set_ctrl_status(8,CTRL_POWER_MOD_ON);
+    std::map<int,int> syn;
+    syn[41] = 1;
+    syn[42] = 1;
+    syn[43] = 1;
+    syn[44] = 1;
+    syn[45] = -1;
+    syn[46] = -1;
+    syn[51] = 1;
+    syn[52] = 1;
+    syn[53] = -1;
+    syn[54] = -1;
+    syn[55] = 1;
+    syn[56] = 1;
+    std::map<int,float> off;
+    off[41] = 0;
+    off[42] = 0;
+    off[43] = 0;
+    off[44] = 0;
+    off[45] = DEG2RAD(-20);
+    off[46] = 0;
+    off[51] = 0;
+    off[52] = 0;
+    off[53] = 0;
+    off[54] = 0;
+    off[55] = DEG2RAD(-20);;
+    off[56] = 0;
 
-    ec_boards_ctrl->recv_from_slaves();
+#define MID_POS(m,M)    (m+(M-m)/2)
+    std::map<int,float> home;
+    home[41] = MID_POS(2.28,3.75);
+    home[42] = MID_POS(1.60,4.02);
+    home[43] = MID_POS(1.06,4.02);
+    home[44] = 4.31; //MID_POS(,);
+    home[45] = MID_POS(2.07,4.26);
+    home[46] = M_PI; //MID_POS(,);
 
-    ec_boards_ctrl->getRxPDO(7, mc_pdo_rx);
-    mc_pdo_tx.pos_ref = mc_pdo_rx.position;
-    mc_pdo_tx.PosGainP = 200;
-    mc_pdo_tx.PosGainI = 0;
-    mc_pdo_tx.PosGainD = 10;
-    mc_pdo_tx.ts = get_time_ns();
-    ec_boards_ctrl->setTxPDO(7, mc_pdo_tx);
+    home[51] = MID_POS(2.63,3.96);
+    home[52] = MID_POS(2.27,4.73);
+    home[53] = MID_POS(2.09,5.23);
+    home[54] = MID_POS(0.80,3.15);
+    home[55] = MID_POS(2.07,4.19);
+    home[56] = MID_POS(2.36,3.90);
 
-    ec_boards_ctrl->getRxPDO(8, mc_pdo_rx);
-    mc_pdo_tx.pos_ref = mc_pdo_rx.position;
-    mc_pdo_tx.PosGainP = 200;
-    mc_pdo_tx.PosGainI = 0;
-    mc_pdo_tx.PosGainD = 10;
-    mc_pdo_tx.ts = get_time_ns();
-    ec_boards_ctrl->setTxPDO(8, mc_pdo_tx);
+    for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
+        std::cout << *it << " " << home[*it] << std::endl; 
+    }
 
-    ec_boards_ctrl->send_to_slaves();
+    std::vector<std::vector<float>> trj;
+    load_trj("walk_5cm_5steps.csv", trj);
 
-    ec_boards_ctrl->set_ctrl_status(7,CTRL_SET_POS_MODE);
-    ec_boards_ctrl->set_ctrl_status(8,CTRL_SET_POS_MODE);
+#if 0
+    std::vector<std::vector<float>>::const_iterator it = trj.begin();
+    while ( it != trj.end()) {
+        std::vector<float> row(*it);
+        std::vector<float>::const_iterator rit = row.begin();
+        while ( rit != row.end()) {
+            std::cout << (*rit) << "\t";
+            rit ++;
+        }
+        std::cout << std::endl;
+        it ++;
+    }
+#endif
+    
+    std::vector<std::vector<float>>::const_iterator it = trj.begin();
+    std::vector<float> row(*it);
+    std::vector<float>::const_iterator rit = row.begin();
+    while ( rit != row.end()) {
+        std::cout << (*rit) << "\t";
+        rit ++;
+    }
+    std::cout << std::endl;
+    it ++;
+    row = *it;
+    rit = row.begin();
+    home[41] = M_PI - (syn[41]*off[41]) + (syn[41]*(*rit)); rit++;
+    home[42] = M_PI - (syn[42]*off[42]) + (syn[42]*(*rit)); rit++;
+    home[43] = M_PI - (syn[43]*off[43]) + (syn[43]*(*rit)); rit++;
+    home[44] = M_PI - (syn[44]*off[44]) + (syn[44]*(*rit)); rit++;
+    home[45] = M_PI - (syn[45]*off[45]) + (syn[45]*(*rit)); rit++;
+    home[46] = M_PI - (syn[46]*off[46]) + (syn[46]*(*rit)); rit++;
+    home[51] = M_PI - (syn[51]*off[51]) + (syn[51]*(*rit)); rit++;
+    home[52] = M_PI - (syn[52]*off[52]) + (syn[52]*(*rit)); rit++;
+    home[53] = M_PI - (syn[53]*off[53]) + (syn[53]*(*rit)); rit++;
+    home[54] = M_PI - (syn[54]*off[54]) + (syn[54]*(*rit)); rit++;
+    home[55] = M_PI - (syn[55]*off[55]) + (syn[55]*(*rit)); rit++;
+    home[56] = M_PI - (syn[56]*off[56]) + (syn[56]*(*rit)); rit++;
 
+    for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
+        std::cout << *it << " " << home[*it] << std::endl; 
+    }
 
-    sleep(1);
+    // set all motor to stay where they are ....
+    for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
 
-    ec_boards_ctrl->recv_from_slaves();
+        sPos = rid2pos[*it];
 
-    mc_pdo_tx.pos_ref = M_PI;
-    mc_pdo_tx.ts = get_time_ns();
-    ec_boards_ctrl->setTxPDO(7, mc_pdo_tx);
-    ec_boards_ctrl->setTxPDO(8, mc_pdo_tx);
+        ec_boards_ctrl->set_ctrl_status(sPos, CTRL_SET_DIRECT_MODE);
+        ec_boards_ctrl->set_ctrl_status(sPos, CTRL_POWER_MOD_ON);
 
-    ec_boards_ctrl->send_to_slaves();
-
-
-    while ( run_loop ) {
-        
         ec_boards_ctrl->recv_from_slaves();
 
-        if ( (cnt % 10) == 0) {
-            ec_boards_ctrl->check_sanity();
+        ec_boards_ctrl->getRxPDO(sPos, mc_pdo_rx);
+        mc_pdo_tx.pos_ref = mc_pdo_rx.position;
+        if ( *it == 42 || *it == 46 || *it == 52 || *it == 56 ) {
+            // medium
+            mc_pdo_tx.PosGainP = 30;
+            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainD = 0.2;
+        } else {
+
+            // big
+            mc_pdo_tx.PosGainP = 200;
+            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainD = 3;
         }
-        cnt++;
-
-        ///////////////////////////////////////////////////////////////////////
-        time += 0.002;
-        mc_pdo_tx.pos_ref = M_PI + sinf(2*M_PI*time);
-        mc_pdo_tx.ts = get_time_ns();
-        ec_boards_ctrl->setTxPDO(7, mc_pdo_tx);
-        ec_boards_ctrl->setTxPDO(8, mc_pdo_tx);
-
-        ///////////////////////////////////////////////////////////////////////
+        ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
 
         ec_boards_ctrl->send_to_slaves();
-   
+
+        ec_boards_ctrl->set_ctrl_status(sPos, CTRL_SET_POS_MODE);
+
+        // go to
+        while ( run_loop ) {
+
+            // rx from all
+            ec_boards_ctrl->recv_from_slaves();
+            // rID rx pdo
+            ec_boards_ctrl->getRxPDO(sPos, mc_pdo_rx);
+            if ( fabs(mc_pdo_rx.position - home[*it]) > 0.1 ) {
+                if ( mc_pdo_rx.position > home[*it] ) {
+                    mc_pdo_tx.pos_ref -= 0.0005;
+                } else {
+                    mc_pdo_tx.pos_ref += 0.0005;
+                }
+                DPRINTF("%d GO to %f --> %f\n", *it, home[*it], mc_pdo_tx.pos_ref);
+                ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
+
+                ec_boards_ctrl->send_to_slaves();
+
+                osal_usleep(1000);
+
+            } else {
+                break;
+            }
+        }
+
+    }
+
+
+    std::vector<std::vector<float>>::const_iterator trj_it = trj.begin();
+    trj_it++;
+    trj_it++;
+
+ 
+    while ( run_loop ) {
+
+        // TO REMOVE
+        //osal_usleep(2000);
+
+        ec_boards_ctrl->recv_from_slaves();
+
+        if ( trj_it != trj.end() ) {
+
+            row = *trj_it;
+            rit = row.begin();
+
+            for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
+
+                sPos = rid2pos[*it];
+                ec_boards_ctrl->getRxPDO(sPos, mc_pdo_rx);
+                mc_pdo_tx.pos_ref = M_PI - (syn[*it]*off[*it]) + (syn[*it]*(row[rid2col[*it]]));
+                DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
+                ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
+
+            }
+            trj_it++;
+            DPRINTF("\n\n");
+
+        } else {
+            //trj_it = trj.begin();
+            //trj_it++;
+            break;
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        //dt = get_time_ns() - start;
+        //time += 0.0001;
+        //mc_pdo_tx.pos_ref = home[*it] + 0.2 * sinf(2*M_PI*time);
+        //DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
+        //ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
+        ///////////////////////////////////////////////////////////////////////
+        
+        ec_boards_ctrl->send_to_slaves();
+
+        if ( (cnt % 10) == 0 ) {
+            //ec_boards_ctrl->check_sanity(sPos);
+        }
+        cnt++;
+    }
+
+    for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
+        ec_boards_ctrl->set_ctrl_status(rid2pos[*it],CTRL_POWER_MOD_OFF);
     }
 
     /////////////////////////////////////////////////////////////////
 
     delete ec_boards_ctrl;
 
-    
+
     return 0;
 }

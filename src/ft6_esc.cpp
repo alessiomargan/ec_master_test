@@ -1,6 +1,7 @@
 #include <iit/ecat/advr/ft6_esc.h>
 //#include <string>
 
+using namespace iit::ecat;
 using namespace iit::ecat::advr;
 
 static const char acName6000[] = "Inputs";
@@ -61,23 +62,28 @@ static const char acName8000_20[] = "matrix_r2_c6";
 static const char acName8001[] = "Parameter";
 static const char acName8001_1[] = "fw_ver";
 static const char acName8001_2[] = "ack_board_faults";
-static const char acName8001_3[] = "Matrix c1";
-static const char acName8001_4[] = "Matrix c2";
-static const char acName8001_5[] = "Matrix c3";
-static const char acName8001_6[] = "Matrix c4";
-static const char acName8001_7[] = "Matrix c5";
-static const char acName8001_8[] = "Matrix c6";
-static const char acName8001_9[] = "flash_parameters_command";
-static const char acName8001_10[] = "flash_parameters_command_ack";
+static const char acName8001_3[] = "matrix_rn_c1";
+static const char acName8001_4[] = "matrix_rn_c2";
+static const char acName8001_5[] = "matrix_rn_c3";
+static const char acName8001_6[] = "matrix_rn_c4";
+static const char acName8001_7[] = "matrix_rn_c5";
+static const char acName8001_8[] = "matrix_rn_c6";
+static const char acName8001_9[] = "flash_params_cmd";
+static const char acName8001_10[] = "flash_params_cmd_ack";
 
 
-FT6_tFlashParameters    FtESC::flash_param;
-FT6_tParameters         FtESC::param;
-FtESCTypes::pdo_rx      FtESC::sdo_rx_pdo;
-FtESCTypes::pdo_tx      FtESC::sdo_tx_pdo;
+//FT6_tFlashParameters    Ft6ESC::sdo;
+//FT6_tParameters         Ft6ESC::sdo;
+//FtESCTypes::pdo_rx      FtESC::sdo_rx_pdo;
+//FtESCTypes::pdo_tx      FtESC::sdo_tx_pdo;
 
-const objd_t FtESC::SDOs[] =
+//template<class EscPDOTypes, class EscSDOTypes>
+//typename BasicEscWrapper<EscPDOTypes, EscSDOTypes>::sdo_t    BasicEscWrapper<EscPDOTypes, EscSDOTypes>::sdo;
+
+
+static const iit::ecat::objd_t source_SDOs[] =
 {
+/*
     // SDO6000[] =
     {0x6000,    0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force0,     (void*)&FtESC::sdo_rx_pdo.force_X},
     {0x6000,    0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force1,     (void*)&FtESC::sdo_rx_pdo.force_Y},
@@ -89,44 +95,88 @@ const objd_t FtESC::SDOs[] =
     {0x6000,    0x8, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_rtt,        (void*)&FtESC::sdo_rx_pdo.rtt},
     // SDO7000[] =                                                           
     {0x7000,    0x1, DTYPE_UNSIGNED64,  64, ATYPE_RW, acName7000_4,          (void*)&FtESC::sdo_tx_pdo.ts},
+*/
     // SDO8000[] =                                                           
-    {0x8000,    0x1, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_1,          (void*)&FtESC::flash_param.Block_control},
-    {0x8000,    0x2, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_2,          (void*)&FtESC::flash_param.NumAvSamples},
-    {0x8000,    0x3, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_3,          (void*)&FtESC::flash_param.calibration_offset0},
-    {0x8000,    0x4, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_4,          (void*)&FtESC::flash_param.calibration_offset1},
-    {0x8000,    0x5, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_5,          (void*)&FtESC::flash_param.calibration_offset2},
-    {0x8000,    0x6, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_6,          (void*)&FtESC::flash_param.calibration_offset3},
-    {0x8000,    0x7, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_7,          (void*)&FtESC::flash_param.calibration_offset4},
-    {0x8000,    0x8, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_8,          (void*)&FtESC::flash_param.calibration_offset5},
-    {0x8000,    0x9, DTYPE_REAL32,      32, ATYPE_RW, acName8000_9,          (void*)&FtESC::flash_param.matrix_r1_c1},
-    {0x8000,    0xa, DTYPE_REAL32,      32, ATYPE_RW, acName8000_10,         (void*)&FtESC::flash_param.matrix_r1_c2},
-    {0x8000,    0xb, DTYPE_REAL32,      32, ATYPE_RW, acName8000_11,         (void*)&FtESC::flash_param.matrix_r1_c3},
-    {0x8000,    0xc, DTYPE_REAL32,      32, ATYPE_RW, acName8000_12,         (void*)&FtESC::flash_param.matrix_r1_c4},
-    {0x8000,    0xd, DTYPE_REAL32,      32, ATYPE_RW, acName8000_13,         (void*)&FtESC::flash_param.matrix_r1_c5},
-    {0x8000,    0xe, DTYPE_REAL32,      32, ATYPE_RW, acName8000_14,         (void*)&FtESC::flash_param.matrix_r1_c6},
-    {0x8000,    0xf, DTYPE_REAL32,      32, ATYPE_RW, acName8000_15,         (void*)&FtESC::flash_param.matrix_r2_c1},
-    {0x8000,    0x10, DTYPE_REAL32,     32, ATYPE_RW, acName8000_16,         (void*)&FtESC::flash_param.matrix_r2_c2},
-    {0x8000,    0x11, DTYPE_REAL32,     32, ATYPE_RW, acName8000_17,         (void*)&FtESC::flash_param.matrix_r2_c3},
-    {0x8000,    0x12, DTYPE_REAL32,     32, ATYPE_RW, acName8000_18,         (void*)&FtESC::flash_param.matrix_r2_c4},
-    {0x8000,    0x13, DTYPE_REAL32,     32, ATYPE_RW, acName8000_19,         (void*)&FtESC::flash_param.matrix_r2_c5},
-    {0x8000,    0x14, DTYPE_REAL32,     32, ATYPE_RW, acName8000_20,         (void*)&FtESC::flash_param.matrix_r2_c6},
+    {0x8000,    0x1, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_1,          0      }, 
+    {0x8000,    0x2, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_2,          0      }, 
+    {0x8000,    0x3, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_3,          0      }, 
+    {0x8000,    0x4, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_4,          0      }, 
+    {0x8000,    0x5, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_5,          0      }, 
+    {0x8000,    0x6, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_6,          0      }, 
+    {0x8000,    0x7, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_7,          0      }, 
+    {0x8000,    0x8, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_8,          0      }, 
+    {0x8000,    0x9, DTYPE_REAL32,      32, ATYPE_RW, acName8000_9,          0      }, 
+    {0x8000,    0xa, DTYPE_REAL32,      32, ATYPE_RW, acName8000_10,         0      }, 
+    {0x8000,    0xb, DTYPE_REAL32,      32, ATYPE_RW, acName8000_11,         0      }, 
+    {0x8000,    0xc, DTYPE_REAL32,      32, ATYPE_RW, acName8000_12,         0      }, 
+    {0x8000,    0xd, DTYPE_REAL32,      32, ATYPE_RW, acName8000_13,         0      }, 
+    {0x8000,    0xe, DTYPE_REAL32,      32, ATYPE_RW, acName8000_14,         0      }, 
+    {0x8000,    0xf, DTYPE_REAL32,      32, ATYPE_RW, acName8000_15,         0      }, 
+    {0x8000,    0x10, DTYPE_REAL32,     32, ATYPE_RW, acName8000_16,         0      }, 
+    {0x8000,    0x11, DTYPE_REAL32,     32, ATYPE_RW, acName8000_17,         0      }, 
+    {0x8000,    0x12, DTYPE_REAL32,     32, ATYPE_RW, acName8000_18,         0      }, 
+    {0x8000,    0x13, DTYPE_REAL32,     32, ATYPE_RW, acName8000_19,         0      }, 
+    {0x8000,    0x14, DTYPE_REAL32,     32, ATYPE_RW, acName8000_20,         0      }, 
     // SDO8001[] =                                                           
-    {0x8001,    0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1,     (void*)&FtESC::param.firmware_version},
-    {0x8001,    0x2, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_2,     (void*)&FtESC::param.ack_board_fault},
-    {0x8001,    0x3, DTYPE_REAL32,           32, ATYPE_RW, acName8001_3,     (void*)&FtESC::param.matrix_rn_c1},
-    {0x8001,    0x4, DTYPE_REAL32,           32, ATYPE_RW, acName8001_4,     (void*)&FtESC::param.matrix_rn_c2},
-    {0x8001,    0x5, DTYPE_REAL32,           32, ATYPE_RW, acName8001_5,     (void*)&FtESC::param.matrix_rn_c3},
-    {0x8001,    0x6, DTYPE_REAL32,           32, ATYPE_RW, acName8001_6,     (void*)&FtESC::param.matrix_rn_c4},
-    {0x8001,    0x7, DTYPE_REAL32,           32, ATYPE_RW, acName8001_7,     (void*)&FtESC::param.matrix_rn_c5},
-    {0x8001,    0x8, DTYPE_REAL32,           32, ATYPE_RW, acName8001_8,     (void*)&FtESC::param.matrix_rn_c6},
-    {0x8001,    0x9, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_9,     (void*)&FtESC::param.flash_params_cmd},
-    {0x8001,    0xa, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_10,    (void*)&FtESC::param.flash_params_cmd_ack},
+    {0x8001,    0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1,     0      },
+    {0x8001,    0x2, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_2,     0      },
+    {0x8001,    0x3, DTYPE_REAL32,           32, ATYPE_RW, acName8001_3,     0      },
+    {0x8001,    0x4, DTYPE_REAL32,           32, ATYPE_RW, acName8001_4,     0      },
+    {0x8001,    0x5, DTYPE_REAL32,           32, ATYPE_RW, acName8001_5,     0      },
+    {0x8001,    0x6, DTYPE_REAL32,           32, ATYPE_RW, acName8001_6,     0      },
+    {0x8001,    0x7, DTYPE_REAL32,           32, ATYPE_RW, acName8001_7,     0      },
+    {0x8001,    0x8, DTYPE_REAL32,           32, ATYPE_RW, acName8001_8,     0      },
+    {0x8001,    0x9, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_9,     0      },
+    {0x8001,    0xa, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_10,    0      },
+                                                                             
+    {0, 0, 0, 0, 0, 0}                                                       
+};                                                                           
+                                                                             
+                                                                             
+                                                                             
+void Ft6ESC::init_SDOs(void) {                                               
+                                                                             
+    int objd_num, i = 0;
 
-    {0, 0, 0, 0, 0, 0}
-};
+    objd_num = sizeof(source_SDOs)/sizeof(objd_t);
+    SDOs = new objd_t [objd_num];
+                                                               
+    memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));                   
 
-const objd_t * FtESC::SDOs6000 = &FtESC::SDOs[0];   // #8
-const objd_t * FtESC::SDOs7000 = &FtESC::SDOs[8];   // #1
-const objd_t * FtESC::SDOs8000 = &FtESC::SDOs[9];   // #20
-const objd_t * FtESC::SDOs8001 = &FtESC::SDOs[29];  // #10
+    // 0x8000
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.Block_control;      
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.NumAvSamples;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset0;
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset1;
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset2;
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset3;
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset4;
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset5;
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c1;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c2;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c3;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c4;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c5;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c6;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c1;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c2;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c3;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c4;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c5;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c6;       
+    // 0x8001
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.firmware_version;    
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.ack_board_fault;     
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c1;        
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c2;        
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c3;        
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c4;        
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c5;        
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c6;        
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.flash_params_cmd;    
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.flash_params_cmd_ack;
+         
+    SDOs[i++].data = 0;
 
+    assert ( objd_num == i );
+}

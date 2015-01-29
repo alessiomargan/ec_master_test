@@ -24,7 +24,9 @@ namespace ecat {
 namespace advr {
 
 
-typedef struct {
+struct HiPwrEscSdoTypes {
+
+    // flash
 
     unsigned long Sensor_type;      // Sensor type: NOT USED
 
@@ -47,13 +49,14 @@ typedef struct {
     float Phase_angle;
     float Torque_lin_coeff;
 
-    uint64_t   Enc_mot_nonius_calib;  
-    uint64_t   Enc_load_nonius_calib;  
+    uint64_t    Enc_mot_nonius_calib;  
+    uint64_t    Enc_load_nonius_calib;  
 
-} HPtFlashParameters;
+    int16_t     Joint_number;
+    int16_t     Joint_robot_id;
 
-typedef struct 
-{
+    // ram
+
     char        firmware_version[8];
     uint16_t    ack_board_fault_all;
     float       Direct_ref;
@@ -69,39 +72,70 @@ typedef struct
     float       angle_enc_mot;
     float       angle_enc_load;     
     float       angle_enc_diff;
-    float       iq_ref;     
-} HPtParameters;
+    float       iq_ref;
+
+};
 
 /**
  *  
  **/ 
 
-class HPESC : public McESC
+class HpESC :
+public BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes>,
+public PDO_log<McEscPdoTypes>
 {
 public:
-    HPESC(const ec_slavet& slave_descriptor) :
-           McESC(slave_descriptor) {
+    typedef BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes> Base;
+    typedef PDO_log<McEscPdoTypes>                        Log;
+
+    HpESC(const ec_slavet& slave_descriptor) :
+        Base(slave_descriptor),
+        Log(std::string("/tmp/HpESC_"+std::to_string(position)+"_log.txt"),1000)
+    {
+        init_SDOs();
+        init_sdo_lookup();
+        // Paranoid Direct_ref
+        float direct_ref = 0.0;
+        set_SDO_byname("Direct_ref", direct_ref);
+        get_SDO_byname("Direct_ref", direct_ref);
+        assert(direct_ref == 0.0);
     }
 
-    virtual ~HPESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
+    virtual ~HpESC(void) {
+        delete [] SDOs;
+        DPRINTF("~%s %d\n", typeid(this).name(), position);
+    }
 
-public:
+    virtual void on_readPDO(void) {
+        rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
+        push_back(rx_pdo);
+    }
 
-    static HPtFlashParameters flash_param;
-    static HPtParameters      param;
+    virtual void on_writePDO(void) {
+        //DPRINTF("%lld\n",tx_pdo.ts);
+        tx_pdo.ts = get_time_ns();
+    }
 
-    static const objd_t SDOs[];
-    //
-    static const objd_t * SDOs6000;
-    static const objd_t * SDOs7000;
-    static const objd_t * SDOs8000;
-    static const objd_t * SDOs8001;
-    
-    virtual const objd_t* get_SDOs() { return SDOs; };
-    virtual const objd_t* get_SDOs6000() { return SDOs6000; };
-    virtual const objd_t* get_SDOs7000() { return SDOs7000; };
-    virtual const objd_t* get_SDOs8000() { return SDOs8000; };
-    virtual const objd_t* get_SDOs8001() { return SDOs8001; };
+    virtual const objd_t * get_SDO_objd() { return SDOs; }
+
+
+    int16_t get_joint_robot_id() {
+        //assert(sdo.Joint_robot_id != -1);
+        return sdo.Joint_robot_id;
+    }
+
+    void print_info(void) {
+        DPRINTF("\nJoint id 0x%4X\tJoint robot id %d\n", sdo.Joint_number, sdo.Joint_robot_id);
+        DPRINTF("min pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos);
+    }
+
+
+    void init_SDOs(void);
+
+private:
+    // TODO NO magic number
+    //objd_t SDOs[37];
+    objd_t * SDOs;
 
 };
 

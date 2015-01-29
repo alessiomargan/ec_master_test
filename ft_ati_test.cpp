@@ -28,13 +28,22 @@ typedef struct {
     float       dummy[6];
     void sprint(char *buff, size_t size) {
         snprintf(buff, size, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
+// big sensor
+//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+// small sensor
                  iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
     }
     void fprint(FILE *fp) {
         fprintf(fp, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
+// big sensor
+//                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+// small sensor
                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+
     }
 } sens_data_t ; 
 
@@ -150,7 +159,10 @@ int main(int argc, char **argv)
 
     std::vector<std::vector<float>> cal_matrix;
     //load_matrix("RightFootCalibMatrix.txt", cal_matrix);
-    load_matrix("LeftFootCalibMatrix.txt", cal_matrix);
+    //load_matrix("LeftFootCalibMatrix.txt", cal_matrix);
+    //load_matrix("RightWristCalibMatrix.txt", cal_matrix);
+    //load_matrix("LeftWristCalibMatrix.txt", cal_matrix);
+    //load_matrix("ones.txt", cal_matrix);
 
     std::vector<std::vector<float>>::const_iterator it = cal_matrix.begin();
     while ( it != cal_matrix.end()) {
@@ -188,18 +200,17 @@ int main(int argc, char **argv)
     uint16_t  cmd = CTRL_POWER_MOD_OFF;
 
     static double time;
-    McESCTypes::pdo_rx mc_pdo_rx;
-    McESCTypes::pdo_tx mc_pdo_tx;
+    McEscPdoTypes::pdo_rx mc_pdo_rx;
+    McEscPdoTypes::pdo_tx mc_pdo_tx;
 
-    FtESCTypes::pdo_rx ft_pdo_rx;
-    FtESCTypes::pdo_tx ft_pdo_tx;
+    Ft6EscPdoTypes::pdo_rx ft_pdo_rx;
+    Ft6EscPdoTypes::pdo_tx ft_pdo_tx;
 
     ec_boards_ctrl->set_ctrl_status(2,CTRL_POWER_MOD_ON);
 
-    ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, 0x00CD);
+    ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, CTRL_REMOVE_TORQUE_OFFS);
 
     //ec_boards_ctrl->set_cal_matrix(FT_ECAT_POS, cal_matrix);
-
     //ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, 0x0012);
 
 
@@ -213,7 +224,7 @@ int main(int argc, char **argv)
         ati->get_last_sample(sample);
 
         if ( (cnt % 10) == 0 ) {
-            ec_boards_ctrl->check_sanity();
+            //ec_boards_ctrl->check_sanity();
         }
         cnt++;
 
@@ -243,7 +254,7 @@ int main(int argc, char **argv)
         time += 0.001;
         mc_pdo_tx.pos_ref = 3000 * sinf(2*M_PI*time);
         mc_pdo_tx.ts = get_time_ns();
-        ec_boards_ctrl->setTxPDO(2, mc_pdo_tx);
+        //ec_boards_ctrl->setTxPDO(2, mc_pdo_tx);
 
         ///////////////////////////////////////////////////////////////////////
 

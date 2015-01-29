@@ -18,68 +18,6 @@ namespace ecat {
 namespace advr {
 
 
-inline int set_SDO(int slave_pos, int index, int subindex, int size, void *data) {
-
-    return ec_SDOwrite(slave_pos, index, subindex, false, size, data, EC_TIMEOUTRXM);
-}
-
-inline int set_SDO(int slave_pos, const objd_t *sdo) {
-
-    char * err;
-    ec_errort   ec_error;
-    int final_size, wkc;
-
-    if (!sdo) { return 0; }
-
-    DPRINTF("set_SDO %s [%d.0x%04X.0x%02X]\n", sdo->name, slave_pos, sdo->index, sdo->subindex);
-    final_size = sdo->bitlength/8;
-    wkc = set_SDO(slave_pos, sdo->index, sdo->subindex, final_size, sdo->data);
-    if ( wkc <= 0 || final_size!=sdo->bitlength/8 ) {
-        DPRINTF("Slave %d >> ", slave_pos);
-        if ( wkc <= 0 ) {
-            err =  ec_elist2string();
-            DPRINTF("Ec_error : %s\n", err);
-        } else {
-            DPRINTF("SDO write fail : %d != %d\n", final_size, sdo->bitlength/8);
-        }
-    } else {
-        // OK ....
-    }
-    return wkc; 
-}
-
-inline int get_SDO(int slave_pos, int index, int subindex, int *size, void *data) {
-
-    return ec_SDOread(slave_pos, index, subindex, FALSE, size, data, EC_TIMEOUTRXM);
-}
-
-inline int get_SDO(int slave_pos, const objd_t *sdo) {
-
-    char * err;
-    ec_errort   ec_error;
-    int final_size, wkc;
-
-    if (!sdo) { return 0; }
-
-    DPRINTF("get_SDO %s [%d.0x%04X.0x%02X]\n", sdo->name, slave_pos, sdo->index, sdo->subindex);
-    final_size = sdo->bitlength/8;
-    wkc = get_SDO(slave_pos, sdo->index, sdo->subindex, &final_size, sdo->data);
-    if ( wkc <= 0 || final_size!=sdo->bitlength/8 ) {
-        DPRINTF("Slave %d >> ", slave_pos);
-        if ( wkc <= 0 ) {
-            err =  ec_elist2string();
-            DPRINTF("Ec_error : %s\n", err);
-        } else {
-            DPRINTF("SDO read fail : %d != %d\n", final_size, sdo->bitlength/8);
-        }
-    } else {
-        // OK ....
-    }
-    return wkc; 
-}
-
-
-
 struct TestEscPdoTypes {
     // TX  slave_input -- master output
     typedef struct {
@@ -87,8 +25,6 @@ struct TestEscPdoTypes {
         int32_t     _value;
         uint64_t    _ts;
     } __attribute__((__packed__)) pdo_tx;
-
-
     // RX  slave_output -- master input
     typedef struct {
         uint8_t     _bit_0:1;
@@ -109,114 +45,58 @@ struct TestEscPdoTypes {
         int64_t     _lint;
         uint64_t    _ulint;
         float       _real;
+        void sprint(char *buff, size_t size) {
+            snprintf(buff, size, "%ld\t%lu\n", _lint,_ulint);
+        }
+        void fprint(FILE *fp) {
+            fprintf(fp, "%ld\t%lu\n", _lint,_ulint);
+        }
     } __attribute__((__packed__)) pdo_rx;
 };
 
 
-
-template<class ESCParamTypes>
-class TestESCtemp : public BasicEscWrapper<TestEscPdoTypes>
-{
-public:
-    typedef BasicEscWrapper<TestEscPdoTypes>    Base;
-    typedef typename ESCParamTypes::flashParam  flash_param_t;
-    typedef typename ESCParamTypes::ramParam    ram_param_t;
-
-public:
-    TestESCtemp(const ec_slavet& slave_descriptor) :
-        Base(slave_descriptor) { }
-
-    virtual ~TestESCtemp(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
-
-    void init(void);
-
-    flash_param_t& getFlashParam() const;
-    ram_param_t&   getRamParam() const;
-
-    int set_SDO_byname(const char * name);
-    int get_SDO_byname(const char * name);
-
-    virtual const objd_t * get_SDOs() = 0;
-
-protected:
-    static flash_param_t flash_param;
-    static ram_param_t   ram_param;
-
-    std::map<std::string, const objd_t*> sdo_look_up;
-};
-
-#define TEMPL template<class ESCParamTypes>
-#define CLASS TestESCtemp<ESCParamTypes>
-#define SIGNATURE(type) TEMPL inline type CLASS
-
-SIGNATURE(void)::init(void) {
-
-    const objd_t * sdo = get_SDOs();
-    while ( sdo && sdo->index ) {
-        sdo_look_up[sdo->name] = sdo;
-        get_SDO(position, sdo);
-        sdo ++;
-    }
-}
-
-SIGNATURE(typename CLASS::flash_param_t&)::getFlashParam() const
-{
-    return flash_param;
-}
-
-SIGNATURE(typename CLASS::ram_param_t&)::getRamParam() const
-{
-    return ram_param;
-}
-
-SIGNATURE(int)::set_SDO_byname(const char * name) {
-
-    // look up name in SDOs
-    const objd_t * sdo = sdo_look_up[name];
-    return set_SDO(position, sdo);
-}
-
-SIGNATURE(int)::get_SDO_byname(const char * name) {
-
-    // look up name in SDOs
-    const objd_t * sdo = sdo_look_up[name];
-    return get_SDO(position, sdo);
-}
-
-#undef SIGNATURE
-#undef CLASS
-#undef TEMPL
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-struct TestESCParamTypes {
+struct TestEscSdoTypes {
     // flash param
-    typedef struct {
-        int	    par_1;
-        int	    par_2;
-    }  __attribute__((__packed__)) flashParam;
+    int	    par_1;
+    int	    par_2;
 
     // ram param
-    typedef struct {
-        //float		dummy;
-    }  __attribute__((__packed__)) ramParam;
+    //float		dummy;
 };
 
-class TestESC : public TestESCtemp<TestESCParamTypes> 
+class TestESC :
+public BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>,
+public PDO_log<TestEscPdoTypes>
 {
 
-private:
-    static const objd_t SDOs[];
-
 public:
+    typedef BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>    Base;
+    typedef PDO_log<TestEscPdoTypes>                            Log;
+
     TestESC(const ec_slavet& slave_descriptor) :
-        TestESCtemp<TestESCParamTypes>(slave_descriptor)
+        Base(slave_descriptor), Log(std::string("/tmp/ESC_log.txt"),1000)
     {
-        init(); 
+        init_SDOs();
+        init_sdo_lookup();
     }
 
-    virtual const objd_t * get_SDOs() { return SDOs; }
+    virtual ~TestESC(void) {
+        delete [] SDOs;
+        DPRINTF("~%s %d\n", typeid(this).name(), position);
+    }
+
+    virtual void on_readPDO(void) {
+        push_back(rx_pdo);
+    }
+    virtual void on_writePDO(void) {
+        tx_pdo._ts = get_time_ns();
+    }
+ 
+    virtual const objd_t * get_SDO_objd() { return SDOs; }
+    virtual void init_SDOs(void);
+
+private:
+    objd_t * SDOs;
 
 };
 

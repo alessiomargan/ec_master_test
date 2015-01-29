@@ -122,8 +122,8 @@ int main(int argc, char **argv)
         delete ec_boards_ctrl;
         return 0;
     }
-
+    
     delete ec_boards_ctrl;
 
-    return 0;
+    return 1;
 }

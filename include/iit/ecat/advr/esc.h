@@ -9,36 +9,56 @@
 
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/utils.h>
+
 #include <map>
+#include <fstream>
 
-#define DTYPE_INTEGER16         0x0001
-#define DTYPE_INTEGER32         0x0002
-#define DTYPE_UNSIGNED8         0x0003
-#define DTYPE_UNSIGNED16        0x0004
-#define DTYPE_REAL32            0x0005
-#define DTYPE_VISIBLE_STRING    0x0006
-#define DTYPE_UNSIGNED64        0x0007
+#include <boost/circular_buffer.hpp>
 
-#define ATYPE_RO 17
-#define ATYPE_RW 18
+// Control commands
+#define CTRL_POWER_MOD_ON		0x00A5
+#define CTRL_POWER_MOD_OFF		0x005A
+#define CTRL_SET_IMPED_MODE		0x00D4
+#define CTRL_SET_POS_MODE		0x003B
+#define CTRL_SET_DIRECT_MODE	0x004F
+#define CTRL_FAN_ON				0x0026
+#define CTRL_FAN_OFF			0x0062
+#define CTRL_LED_ON				0x0019
+#define CTRL_LED_OFF			0x0091
+
+//#define CTRL_ALIGN_ENCODERS		0x00B2
+#define CTRL_SET_ZERO_POSITION	0x00AB
+
+// FT6
+#define CTRL_REMOVE_TORQUE_OFFS	0x00CD
+
+#define CTRL_CMD_DONE			0x7800
+#define CTRL_CMD_ERROR			0xAA00
+
 
 namespace iit {
 namespace ecat {
 namespace advr {
 
-typedef struct
+
+inline int check_cmd_ack(int16_t cmd, int16_t ack)
 {
-    int index;
-    int subindex;
-    int datatype;
-    int bitlength;
-    int access;
-    const char * name;
-    void * data;
-} objd_t;
+    if ( ack == ((cmd & 0x00FF) | CTRL_CMD_DONE) ) {
+        DPRINTF("DONE 0x%04X\n", cmd);
+        return 0;
+    } else if ( ack == ((cmd & 0x00FF) | CTRL_CMD_ERROR) ) {
+        DPRINTF("FAIL 0x%04X\n", cmd);
+        return -1;
+    } else {
+        DPRINTF("PROTOCOL FAILURE cmd 0x%04X ack 0x%04X !!!\n", cmd, ack);
+        return -2;
+    }
+
+}
 
 
-struct McESCTypes {
+
+struct McEscPdoTypes {
     // TX  slave_input -- master output
     typedef struct {
         float	    pos_ref;
@@ -48,6 +68,13 @@ struct McESCTypes {
         float		PosGainD;
         uint64_t	ts;
 
+        void fprint(FILE *fp) {
+            fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
+        }
+        void sprint(char *buff, size_t size) {
+            snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
+        }
+
     }  __attribute__((__packed__)) pdo_tx;
 
     // RX  slave_output -- master input
@@ -56,47 +83,43 @@ struct McESCTypes {
         float	    position;   		// rad
         float		velocity;   		// rad/s
         float		torque;     		// Nm
-        uint16_t    fault;
+        uint32_t    fault;
         uint64_t	rtt;        		// ns
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%f\t%f\t%d\t%lld\n", max_temperature,position,velocity,torque,fault,rtt);
+            fprintf(fp, "%f\t%f\t%f\t%f\t0xX%\t%lu\n", max_temperature,position,velocity,torque,fault,rtt);
         }
-
+        void sprint(char *buff, size_t size) {
+            snprintf(buff, size, "%f\t%f\t%f\t%f\t0x%X\t%lu\n", max_temperature,position,velocity,torque,fault,rtt);
+        }
     }  __attribute__((__packed__)) pdo_rx;
 };
 
 
-class McESC : public BasicEscWrapper<McESCTypes>
-{
 
+
+template<class EscPDOTypes>
+class PDO_log
+{
 public:
-    typedef BasicEscWrapper<McESCTypes> Base;
-public:
-    McESC(const ec_slavet& slave_descriptor) :
-           Base(slave_descriptor) {
+    typedef typename EscPDOTypes::pdo_rx    pdo_rx_t;
+
+    PDO_log(std::string filename, int capacity): log_filename(filename) {
+        esc_log.set_capacity(capacity);
+    }
+    virtual ~PDO_log() {
+        dump_buffer(log_filename, esc_log);
     }
 
-    virtual ~McESC(void) { DPRINTF("~%s %d\n", typeid(this).name(), position); }
+    void push_back(const pdo_rx_t& item) {
+        esc_log.push_back(item);
+    }
 
-public:
-   
-    virtual const objd_t * get_SDOs() = 0;
-    virtual const objd_t * get_SDOs6000() = 0;
-    virtual const objd_t * get_SDOs7000() = 0;
-    virtual const objd_t * get_SDOs8000() = 0;
-    virtual const objd_t * get_SDOs8001() = 0;
-    
-    static McESCTypes::pdo_rx sdo_rx_pdo;
-    static McESCTypes::pdo_tx sdo_tx_pdo;
+protected:
 
+    std::string log_filename;
+    boost::circular_buffer<pdo_rx_t> esc_log;
 };
-
-
-// typedef std::shared_ptr<McESC>  McESCPtr;
-typedef std::map<int, McESC*>  McSlavesMap;
-
-    
 
 } 
 }
