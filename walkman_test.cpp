@@ -18,11 +18,9 @@ using namespace iit::ecat::advr;
 
 static int run_loop = 1;
 
-#define DEG2RAD(X)  ((float)X*M_PI)/180.0
-
 
 extern Rid2PosMap  rid2pos;
-
+ 
 
 static void load_trj(std::string filename, std::vector<std::vector<float>> &trj) {
 
@@ -115,8 +113,8 @@ int main(int argc, char **argv)
     rt_print_auto_init(1);
 #endif
 
-    if ( argc != 2 ) {
-        printf("Usage: %s ifname\nifname = {eth0,rteth0} for example\n", argv[0]);
+    if ( argc != 3 ) {
+        printf("Usage: %s ifname trajectory file\nifname = {eth0,rteth0} for example\n", argv[0]);
         return 0;
     }
 
@@ -153,15 +151,22 @@ int main(int argc, char **argv)
     uint64_t    dt;
     double time = 0;
     int sPos = 0;
-#if 0
+#if 1
     std::vector<int> rIDs = {
-        41, 42, 43, 44, 45, 46,
-        51, 52, 53, 54, 55, 56
+        41, 51, // hip  
+        42, 52,
+        43, 53,
+        44, 54,
+        45, 55,
+        46, 56,
     };
 #else
+    //std::vector<int> rIDs = {
+    //    42, 43, 44, 45, 46,
+    //    52, 53, 54, 55, 56
+    //};
     std::vector<int> rIDs = {
-        42, 43, 44, 45, 46,
-        52, 53, 54, 55, 56
+        41, 51,
     };
 #endif
     
@@ -178,20 +183,19 @@ int main(int argc, char **argv)
     rid2col[54] = 9;
     rid2col[55] = 10;
     rid2col[56] = 11;
-
-    std::map<int,int> syn;
-    syn[41] = 1;
-    syn[42] = 1;
-    syn[43] = 1;
-    syn[44] = 1;
-    syn[45] = -1;
-    syn[46] = -1;
-    syn[51] = 1;
-    syn[52] = 1;
-    syn[53] = -1;
-    syn[54] = -1;
-    syn[55] = 1;
-    syn[56] = 1;
+    std::map<int,int> sgn;
+    sgn[41] = 1;
+    sgn[42] = 1;
+    sgn[43] = 1;
+    sgn[44] = 1;
+    sgn[45] = -1;
+    sgn[46] = -1;
+    sgn[51] = 1;
+    sgn[52] = 1;
+    sgn[53] = -1;
+    sgn[54] = -1;
+    sgn[55] = 1;
+    sgn[56] = -1; //1;
     std::map<int,float> off;
     off[41] = 0;
     off[42] = 0;
@@ -203,7 +207,7 @@ int main(int argc, char **argv)
     off[52] = 0;
     off[53] = 0;
     off[54] = 0;
-    off[55] = DEG2RAD(-20);;
+    off[55] = DEG2RAD(-20);
     off[56] = 0;
 
 #define MID_POS(m,M)    (m+(M-m)/2)
@@ -227,22 +231,24 @@ int main(int argc, char **argv)
     }
 
     std::vector<std::vector<float>> trj;
-    load_trj("walk_5cm_5steps.csv", trj);
+    load_trj(argv[2], trj);
 
 #if 0
-    std::vector<std::vector<float>>::const_iterator it = trj.begin();
-    while ( it != trj.end()) {
-        std::vector<float> row(*it);
-        std::vector<float>::const_iterator rit = row.begin();
-        while ( rit != row.end()) {
-            std::cout << (*rit) << "\t";
-            rit ++;
+    {
+        std::vector<std::vector<float>>::const_iterator it = trj.begin();
+        while ( it != trj.end()) {
+            std::vector<float> row(*it);
+            std::vector<float>::const_iterator rit = row.begin();
+            while ( rit != row.end()) {
+                std::cout << (*rit) << "\t";
+                rit ++;
+            }
+            std::cout << std::endl;
+            it ++;
         }
-        std::cout << std::endl;
-        it ++;
     }
 #endif
-    
+ 
     std::vector<std::vector<float>>::const_iterator it = trj.begin();
     std::vector<float> row(*it);
     std::vector<float>::const_iterator rit = row.begin();
@@ -254,19 +260,33 @@ int main(int argc, char **argv)
     it ++;
     row = *it;
     rit = row.begin();
-    home[41] = M_PI - (syn[41]*off[41]) + (syn[41]*(*rit)); rit++;
-    home[42] = M_PI - (syn[42]*off[42]) + (syn[42]*(*rit)); rit++;
-    home[43] = M_PI - (syn[43]*off[43]) + (syn[43]*(*rit)); rit++;
-    home[44] = M_PI - (syn[44]*off[44]) + (syn[44]*(*rit)); rit++;
-    home[45] = M_PI - (syn[45]*off[45]) + (syn[45]*(*rit)); rit++;
-    home[46] = M_PI - (syn[46]*off[46]) + (syn[46]*(*rit)); rit++;
-    home[51] = M_PI - (syn[51]*off[51]) + (syn[51]*(*rit)); rit++;
-    home[52] = M_PI - (syn[52]*off[52]) + (syn[52]*(*rit)); rit++;
-    home[53] = M_PI - (syn[53]*off[53]) + (syn[53]*(*rit)); rit++;
-    home[54] = M_PI - (syn[54]*off[54]) + (syn[54]*(*rit)); rit++;
-    home[55] = M_PI - (syn[55]*off[55]) + (syn[55]*(*rit)); rit++;
-    home[56] = M_PI - (syn[56]*off[56]) + (syn[56]*(*rit)); rit++;
-
+#if 0
+    home[41] = J2M(*rit,sgn[41],off[41]); rit++;//M_PI - (sgn[41]*off[41]) + (sgn[41]*(*rit)); rit++;
+    home[42] = J2M(*rit,sgn[42],off[42]); rit++;//M_PI - (sgn[42]*off[42]) + (sgn[42]*(*rit)); rit++;
+    home[43] = J2M(*rit,sgn[43],off[43]); rit++;//M_PI - (sgn[43]*off[43]) + (sgn[43]*(*rit)); rit++;
+    home[44] = J2M(*rit,sgn[44],off[44]); rit++;//M_PI - (sgn[44]*off[44]) + (sgn[44]*(*rit)); rit++;
+    home[45] = J2M(*rit,sgn[45],off[45]); rit++;//M_PI - (sgn[45]*off[45]) + (sgn[45]*(*rit)); rit++;
+    home[46] = J2M(*rit,sgn[46],off[46]); rit++;//M_PI - (sgn[46]*off[46]) + (sgn[46]*(*rit)); rit++;
+    home[51] = J2M(*rit,sgn[51],off[51]); rit++;//M_PI - (sgn[51]*off[51]) + (sgn[51]*(*rit)); rit++;
+    home[52] = J2M(*rit,sgn[52],off[52]); rit++;//M_PI - (sgn[52]*off[52]) + (sgn[52]*(*rit)); rit++;
+    home[53] = J2M(*rit,sgn[53],off[53]); rit++;//M_PI - (sgn[53]*off[53]) + (sgn[53]*(*rit)); rit++;
+    home[54] = J2M(*rit,sgn[54],off[54]); rit++;//M_PI - (sgn[54]*off[54]) + (sgn[54]*(*rit)); rit++;
+    home[55] = J2M(*rit,sgn[55],off[55]); rit++;//M_PI - (sgn[55]*off[55]) + (sgn[55]*(*rit)); rit++;
+    home[56] = J2M(*rit,sgn[56],off[56]); rit++;//M_PI - (sgn[56]*off[56]) + (sgn[56]*(*rit)); rit++;
+#else
+    home[41] = *rit; rit++; 
+    home[42] = *rit; rit++; 
+    home[43] = *rit; rit++; 
+    home[44] = *rit; rit++; 
+    home[45] = *rit; rit++; 
+    home[46] = *rit; rit++; 
+    home[51] = *rit; rit++; 
+    home[52] = *rit; rit++; 
+    home[53] = *rit; rit++; 
+    home[54] = *rit; rit++; 
+    home[55] = *rit; rit++; 
+    home[56] = *rit; rit++; 
+#endif
     for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
         std::cout << *it << " " << home[*it] << std::endl; 
     }
@@ -275,6 +295,10 @@ int main(int argc, char **argv)
     for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
 
         sPos = rid2pos[*it];
+        
+        HpESC * hp = ec_boards_ctrl->slave_as_HP(sPos);
+        assert(hp);
+        hp->set_off_sgn(off[*it],sgn[*it]);
 
         ec_boards_ctrl->set_ctrl_status(sPos, CTRL_SET_DIRECT_MODE);
         ec_boards_ctrl->set_ctrl_status(sPos, CTRL_POWER_MOD_ON);
@@ -282,19 +306,47 @@ int main(int argc, char **argv)
         ec_boards_ctrl->recv_from_slaves();
 
         ec_boards_ctrl->getRxPDO(sPos, mc_pdo_rx);
+        ec_boards_ctrl->getTxPDO(sPos, mc_pdo_tx);
+        // ack error
+        ec_boards_ctrl->ack_faults(sPos, mc_pdo_rx.fault);
         mc_pdo_tx.pos_ref = mc_pdo_rx.position;
+        
         if ( *it == 42 || *it == 46 || *it == 52 || *it == 56 ) {
-            // medium
-            mc_pdo_tx.PosGainP = 30;
-            mc_pdo_tx.PosGainI = 0.0;
-            mc_pdo_tx.PosGainD = 0.2;
-        } else {
 
-            // big
-            mc_pdo_tx.PosGainP = 200;
+            // medium
+            mc_pdo_tx.PosGainP = 60.0;
             mc_pdo_tx.PosGainI = 0.0;
-            mc_pdo_tx.PosGainD = 3;
+            mc_pdo_tx.PosGainD = 1.0;
+
+        } else if ( *it == 41 || *it == 51 ) {
+
+            // big hip yaw
+            mc_pdo_tx.PosGainP = 800.0;
+            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainD = 12.0;
+
+        } else if ( *it == 43 || *it == 53 ) {
+
+            // big hip pitch
+            mc_pdo_tx.PosGainP = 700.0;
+            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainD = 10.0;
+
+        } else if ( *it == 44 || *it == 54 ) {
+
+            // big knee
+            mc_pdo_tx.PosGainP = 500.0;
+            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainD = 2.0;
+
+        } else {
+        
+            // big
+            mc_pdo_tx.PosGainP = 500.0;
+            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainD = 2.0;
         }
+        
         ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
 
         ec_boards_ctrl->send_to_slaves();
@@ -308,13 +360,14 @@ int main(int argc, char **argv)
             ec_boards_ctrl->recv_from_slaves();
             // rID rx pdo
             ec_boards_ctrl->getRxPDO(sPos, mc_pdo_rx);
-            if ( fabs(mc_pdo_rx.position - home[*it]) > 0.1 ) {
+            ec_boards_ctrl->getTxPDO(sPos, mc_pdo_tx);
+            if ( fabs(mc_pdo_rx.position - home[*it]) > 0.001 ) {
                 if ( mc_pdo_rx.position > home[*it] ) {
                     mc_pdo_tx.pos_ref -= 0.0005;
                 } else {
                     mc_pdo_tx.pos_ref += 0.0005;
                 }
-                DPRINTF("%d GO to %f --> %f\n", *it, home[*it], mc_pdo_tx.pos_ref);
+                DPRINTF("%d HOME to %f --> ref %f\tact %f\n", *it, home[*it], mc_pdo_tx.pos_ref, mc_pdo_rx.position);
                 ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
 
                 ec_boards_ctrl->send_to_slaves();
@@ -329,49 +382,68 @@ int main(int argc, char **argv)
     }
 
 
+
+
+#define TRJ
+#ifdef TRJ
     std::vector<std::vector<float>>::const_iterator trj_it = trj.begin();
     trj_it++;
     trj_it++;
-
+    DPRINTF("\n***** START TRAJECTORY *****\n", *it, home[*it], mc_pdo_tx.pos_ref, mc_pdo_rx.position);
+#endif
  
+    for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
+
+        sPos = rid2pos[*it];
+        HpESC * hp = ec_boards_ctrl->slave_as_HP(sPos);
+        assert(hp);
+        hp->start_log(true);
+    }
+
     while ( run_loop ) {
 
         // TO REMOVE
-        //osal_usleep(2000);
+        osal_usleep(1000);
 
         ec_boards_ctrl->recv_from_slaves();
-
+#ifdef TRJ
         if ( trj_it != trj.end() ) {
 
             row = *trj_it;
             rit = row.begin();
 
+            // set pos_ref to all rIDs
             for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
 
                 sPos = rid2pos[*it];
                 ec_boards_ctrl->getRxPDO(sPos, mc_pdo_rx);
-                mc_pdo_tx.pos_ref = M_PI - (syn[*it]*off[*it]) + (syn[*it]*(row[rid2col[*it]]));
-                DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
+                ec_boards_ctrl->getTxPDO(sPos, mc_pdo_tx);
+                mc_pdo_tx.pos_ref = row[rid2col[*it]];
+                //DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
                 ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
 
             }
             trj_it++;
-            DPRINTF("\n\n");
+            //DPRINTF("\n\n");
 
         } else {
-            //trj_it = trj.begin();
-            //trj_it++;
+            // end trajectory
+            // exit while ....
             break;
         }
-
+#else
         ///////////////////////////////////////////////////////////////////////
-        //dt = get_time_ns() - start;
-        //time += 0.0001;
-        //mc_pdo_tx.pos_ref = home[*it] + 0.2 * sinf(2*M_PI*time);
-        //DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
-        //ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
+        dt = get_time_ns() - start;
+        time += 0.0001;
+        for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
+            sPos = rid2pos[*it];
+            ec_boards_ctrl->getRxPDO(sPos, mc_pdo_rx);
+            mc_pdo_tx.pos_ref = home[*it] + 0.2 * sinf(2*M_PI*time);
+            //DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
+            //ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
+        }
         ///////////////////////////////////////////////////////////////////////
-        
+#endif        
         ec_boards_ctrl->send_to_slaves();
 
         if ( (cnt % 10) == 0 ) {
@@ -379,6 +451,7 @@ int main(int argc, char **argv)
         }
         cnt++;
     }
+
 
     for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
         ec_boards_ctrl->set_ctrl_status(rid2pos[*it],CTRL_POWER_MOD_OFF);

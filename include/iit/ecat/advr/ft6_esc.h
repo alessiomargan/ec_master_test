@@ -129,15 +129,15 @@ inline int Ft6ESC::set_cal_matrix(std::vector<std::vector<float>> &cal_matrix)
     for ( int r=0; r<6; r++ ) {
     
         // set row n param value
-        set_SDO_byname<float>("matrix_rn_c1",cal_matrix[r][0]);
-        set_SDO_byname<float>("matrix_rn_c2",cal_matrix[r][1]);
-        set_SDO_byname<float>("matrix_rn_c3",cal_matrix[r][2]);
-        set_SDO_byname<float>("matrix_rn_c4",cal_matrix[r][3]);
-        set_SDO_byname<float>("matrix_rn_c5",cal_matrix[r][4]);
-        set_SDO_byname<float>("matrix_rn_c6",cal_matrix[r][5]);
+        set_SDO_byname("matrix_rn_c1",cal_matrix[r][0]);
+        set_SDO_byname("matrix_rn_c2",cal_matrix[r][1]);
+        set_SDO_byname("matrix_rn_c3",cal_matrix[r][2]);
+        set_SDO_byname("matrix_rn_c4",cal_matrix[r][3]);
+        set_SDO_byname("matrix_rn_c5",cal_matrix[r][4]);
+        set_SDO_byname("matrix_rn_c6",cal_matrix[r][5]);
     
-        set_SDO_byname<int16_t>("flash_params_cmd", flash_row_cmd);
-        get_SDO_byname<int16_t>("flash_params_cmd_ack", ack);
+        set_SDO_byname("flash_params_cmd", flash_row_cmd);
+        get_SDO_byname("flash_params_cmd_ack", ack);
     
         if ( (res=check_cmd_ack(flash_row_cmd, ack)) ) {
               return res;

@@ -16,7 +16,7 @@ static const iit::ecat::objd_t source_SDOs[] =
     { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "position"          ,(void*)&HpESC::sdo_rx_pdo.position                  },
     { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "velocity"          ,(void*)&HpESC::sdo_rx_pdo.velocity                  },
     { 0X6000, 0x4, DTYPE_REAL32,        32,  ATYPE_RO,   "torque"            ,(void*)&HpESC::sdo_rx_pdo.torque                    },
-    { 0X6000, 0x5, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"             ,(void*)&HpESC::sdo_rx_pdo.fault                     },
+    { 0X6000, 0x5, DTYPE_INTEGER32,     32,  ATYPE_RO,   "fault"             ,(void*)&HpESC::sdo_rx_pdo.fault                     },
     { 0X6000, 0x6, DTYPE_UNSIGNED64,    64,  ATYPE_RO,   "rtt"               ,(void*)&HpESC::sdo_rx_pdo.rtt                       },
 
     // SD0 0x7000
@@ -51,7 +51,7 @@ static const iit::ecat::objd_t source_SDOs[] =
 
     // SD0 0x8001
     { 0x8001, 0x1, DTYPE_VISIBLE_STRING,64, ATYPE_RO,    "firmware_version"  		 ,0   },
-    { 0x8001, 0x2, DTYPE_INTEGER16,     16, ATYPE_RW,    "ack_board_fault_all"  	 ,0   },
+    { 0x8001, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW,    "ack_board_fault_all"  	 ,0   },
     { 0x8001, 0x3, DTYPE_REAL32,        32, ATYPE_RW,    "Direct_ref"  			     ,0   },
     { 0x8001, 0x4, DTYPE_REAL32,        32, ATYPE_RO,    "V_batt_filt_100ms" 		 ,0   },
     { 0x8001, 0x5, DTYPE_REAL32,        32, ATYPE_RO,    "Board_Temperature"  		 ,0   },

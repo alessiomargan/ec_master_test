@@ -90,10 +90,14 @@ public:
 
     HpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/HpESC_"+std::to_string(position)+"_log.txt"),1000)
+        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),100000)
     {
+        _start_log = false;
+
         init_SDOs();
         init_sdo_lookup();
+        // set filename with robot_id
+        log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
         // Paranoid Direct_ref
         float direct_ref = 0.0;
         set_SDO_byname("Direct_ref", direct_ref);
@@ -108,16 +112,20 @@ public:
 
     virtual void on_readPDO(void) {
         rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
-        push_back(rx_pdo);
+        // apply transformation from Motor to Joint 
+        rx_pdo.position = M2J(rx_pdo.position,_sgn,_offset); 
+        if (_start_log) {
+            push_back(rx_pdo);
+        }
     }
 
     virtual void on_writePDO(void) {
-        //DPRINTF("%lld\n",tx_pdo.ts);
         tx_pdo.ts = get_time_ns();
+        // apply transformation from Joint to Motor 
+        tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
 
     virtual const objd_t * get_SDO_objd() { return SDOs; }
-
 
     int16_t get_joint_robot_id() {
         //assert(sdo.Joint_robot_id != -1);
@@ -125,16 +133,27 @@ public:
     }
 
     void print_info(void) {
-        DPRINTF("\nJoint id 0x%4X\tJoint robot id %d\n", sdo.Joint_number, sdo.Joint_robot_id);
+        DPRINTF("\nJoint id %c%d\tJoint robot id %d\n", (char)(sdo.Joint_number>>8), sdo.Joint_number&0x0F, sdo.Joint_robot_id);
         DPRINTF("min pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos);
     }
 
-
     void init_SDOs(void);
 
+
+    void set_off_sgn(float offset, int sgn) {
+        _offset = offset;
+        _sgn = sgn;
+    }
+
+    void start_log(bool start) {
+        _start_log = start;
+    }
 private:
-    // TODO NO magic number
-    //objd_t SDOs[37];
+    
+    float   _offset;
+    int     _sgn;
+    bool    _start_log;
+
     objd_t * SDOs;
 
 };

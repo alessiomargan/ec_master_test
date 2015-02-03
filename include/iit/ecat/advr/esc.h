@@ -15,6 +15,11 @@
 
 #include <boost/circular_buffer.hpp>
 
+#define DEG2RAD(X)  ((float)X*M_PI)/180.0
+
+#define J2M(p,s,o)  (M_PI - (s*o) + (s*p)) 
+#define M2J(p,s,o)  ((p - M_PI + (s*o))/s) 
+
 // Control commands
 #define CTRL_POWER_MOD_ON		0x00A5
 #define CTRL_POWER_MOD_OFF		0x005A
@@ -56,6 +61,30 @@ inline int check_cmd_ack(int16_t cmd, int16_t ack)
 
 }
 
+struct FAULT_BITS {
+    uint16_t  rxpdo_pos_ref:1;
+    uint16_t  rxpdo_tor_offs:1;
+    uint16_t  rxpdo_kp_pos:1;
+    uint16_t  rxpdo_ki_pos:1;
+    uint16_t  rxpdo_kd_pos:1;
+    uint16_t  fault_encoder_1:1;
+    uint16_t  fault_encoder_2:1;
+    uint16_t  fault_hardware:1;
+    uint16_t  params_out_of_range:1;
+    uint16_t  Max_cur_limited_for_temp:1;
+    uint16_t  flag_10:1;
+    uint16_t  flag_11:1;
+    uint16_t  flag_12:1;
+    uint16_t  flag_13:1;
+    uint16_t  flag_14:1;
+    uint16_t  irq_alive:1;
+    uint16_t  spare;
+};
+
+typedef union{
+    uint32_t            all;
+    struct FAULT_BITS   bit;
+} FAULT;
 
 
 struct McEscPdoTypes {
@@ -83,7 +112,7 @@ struct McEscPdoTypes {
         float	    position;   		// rad
         float		velocity;   		// rad/s
         float		torque;     		// Nm
-        uint32_t    fault;
+        int32_t     fault;
         uint64_t	rtt;        		// ns
 
         void fprint(FILE *fp) {

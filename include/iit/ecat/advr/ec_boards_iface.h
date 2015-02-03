@@ -113,23 +113,33 @@ public:
     int set_operative();
 
     /**
-     * @brief returns the PDO of the slave @p slave_index
-     * @note This will not receive anything, it will just return a copy of the last PDO received!
+     * @brief get RxPDO of the slave @p slave_index
+     * @note This will not receive anything, it will just return 
+     *       copy of the last RxPDO received!
      * @param slave_index id of the slave
-     * @return const iit::ecat::advr::McESCTypes::pdo_rx&
+     * @param iit::ecat::advr::McESCTypes::pdo_rx&
      */
     void getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo);
     void getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo);
 
     /**
-     * @brief Sends a PDO to a slave
-     * @note This will not send anything, it will just copy the PDO so that send_to_slaves() can send it     * 
+     * @brief set TxPDO of the slave @p slave_index
+     * @note This will not send anything, it will just copy the 
+     *       TxPDO so that send_to_slaves() can send it
      * @param slave_index id of the slave
-     * @param pdo data to write
+     * @param iit::ecat::advr::McESCTypes::pdo_rx&
      * @return void
      */
     void setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo);
     void setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo);
+    /**
+     * @brief returns the TxPDO of the slave @p slave_index
+     * @note Just return a copy of the last TxPDO sent!
+     * @param slave_index id of the slave
+     * @param iit::ecat::advr::McESCTypes::pdo_rx&
+     */
+    void getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo);
+    void getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo);
 
     /**
      * @brief This will receive a running train from all the slaves, and will fill the RxPDO_map returned from getRxPDO()
@@ -205,6 +215,7 @@ public:
      * @param cmd 
      * @return int
      */
+    int ack_faults(uint16_t sPos, int32_t faults);
     int set_ctrl_status(uint16_t sPos, uint16_t cmd);
     int set_flash_cmd(uint16_t sPos, uint16_t cmd);
     int set_cal_matrix(uint16_t sPos, std::vector<std::vector<float>> &cal_matrix);

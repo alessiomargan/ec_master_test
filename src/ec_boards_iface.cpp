@@ -7,13 +7,23 @@ Rid2PosMap  rid2pos;
 
 
 template <class C>
+inline int ack_faults_X(C *c, int32_t faults)
+{
+    int32_t xor_faults = 0xFFFFFFFF;
+    //xor_faults ^= xor_faults;
+    return c->template set_SDO_byname("ack_board_fault_all", xor_faults);
+
+}
+
+
+template <class C>
 inline int set_ctrl_status_X(C *c, int16_t cmd)
 {
     int16_t ack;
 
     cmd = cmd & 0x00FF;
-    c->template set_SDO_byname<int16_t>("ctrl_status_cmd", cmd);
-    c->template get_SDO_byname<int16_t>("ctrl_status_cmd_ack", ack);
+    c->template set_SDO_byname("ctrl_status_cmd", cmd);
+    c->template get_SDO_byname("ctrl_status_cmd_ack", ack);
 
     // check 
     DPRINTF("set_ctrl_status ");
@@ -26,8 +36,8 @@ inline int set_flash_cmd_X(C *c, uint16_t cmd)
     int16_t ack;
 
     cmd = cmd & 0x00FF;
-    c->template set_SDO_byname<int16_t>("flash_params_cmd", cmd);
-    c->template get_SDO_byname<int16_t>("flash_params_cmd_ack", ack);
+    c->template set_SDO_byname("flash_params_cmd", cmd);
+    c->template get_SDO_byname("flash_params_cmd_ack", ack);
 
     // check 
     DPRINTF("flash_params_cmd ");
@@ -257,6 +267,25 @@ int Ec_Boards_ctrl::set_flash_cmd(uint16_t sPos, uint16_t cmd) {
 
 }
 
+/** 
+ *  TODO: change to McESC objects !!!! 
+ */
+int Ec_Boards_ctrl::ack_faults(uint16_t sPos, int32_t faults) {
+
+    HpESC * hp = slave_as_HP(sPos);
+    if (hp) { return ack_faults_X(hp, faults); }
+
+    LpESC * lp = slave_as_LP(sPos);
+    if (lp) { return ack_faults_X(lp, faults); }
+
+    Ft6ESC * ft = slave_as_FT(sPos);
+    if (ft) { return ack_faults_X(ft, faults); }
+    
+    return 0; 
+
+}
+
+
 int Ec_Boards_ctrl::set_cal_matrix(uint16_t sPos, std::vector<std::vector<float>> &cal_matrix) {
 
     Ft6ESC * ft = slave_as_FT(sPos);
@@ -336,6 +365,18 @@ void Ec_Boards_ctrl::setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo)
 {
     wr_LOCK();
     FtTxPDO_map[slave_index] = pdo;
+    wr_UNLOCK();
+}
+void Ec_Boards_ctrl::getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo)
+{
+    wr_LOCK();
+    memcpy((void*)&pdo, (void*)&McTxPDO_map[slave_index], sizeof(pdo));
+    wr_UNLOCK();
+}
+void Ec_Boards_ctrl::getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo)
+{
+    wr_LOCK();
+    memcpy((void*)&pdo, (void*)&FtTxPDO_map[slave_index], sizeof(pdo));
     wr_UNLOCK();
 }
 
