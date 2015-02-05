@@ -57,6 +57,12 @@ add_executable(
 
 target_link_libraries(walkman_test walkman_master iitecat_iface soem pthread)
 
+add_executable(
+     walkman_test_2
+     walkman_test_2.cpp)
+
+target_link_libraries(walkman_test_2 walkman_master iitecat_iface soem pthread)
+
 
 add_executable(
      firm_update

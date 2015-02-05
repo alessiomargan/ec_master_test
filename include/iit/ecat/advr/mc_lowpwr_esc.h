@@ -80,16 +80,24 @@ struct LoPwrEscSdoTypes {
  *  
  **/ 
 
-class LpESC : public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>
+class LpESC :
+public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>,
+public PDO_log<McEscPdoTypes>,
+public Motor
 {
 public:
     typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> Base;
+    typedef PDO_log<McEscPdoTypes>                          Log;
 
     LpESC(const ec_slavet& slave_descriptor) :
-           Base(slave_descriptor)
+        Base(slave_descriptor),
+        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),100000)
     {
         init_SDOs();
         init_sdo_lookup();
+        // set filename with robot_id
+        log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+
     }
     virtual ~LpESC(void) { 
         delete [] SDOs;
@@ -106,7 +114,34 @@ public:
     }
 
     virtual const objd_t * get_SDO_objd() { return SDOs; }
+
     virtual void init_SDOs(void);
+
+    ///////////////////////////////////////////////////////
+    ///
+    ///////////////////////////////////////////////////////
+
+    virtual int start(void) {
+
+    }
+
+    virtual int stop(void) {
+
+    }
+
+    virtual int set_posRef(float joint_pos) {
+
+    }
+
+    virtual int set_posGainP(float p_gain) {
+
+    }
+    virtual int set_posGainI(float i_gain) {
+
+    }
+    virtual int set_posGainD(float d_gain) {
+
+    }
 
 private:
     objd_t * SDOs;

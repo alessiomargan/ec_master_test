@@ -119,86 +119,98 @@ char acName8001_9[] = "flash_parameters_command_ack";
 
 static const iit::ecat::objd_t source_SDOs[] =
 {
-/*
+
     // SDO6000[] =
-    {0x6000, 0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_temp,    (void*)&LPESC::sdo_rx_pdo.max_temperature},
-    {0x6000, 0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_pos,     (void*)&LPESC::sdo_rx_pdo.position},
-    {0x6000, 0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_vel,     (void*)&LPESC::sdo_rx_pdo.velocity},
-    {0x6000, 0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_tor,     (void*)&LPESC::sdo_rx_pdo.torque},
-    {0x6000, 0x5, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_fault,   (void*)&LPESC::sdo_rx_pdo.fault},
-    {0x6000, 0x6, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_rtt,     (void*)&LPESC::sdo_rx_pdo.rtt},
+    {0x6000, 0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_temp        ,0   }, 
+    {0x6000, 0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_pos         ,0   }, 
+    {0x6000, 0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_vel         ,0   }, 
+    {0x6000, 0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_tor         ,0   }, 
+    {0x6000, 0x5, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_fault       ,0   }, 
+    {0x6000, 0x6, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_rtt         ,0   }, 
+    // SDO7000[] =                                                        
+    {0x7000, 0x1, DTYPE_REAL32,     32, ATYPE_RW, acName7000_1            ,0   },
+    {0x7000, 0x2, DTYPE_REAL32,     32, ATYPE_RW, acName7000_2            ,0   },
+    {0x7000, 0x3, DTYPE_REAL32,     32, ATYPE_RW, acName7000_3            ,0   },
+    {0x7000, 0x4, DTYPE_REAL32,     32, ATYPE_RW, acName7000_4            ,0   },
+    {0x7000, 0x5, DTYPE_REAL32,     32, ATYPE_RW, acName7000_5            ,0   },
+    {0x7000, 0x6, DTYPE_UNSIGNED64, 64, ATYPE_RW, acName7000_6            ,0   },
+    // SDO8000[] =                                                          
+    {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1         ,0   }, 
+    {0x8000, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_2         ,0   }, 
+    {0x8000, 0x3, DTYPE_REAL32,        32, ATYPE_RW, acName8000_3         ,0   }, 
+    {0x8000, 0x4, DTYPE_REAL32,        32, ATYPE_RW, acName8000_4         ,0   }, 
+    {0x8000, 0x5, DTYPE_REAL32,        32, ATYPE_RW, acName8000_5         ,0   }, 
+    {0x8000, 0x6, DTYPE_REAL32,        32, ATYPE_RW, acName8000_6         ,0   }, 
+    {0x8000, 0x7, DTYPE_REAL32,        32, ATYPE_RW, acName8000_7         ,0   }, 
+    {0x8000, 0x8, DTYPE_REAL32,        32, ATYPE_RW, acName8000_8         ,0   }, 
+    {0x8000, 0x9, DTYPE_REAL32,        32, ATYPE_RW, acName8000_9         ,0   }, 
+    {0x8000, 0xa, DTYPE_REAL32,        32, ATYPE_RW, acName8000_10        ,0   }, 
+    {0x8000, 0xb, DTYPE_REAL32,        32, ATYPE_RW, acName8000_11        ,0   }, 
+    {0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW, acName8000_12        ,0   }, 
+    {0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RW, acName8000_13        ,0   }, 
+    {0x8000, 0xe, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_14        ,0   }, 
+    {0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW, acName8000_15        ,0   }, 
+    {0x8000, 0x10, DTYPE_REAL32,       32, ATYPE_RW, acName8000_16        ,0   }, 
+    {0x8000, 0x11, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_17        ,0   }, 
+    {0x8000, 0x12, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_18        ,0   }, 
+    {0x8000, 0x13, DTYPE_REAL32,       32, ATYPE_RW, acName8000_19        ,0   }, 
+    {0x8000, 0x14, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_20        ,0   }, 
+    {0x8000, 0x15, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_21        ,0   }, 
+    {0x8000, 0x16, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_22        ,0   }, 
+    {0x8000, 0x17, DTYPE_REAL32,       32, ATYPE_RW, acName8000_23        ,0   }, 
+    {0x8000, 0x18, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_24        ,0   }, 
+    {0x8000, 0x19, DTYPE_REAL32,       32, ATYPE_RW, acName8000_25        ,0   }, 
+    {0x8000, 0x1a, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_26        ,0   }, 
+    {0x8000, 0x1b, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_27        ,0   }, 
+    {0x8000, 0x1c, DTYPE_REAL32,       32, ATYPE_RW, acName8000_28        ,0   }, 
+    {0x8000, 0x1d, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_29        ,0   }, 
+    {0x8000, 0x1e, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_30        ,0   }, 
+    {0x8000, 0x1f, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_31        ,0   }, 
+    {0x8000, 0x20, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_32        ,0   }, 
+    {0x8000, 0x21,DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_33        ,0   }, 
+    {0x8000, 0x22,DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_34        ,0   }, 
+                                                                        
+    // SDO8001[] =                                                      
+    {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1      ,0   }, 
+    {0x8001, 0x2, DTYPE_INTEGER32,        32, ATYPE_RW, acName8001_2      ,0   }, 
+    {0x8001, 0x3, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_3      ,0   }, 
+    {0x8001, 0x4, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_4      ,0   }, 
+    {0x8001, 0x5, DTYPE_REAL32,           32, ATYPE_RO, acName8001_5      ,0   }, 
+    {0x8001, 0x6, DTYPE_REAL32,           32, ATYPE_RO, acName8001_6      ,0   }, 
+    {0x8001, 0x7, DTYPE_REAL32,           32, ATYPE_RO, acName8001_7      ,0   }, 
+    {0x8001, 0x8, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_8      ,0   }, 
+    {0x8001, 0x9, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_9      ,0   }, 
+                                                                      
+    {0, 0, 0, 0, 0, 0, 0 }                                                
+};                                                                    
+                                                                      
+                                                                      
+                                                                      
+                                                                      
+                                                                      
+void LpESC::init_SDOs(void) {                                         
+                                                                      
+    int objd_num, i = 0;                                              
+                                                                      
+    objd_num = sizeof(source_SDOs)/sizeof(objd_t);                    
+    SDOs = new objd_t [objd_num];                                     
+                                                                      
+    memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));            
 
-    // SDO7000[] =
-    {0x7000, 0x1, DTYPE_REAL32,     32, ATYPE_RW, acName7000_1, (void*)&LPESC::sdo_tx_pdo.pos_ref},
-    {0x7000, 0x2, DTYPE_REAL32,     32, ATYPE_RW, acName7000_2, (void*)&LPESC::sdo_tx_pdo.tor_offs},
-    {0x7000, 0x3, DTYPE_REAL32,     32, ATYPE_RW, acName7000_3, (void*)&LPESC::sdo_tx_pdo.PosGainP},
-    {0x7000, 0x4, DTYPE_REAL32,     32, ATYPE_RW, acName7000_4, (void*)&LPESC::sdo_tx_pdo.PosGainI},
-    {0x7000, 0x5, DTYPE_REAL32,     32, ATYPE_RW, acName7000_5, (void*)&LPESC::sdo_tx_pdo.PosGainD},
-    {0x7000, 0x6, DTYPE_UNSIGNED64, 64, ATYPE_RW, acName7000_6, (void*)&LPESC::sdo_tx_pdo.ts},
-*/
-    // SDO8000[] =
-    {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1,      0      }, 
-    {0x8000, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_2,      0      }, 
-    {0x8000, 0x3, DTYPE_REAL32,        32, ATYPE_RW, acName8000_3,      0      }, 
-    {0x8000, 0x4, DTYPE_REAL32,        32, ATYPE_RW, acName8000_4,      0      }, 
-    {0x8000, 0x5, DTYPE_REAL32,        32, ATYPE_RW, acName8000_5,      0      }, 
-    {0x8000, 0x6, DTYPE_REAL32,        32, ATYPE_RW, acName8000_6,      0      }, 
-    {0x8000, 0x7, DTYPE_REAL32,        32, ATYPE_RW, acName8000_7,      0      }, 
-    {0x8000, 0x8, DTYPE_REAL32,        32, ATYPE_RW, acName8000_8,      0      }, 
-    {0x8000, 0x9, DTYPE_REAL32,        32, ATYPE_RW, acName8000_9,      0      }, 
-    {0x8000, 0xa, DTYPE_REAL32,        32, ATYPE_RW, acName8000_10,     0      }, 
-    {0x8000, 0xb, DTYPE_REAL32,        32, ATYPE_RW, acName8000_11,     0      }, 
-    {0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW, acName8000_12,     0      }, 
-    {0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RW, acName8000_13,     0      }, 
-    {0x8000, 0xe, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_14,     0      }, 
-    {0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW, acName8000_15,     0      }, 
-    {0x8000, 0x10, DTYPE_REAL32,       32, ATYPE_RW, acName8000_16,     0      }, 
-    {0x8000, 0x11, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_17,     0      }, 
-    {0x8000, 0x12, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_18,     0      }, 
-    {0x8000, 0x13, DTYPE_REAL32,       32, ATYPE_RW, acName8000_19,     0      }, 
-    {0x8000, 0x14, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_20,     0      }, 
-    {0x8000, 0x15, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_21,     0      }, 
-    {0x8000, 0x16, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_22,     0      }, 
-    {0x8000, 0x17, DTYPE_REAL32,       32, ATYPE_RW, acName8000_23,     0      }, 
-    {0x8000, 0x18, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_24,     0      }, 
-    {0x8000, 0x19, DTYPE_REAL32,       32, ATYPE_RW, acName8000_25,     0      }, 
-    {0x8000, 0x1a, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_26,     0      }, 
-    {0x8000, 0x1b, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_27,     0      }, 
-    {0x8000, 0x1c, DTYPE_REAL32,       32, ATYPE_RW, acName8000_28,     0      }, 
-    {0x8000, 0x1d, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_29,     0      }, 
-    {0x8000, 0x1e, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_30,     0      }, 
-    {0x8000, 0x1f, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_31,     0      }, 
-    {0x8000, 0x20, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_32,     0      }, 
-    {0x8000, 0x21,DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_33,     0      }, 
-    {0x8000, 0x22,DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_34,     0      }, 
-                  
-    // SDO8001[] =
-    {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1, 0      }, 
-    {0x8001, 0x2, DTYPE_INTEGER32,        32, ATYPE_RW, acName8001_2, 0      }, 
-    {0x8001, 0x3, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_3, 0      }, 
-    {0x8001, 0x4, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_4, 0      }, 
-    {0x8001, 0x5, DTYPE_REAL32,           32, ATYPE_RO, acName8001_5, 0      }, 
-    {0x8001, 0x6, DTYPE_REAL32,           32, ATYPE_RO, acName8001_6, 0      }, 
-    {0x8001, 0x7, DTYPE_REAL32,           32, ATYPE_RO, acName8001_7, 0      }, 
-    {0x8001, 0x8, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_8, 0      }, 
-    {0x8001, 0x9, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_9, 0      }, 
-                                                                     
-    {0, 0, 0, 0, 0, 0}                                               
-};                                                                   
-                                                                     
-                                                                     
-                                                                     
-
-
-void LpESC::init_SDOs(void) {
-
-    int objd_num, i = 0;
-
-    objd_num = sizeof(source_SDOs)/sizeof(objd_t);
-    SDOs = new objd_t [objd_num];
-
-    memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));
-
+    // 0x6000        
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.max_temperature; 
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.position;       
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.velocity;       
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.torque;         
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.fault;            
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.rtt;            
+    // 0x7000        
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.pos_ref; 
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.tor_offs;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.PosGainP;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.PosGainI;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.PosGainD;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.ts;      
     // 0x8000
     SDOs[i++].data = (void*)&LpESC::sdo.Block_control;      
     SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset_low;  

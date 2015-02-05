@@ -72,77 +72,79 @@ static const char acName8001_9[] = "flash_params_cmd";
 static const char acName8001_10[] = "flash_params_cmd_ack";
 
 
-//FT6_tFlashParameters    Ft6ESC::sdo;
-//FT6_tParameters         Ft6ESC::sdo;
-//FtESCTypes::pdo_rx      FtESC::sdo_rx_pdo;
-//FtESCTypes::pdo_tx      FtESC::sdo_tx_pdo;
-
-//template<class EscPDOTypes, class EscSDOTypes>
-//typename BasicEscWrapper<EscPDOTypes, EscSDOTypes>::sdo_t    BasicEscWrapper<EscPDOTypes, EscSDOTypes>::sdo;
-
 
 static const iit::ecat::objd_t source_SDOs[] =
 {
-/*
-    // SDO6000[] =
-    {0x6000,    0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force0,     (void*)&FtESC::sdo_rx_pdo.force_X},
-    {0x6000,    0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force1,     (void*)&FtESC::sdo_rx_pdo.force_Y},
-    {0x6000,    0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force2,     (void*)&FtESC::sdo_rx_pdo.force_Z},
-    {0x6000,    0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force3,     (void*)&FtESC::sdo_rx_pdo.torque_X},
-    {0x6000,    0x5, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force4,     (void*)&FtESC::sdo_rx_pdo.torque_Y},
-    {0x6000,    0x6, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force5,     (void*)&FtESC::sdo_rx_pdo.torque_Z},
-    {0x6000,    0x7, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_fault,      (void*)&FtESC::sdo_rx_pdo.fault},
-    {0x6000,    0x8, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_rtt,        (void*)&FtESC::sdo_rx_pdo.rtt},
-    // SDO7000[] =                                                           
-    {0x7000,    0x1, DTYPE_UNSIGNED64,  64, ATYPE_RW, acName7000_4,          (void*)&FtESC::sdo_tx_pdo.ts},
-*/
-    // SDO8000[] =                                                           
-    {0x8000,    0x1, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_1,          0      }, 
-    {0x8000,    0x2, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_2,          0      }, 
-    {0x8000,    0x3, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_3,          0      }, 
-    {0x8000,    0x4, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_4,          0      }, 
-    {0x8000,    0x5, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_5,          0      }, 
-    {0x8000,    0x6, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_6,          0      }, 
-    {0x8000,    0x7, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_7,          0      }, 
-    {0x8000,    0x8, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_8,          0      }, 
-    {0x8000,    0x9, DTYPE_REAL32,      32, ATYPE_RW, acName8000_9,          0      }, 
-    {0x8000,    0xa, DTYPE_REAL32,      32, ATYPE_RW, acName8000_10,         0      }, 
-    {0x8000,    0xb, DTYPE_REAL32,      32, ATYPE_RW, acName8000_11,         0      }, 
-    {0x8000,    0xc, DTYPE_REAL32,      32, ATYPE_RW, acName8000_12,         0      }, 
-    {0x8000,    0xd, DTYPE_REAL32,      32, ATYPE_RW, acName8000_13,         0      }, 
-    {0x8000,    0xe, DTYPE_REAL32,      32, ATYPE_RW, acName8000_14,         0      }, 
-    {0x8000,    0xf, DTYPE_REAL32,      32, ATYPE_RW, acName8000_15,         0      }, 
-    {0x8000,    0x10, DTYPE_REAL32,     32, ATYPE_RW, acName8000_16,         0      }, 
-    {0x8000,    0x11, DTYPE_REAL32,     32, ATYPE_RW, acName8000_17,         0      }, 
-    {0x8000,    0x12, DTYPE_REAL32,     32, ATYPE_RW, acName8000_18,         0      }, 
-    {0x8000,    0x13, DTYPE_REAL32,     32, ATYPE_RW, acName8000_19,         0      }, 
-    {0x8000,    0x14, DTYPE_REAL32,     32, ATYPE_RW, acName8000_20,         0      }, 
-    // SDO8001[] =                                                           
-    {0x8001,    0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1,     0      },
-    {0x8001,    0x2, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_2,     0      },
-    {0x8001,    0x3, DTYPE_REAL32,           32, ATYPE_RW, acName8001_3,     0      },
-    {0x8001,    0x4, DTYPE_REAL32,           32, ATYPE_RW, acName8001_4,     0      },
-    {0x8001,    0x5, DTYPE_REAL32,           32, ATYPE_RW, acName8001_5,     0      },
-    {0x8001,    0x6, DTYPE_REAL32,           32, ATYPE_RW, acName8001_6,     0      },
-    {0x8001,    0x7, DTYPE_REAL32,           32, ATYPE_RW, acName8001_7,     0      },
-    {0x8001,    0x8, DTYPE_REAL32,           32, ATYPE_RW, acName8001_8,     0      },
-    {0x8001,    0x9, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_9,     0      },
-    {0x8001,    0xa, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_10,    0      },
-                                                                             
-    {0, 0, 0, 0, 0, 0}                                                       
-};                                                                           
-                                                                             
-                                                                             
-                                                                             
-void Ft6ESC::init_SDOs(void) {                                               
-                                                                             
-    int objd_num, i = 0;
 
+    // SDO6000[] =
+    {0x6000,    0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force0     ,0     },
+    {0x6000,    0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force1     ,0     },
+    {0x6000,    0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force2     ,0     },
+    {0x6000,    0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force3     ,0     },
+    {0x6000,    0x5, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force4     ,0     },
+    {0x6000,    0x6, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force5     ,0     },
+    {0x6000,    0x7, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_fault      ,0     },
+    {0x6000,    0x8, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_rtt        ,0     },
+    // SDO7000[] =                                                           
+    {0x7000,    0x1, DTYPE_UNSIGNED64,  64, ATYPE_RW, acName7000_4          ,0     },
+    // SDO8000[] =                                                           
+    {0x8000,    0x1, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_1          ,0     },
+    {0x8000,    0x2, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_2          ,0     },
+    {0x8000,    0x3, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_3          ,0     },
+    {0x8000,    0x4, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_4          ,0     },
+    {0x8000,    0x5, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_5          ,0     },
+    {0x8000,    0x6, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_6          ,0     },
+    {0x8000,    0x7, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_7          ,0     },
+    {0x8000,    0x8, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_8          ,0     },
+    {0x8000,    0x9, DTYPE_REAL32,      32, ATYPE_RW, acName8000_9          ,0     },
+    {0x8000,    0xa, DTYPE_REAL32,      32, ATYPE_RW, acName8000_10         ,0     },
+    {0x8000,    0xb, DTYPE_REAL32,      32, ATYPE_RW, acName8000_11         ,0     },
+    {0x8000,    0xc, DTYPE_REAL32,      32, ATYPE_RW, acName8000_12         ,0     },
+    {0x8000,    0xd, DTYPE_REAL32,      32, ATYPE_RW, acName8000_13         ,0     },
+    {0x8000,    0xe, DTYPE_REAL32,      32, ATYPE_RW, acName8000_14         ,0     },
+    {0x8000,    0xf, DTYPE_REAL32,      32, ATYPE_RW, acName8000_15         ,0     },
+    {0x8000,    0x10, DTYPE_REAL32,     32, ATYPE_RW, acName8000_16         ,0     },
+    {0x8000,    0x11, DTYPE_REAL32,     32, ATYPE_RW, acName8000_17         ,0     },
+    {0x8000,    0x12, DTYPE_REAL32,     32, ATYPE_RW, acName8000_18         ,0     },
+    {0x8000,    0x13, DTYPE_REAL32,     32, ATYPE_RW, acName8000_19         ,0     },
+    {0x8000,    0x14, DTYPE_REAL32,     32, ATYPE_RW, acName8000_20         ,0     },
+    // SDO8001[] =                                                           
+    {0x8001,    0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1     ,0     },
+    {0x8001,    0x2, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_2     ,0     },
+    {0x8001,    0x3, DTYPE_REAL32,           32, ATYPE_RW, acName8001_3     ,0     },
+    {0x8001,    0x4, DTYPE_REAL32,           32, ATYPE_RW, acName8001_4     ,0     },
+    {0x8001,    0x5, DTYPE_REAL32,           32, ATYPE_RW, acName8001_5     ,0     },
+    {0x8001,    0x6, DTYPE_REAL32,           32, ATYPE_RW, acName8001_6     ,0     },
+    {0x8001,    0x7, DTYPE_REAL32,           32, ATYPE_RW, acName8001_7     ,0     },
+    {0x8001,    0x8, DTYPE_REAL32,           32, ATYPE_RW, acName8001_8     ,0     },
+    {0x8001,    0x9, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_9     ,0     },
+    {0x8001,    0xa, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_10    ,0     },
+                                                                          
+    {0, 0, 0, 0, 0, 0, 0 }                                                    
+};                                                                        
+                                                                          
+                                                                          
+                                                                          
+void Ft6ESC::init_SDOs(void) {                                            
+                                                                          
+    int objd_num, i = 0;                                                  
+                                                                          
     objd_num = sizeof(source_SDOs)/sizeof(objd_t);
     SDOs = new objd_t [objd_num];
                                                                
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));                   
 
+    // 0x6000
+    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.force_X;    
+    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.force_Y;    
+    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.force_Z;    
+    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.torque_X;   
+    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.torque_Y;   
+    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.torque_Z;   
+    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.fault;      
+    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.rtt;        
+    // 0x7000 
+    SDOs[i++].data = (void*)&Ft6ESC::tx_pdo.ts;         
     // 0x8000
     SDOs[i++].data = (void*)&Ft6ESC::sdo.Block_control;      
     SDOs[i++].data = (void*)&Ft6ESC::sdo.NumAvSamples;       

@@ -6,45 +6,6 @@ using namespace iit::ecat::advr;
 Rid2PosMap  rid2pos;
 
 
-template <class C>
-inline int ack_faults_X(C *c, int32_t faults)
-{
-    int32_t xor_faults = 0xFFFFFFFF;
-    //xor_faults ^= xor_faults;
-    return c->template set_SDO_byname("ack_board_fault_all", xor_faults);
-
-}
-
-
-template <class C>
-inline int set_ctrl_status_X(C *c, int16_t cmd)
-{
-    int16_t ack;
-
-    cmd = cmd & 0x00FF;
-    c->template set_SDO_byname("ctrl_status_cmd", cmd);
-    c->template get_SDO_byname("ctrl_status_cmd_ack", ack);
-
-    // check 
-    DPRINTF("set_ctrl_status ");
-    return check_cmd_ack(cmd, ack);
-}
-
-template <class C>
-inline int set_flash_cmd_X(C *c, uint16_t cmd)
-{
-    int16_t ack;
-
-    cmd = cmd & 0x00FF;
-    c->template set_SDO_byname("flash_params_cmd", cmd);
-    c->template get_SDO_byname("flash_params_cmd_ack", ack);
-
-    // check 
-    DPRINTF("flash_params_cmd ");
-    return check_cmd_ack(cmd, ack);
-
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -495,7 +456,7 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
 
     // second boot state request is handled by bootloader
     // now the slave should go in BOOT state
-    if ( ! req_state_check(slave_pos, EC_STATE_BOOT) ) {
+    if ( req_state_check(slave_pos, EC_STATE_BOOT) != EC_STATE_BOOT ) {
         DPRINTF("Slave %d not changed to BOOT state.\n", slave_pos);
         return 0;
     }

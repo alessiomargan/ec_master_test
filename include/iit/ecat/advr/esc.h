@@ -61,6 +61,45 @@ inline int check_cmd_ack(int16_t cmd, int16_t ack)
 
 }
 
+template <class C>
+inline int ack_faults_X(C *c, int32_t faults)
+{
+    int32_t xor_faults = 0xFFFFFFFF;
+    //xor_faults ^= xor_faults;
+    return c->template set_SDO_byname("ack_board_fault_all", xor_faults);
+
+}
+
+
+template <class C>
+inline int set_ctrl_status_X(C *c, int16_t cmd)
+{
+    int16_t ack;
+
+    cmd = cmd & 0x00FF;
+    c->template set_SDO_byname("ctrl_status_cmd", cmd);
+    c->template get_SDO_byname("ctrl_status_cmd_ack", ack);
+
+    // check 
+    DPRINTF("set_ctrl_status ");
+    return check_cmd_ack(cmd, ack);
+}
+
+template <class C>
+inline int set_flash_cmd_X(C *c, uint16_t cmd)
+{
+    int16_t ack;
+
+    cmd = cmd & 0x00FF;
+    c->template set_SDO_byname("flash_params_cmd", cmd);
+    c->template get_SDO_byname("flash_params_cmd_ack", ack);
+
+    // check 
+    DPRINTF("flash_params_cmd ");
+    return check_cmd_ack(cmd, ack);
+
+}
+
 struct FAULT_BITS {
     uint16_t  rxpdo_pos_ref:1;
     uint16_t  rxpdo_tor_offs:1;
@@ -125,6 +164,25 @@ struct McEscPdoTypes {
 };
 
 
+class Motor
+{
+public:
+
+    virtual int start() = 0;
+
+    virtual int stop() = 0;
+
+    virtual int set_posRef(float joint_pos) = 0;
+    virtual int set_posGainP(float p_gain)  = 0;
+    virtual int set_posGainI(float i_gain)  = 0;
+    virtual int set_posGainD(float d_gain)  = 0;
+
+    //virtual int get_pos(float &joint_pos)   = 0;
+    //virtual int get_posGainP(float &p_gain) = 0;
+    //virtual int get_posGainI(float &i_gain) = 0;
+    //virtual int get_posGainD(float &d_gain) = 0;
+
+};
 
 
 template<class EscPDOTypes>

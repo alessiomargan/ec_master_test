@@ -239,6 +239,8 @@ public:
     LpESC *  slave_as_LP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<LpESC*>(slaves[sPos].get()) : NULL;}
     Ft6ESC * slave_as_FT(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Ft6ESC*>(slaves[sPos].get()) : NULL;}
 
+    Motor *  slave_as_Motor(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Motor*>(slaves[sPos].get()) : NULL;}
+
     void rd_LOCK(void);
     void rd_UNLOCK(void);
     void wr_LOCK(void);
@@ -310,6 +312,9 @@ inline void Ec_Boards_ctrl::wr_UNLOCK(void)
     pthread_mutex_unlock(&wr_mtx);
 #endif
 }
+
+
+
 
 } 
 }

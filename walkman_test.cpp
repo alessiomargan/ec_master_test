@@ -166,7 +166,11 @@ int main(int argc, char **argv)
     //    52, 53, 54, 55, 56
     //};
     std::vector<int> rIDs = {
-        41, 51,
+        42, 52,
+        43, 53,
+        44, 54,
+        45, 55,
+        46, 56,
     };
 #endif
     
@@ -260,20 +264,6 @@ int main(int argc, char **argv)
     it ++;
     row = *it;
     rit = row.begin();
-#if 0
-    home[41] = J2M(*rit,sgn[41],off[41]); rit++;//M_PI - (sgn[41]*off[41]) + (sgn[41]*(*rit)); rit++;
-    home[42] = J2M(*rit,sgn[42],off[42]); rit++;//M_PI - (sgn[42]*off[42]) + (sgn[42]*(*rit)); rit++;
-    home[43] = J2M(*rit,sgn[43],off[43]); rit++;//M_PI - (sgn[43]*off[43]) + (sgn[43]*(*rit)); rit++;
-    home[44] = J2M(*rit,sgn[44],off[44]); rit++;//M_PI - (sgn[44]*off[44]) + (sgn[44]*(*rit)); rit++;
-    home[45] = J2M(*rit,sgn[45],off[45]); rit++;//M_PI - (sgn[45]*off[45]) + (sgn[45]*(*rit)); rit++;
-    home[46] = J2M(*rit,sgn[46],off[46]); rit++;//M_PI - (sgn[46]*off[46]) + (sgn[46]*(*rit)); rit++;
-    home[51] = J2M(*rit,sgn[51],off[51]); rit++;//M_PI - (sgn[51]*off[51]) + (sgn[51]*(*rit)); rit++;
-    home[52] = J2M(*rit,sgn[52],off[52]); rit++;//M_PI - (sgn[52]*off[52]) + (sgn[52]*(*rit)); rit++;
-    home[53] = J2M(*rit,sgn[53],off[53]); rit++;//M_PI - (sgn[53]*off[53]) + (sgn[53]*(*rit)); rit++;
-    home[54] = J2M(*rit,sgn[54],off[54]); rit++;//M_PI - (sgn[54]*off[54]) + (sgn[54]*(*rit)); rit++;
-    home[55] = J2M(*rit,sgn[55],off[55]); rit++;//M_PI - (sgn[55]*off[55]) + (sgn[55]*(*rit)); rit++;
-    home[56] = J2M(*rit,sgn[56],off[56]); rit++;//M_PI - (sgn[56]*off[56]) + (sgn[56]*(*rit)); rit++;
-#else
     home[41] = *rit; rit++; 
     home[42] = *rit; rit++; 
     home[43] = *rit; rit++; 
@@ -286,7 +276,7 @@ int main(int argc, char **argv)
     home[54] = *rit; rit++; 
     home[55] = *rit; rit++; 
     home[56] = *rit; rit++; 
-#endif
+
     for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
         std::cout << *it << " " << home[*it] << std::endl; 
     }
@@ -389,7 +379,7 @@ int main(int argc, char **argv)
     std::vector<std::vector<float>>::const_iterator trj_it = trj.begin();
     trj_it++;
     trj_it++;
-    DPRINTF("\n***** START TRAJECTORY *****\n", *it, home[*it], mc_pdo_tx.pos_ref, mc_pdo_rx.position);
+    DPRINTF("\n***** START TRAJECTORY *****\n");
 #endif
  
     for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
