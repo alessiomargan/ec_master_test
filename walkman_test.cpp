@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     uint64_t    dt;
     double time = 0;
     int sPos = 0;
-#if 1
+#if 0
     std::vector<int> rIDs = {
         41, 51, // hip  
         42, 52,

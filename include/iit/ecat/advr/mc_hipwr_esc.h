@@ -166,7 +166,7 @@ protected :
         tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
 
-    virtual void on_getSDO(const objd_t * sdo)  {
+    virtual int on_getSDO(const objd_t * sdo)  {
 
         if ( ! strcmp(sdo->name, "position") ) {
             rx_pdo.position = M2J(rx_pdo.position,_sgn,_offset);
@@ -174,8 +174,10 @@ protected :
         }
     }
 
-    virtual void on_setSDO(const objd_t * sdo) {
+    virtual int on_setSDO(const objd_t * sdo) {
 
+        if () {
+        }
         if ( ! strcmp(sdo->name, "pos_ref") ) {
             tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
             //DPRINTF("on_setSDO J2M pos_ref %f\n", tx_pdo.pos_ref);
