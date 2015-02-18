@@ -1,0 +1,233 @@
+#
+
+ec_board_ctrl:
+  eth_iface: rteth0
+  sync_cycle_time_ns: 1000000
+  sync_cycle_offset_ns: 500000000
+
+firmware_update:
+  # slave robot id
+  # legs motors
+  slave_rId_list: [41,41,42,43,44,45,46,51,52,53,54,55,56]
+  # upper body big medium motors
+  #slave_rId_list: [31,31,32,33,11,12,13,14,21,22,23,24]
+  # upper body small motors
+  #slave_rId_list: [15,15,16,17,19,25,26,27,29]
+  #slave_pos_list: [2]
+  #slave_rId_list: []
+  big_motor:
+    bin_file: BigMotor.bin
+    passwd: 0xb001
+  medium_motor:
+    bin_file: MedMotor.bin
+    passwd: 0xb002
+  small_motor:
+    bin_file: mc_tm4c.bin
+    passwd: 0xbeef
+  force_torque_6:
+    bin_file: FT6.bin
+    passwd: 0xbeef
+
+#############################
+# RIGHT LEG
+#############################
+
+# RL_H_Y = 41
+HpESC_41:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [800.0 , 0.0 , 12.0]
+
+# RL_H_R = 42
+HpESC_42:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [180.0 , 0.0 , 3.0]
+
+# RL_H_P = 43
+HpESC_43:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [700.0 , 0.0 , 10.0]
+
+# RL_K = 44
+HpESC_44:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [500.0 , 0.0 , 1.0]
+
+# RL_A_P = 45
+HpESC_45:
+  sign: -1
+  pos_offset: 20
+  pid :
+    position: [500.0 , 0.0 , 2.0]
+
+# RL_A_R = 46
+HpESC_46:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [80.0 , 0.0 , 4.0]
+
+#############################
+# LEFT LEG
+#############################
+
+# LL_H_Y = 51
+HpESC_51:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [800.0 , 0.0 , 12.0]
+
+# LL_H_R = 52
+HpESC_52:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [180.0 , 0.0 , 3.0]
+
+# LL_H_P = 53
+HpESC_53:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [700.0 , 0.0 , 10.0]
+
+# LL_K = 54
+HpESC_54:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [500.0 , 0.0 , 1.0]
+
+# LL_A_P = 55
+HpESC_55:
+  sign: 1
+  pos_offset: 20
+  pid :
+    position: [500.0 , 0.0 , 2.0]
+
+# LL_A_R = 56
+HpESC_56:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [80.0 , 0.0 , 4.0]
+
+
+#############################
+# RIGHT ARM
+#############################
+
+# RA_SH_1 = 11
+HpESC_11:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# RA_SH_2 = 12
+HpESC_12:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# RA_SH_3 = 13
+HpESC_13:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# RA_EL_ = 14
+HpESC_14:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+
+#############################
+# LEFT ARM
+#############################
+
+# LA_SH_1 = 21
+HpESC_21:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# LA_SH_2 = 22
+HpESC_22:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# LA_SH_3 = 23
+HpESC_23:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# LA_EL_ = 24
+HpESC_24:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+#############################
+# WAIST
+#############################
+
+# WST_P = 31
+HpESC_31:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# WST_R = 32
+HpESC_32:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# WST_Y = 33
+HpESC_33:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+
+#############################
+# TEST JOINT
+#############################
+
+HpESC_100:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0, 0.0, 1.0]
+    mix_pos: [2500.0,0.005,100.0]
+
+HpESC_1000:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0, 0.0, 1.0]
+    mix_pos: [2500.0,0.005,100.0]
+
+

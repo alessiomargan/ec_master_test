@@ -19,7 +19,6 @@ using namespace iit::ecat::advr;
 static int run_loop = 1;
 
 
-extern Rid2PosMap  rid2pos;
  
 
 static void load_trj(std::string filename, std::vector<std::vector<float>> &trj) {
@@ -114,7 +113,7 @@ int main(int argc, char **argv)
 #endif
 
     if ( argc != 3 ) {
-        printf("Usage: %s ifname trajectory file\nifname = {eth0,rteth0} for example\n", argv[0]);
+        printf("Usage: %s config.yaml trajectory file\n", argv[0]);
         return 0;
     }
 
@@ -124,7 +123,7 @@ int main(int argc, char **argv)
 
     ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
 
-    if ( ec_boards_ctrl->init() <= 0 ) {
+    if ( ec_boards_ctrl->init() != EC_BOARD_OK ) {
         std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
         delete ec_boards_ctrl;
         return 0;
@@ -137,6 +136,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
     int cnt = 0;
     McEscPdoTypes::pdo_rx mc_pdo_rx;
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     uint64_t    dt;
     double time = 0;
     int sPos = 0;
-#if 0
+#if 1
     std::vector<int> rIDs = {
         41, 51, // hip  
         42, 52,
@@ -301,39 +301,53 @@ int main(int argc, char **argv)
         ec_boards_ctrl->ack_faults(sPos, mc_pdo_rx.fault);
         mc_pdo_tx.pos_ref = mc_pdo_rx.position;
         
-        if ( *it == 42 || *it == 46 || *it == 52 || *it == 56 ) {
+        if ( *it == 42 || *it == 52 ) {
 
             // medium
-            mc_pdo_tx.PosGainP = 60.0;
-            mc_pdo_tx.PosGainI = 0.0;
-            mc_pdo_tx.PosGainD = 1.0;
+            mc_pdo_tx.PosGainP = 180.0;
+            mc_pdo_tx.PosGainI = 0.0; //0.01;
+            mc_pdo_tx.PosGainD = 3.0;
+
+        } else if ( *it == 46 || *it == 56 ) {
+
+            // medium ankle roll
+            mc_pdo_tx.PosGainP = 80.0;
+            mc_pdo_tx.PosGainI = 0.0; //0.01;
+            mc_pdo_tx.PosGainD = 4.0;
 
         } else if ( *it == 41 || *it == 51 ) {
 
             // big hip yaw
             mc_pdo_tx.PosGainP = 800.0;
-            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainI = 0.0; //0.03;
             mc_pdo_tx.PosGainD = 12.0;
 
         } else if ( *it == 43 || *it == 53 ) {
 
             // big hip pitch
             mc_pdo_tx.PosGainP = 700.0;
-            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainI = 0.0; //0.03;
             mc_pdo_tx.PosGainD = 10.0;
 
         } else if ( *it == 44 || *it == 54 ) {
 
             // big knee
             mc_pdo_tx.PosGainP = 500.0;
-            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainI = 0.0; //0.02;
             mc_pdo_tx.PosGainD = 2.0;
-
+#if 0
+        } else if ( *it == 45 || *it == 55 ) {
+            
+            // test CTRL_SET_POS_LNK_MODE
+            mc_pdo_tx.PosGainP = 100.0;
+            mc_pdo_tx.PosGainI = 0.01;
+            mc_pdo_tx.PosGainD = 20.0;
+#endif
         } else {
         
             // big
             mc_pdo_tx.PosGainP = 500.0;
-            mc_pdo_tx.PosGainI = 0.0;
+            mc_pdo_tx.PosGainI = 0.0; //0.02;
             mc_pdo_tx.PosGainD = 2.0;
         }
         
@@ -365,6 +379,7 @@ int main(int argc, char **argv)
                 osal_usleep(1000);
 
             } else {
+                DPRINTF("%d Reach HOME to %f --> act %f\tref %f\n", *it, home[*it], mc_pdo_rx.position, mc_pdo_tx.pos_ref);
                 break;
             }
         }
@@ -393,9 +408,11 @@ int main(int argc, char **argv)
     while ( run_loop ) {
 
         // TO REMOVE
-        osal_usleep(1000);
+        osal_usleep(500);
 
-        ec_boards_ctrl->recv_from_slaves();
+        if ( ! ec_boards_ctrl->recv_from_slaves() ) {
+            //
+        }
 #ifdef TRJ
         if ( trj_it != trj.end() ) {
 
@@ -412,6 +429,10 @@ int main(int argc, char **argv)
                 //DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
                 ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
 
+                //if ( (cnt % 100) == 0 ) {
+                //    ec_boards_ctrl->check_sanity(sPos);
+                //}
+
             }
             trj_it++;
             //DPRINTF("\n\n");
@@ -419,7 +440,7 @@ int main(int argc, char **argv)
         } else {
             // end trajectory
             // exit while ....
-            break;
+            //break;
         }
 #else
         ///////////////////////////////////////////////////////////////////////
@@ -430,15 +451,12 @@ int main(int argc, char **argv)
             ec_boards_ctrl->getRxPDO(sPos, mc_pdo_rx);
             mc_pdo_tx.pos_ref = home[*it] + 0.2 * sinf(2*M_PI*time);
             //DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
-            //ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
+            ec_boards_ctrl->setTxPDO(sPos, mc_pdo_tx);
         }
         ///////////////////////////////////////////////////////////////////////
 #endif        
         ec_boards_ctrl->send_to_slaves();
 
-        if ( (cnt % 10) == 0 ) {
-            //ec_boards_ctrl->check_sanity(sPos);
-        }
         cnt++;
     }
 

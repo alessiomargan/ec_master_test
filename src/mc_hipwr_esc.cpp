@@ -8,7 +8,7 @@ using namespace iit::ecat;
 static const iit::ecat::objd_t source_SDOs[] =
 {
     // SD0 0x6000
-    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "max_temperature"          ,0     },
+    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "temperature"              ,0     },
     { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "position"                 ,0     },
     { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "velocity"                 ,0     },
     { 0X6000, 0x4, DTYPE_REAL32,        32,  ATYPE_RO,   "torque"                   ,0     },
@@ -36,7 +36,7 @@ static const iit::ecat::objd_t source_SDOs[] =
     { 0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW,    "Max_cur"                  ,0     },
     { 0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RO,    "Enc_offset"               ,0     },
     { 0x8000, 0xe, DTYPE_REAL32,        32, ATYPE_RO,    "Enc_relative_offset"      ,0     },
-    { 0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW,    "Phase_angle"              ,0     },
+    { 0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW,    "Calibration_angle"        ,0     },
     { 0x8000, 0x10,DTYPE_REAL32,        32, ATYPE_RW,    "Torque_lin_coeff"         ,0     },
     { 0x8000, 0x11,DTYPE_UNSIGNED64,    64, ATYPE_RW,    "Enc_mot_nonius_calib"     ,0     },
     { 0x8000, 0x12,DTYPE_UNSIGNED64,    64, ATYPE_RW,    "Enc_load_nonius_calib"    ,0     },
@@ -77,7 +77,7 @@ void HpESC::init_SDOs(void) {
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));
 
     // 0x6000 
-    SDOs[i++].data = (void*)&HpESC::rx_pdo.max_temperature;
+    SDOs[i++].data = (void*)&HpESC::rx_pdo.temperature;
     SDOs[i++].data = (void*)&HpESC::rx_pdo.position;       
     SDOs[i++].data = (void*)&HpESC::rx_pdo.velocity;       
     SDOs[i++].data = (void*)&HpESC::rx_pdo.torque;         

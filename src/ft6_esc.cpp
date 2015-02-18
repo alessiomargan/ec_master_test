@@ -52,12 +52,8 @@ static const char acName8000_11[] = "matrix_r1_c3";
 static const char acName8000_12[] = "matrix_r1_c4";
 static const char acName8000_13[] = "matrix_r1_c5";
 static const char acName8000_14[] = "matrix_r1_c6";
-static const char acName8000_15[] = "matrix_r2_c1";
-static const char acName8000_16[] = "matrix_r2_c2";
-static const char acName8000_17[] = "matrix_r2_c3";
-static const char acName8000_18[] = "matrix_r2_c4";
-static const char acName8000_19[] = "matrix_r2_c5";
-static const char acName8000_20[] = "matrix_r2_c6";
+static const char acName8000_15[] = "Sensor number";
+static const char acName8000_16[] = "Sensor robot id";
 
 static const char acName8001[] = "Parameter";
 static const char acName8001_1[] = "fw_ver";
@@ -102,12 +98,8 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x8000,    0xc, DTYPE_REAL32,      32, ATYPE_RW, acName8000_12         ,0     },
     {0x8000,    0xd, DTYPE_REAL32,      32, ATYPE_RW, acName8000_13         ,0     },
     {0x8000,    0xe, DTYPE_REAL32,      32, ATYPE_RW, acName8000_14         ,0     },
-    {0x8000,    0xf, DTYPE_REAL32,      32, ATYPE_RW, acName8000_15         ,0     },
-    {0x8000,    0x10, DTYPE_REAL32,     32, ATYPE_RW, acName8000_16         ,0     },
-    {0x8000,    0x11, DTYPE_REAL32,     32, ATYPE_RW, acName8000_17         ,0     },
-    {0x8000,    0x12, DTYPE_REAL32,     32, ATYPE_RW, acName8000_18         ,0     },
-    {0x8000,    0x13, DTYPE_REAL32,     32, ATYPE_RW, acName8000_19         ,0     },
-    {0x8000,    0x14, DTYPE_REAL32,     32, ATYPE_RW, acName8000_20         ,0     },
+    {0x8000,    0xf, DTYPE_INTEGER16,   16, ATYPE_RW, acName8000_15         ,0     },
+    {0x8000,    0x10, DTYPE_INTEGER16,  16, ATYPE_RW, acName8000_16         ,0     },
     // SDO8001[] =                                                           
     {0x8001,    0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1     ,0     },
     {0x8001,    0x2, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_2     ,0     },
@@ -160,12 +152,8 @@ void Ft6ESC::init_SDOs(void) {
     SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c4;       
     SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c5;       
     SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c6;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c1;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c2;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c3;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c4;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c5;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r2_c6;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.sensor_number;       
+    SDOs[i++].data = (void*)&Ft6ESC::sdo.sensor_robot_id;       
     // 0x8001
     SDOs[i++].data = (void*)&Ft6ESC::sdo.firmware_version;    
     SDOs[i++].data = (void*)&Ft6ESC::sdo.ack_board_fault;     

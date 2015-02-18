@@ -17,6 +17,8 @@
 #include <iit/ecat/ec_master_iface.h>
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
+#include <iit/ecat/advr/motor_iface.h>
+#include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -77,65 +79,64 @@ struct HiPwrEscSdoTypes {
 
 };
 
+
+struct HiPwrLogTypes {
+
+    uint64_t	ts;        		    // ns
+    float	    pos_ref;   		// rad
+    float		tor_offs;
+    float		PosGainP;
+    float		PosGainI;
+    float		PosGainD;
+    //                            
+    float		temperature; 	// C
+    float	    position;   		// rad
+    float		velocity;   		// rad/s
+    float		torque;     		// Nm
+    int32_t     fault;
+    uint64_t	rtt;        		// ns
+
+    void fprint(FILE *fp) {
+        fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+                ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
+                temperature,position,velocity,torque,fault,rtt);
+    }
+    void sprint(char *buff, size_t size) {
+        snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+                ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
+                temperature,position,velocity,torque,fault,rtt);
+    }
+};
+
 /**
- *  
- **/ 
+*  
+**/ 
 
 
 class HpESC :
 public BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes>,
-public PDO_log<McEscPdoTypes>,
-public Motor
-{
+public PDO_log<HiPwrLogTypes>,
+public Motor {
 public:
     typedef BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes> Base;
-    typedef PDO_log<McEscPdoTypes>                          Log;
+    typedef PDO_log<HiPwrLogTypes>                          Log;
 
     HpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),100000)
+        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
         _start_log = false;
-
-        init_SDOs();
-        init_sdo_lookup();
-        //objd_t * sdobj = getObjd_ptr("pos_ref");
-        //assert(sdobj);
-
-        // set filename with robot_id
-        log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
-
-        // Paranoid Direct_ref
-        float direct_ref = 0.0;
-        set_SDO_byname("Direct_ref", direct_ref);
-        get_SDO_byname("Direct_ref", direct_ref);
-        assert(direct_ref == 0.0);
-
-        _actual_state = 0;
+        _actual_state = EC_STATE_PRE_OP;
     }
 
     virtual ~HpESC(void) {
 
         delete [] SDOs;
         DPRINTF("~%s %d\n", typeid(this).name(), position);
-    }
-
-    void set_off_sgn(float offset, int sgn) {
-        _offset = offset;
-        _sgn = sgn;
-    }
-    void set_pid(float p, float i, float d) {
-        _p = p; _i = i; _d = d;
-    }
-
-
-    void start_log(bool start) {
-
-        _start_log = start;
+        print_stat(s_rtt);
     }
 
     int16_t get_joint_robot_id() {
-
         //assert(sdo.Joint_robot_id != -1);
         return sdo.Joint_robot_id;
     }
@@ -150,12 +151,35 @@ protected :
 
     virtual void on_readPDO(void) {
 
-        rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
+        if ( rx_pdo.rtt ) {
+            rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
+            s_rtt(rx_pdo.rtt);
+        }
+
+        if ( rx_pdo.fault & 0x7FFF) {
+            handle_fault();
+        }
+
         // apply transformation from Motor to Joint 
         rx_pdo.position = M2J(rx_pdo.position,_sgn,_offset); 
-        // TODO check valid motor coordinate ...
-        if (_start_log) {
-            push_back(rx_pdo);
+
+        if ( _start_log ) {
+            Log::log_t log;
+            log.ts = get_time_ns() -_start_log_ts ;
+            log.pos_ref     = M2J(tx_pdo.pos_ref,_sgn,_offset);
+            log.tor_offs    = tx_pdo.tor_offs;
+            log.PosGainP    = tx_pdo.PosGainP;
+            log.PosGainI    = tx_pdo.PosGainI;
+            log.PosGainD    = tx_pdo.PosGainD;
+            // for TEST temperature is motor_enc
+            log.temperature = M2J(rx_pdo.temperature,_sgn,_offset);
+            //log.temperature = rx_pdo.temperature;
+            log.position    = rx_pdo.position;
+            log.velocity    = rx_pdo.velocity;
+            log.torque      = rx_pdo.torque;  
+            log.fault       = rx_pdo.fault;   
+            log.rtt         = rx_pdo.rtt;     
+            push_back(log);
         }
     }
 
@@ -166,65 +190,136 @@ protected :
         tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
 
-    virtual int on_getSDO(const objd_t * sdo)  {
+    virtual int on_readSDO(const objd_t * sdobj)  {
 
-        if ( ! strcmp(sdo->name, "position") ) {
+        if ( ! strcmp(sdobj->name, "position") ) {
             rx_pdo.position = M2J(rx_pdo.position,_sgn,_offset);
             //DPRINTF("on_getSDO M2J position %f\n", rx_pdo.position);
+        } else if ( ! strcmp(sdobj->name, "Min_pos") ) {
+            //DPRINTF("1 on_getSDO M2J min_pos %f\n", sdo.Min_pos);
+            sdo.Min_pos = M2J(sdo.Min_pos,_sgn,_offset);
+            //DPRINTF("2 on_getSDO M2J min_pos %f\n", sdo.Min_pos);
+        } else if ( ! strcmp(sdobj->name, "Max_pos") ) {
+            sdo.Max_pos = M2J(sdo.Max_pos,_sgn,_offset);
+            //DPRINTF("on_getSDO M2J max_pos %f\n", sdo.Max_pos);
         }
+        return EC_BOARD_OK;
     }
 
-    virtual int on_setSDO(const objd_t * sdo) {
+    virtual int on_writeSDO(const objd_t * sdo) {
 
-        if () {
+        // do not allow to write sdo that map txPDO
+        if ( _actual_state == EC_STATE_OPERATIONAL && sdo->index == 0x7000 ) {
+            return EC_WRP_SDO_WRITE_CB_FAIL;
         }
         if ( ! strcmp(sdo->name, "pos_ref") ) {
             tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
             //DPRINTF("on_setSDO J2M pos_ref %f\n", tx_pdo.pos_ref);
         }
+        return EC_BOARD_OK;
     }
 
-    virtual const objd_t * get_SDO_objd() { return SDOs; }
+    virtual const objd_t * get_SDO_objd() { return SDOs;}
 
     void init_SDOs(void);
 
 public :
     ///////////////////////////////////////////////////////
     ///
+    /// Motor method implementation
+    ///
+    ///////////////////////////////////////////////////////
+    virtual bool am_i_HpESC() { return true; }
+    virtual bool am_i_LpESC() { return false;}
+    virtual uint16_t get_ESC_type() {
+        if ( product_code == HI_PWR_AC_MC ) return HI_PWR_AC_MC;
+        if ( product_code == HI_PWR_DC_MC ) return HI_PWR_DC_MC;
+        return NO_TYPE;
+    }
+
+    virtual int init(const YAML::Node & root_cfg) {
+
+        int16_t Joint_robot_id;
+
+        try {
+
+            // !! sgn and offset must set before init_sdo_lookup !!
+            init_SDOs();
+            init_sdo_lookup();
+            
+            getSDO_byname("Joint_robot_id", Joint_robot_id);
+
+            std::string esc_conf_key = std::string("HpESC_"+std::to_string(Joint_robot_id));
+            const YAML::Node& esc_conf = root_cfg[esc_conf_key];
+            std::vector<float> conf_pid; 
+            if ( esc_conf.Type() != YAML::NodeType::Null ) {
+                esc_conf["sign"] >> _sgn; 
+                esc_conf["pos_offset"] >> _offset;
+                esc_conf["pid"]["position"] >> conf_pid;
+            }
+
+            // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
+            readSDO_byname("Min_pos");
+            readSDO_byname("Max_pos");
+            readSDO_byname("position");
+    
+            // set filename with robot_id
+            log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+
+            // Paranoid Direct_ref
+            float direct_ref = 0.0;
+            writeSDO_byname("Direct_ref", direct_ref);
+            readSDO_byname("Direct_ref", direct_ref);
+            assert(direct_ref == 0.0);
+            
+                
+        } catch (EscWrpError &e ) {
+
+            DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
+            return EC_BOARD_NOK;
+
+        } catch (std::exception &e) {
+    
+            DPRINTF("Exception %s ... %s\n", __FUNCTION__, e.what());
+            return EC_BOARD_NOK;
+        }
+        
+        return EC_BOARD_OK;
+        
+    }
     ///////////////////////////////////////////////////////
     /**
      * all done with mailbox 
-     *  
      * !! in OPERATIONAL DO NOT ALLOW to set_SDO that maps TX_PDO !!
-     *  
-     * 
      * @return int 
      */
-    virtual int start(void) {
+    virtual int start(int controller_type, float _p, float _i, float _d) {
 
         float act_position;
 
-        _actual_state = req_state_check(position, EC_STATE_PRE_OP);
-        if ( _actual_state != EC_STATE_PRE_OP ) {
-            return 1;
+        try {
+            // ack errors
+            // set direct mode and power on modulator
+            set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
+            set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
+            // set actual position as reference
+            readSDO_byname("position", act_position);
+            writeSDO_byname("pos_ref", act_position);
+            // set PID gains ... this will set tx_pdo.PosGainP ....
+            writeSDO_byname("PosGainP", _p);
+            writeSDO_byname("PosGainI", _i);
+            writeSDO_byname("PosGainD", _d);
+
+            // set position mode
+            set_ctrl_status_X(this, controller_type);
+            
+        } catch (EscWrpError &e ) {
+
+            DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
+            return EC_BOARD_NOK;
         }
-        // ack errors
 
-        // set direct mode and power on modulator
-        set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
-        set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
-        // set actual position as reference
-        get_SDO_byname("position", act_position);
-        set_SDO_byname("pos_ref", act_position);
-        // set PID gains 
-        set_SDO_byname("PosGainP", _p);
-        set_SDO_byname("PosGainI", _i);
-        set_SDO_byname("PosGainD", _d);
-
-        // set position mode
-        set_ctrl_status_X(this, CTRL_SET_POS_MODE);
-
-        return 0;
+        return EC_BOARD_OK;
 
     }
 
@@ -233,31 +328,52 @@ public :
         return set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
     }
 
+    virtual void set_off_sgn(float offset, int sgn) {
+        _offset = offset;
+        _sgn = sgn;
+    }
+    void start_log(bool start) {
+        _start_log = start;
+        _start_log_ts = get_time_ns();
+    }
+
+    virtual void handle_fault(void) {
+
+        fault_t fault;
+        fault.all = rx_pdo.fault;
+        //fault.bit.
+        ack_faults_X(this, fault.all);
+
+    }
+
+    /////////////////////////////////////////////
+    // set pdo data
     virtual int set_posRef(float joint_pos) {
-        
         tx_pdo.pos_ref = joint_pos;
     }
+    virtual int set_torOffs(float tor_offs) {
+        tx_pdo.tor_offs = tor_offs;
+    }
     virtual int set_posGainP(float p_gain) {
-
         tx_pdo.PosGainP = p_gain;
     }
     virtual int set_posGainI(float i_gain) {
-
         tx_pdo.PosGainI = i_gain;
     }
     virtual int set_posGainD(float d_gain) {
-
         tx_pdo.PosGainD = d_gain;
     }
 
+
 private:
-    
+
     float   _offset;
     int     _sgn;
-    float   _p, _i, _d;
 
-    bool    _start_log;
-    int     _actual_state;
+    bool        _start_log;
+    uint64_t    _start_log_ts;
+
+    stat_t  s_rtt;
 
     objd_t * SDOs;
 

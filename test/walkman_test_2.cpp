@@ -19,10 +19,6 @@ using namespace iit::ecat::advr;
 static int run_loop = 1;
 
 
-extern Rid2PosMap  rid2pos;
- 
-
-
 
 static void warn_upon_switch(int sig __attribute__((unused)))
 {
@@ -99,21 +95,22 @@ int main(int argc, char **argv)
 
     Ec_Boards_ctrl * ec_boards_ctrl;
 
-    ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
+    ec_boards_ctrl = new Ec_Boards_ctrl(std::string(argv[1])); 
 
-    if ( ec_boards_ctrl->init() <= 0 ) {
+    if ( ec_boards_ctrl->init() != EC_BOARD_OK ) {
         std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
         delete ec_boards_ctrl;
         return 0;
     }
     ec_boards_ctrl->configure_boards();
 
+    Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
     uint64_t    start = get_time_ns();
     uint64_t    dt;
     double time = 0;
     int sPos = 0;
-#if 0
+#if 1
     std::vector<int> rIDs = {
         41, 51, // hip  
         42, 52,
@@ -191,9 +188,9 @@ int main(int argc, char **argv)
 
         sPos = rid2pos[*it];
         
-        HpESC * hp = ec_boards_ctrl->slave_as_HP(sPos);
-        assert(hp);
-        hp->set_off_sgn(off[*it],sgn[*it]);
+        Motor * moto = ec_boards_ctrl->slave_as_Motor(sPos);
+        assert(moto);
+        moto->set_off_sgn(off[*it],sgn[*it]);
       
         if ( *it == 42 || *it == 46 || *it == 52 || *it == 56 ) {
             // medium
@@ -222,42 +219,58 @@ int main(int argc, char **argv)
             D = 2.0;
         }
         
-        hp->set_pid(P,I,D);
-        hp->start_log(true);
-        hp->get_SDO_byname("position", home[*it]);
-        hp->start();
+        moto->start_log(true);
+        moto->readSDO("position", home[*it]);
+        moto->start(CTRL_SET_POS_MODE, P, I, D);
 
     } // end for
 
+#if 0
     float pos, pos_ref;
 
     while ( run_loop ) {
 
         osal_usleep(1000);
 
-        time += 0.0001;
+        time += 0.0002;
 
         for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
             sPos = rid2pos[*it];
-            HpESC * hp = ec_boards_ctrl->slave_as_HP(sPos);
-            assert(hp);
+            Motor * moto = ec_boards_ctrl->slave_as_Motor(sPos);
+            assert(moto);
 
             pos_ref = home[*it] + 0.2 * sinf(2*M_PI*time);
-            hp->set_SDO_byname("pos_ref", pos_ref);
-
-            hp->get_SDO_byname("pos_ref", pos_ref);
-            hp->get_SDO_byname("position", pos);
-            DPRINTF("%d home %f pos %f pos_ref %f\n", *it, home[*it] ,pos, pos_ref);
+            moto->set_SDO("pos_ref", pos_ref);
+            moto->get_SDO("pos_ref", pos_ref);
+            moto->get_SDO("position", pos);
+            //DPRINTF("%d home %f pos %f pos_ref %f\n", *it, home[*it] ,pos, pos_ref);
         }
-
     }
+#else
+
+    if ( ec_boards_ctrl->set_operative() <= 0 ) {
+        std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl; 
+        delete ec_boards_ctrl;
+        return 0;
+    }
+
+    while (run_loop) {
+
+        if ( ! ec_boards_ctrl->recv_from_slaves() ) {
+            break;
+        }
+        ec_boards_ctrl->send_to_slaves();
+    }
+
+
+#endif
 
 
     for ( auto it = rIDs.begin(); it != rIDs.end(); it++ ) {
         sPos = rid2pos[*it];
-        HpESC * hp = ec_boards_ctrl->slave_as_HP(sPos);
-        assert(hp);
-        hp->stop();
+        Motor * moto = ec_boards_ctrl->slave_as_Motor(sPos);
+        assert(moto);
+        moto->stop();
     }
 
     /////////////////////////////////////////////////////////////////

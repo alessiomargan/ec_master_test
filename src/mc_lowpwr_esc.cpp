@@ -100,18 +100,18 @@ char acName8000_31[] = "Cal_Abs2_Position";
 char acName8000_32[] = "nonius offset2 high";
 char acName8000_33[] = "Joint_number";
 char acName8000_34[] = "Joint_robot_id";
-
+char acName8000_35[] = "Target velocity";
 
 char acName8001[] = "Parameter";
 char acName8001_1[] = "fw_ver";
 char acName8001_2[] = "ack_board_faults";
-char acName8001_3[] = "controller_set_status";
-char acName8001_4[] = "controller_get_status";
+char acName8001_3[] = "ctrl_status_cmd";
+char acName8001_4[] = "ctrl_status_cmd_ack";
 char acName8001_5[] = "V_batt";
 char acName8001_6[] = "T_inv";
 char acName8001_7[] = "T_mot";
-char acName8001_8[] = "flash_parameters_command";
-char acName8001_9[] = "flash_parameters_command_ack";
+char acName8001_8[] = "flash_params_cmd";
+char acName8001_9[] = "flash_params_cmd_ack";
 
 
 //template<class EscPDOTypes, class EscSDOTypes>
@@ -125,7 +125,7 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x6000, 0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_pos         ,0   }, 
     {0x6000, 0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_vel         ,0   }, 
     {0x6000, 0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_tor         ,0   }, 
-    {0x6000, 0x5, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_fault       ,0   }, 
+    {0x6000, 0x5, DTYPE_INTEGER32,   32, ATYPE_RO, acName6000_fault       ,0   }, 
     {0x6000, 0x6, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_rtt         ,0   }, 
     // SDO7000[] =                                                        
     {0x7000, 0x1, DTYPE_REAL32,     32, ATYPE_RW, acName7000_1            ,0   },
@@ -198,7 +198,7 @@ void LpESC::init_SDOs(void) {
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));            
 
     // 0x6000        
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.max_temperature; 
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.temperature; 
     SDOs[i++].data = (void*)&LpESC::rx_pdo.position;       
     SDOs[i++].data = (void*)&LpESC::rx_pdo.velocity;       
     SDOs[i++].data = (void*)&LpESC::rx_pdo.torque;         

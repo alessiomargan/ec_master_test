@@ -41,27 +41,33 @@ add_library(walkman_master SHARED
     src/test_esc.cpp
 )
 
-target_link_libraries(walkman_master iitecat_iface soem pthread )
+target_link_libraries(walkman_master iitecat_iface soem pthread yaml-cpp)
 
 
 add_executable(
      ft_ati_test
      src/ati_iface.cpp
-     ft_ati_test.cpp)
+     test/ft_ati_test.cpp)
 
 target_link_libraries(ft_ati_test walkman_master iitecat_iface soem pthread)
 
 add_executable(
      walkman_test
-     walkman_test.cpp)
+     test/walkman_test.cpp)
 
 target_link_libraries(walkman_test walkman_master iitecat_iface soem pthread)
 
 add_executable(
      walkman_test_2
-     walkman_test_2.cpp)
+     test/walkman_test_2.cpp)
 
 target_link_libraries(walkman_test_2 walkman_master iitecat_iface soem pthread)
+
+add_executable(
+     walkman_test_3
+     test/walkman_test_3.cpp)
+
+target_link_libraries(walkman_test_3 walkman_master iitecat_iface soem pthread)
 
 
 add_executable(

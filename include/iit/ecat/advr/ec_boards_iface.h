@@ -20,9 +20,12 @@
 #include <iit/ecat/advr/mc_hipwr_esc.h>
 #include <iit/ecat/advr/mc_lowpwr_esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
+#include <iit/ecat/advr/hub_esc.h>
 
 #include <string>
 #include <mutex>
+
+#include <yaml-cpp/yaml.h>
 
 #include <boost/variant.hpp>
 
@@ -31,21 +34,15 @@ namespace ecat {
 namespace advr {
 
 
+/*
 struct info_item
 {
     const objd_t* sdo_ptr;
     int index;
     int sub_index;
     int size;
-};
-
-
-enum class Board_type 
-{ 
-    HIGH_POWER,
-    LOW_POWER,
-    FT6
 }; 
+*/ 
 
 
 enum class Robot_IDs : std::int32_t 
@@ -68,8 +65,8 @@ enum class Robot_IDs : std::int32_t
 }; 
 
 
-typedef boost::variant<HpESC*, LpESC*, bool> McEscVar;
-typedef std::map<int, McEscVar>  McSlavesMap;
+//typedef boost::variant<HpESC*, LpESC*, bool> McEscVar;
+//typedef std::map<int, McEscVar>  McSlavesMap;
 
 typedef std::map<int, int>  Rid2PosMap;
 
@@ -88,7 +85,7 @@ typedef std::map<int, int>  Rid2PosMap;
 class Ec_Boards_ctrl {
 
 public:
-    Ec_Boards_ctrl(const char * config);
+    Ec_Boards_ctrl(std::string config);
     ~Ec_Boards_ctrl();
 
     /**
@@ -119,8 +116,8 @@ public:
      * @param slave_index id of the slave
      * @param iit::ecat::advr::McESCTypes::pdo_rx&
      */
-    void getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo);
-    void getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo);
+    int getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo);
+    int getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo);
 
     /**
      * @brief set TxPDO of the slave @p slave_index
@@ -130,16 +127,16 @@ public:
      * @param iit::ecat::advr::McESCTypes::pdo_rx&
      * @return void
      */
-    void setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo);
-    void setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo);
+    int setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo);
+    int setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo);
     /**
      * @brief returns the TxPDO of the slave @p slave_index
      * @note Just return a copy of the last TxPDO sent!
      * @param slave_index id of the slave
      * @param iit::ecat::advr::McESCTypes::pdo_rx&
      */
-    void getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo);
-    void getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo);
+    int getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo);
+    int getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo);
 
     /**
      * @brief This will receive a running train from all the slaves, and will fill the RxPDO_map returned from getRxPDO()
@@ -154,53 +151,6 @@ public:
      */
     int send_to_slaves(void);
     
-#if 0
-    /**
-     * @brief Receives a specific parameter from the board @p slave_index
-     * @note This method send a request packet and receive a return packet, the frequency of the calls to this method should not be higher than 5 hz
-     * @param slave_index id of the slave
-     * @param token name of the parameter to receive
-     * @return uint64_t
-     */
-    uint64_t mailbox_recv_from_slaves_as_int(int slave_index, std::string token);
-    /**
-     * @brief @see mailbox_recv_from_slaves_as_int
-     * 
-     * @param slave_index id of the slave
-     * @param token 
-     * @return std::string
-     */
-    std::string mailbox_recv_from_slaves_as_string(int slave_index, std::string token);
-    /**
-     * @brief @see mailbox_recv_from_slaves_as_int
-     * 
-     * @param slave_index id of the slave
-     * @param token 
-     * @return float
-     */
-    float mailbox_recv_from_slaves_as_float(int slave_index, std::string token);
-    
-    /**
-     * @brief Receives the parameter @p token from the slave @p slave_index, putting it into @p data
-     * 
-     * @param slave_index id of the slave
-     * @param token name of the parameter to receive
-     * @param data[out] value of the parameter
-     * @return int number of slaves that provided the parameter (should be 1)
-     */
-    int mailbox_recv_from_slaves(int slave_index, std::string token, void* data);
-    
-    /**
-     * @brief Sends the parameter @p token with value @p data to the slave @p slave_index
-     * 
-     * @param slave_index id of the slave
-     * @param token name of the parameter to send
-     * @param data value of the parameter
-     * @return int number of slaves that received the parameter (should be 1)
-     */
-    int mailbox_send_to_slaves(int slave_index, std::string token, void* data);
-
-#endif
     /**
      * @brief 
      * 
@@ -234,13 +184,20 @@ public:
      */
     int update_board_firmware(uint16_t slave_pos, std::string firmware, uint32_t passwd_firm);
 
+    EscWrapper * slave_as_EscWrapper(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? slaves[sPos].get() : NULL;}
+
+    Motor *  slave_as_Motor(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Motor*>(slaves[sPos].get()) : NULL;}
+    //Motor *  slave_as_Motor(uint16_t sPos) { return dynamic_cast<Motor*>(slaves.at(sPos).get()); }
+
     HpESC *  slave_as_HP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<HpESC*>(slaves[sPos].get()) : NULL;}
-    //MpESC *  slave_as_MP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<MpESC*>(slaves[sPos].get()) : NULL;}
     LpESC *  slave_as_LP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<LpESC*>(slaves[sPos].get()) : NULL;}
     Ft6ESC * slave_as_FT(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Ft6ESC*>(slaves[sPos].get()) : NULL;}
 
-    Motor *  slave_as_Motor(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Motor*>(slaves[sPos].get()) : NULL;}
+    const YAML::Node & get_config_YAML_Node(void) { return root_cfg; }
 
+    const Rid2PosMap & get_Rid2PosMap(void) { return rid2pos; }
+    int rid2Pos(int rId) { return rid2pos.find(rId) != rid2pos.end() ? rid2pos[rId] : 0; }
+     
     void rd_LOCK(void);
     void rd_UNLOCK(void);
     void wr_LOCK(void);
@@ -251,10 +208,12 @@ protected:
     void factory_board(void);
 
     SlavesMap   slaves;
-    //McSlavesMap mcSlaves;
-    FtSlavesMap ftSlaves;
     
+    Rid2PosMap  rid2pos;
+    YAML::Node  root_cfg;
+
 private:
+
 
     int             slave_cnt;
     int             expected_wkc;
@@ -265,11 +224,6 @@ private:
     uint64_t    sync_cycle_time_ns;
     uint64_t    sync_cycle_offset_ns;
 
-    std::map<int,Ft6EscPdoTypes::pdo_rx> FtRxPDO_map;
-    std::map<int,Ft6EscPdoTypes::pdo_tx> FtTxPDO_map;
-
-    std::map<int,McEscPdoTypes::pdo_rx> McRxPDO_map;
-    std::map<int,McEscPdoTypes::pdo_tx> McTxPDO_map;
 
 #ifdef __XENO__
     pthread_mutex_t rd_mtx, wr_mtx;

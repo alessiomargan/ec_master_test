@@ -1,27 +1,35 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <iit/ecat/advr/esc.h>
 
-using namespace iit::ecat::advr;
+#include <iostream>
+#include <fstream>
 
-Rid2PosMap  rid2pos;
+using namespace iit::ecat::advr;
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
-Ec_Boards_ctrl::Ec_Boards_ctrl(const char * config_file) {
+Ec_Boards_ctrl::Ec_Boards_ctrl(std::string config_file) {
 
 #ifdef __XENO__
     rd_mtx = PTHREAD_MUTEX_INITIALIZER;
     wr_mtx = PTHREAD_MUTEX_INITIALIZER;
 #endif
-    // read conf file .....
-    eth_if = std::string(config_file);
+    
+    std::ifstream fin(config_file);
+    if ( fin.fail() ) {
+        DPRINTF("Can not open %s\n", config_file.c_str());
+        assert(0);
+    }
 
-    sync_cycle_time_ns = 1e6;     //   1ms
-    //sync_cycle_time_ns = 10e6;      //  10ms
-    //sync_cycle_time_ns = 0;         //   no dc 
-    sync_cycle_offset_ns = 500e6;   // 500ms
+    YAML::Parser parser(fin);
+    parser.GetNextDocument(root_cfg);
+    const YAML::Node& board_ctrl = root_cfg["ec_board_ctrl"];
+
+    board_ctrl["eth_iface"] >> eth_if;
+    board_ctrl["sync_cycle_time_ns"] >> sync_cycle_time_ns;
+    board_ctrl["sync_cycle_offset_ns"] >> sync_cycle_offset_ns;
 
 }
 
@@ -39,12 +47,12 @@ Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 int Ec_Boards_ctrl::init(void) {
 
     if ( iit::ecat::initialize(eth_if.c_str()) <= 0 ) {
-        return 0;
+        return EC_BOARD_NOK;
     }
 
     factory_board();
 
-    return 1;
+    return EC_BOARD_OK;
 
 }
 
@@ -54,63 +62,74 @@ void Ec_Boards_ctrl::factory_board(void) {
     int16_t rid;
     slave_cnt = ec_slavecount;
 
+
     for ( i=1; i<=slave_cnt; i++ ) {
 
-        // XL Motor
-        if ( ec_slave[i].eep_id == 0x10 ) {
+        // BigMotor and MediumMotor
+        if ( ec_slave[i].eep_id == HI_PWR_AC_MC ||
+             ec_slave[i].eep_id == HI_PWR_DC_MC) {
 
             HpESC * mc_slave = new HpESC(ec_slave[i]);
+            if ( mc_slave->init(root_cfg) != EC_BOARD_OK ) {
+                // skip this slave
+                continue;
+            }
             slaves[i] = iit::ecat::ESCPtr(mc_slave);
             rid = mc_slave->get_joint_robot_id();
             if (rid != -1) {
                 rid2pos[rid] = i;
-                //mcSlaves[rid] = mc_slave;
             }
 
-        // MD Motor
-        } else if ( ec_slave[i].eep_id == 0x11 ) {
+        } else if ( ec_slave[i].eep_id == HI_PWR_DC_MC ) {
 
             HpESC * mc_slave = new HpESC(ec_slave[i]);
+            if ( mc_slave->init(root_cfg) != EC_BOARD_OK ) {
+                // skip this slave
+                continue;
+            }
             slaves[i] = iit::ecat::ESCPtr(mc_slave);
             rid = mc_slave->get_joint_robot_id();
             if (rid != -1) {
                 rid2pos[rid] = i;
-                //mcSlaves[rid] = mc_slave;
             }
         // LP Motor
-        } else if ( ec_slave[i].eep_id == 0x12 ) {
+        } else if ( ec_slave[i].eep_id == LO_PWR_DC_MC ) {
 
             LpESC * mc_slave = new LpESC(ec_slave[i]);
-            //HpESC * mc_slave = new HpESC(ec_slave[i]);
+            if ( mc_slave->init(root_cfg) != EC_BOARD_OK ) {
+                // skip this slave
+                continue;
+            }
             slaves[i] = iit::ecat::ESCPtr(mc_slave);
             rid = mc_slave->get_joint_robot_id();
             if (rid != -1) {
                 rid2pos[rid] = i;
-                //mcSlaves[rid] = mc_slave;
             }
         // FT6 Sensor
-        } else if ( ec_slave[i].eep_id == 0x20 ) {
+        } else if ( ec_slave[i].eep_id == FT6 ) {
 
             Ft6ESC * ft_slave = new Ft6ESC(ec_slave[i]);
             slaves[i] = iit::ecat::ESCPtr(ft_slave);
-            //ftSlaves[i] = ft_slave;
-#if 1
-        } else if ( ec_slave[i].eep_id == 1234 ) {
+
+        // Test    
+        } else if ( ec_slave[i].eep_id == EC_TEST ) {
 
             TestESC * test_slave = new TestESC(ec_slave[i]);
-            slaves[i] = iit::ecat::ESCPtr(test_slave);
-            test_slave->getSDO_ptr().par_1 = 123;
-            test_slave->getSDO_ptr().par_2 = 999;
-            test_slave->set_SDO_byname("par_1");
-            test_slave->set_SDO_byname("par_2");
-            test_slave->set_SDO_byname<int32_t>("par_2", 777);
-            int32_t test;
-            test_slave->get_SDO_byname<int32_t>("par_2", test);
-            assert(test == 777);
-#endif       
-        } else if ( ec_slave[i].eep_id == 0x100 ) {
+            if ( test_slave->init(root_cfg) != EC_BOARD_OK ) {
+                // skip this slave
+                continue;
+            }
+            slaves[i] = iit::ecat::ESCPtr(test_slave);            
 
-            // ECAT HUB 
+        } else if ( ec_slave[i].eep_id == HUB ) {
+
+            HubESC * hub = new HubESC(ec_slave[i]);
+            slaves[i] = iit::ecat::ESCPtr(hub); 
+
+        } else if ( ec_slave[i].eep_id == HUB_IO ) {
+
+            HubIoESC * hub = new HubIoESC(ec_slave[i]);
+            slaves[i] = iit::ecat::ESCPtr(hub); 
 
         } else {
 
@@ -131,44 +150,6 @@ int Ec_Boards_ctrl::configure_boards(void) {
         HpESC * hp = slave_as_HP(it->first);
         if ( hp ) { hp->print_info();; continue; }
     }
-#if 0
-
-    const objd_t * sdo = 0;
-
-    for ( auto it = slaves.begin(); it != slaves.end(); it++ ) {
-        DPRINTF("Get SDOs from %d\n", it->first);
-
-        sdo = it->second.get()->get_SDO_objd();
-
-        while ( sdo && sdo->index ) {
-
-            //get_SDO(it->first, sdo);
-            sdo ++;
-        }
-    }
-    DPRINTF("End GET all SDOs\n");
-
-    for ( auto it = slaves.begin(); it != slaves.end(); it++ ) {
-        DPRINTF("Set SDOs from %d\n", it->first);
-        if ( (mc = dynamic_cast<McESC*>(it->second.get())) ) {
-            sdo = mc->get_SDOs();
-        } else if ( dynamic_cast<TestESC*>(it->second.get()) ) {
-            sdo = 0;
-        }
-        while ( sdo && sdo->index ) {
-            int wkc = 0;
-            if ( sdo->access == ATYPE_RW ) {
-                wkc = set_SDO(it->first, sdo);
-                if ( wkc <= 0 ) {
-                    DPRINTF("Error SETTING SDO on board %d\n", it->first);
-                }
-            }
-            sdo ++;
-        }
-    }
-    DPRINTF("End SET all SDOs\n");
-#endif
-
     return slaves.size();
 
 }
@@ -181,33 +162,10 @@ int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
     HpESC * hp = slave_as_HP(sPos);
     if (hp) { return set_ctrl_status_X(hp, cmd); }
 
-    //MpESC * mp = slave_as_MP(sPos);
-    //if (mp) { return set_ctrl_status_X(mp, cmd); }
-
     LpESC * lp = slave_as_LP(sPos);
     if (lp) { return set_ctrl_status_X(lp, cmd); }
 
-    return -1;
- 
-#if 0
-    const objd_t * sdo = 0;
-    HpESC * hp;
-    LpESC * lp;
-
-    McEscVar var = mcSlaves[sPos];    //TODO has to be generic
-    switch (var.which()) {
-        case 0:
-            hp = boost::get<HpESC*>(var);
-            set_ctrl_status_X(hp, cmd);
-            break;
-        case 1:
-            //lp = boost::get<LpESC*>(var);
-            ///set_ctrl_status_X(lp, cmd);
-            break;
-    }
-
-    return 0;
-#endif
+    return EC_WRP_NOK;
 }
 
 /** 
@@ -220,12 +178,11 @@ int Ec_Boards_ctrl::set_flash_cmd(uint16_t sPos, uint16_t cmd) {
 
     LpESC * lp = slave_as_LP(sPos);
     if (lp) { return set_flash_cmd_X(lp, cmd); }
-
-    Ft6ESC * ft = slave_as_FT(sPos);
-    if (ft) { return set_flash_cmd_X(ft, cmd); }
     
-    return 0; 
-
+    Ft6ESC * ft = slave_as_FT(sPos);
+    if ( ft ) { return set_flash_cmd_X(ft, cmd); }
+    
+    return EC_WRP_NOK;
 }
 
 /** 
@@ -265,34 +222,10 @@ int Ec_Boards_ctrl::check_sanity(uint16_t sPos) {
     float iq_ref;
     HpESC * hp = slave_as_HP(sPos);
     if (hp) {
-        hp->get_SDO_byname("iq_ref", iq_ref);
+        hp->readSDO_byname("iq_ref", iq_ref);
         DPRINTF("iq_ref %f\n", iq_ref);
     }
 
-#if 0
-    const objd_t * sdo = 0;
-    HpESC * mc = 0;     //TODO has to be generic
-    //McESC * mc = slave_as_MC(sPos);
-
-    // V_batt_filt_100ms , Board_Temperature , T_mot1_filt_100ms
-    std::vector<const objd_t*> offsets;// = {3,4,5};
-    offsets.push_back(info_map[Board_type::HIGH_POWER]["V_batt_filt_100ms"].sdo_ptr); //TODO has to be generic
-    offsets.push_back(info_map[Board_type::HIGH_POWER]["Board_Temperature"].sdo_ptr); //TODO has to be generic
-    offsets.push_back(info_map[Board_type::HIGH_POWER]["T_mot1_filt_100ms"].sdo_ptr); //TODO has to be generic
-
-    for ( auto sl_it = mcSlaves.begin(); sl_it != mcSlaves.end(); sl_it++ ) {
-        mc = (HPESC*)sl_it->second; //TODO has to be generic
-        for ( auto it = offsets.begin(); it != offsets.end(); it++ ) {
-            if ( *it ) {
-                // get value from slave
-                if ( get_SDO(sl_it->first, *it) <= 0 ) {
-                    ; // error
-                }
-            }
-        }
-    }
-    //TODO return something!!
-#endif
     return 0;
 }
 
@@ -303,78 +236,76 @@ int Ec_Boards_ctrl::set_operative() {
     return expected_wkc;
 }
 
-void Ec_Boards_ctrl::getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo)
+int Ec_Boards_ctrl::getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo)
 {
+    Motor * m = slave_as_Motor(slave_index);
+    if ( !m ) { return EC_BOARD_NOK; }
     rd_LOCK();
-    memcpy((void*)&pdo, (void*)&McRxPDO_map[slave_index], sizeof(pdo));
+    m->get_RxPDO(pdo);
     rd_UNLOCK();
+    return EC_BOARD_OK;
 }
-void Ec_Boards_ctrl::getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo)
+int Ec_Boards_ctrl::setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo)
 {
-    rd_LOCK();
-    memcpy((void*)&pdo, (void*)&FtRxPDO_map[slave_index], sizeof(pdo));
-    rd_UNLOCK();
+    Motor * m = slave_as_Motor(slave_index);
+    if ( !m ) { return EC_BOARD_NOK; }
+    wr_LOCK();
+    m->set_TxPDO(pdo);
+    wr_UNLOCK();
+    return EC_BOARD_OK;
+}
+int Ec_Boards_ctrl::getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo)
+{
+    Motor * m = slave_as_Motor(slave_index);
+    if ( !m ) { return EC_BOARD_NOK; }
+    wr_LOCK();
+    m->get_TxPDO(pdo);
+    wr_UNLOCK();
+    return EC_BOARD_OK;
 }
 
-void Ec_Boards_ctrl::setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo)
+
+int Ec_Boards_ctrl::getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo)
 {
-    wr_LOCK();
-    McTxPDO_map[slave_index] = pdo;
-    wr_UNLOCK();
+    Ft6ESC * ft = slave_as_FT(slave_index);
+    if ( !ft ) { return EC_BOARD_NOK; }
+    rd_LOCK();
+    pdo = ft->getRxPDO();
+    rd_UNLOCK();
+    return EC_BOARD_OK;
 }
-void Ec_Boards_ctrl::setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo)
+int Ec_Boards_ctrl::setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo)
 {
+    Ft6ESC * ft = slave_as_FT(slave_index);
+    if ( !ft ) { return EC_BOARD_NOK; }
     wr_LOCK();
-    FtTxPDO_map[slave_index] = pdo;
+    ft->setTxPDO(pdo);
     wr_UNLOCK();
+    return EC_BOARD_OK;
 }
-void Ec_Boards_ctrl::getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo)
+int Ec_Boards_ctrl::getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo)
 {
+    Ft6ESC * ft = slave_as_FT(slave_index);
+    if ( !ft ) { return EC_BOARD_NOK; }
     wr_LOCK();
-    memcpy((void*)&pdo, (void*)&McTxPDO_map[slave_index], sizeof(pdo));
+    pdo = ft->getTxPDO();
     wr_UNLOCK();
-}
-void Ec_Boards_ctrl::getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo)
-{
-    wr_LOCK();
-    memcpy((void*)&pdo, (void*)&FtTxPDO_map[slave_index], sizeof(pdo));
-    wr_UNLOCK();
+    return EC_BOARD_OK;
 }
 
 
 int Ec_Boards_ctrl::recv_from_slaves() {
 
-    TestESC * test;
     /////////////////////////////////////////////
     // wait for cond_signal 
     // ecat_thread sync with DC
+    rd_LOCK();
     int ret = iit::ecat::recv_from_slaves(&timing);
+    rd_UNLOCK();
     if ( ret != 0 ) {
         DPRINTF("fail recv_from_slaves\n");
         return 0;
     }
-
-    rd_LOCK();
-    for ( auto it = slaves.begin(); it != slaves.end(); it++ ) {
-
-        HpESC * hp = slave_as_HP(it->first);
-        if ( hp ) { McRxPDO_map[it->first] = hp->getRxPDO(); continue; }
-
-        //MpESC * mp = slave_as_MP(it->first);
-        //if ( mp ) { McRxPDO_map[it->first] = mp->getRxPDO(); continue; }
-
-        LpESC * lp = slave_as_LP(it->first);
-        if ( lp ) { McRxPDO_map[it->first] = lp->getRxPDO(); continue; }
-
-        Ft6ESC * ft = slave_as_FT(it->first);
-        if ( ft ) { FtRxPDO_map[it->first] = ft->getRxPDO(); continue; }
-
-        //if ( (test = dynamic_cast<TestESC*>(it->second.get())) ) {
-        //    test->push_back(test->getRxPDO());
-        //}
-    }
-    rd_UNLOCK();
-
     return 1;
 }
 
@@ -382,31 +313,14 @@ int Ec_Boards_ctrl::send_to_slaves() {
 
     int wkc, retry = 2;
 
-    { // begin std::mutex scope   
-        wr_LOCK();
-
-        for ( auto it = slaves.begin(); it != slaves.end(); it++ ) {
-
-            HpESC * hp = slave_as_HP(it->first);
-            if ( hp ) { hp->setTxPDO(McTxPDO_map[it->first]); continue; }
-
-            //MpESC * mp = slave_as_MP(it->first);
-            //if ( mp ) { hp->setTxPDO(McTxPDO_map[it->first]); continue; }
-
-            LpESC * lp = slave_as_LP(it->first);
-            if ( lp ) { lp->setTxPDO(McTxPDO_map[it->first]); continue; }
-
-            Ft6ESC * ft = slave_as_FT(it->first);
-            if ( ft ) { ft->setTxPDO(FtTxPDO_map[it->first]); continue;}
-        }
-        wr_UNLOCK();
-    } // end mutex scope
-
+    wr_LOCK();
     wkc = iit::ecat::send_to_slaves();
-
+    wr_UNLOCK();
     while ( wkc < expected_wkc && retry-- ) {
         DPRINTF("## wkc %d\n", wkc);
+        wr_LOCK();
         wkc = iit::ecat::send_to_slaves();
+        wr_UNLOCK();
     }
 
     return retry;
@@ -432,22 +346,25 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
     req_state_check(0, EC_STATE_INIT);
 
     // check slave type ... HiPwr uses ET1100 GPIO to force/release bootloader 
-    HpESC * s = dynamic_cast<HpESC*>(slaves[slave_pos].get());
-    if ( s ) {
-        // pre-update
-        // POWER OFF
-        if ( esc_gpio_ll_wr(configadr, 0x0) <= 0 ) {
-            return 0;
+    EscWrapper * s = slave_as_EscWrapper(slave_pos);
+    if ( s) {
+        if ( (s->get_ESC_type() == HI_PWR_AC_MC) || 
+             (s->get_ESC_type() == HI_PWR_DC_MC)) {
+            // pre-update
+            // POWER OFF
+            if ( esc_gpio_ll_wr(configadr, 0x0) <= 0 ) {
+                return 0;
+            }
+            sleep(1);
+            // POWER ON and BOOT
+            if ( esc_gpio_ll_wr(configadr, 0x5) <= 0 ) {
+                return 0;
+            }
+            sleep(1);
+    
+        } else {
+            DPRINTF("Slave %d is NOT a XL or a MD motor\n", slave_pos);
         }
-        sleep(1);
-        // POWER ON and BOOT
-        if ( esc_gpio_ll_wr(configadr, 0x5) <= 0 ) {
-            return 0;
-        }
-        sleep(1);
-
-    } else {
-        DPRINTF("Slave %d is NOT a HpESC\n", slave_pos);
     }
 
     // first boot state request is handled by application that jump to bootloader
@@ -461,30 +378,32 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
         return 0;
     }
 
-    if ( s ) {
-        // erase flash
-        uint16_t flash_cmd = 0x00EE;
-        uint16_t flash_cmd_ack;
-        int size;
-        // write sdo flash_cmd
-        DPRINTF("erasing flash ...\n");
-        wc = ec_SDOwrite(slave_pos, 0x8000, 0x1, false, sizeof(flash_cmd), &flash_cmd, EC_TIMEOUTRXM * 20); // 14 secs
-        if ( wc <= 0 ) {
-            DPRINTF("ERROR writing flash_cmd\n");
-            go_ahead = false;
-        } else {
-            // read flash_cmd_ack
-            wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM *3);
-            DPRINTF("Slave %d wc %d flash_cmd_ack 0x%04X\n", slave_pos, wc, flash_cmd_ack);
+    if ( s) {
+        if ( (s->get_ESC_type() == HI_PWR_AC_MC) || 
+             (s->get_ESC_type() == HI_PWR_DC_MC)) {
+            // erase flash
+            uint16_t flash_cmd = 0x00EE;
+            uint16_t flash_cmd_ack = 0x0;
+            int size;
+            // write sdo flash_cmd
+            DPRINTF("erasing flash ...\n");
+            wc = ec_SDOwrite(slave_pos, 0x8000, 0x1, false, sizeof(flash_cmd), &flash_cmd, EC_TIMEOUTRXM * 20); // 14 secs
             if ( wc <= 0 ) {
-                DPRINTF("ERROR reading flash_cmd_ack\n");
+                DPRINTF("ERROR writing flash_cmd\n");
                 go_ahead = false;
-            } else if ( flash_cmd_ack != CTRL_CMD_DONE ) {
-                DPRINTF("ERROR erasing flash\n");
-                go_ahead = false;
+            } else {
+                // read flash_cmd_ack
+                wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM *3);
+                DPRINTF("Slave %d wc %d flash_cmd_ack 0x%04X\n", slave_pos, wc, flash_cmd_ack);
+                if ( wc <= 0 ) {
+                    DPRINTF("ERROR reading flash_cmd_ack\n");
+                    go_ahead = false;
+                } else if ( flash_cmd_ack != CTRL_CMD_DONE ) {
+                    DPRINTF("ERROR erasing flash\n");
+                    go_ahead = false;
+                }
             }
         }
-
     }
 
     if ( go_ahead ) {

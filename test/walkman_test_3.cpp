@@ -13,7 +13,6 @@
 
 #include <iit/ecat/advr/ec_boards_iface.h>
 
-
 using namespace iit::ecat::advr;
 
 static int run_loop = 1;
@@ -103,75 +102,85 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    ec_boards_ctrl->configure_boards();
+
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
-    const YAML::Node& doc = ec_boards_ctrl->get_config_YAML_Node();
-    const YAML::Node& firmware_update = doc["firmware_update"];
+#if 1
+    Motor * moto = ec_boards_ctrl->slave_as_Motor(1);
+    assert(moto);
+    moto->set_off_sgn(0,1);
+    float home;
+    moto->readSDO("position", home);
+    DPRINTF(">>>>>>>>>>> home %f\n", home);
+    moto->writeSDO<float>("tor_offs", 0.0);
 
-    std::vector<int> slave_list;
-    bool use_rId = true;
-    try {
-            firmware_update["slave_rId_list"] >> slave_list;
-    } catch ( YAML::KeyNotFound &e ) {
-        firmware_update["slave_pos_list"] >> slave_list;
-        use_rId = false;
-    }
-    std::string bin_file;
-    int passwd;
-    EscWrapper * esc;
-    uint16_t   bType;
-    int sPos;
 
-    for (auto it = slave_list.begin(); it != slave_list.end(); it++) {
-        if ( use_rId ) {
-            sPos = rid2pos[*it];
-        } else {
-            sPos = *it;
-        }
-        esc = ec_boards_ctrl->slave_as_EscWrapper(sPos);
-        if( esc ) {
-            bType = esc->get_ESC_type();
-            switch ( bType ) {
-                case HI_PWR_AC_MC :
-                    firmware_update["big_motor"]["bin_file"] >> bin_file;
-                    firmware_update["big_motor"]["passwd"] >> passwd;
-                    break;
-                case HI_PWR_DC_MC :
-                    firmware_update["medium_motor"]["bin_file"] >> bin_file;
-                    firmware_update["medium_motor"]["passwd"] >> passwd;
-                    break;
-                case LO_PWR_DC_MC :
-                    firmware_update["small_motor"]["bin_file"] >> bin_file;
-                    firmware_update["small_motor"]["passwd"] >> passwd;
-                    break;
-                case FT6 :
-                    firmware_update["force_torque_6"]["bin_file"] >> bin_file;
-                    firmware_update["force_torque_6"]["passwd"] >> passwd;
-                    break;
-                default :
-                    break;
-            }
-            std::cout << *it << " " << bin_file << " " << passwd << std::endl;
-            ret = ec_boards_ctrl->update_board_firmware(sPos, bin_file, passwd);
-            if ( ! ret  ) {
-                std::cout << "FAIL update slave pos " << sPos << std::endl;
-            }
-        }
-    }
-    
-    delete ec_boards_ctrl;
-
-    ///////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////
-
-    ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
-
-    if ( ec_boards_ctrl->init() != EC_BOARD_OK) {
-        std::cout << "Error in boards init()... cannot proceed!" << std::endl;		
+    if ( moto->start(CTRL_SET_POS_LNK_ERR, 13.0, 0.0035, 3.0) != EC_BOARD_OK ) {
+    //if ( moto->start(CTRL_SET_MIX_POS_MODE_2) != EC_BOARD_OK ) {
+        DPRINTF("Motor not started\n");
         delete ec_boards_ctrl;
         return 0;
     }
-    
+
+    if ( ec_boards_ctrl->set_operative() <= 0 ) {
+        std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl; 
+        delete ec_boards_ctrl;
+        return 0;
+    }
+
+    sleep(3);
+
+    moto->start_log(true);
+
+    uint64_t dt;
+    double time = 0.0;
+    McEscPdoTypes::pdo_rx mc_pdo_rx;
+    McEscPdoTypes::pdo_tx mc_pdo_tx;
+
+    mc_pdo_tx.PosGainP = 13.0;
+    mc_pdo_tx.PosGainI = 0.0035; 
+    mc_pdo_tx.PosGainD = 3.0;
+    mc_pdo_tx.tor_offs = 0.0;
+    mc_pdo_tx.pos_ref = 0;
+    ec_boards_ctrl->setTxPDO(1, mc_pdo_tx);
+
+    ec_boards_ctrl->send_to_slaves();
+
+    while (run_loop) {
+
+        if ( ! ec_boards_ctrl->recv_from_slaves() ) {
+            break;
+        }
+
+        time += 0.0003;
+        ec_boards_ctrl->getRxPDO(1, mc_pdo_rx);
+        mc_pdo_tx.pos_ref = home + 1 * sinf(2*M_PI*time);
+        //ec_boards_ctrl->setTxPDO(1, mc_pdo_tx);
+        moto->set_posRef(home + 1.0 * sinf(2*M_PI*time));
+
+        //DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
+
+        ec_boards_ctrl->send_to_slaves();
+    }
+
+    moto->stop();
+
+#else
+
+    HubIoESC * hub_io = dynamic_cast<HubIoESC*>(ec_boards_ctrl->slave_as_EscWrapper(2));
+    uint16_t reg_0x1000;
+
+    while (run_loop) {
+
+        hub_io->read_io_reg(reg_0x1000);
+        DPRINTF("%d\n",reg_0x1000);
+        sleep(1);
+
+    }
+
+#endif
+
     delete ec_boards_ctrl;
 
     return 1;

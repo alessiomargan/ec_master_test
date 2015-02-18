@@ -16,6 +16,8 @@
 
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
+#include <iit/ecat/advr/motor_iface.h>
+#include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -82,21 +84,17 @@ struct LoPwrEscSdoTypes {
 
 class LpESC :
 public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>,
-public PDO_log<McEscPdoTypes>,
+public PDO_log<McEscPdoTypes::pdo_rx>,
 public Motor
 {
 public:
     typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> Base;
-    typedef PDO_log<McEscPdoTypes>                          Log;
+    typedef PDO_log<McEscPdoTypes::pdo_rx>                   Log;
 
     LpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),100000)
+        Log(std::string("/tmp/LpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
-        init_SDOs();
-        init_sdo_lookup();
-        // set filename with robot_id
-        log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
 
     }
     virtual ~LpESC(void) { 
@@ -119,29 +117,66 @@ public:
 
     ///////////////////////////////////////////////////////
     ///
+    /// Motor method implementation
+    ///
     ///////////////////////////////////////////////////////
+    virtual bool am_i_HpESC() { return false; }
+    virtual bool am_i_LpESC() { return true; }
+    virtual uint16_t get_ESC_type() { return LO_PWR_DC_MC; }
 
-    virtual int start(void) {
+    virtual int init(const YAML::Node & root_cfg) {
 
+        try {
+            init_SDOs();
+            init_sdo_lookup();
+            // set filename with robot_id
+            log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+
+        } catch (EscWrpError &e ) {
+
+            DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
+            return EC_WRP_NOK;
+        }
+
+        return EC_WRP_OK;
+
+    }
+    virtual int start(int controller_type, float _p, float _i, float _d) {
+        return 0;
     }
 
     virtual int stop(void) {
+        return 0;
+    }
+
+    virtual void handle_fault(void) {
+
+        fault_t fault;
+        fault.all = rx_pdo.fault;
+        //fault.bit.
+        ack_faults_X(this, fault.all);
 
     }
 
     virtual int set_posRef(float joint_pos) {
-
+        return 0;
+    }
+    virtual int set_torOffs(float tor_offs) {
+        return 0;
     }
 
     virtual int set_posGainP(float p_gain) {
-
+        return 0;
     }
     virtual int set_posGainI(float i_gain) {
-
+        return 0;
     }
     virtual int set_posGainD(float d_gain) {
-
+        return 0;
     }
+
+    virtual void set_off_sgn(float offset, int sgn) {}
+    virtual void start_log(bool start) {}
 
 private:
     objd_t * SDOs;
