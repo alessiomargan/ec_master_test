@@ -71,6 +71,11 @@ enum ec_board_ctrl_err: int {
     /* erros */
     EC_BOARD_NOK,
     EC_BOARD_CMD_ACK,
+    EC_BOARD_INIT_SDO_FAIL,
+    EC_BOARD_KEY_NOT_FOUND,
+    EC_BOARD_FT6_CALIB_FAIL,
+    EC_BOARD_INVALID_ROBOT_ID,
+
 };
 
 struct fault_bits {
@@ -176,7 +181,7 @@ inline int set_ctrl_status_X(C *c, int16_t cmd)
 }
 
 template <class C>
-inline int set_flash_cmd_X(C *c, uint16_t cmd)
+inline int set_flash_cmd_X(C *c, int16_t cmd)
 {
     int16_t ack;
 

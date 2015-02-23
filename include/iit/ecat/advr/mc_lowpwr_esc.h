@@ -83,37 +83,73 @@ struct LoPwrEscSdoTypes {
  **/ 
 
 class LpESC :
-public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>,
-public PDO_log<McEscPdoTypes::pdo_rx>,
-public Motor
+    public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>,
+    public PDO_log<McEscPdoTypes::pdo_rx>,
+    public XDDP_pipe<McEscPdoTypes::pdo_rx,McEscPdoTypes::pdo_tx>,
+    public Motor
 {
 public:
     typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> Base;
     typedef PDO_log<McEscPdoTypes::pdo_rx>                   Log;
+    typedef XDDP_pipe<McEscPdoTypes::pdo_rx,McEscPdoTypes::pdo_tx> Xddp;
 
     LpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/LpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
+        Log(std::string("/tmp/LpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
+        Xddp("LpESC_pos"+std::to_string(position), 8192)
     {
 
     }
     virtual ~LpESC(void) { 
         delete [] SDOs;
         DPRINTF("~%s %d\n", typeid(this).name(), position);
+        print_stat(s_rtt);
     }
 
-    int16_t get_joint_robot_id() {
+    int16_t get_robot_id() {
         //assert(sdo.Joint_robot_id != -1);
         return sdo.Joint_robot_id;
     }
 
     void print_info(void) {
-        DPRINTF("\n min pos %f\tmax pos %f \n", sdo.Min_pos, sdo.Max_pos);
+        DPRINTF("\tJoint id %d\tJoint robot id %d\n", sdo.Joint_number, sdo.Joint_robot_id);
+        DPRINTF("\tmin pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos);
+        DPRINTF("\tfw_ver %s\n", sdo.firmware_version);
     }
 
-    virtual const objd_t * get_SDO_objd() { return SDOs; }
+    virtual const objd_t * get_SDOs() { return SDOs; }
 
     virtual void init_SDOs(void);
+
+    virtual void on_readPDO(void) {
+
+        if ( rx_pdo.rtt ) {
+            rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
+            s_rtt(rx_pdo.rtt);
+        }
+
+        if ( rx_pdo.fault & 0x7FFF) {
+            handle_fault();
+        }
+
+        // apply transformation from Motor to Joint 
+        rx_pdo.position = M2J(rx_pdo.position,_sgn,_offset); 
+
+        if ( _start_log ) {
+            push_back(rx_pdo);
+        }
+
+        xddp_write(rx_pdo);
+    }
+
+    virtual void on_writePDO(void) {
+
+        tx_pdo.ts = get_time_ns();
+
+        // apply transformation from Joint to Motor 
+        tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
+    }
+
 
     ///////////////////////////////////////////////////////
     ///
@@ -124,19 +160,52 @@ public:
     virtual bool am_i_LpESC() { return true; }
     virtual uint16_t get_ESC_type() { return LO_PWR_DC_MC; }
 
+    virtual const pdo_rx_t& getRxPDO() const {
+        return Base::getRxPDO();
+    }
+    virtual const pdo_tx_t& getTxPDO() const {
+        return Base::getTxPDO();
+    }
+    virtual void setTxPDO(const pdo_tx_t & pdo_tx) {
+        Base::setTxPDO(pdo_tx);
+    }
+
     virtual int init(const YAML::Node & root_cfg) {
 
+        int16_t Joint_robot_id = -1;
+
         try {
+            // !! sgn and offset must set before init_sdo_lookup !!
             init_SDOs();
             init_sdo_lookup();
-            // set filename with robot_id
-            log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+            getSDO_byname("Joint_robot_id", Joint_robot_id);
 
         } catch (EscWrpError &e ) {
 
-            DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
-            return EC_WRP_NOK;
+            DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
+            return EC_BOARD_INIT_SDO_FAIL;
         }
+
+        if ( Joint_robot_id > 0 ) {
+            try {
+                std::string esc_conf_key = std::string("LpESC_"+std::to_string(Joint_robot_id));
+                const YAML::Node& esc_conf = root_cfg[esc_conf_key];
+                //std::vector<float> conf_pid; 
+                if ( esc_conf.Type() != YAML::NodeType::Null ) {
+                    esc_conf["sign"] >> _sgn; 
+                    esc_conf["pos_offset"] >> _offset;
+                    //esc_conf["pid"]["position"] >> conf_pid;
+                }
+            } catch (YAML::KeyNotFound &e) {
+                DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
+                return EC_BOARD_KEY_NOT_FOUND;
+            }
+        } else {
+            return EC_BOARD_INVALID_ROBOT_ID;
+        }
+
+        log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+
 
         return EC_WRP_OK;
 
@@ -149,6 +218,10 @@ public:
         return 0;
     }
 
+    virtual void start_log(bool start) {
+        Log::start_log(start);
+    }
+
     virtual void handle_fault(void) {
 
         fault_t fault;
@@ -158,27 +231,33 @@ public:
 
     }
 
+    /////////////////////////////////////////////
+    // set pdo data
     virtual int set_posRef(float joint_pos) {
-        return 0;
+        tx_pdo.pos_ref = joint_pos;
     }
     virtual int set_torOffs(float tor_offs) {
-        return 0;
+        tx_pdo.tor_offs = tor_offs;
     }
-
     virtual int set_posGainP(float p_gain) {
-        return 0;
+        tx_pdo.PosGainP = p_gain;
     }
     virtual int set_posGainI(float i_gain) {
-        return 0;
+        tx_pdo.PosGainI = i_gain;
     }
     virtual int set_posGainD(float d_gain) {
-        return 0;
+        tx_pdo.PosGainD = d_gain;
     }
 
     virtual void set_off_sgn(float offset, int sgn) {}
-    virtual void start_log(bool start) {}
 
 private:
+
+    float   _offset;
+    int     _sgn;
+
+    stat_t  s_rtt;
+
     objd_t * SDOs;
 
 };

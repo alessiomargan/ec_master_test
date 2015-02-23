@@ -16,32 +16,19 @@
 #include <map>
 
 namespace iit {
-    namespace ecat {
-        namespace advr {
+namespace ecat {
+namespace advr {
 
-struct HubEscPdoTypes {
-    // TX  slave_input -- master output
-    typedef struct {
-    }  __attribute__((__packed__)) pdo_tx;
-    // RX  slave_output -- master input
-    typedef struct {
-    }  __attribute__((__packed__)) pdo_rx;
-};
-
-struct HubEscSdoTypes {
-};
 
 /**
 *  
 **/ 
 
-class HubESC : public BasicEscWrapper<HubEscPdoTypes,HubEscSdoTypes> {
+class HubESC : public EscWrapper {
 
 public:
-    typedef BasicEscWrapper<HubEscPdoTypes,HubEscSdoTypes> Base;
-public:
     HubESC(const ec_slavet& slave_descriptor) :
-        Base(slave_descriptor)
+        EscWrapper(slave_descriptor)
     {
     }
 
@@ -49,9 +36,12 @@ public:
         DPRINTF("~%s %d\n", typeid(this).name(), position);
     }
 
-    virtual const objd_t * get_SDO_objd() { return 0; }
-    virtual void init_SDOs(void)    { }
+    virtual const objd_t * get_SDOs() { return 0; }
     virtual uint16_t get_ESC_type() { return HUB; }
+
+private:
+    virtual void readPDO() {};
+    virtual void writePDO() {};
 
 private:
 

@@ -13,12 +13,15 @@ namespace advr {
 
 #include <iit/ecat/advr/esc.h>
 
-
 class HpESC;
 class LpESC;
 
-class Motor
+template <typename MotorPdoTypes>
+class AbsMotor
 {
+public:
+    typedef typename MotorPdoTypes::pdo_rx    motor_pdo_rx_t;
+    typedef typename MotorPdoTypes::pdo_tx    motor_pdo_tx_t;
 
 private:
     template <class C, typename T> 
@@ -33,30 +36,6 @@ private:
         C *c = dynamic_cast<C*>(this);
         if (!c) { return EC_WRP_NOK; }
         return c->readSDO_byname( name.c_str(), value );
-    }
-
-    template <class C, typename T>
-    int get_RxPDO_impl(T & rx_pdo) {
-        C *c = dynamic_cast<C*>(this);
-        if (!c) { return EC_WRP_NOK; }
-        rx_pdo = c->getRxPDO();
-        return EC_WRP_OK;
-    }
-
-    template <class C, typename T>
-    int get_TxPDO_impl(T & tx_pdo) {
-        C *c = dynamic_cast<C*>(this);
-        if (!c) { return EC_WRP_NOK; }
-        tx_pdo = c->getTxPDO();
-        return EC_WRP_OK;
-    }
-
-    template <class C, typename T>
-    int set_TxPDO_impl(T & tx_pdo) {
-        C *c = dynamic_cast<C*>(this);
-        if (!c) { return EC_WRP_NOK; }
-        c->setTxPDO(tx_pdo);
-        return EC_WRP_OK;
     }
 
 public:
@@ -81,41 +60,13 @@ public:
         return EC_WRP_NOK;
     }
 
-    template <typename T>
-    int get_RxPDO(T & rx_pdo) {
-        if ( am_i_HpESC() ) {
-            return get_RxPDO_impl<HpESC>(rx_pdo);
-        } else if ( am_i_LpESC() ) {
-            return get_RxPDO_impl<LpESC>(rx_pdo);
-        }
-        return EC_WRP_NOK;
-    }
-
-    template <typename T>
-    int get_TxPDO(T & tx_pdo) {
-        if ( am_i_HpESC() ) {
-            return get_TxPDO_impl<HpESC>(tx_pdo);
-        } else if ( am_i_LpESC() ) {
-            return get_TxPDO_impl<LpESC>(tx_pdo);
-        }
-        return EC_WRP_NOK;
-
-    }
-
-    template <typename T>
-    int set_TxPDO(T & tx_pdo) {
-        if ( am_i_HpESC() ) {
-            return set_TxPDO_impl<HpESC>(tx_pdo);
-        } else if ( am_i_LpESC() ) {
-            return set_TxPDO_impl<LpESC>(tx_pdo);
-        }
-        return EC_WRP_NOK;
-    }
-
-
     virtual int init(const YAML::Node &) = 0;
     virtual int start(int controller_type, float _p, float _i, float _d) = 0;
     virtual int stop(void) = 0;
+
+    virtual const motor_pdo_rx_t & getRxPDO() const = 0;
+    virtual const motor_pdo_tx_t & getTxPDO() const = 0;
+    virtual void setTxPDO(const motor_pdo_tx_t &) = 0;
 
     virtual int set_posRef(float joint_pos) = 0;
     virtual int set_torOffs(float tor_offs) = 0;
@@ -142,6 +93,8 @@ protected:
 
     ec_state     _actual_state;
 };
+
+typedef AbsMotor<McEscPdoTypes> Motor;
 
 
 }

@@ -65,6 +65,7 @@ void Ec_Boards_ctrl::factory_board(void) {
 
     for ( i=1; i<=slave_cnt; i++ ) {
 
+        ///////////////////////////////////////////////////
         // BigMotor and MediumMotor
         if ( ec_slave[i].eep_id == HI_PWR_AC_MC ||
              ec_slave[i].eep_id == HI_PWR_DC_MC) {
@@ -72,56 +73,64 @@ void Ec_Boards_ctrl::factory_board(void) {
             HpESC * mc_slave = new HpESC(ec_slave[i]);
             if ( mc_slave->init(root_cfg) != EC_BOARD_OK ) {
                 // skip this slave
+                zombies[i] = iit::ecat::ESCPtr(mc_slave);
                 continue;
             }
             slaves[i] = iit::ecat::ESCPtr(mc_slave);
-            rid = mc_slave->get_joint_robot_id();
+            rid = mc_slave->get_robot_id();
+            mc_slave->print_info();
             if (rid != -1) {
                 rid2pos[rid] = i;
             }
-
-        } else if ( ec_slave[i].eep_id == HI_PWR_DC_MC ) {
-
-            HpESC * mc_slave = new HpESC(ec_slave[i]);
-            if ( mc_slave->init(root_cfg) != EC_BOARD_OK ) {
-                // skip this slave
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr(mc_slave);
-            rid = mc_slave->get_joint_robot_id();
-            if (rid != -1) {
-                rid2pos[rid] = i;
-            }
+        }
+        ///////////////////////////////////////////////////
         // LP Motor
-        } else if ( ec_slave[i].eep_id == LO_PWR_DC_MC ) {
+        else if ( ec_slave[i].eep_id == LO_PWR_DC_MC ) {
 
             LpESC * mc_slave = new LpESC(ec_slave[i]);
             if ( mc_slave->init(root_cfg) != EC_BOARD_OK ) {
                 // skip this slave
+                zombies[i] = iit::ecat::ESCPtr(mc_slave);
                 continue;
             }
             slaves[i] = iit::ecat::ESCPtr(mc_slave);
-            rid = mc_slave->get_joint_robot_id();
+            rid = mc_slave->get_robot_id();
+            mc_slave->print_info();
             if (rid != -1) {
                 rid2pos[rid] = i;
             }
+        }
+        ///////////////////////////////////////////////////
         // FT6 Sensor
-        } else if ( ec_slave[i].eep_id == FT6 ) {
+        else if ( ec_slave[i].eep_id == FT6 ) {
 
             Ft6ESC * ft_slave = new Ft6ESC(ec_slave[i]);
+            if ( ft_slave->init(root_cfg) != EC_BOARD_OK ) {
+                // skip this slave
+                zombies[i] = iit::ecat::ESCPtr(ft_slave);
+                continue;
+            }
             slaves[i] = iit::ecat::ESCPtr(ft_slave);
-
+            rid = ft_slave->get_robot_id();
+            if (rid != -1) {
+                rid2pos[rid] = i;
+            }
+        }
+        ///////////////////////////////////////////////////
         // Test    
-        } else if ( ec_slave[i].eep_id == EC_TEST ) {
+        else if ( ec_slave[i].eep_id == EC_TEST ) {
 
             TestESC * test_slave = new TestESC(ec_slave[i]);
             if ( test_slave->init(root_cfg) != EC_BOARD_OK ) {
                 // skip this slave
+                zombies[i] = iit::ecat::ESCPtr(test_slave);
                 continue;
             }
             slaves[i] = iit::ecat::ESCPtr(test_slave);            
-
-        } else if ( ec_slave[i].eep_id == HUB ) {
+        }
+        ///////////////////////////////////////////////////
+        // Hubs
+        else if ( ec_slave[i].eep_id == HUB ) {
 
             HubESC * hub = new HubESC(ec_slave[i]);
             slaves[i] = iit::ecat::ESCPtr(hub); 
@@ -140,16 +149,13 @@ void Ec_Boards_ctrl::factory_board(void) {
 
     iit::ecat::setExpectedSlaves(slaves);
 
-
+    if ( zombies.size() > 0 ) {
+        DPRINTF("Warning you got %d zombies !!!\n", zombies.size());
+    }
 }
 
 int Ec_Boards_ctrl::configure_boards(void) {
 
-    for ( auto it = slaves.begin(); it != slaves.end(); it++ ) {
-
-        HpESC * hp = slave_as_HP(it->first);
-        if ( hp ) { hp->print_info();; continue; }
-    }
     return slaves.size();
 
 }
@@ -157,7 +163,7 @@ int Ec_Boards_ctrl::configure_boards(void) {
 /** 
  *  TODO: change to McESC objects !!!! 
  */
-int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
+int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, int16_t cmd) {
 
     HpESC * hp = slave_as_HP(sPos);
     if (hp) { return set_ctrl_status_X(hp, cmd); }
@@ -171,7 +177,7 @@ int Ec_Boards_ctrl::set_ctrl_status(uint16_t sPos, uint16_t cmd) {
 /** 
  *  TODO: change to McESC objects !!!! 
  */
-int Ec_Boards_ctrl::set_flash_cmd(uint16_t sPos, uint16_t cmd) {
+int Ec_Boards_ctrl::set_flash_cmd(uint16_t sPos, int16_t cmd) {
 
     HpESC * hp = slave_as_HP(sPos);
     if (hp) { return set_flash_cmd_X(hp, cmd); }
@@ -241,7 +247,7 @@ int Ec_Boards_ctrl::getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo)
     Motor * m = slave_as_Motor(slave_index);
     if ( !m ) { return EC_BOARD_NOK; }
     rd_LOCK();
-    m->get_RxPDO(pdo);
+    pdo = m->getRxPDO();
     rd_UNLOCK();
     return EC_BOARD_OK;
 }
@@ -250,7 +256,7 @@ int Ec_Boards_ctrl::setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo)
     Motor * m = slave_as_Motor(slave_index);
     if ( !m ) { return EC_BOARD_NOK; }
     wr_LOCK();
-    m->set_TxPDO(pdo);
+    m->setTxPDO(pdo);
     wr_UNLOCK();
     return EC_BOARD_OK;
 }
@@ -259,7 +265,7 @@ int Ec_Boards_ctrl::getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo)
     Motor * m = slave_as_Motor(slave_index);
     if ( !m ) { return EC_BOARD_NOK; }
     wr_LOCK();
-    m->get_TxPDO(pdo);
+    pdo = m->getTxPDO();
     wr_UNLOCK();
     return EC_BOARD_OK;
 }
@@ -323,7 +329,7 @@ int Ec_Boards_ctrl::send_to_slaves() {
         wr_UNLOCK();
     }
 
-    return retry;
+    return wkc;
 }
 
 
@@ -339,15 +345,25 @@ static int esc_gpio_ll_wr(uint16_t configadr, uint16_t gpio_val) {
 int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmware, uint32_t passwd_firm) {
 
     int wc, ret = 0;
+    char * ec_err_string;
     bool go_ahead = true;
-    uint16_t configadr = slaves[slave_pos]->get_configadr();
+    uint16_t configadr; 
 
     // all slaves in INIT state 
     req_state_check(0, EC_STATE_INIT);
 
-    // check slave type ... HiPwr uses ET1100 GPIO to force/release bootloader 
     EscWrapper * s = slave_as_EscWrapper(slave_pos);
-    if ( s) {
+    if ( ! s ) {
+        s = slave_as_Zombie(slave_pos);
+        if ( ! s ) {
+            return 0;
+        }
+    }
+
+    configadr = s->get_configadr();
+
+    // check slave type ... HiPwr uses ET1100 GPIO to force/release bootloader 
+    if ( s ) {
         if ( (s->get_ESC_type() == HI_PWR_AC_MC) || 
              (s->get_ESC_type() == HI_PWR_DC_MC)) {
             // pre-update
@@ -390,13 +406,17 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
             wc = ec_SDOwrite(slave_pos, 0x8000, 0x1, false, sizeof(flash_cmd), &flash_cmd, EC_TIMEOUTRXM * 20); // 14 secs
             if ( wc <= 0 ) {
                 DPRINTF("ERROR writing flash_cmd\n");
+                ec_err_string =  ec_elist2string();
+                DPRINTF("Ec_error : %s\n", ec_err_string);
                 go_ahead = false;
             } else {
                 // read flash_cmd_ack
-                wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM *3);
+                wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM * 3);
                 DPRINTF("Slave %d wc %d flash_cmd_ack 0x%04X\n", slave_pos, wc, flash_cmd_ack);
                 if ( wc <= 0 ) {
                     DPRINTF("ERROR reading flash_cmd_ack\n");
+                    ec_err_string =  ec_elist2string();
+                    DPRINTF("Ec_error : %s\n", ec_err_string);
                     go_ahead = false;
                 } else if ( flash_cmd_ack != CTRL_CMD_DONE ) {
                     DPRINTF("ERROR erasing flash\n");

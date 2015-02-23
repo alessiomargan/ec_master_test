@@ -66,16 +66,20 @@ struct TestEscSdoTypes {
 };
 
 class TestESC :
-public BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>,
-public PDO_log<TestEscPdoTypes::pdo_rx>
+    public BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>,
+    public PDO_log<TestEscPdoTypes::pdo_rx>,
+    public XDDP_pipe<TestEscPdoTypes::pdo_rx,TestEscPdoTypes::pdo_tx>
 {
 
 public:
     typedef BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>    Base;
     typedef PDO_log<TestEscPdoTypes::pdo_rx>                    Log;
+    typedef XDDP_pipe<TestEscPdoTypes::pdo_rx,TestEscPdoTypes::pdo_tx> Xddp;
 
     TestESC(const ec_slavet& slave_descriptor) :
-        Base(slave_descriptor), Log(std::string("/tmp/ESC_log.txt"),DEFAULT_LOG_SIZE)
+        Base(slave_descriptor),
+        Log(std::string("/tmp/ESC_test_log.txt"),DEFAULT_LOG_SIZE),
+        Xddp("TestESC_pos"+std::to_string(position), 8192)
     {
 
     }
@@ -83,16 +87,28 @@ public:
     virtual ~TestESC(void) {
         delete [] SDOs;
         DPRINTF("~%s %d\n", typeid(this).name(), position);
+        print_stat(s_rtt);
     }
 
     virtual void on_readPDO(void) {
-        push_back(rx_pdo);
+
+        if ( rx_pdo._ulint ) {
+            rx_pdo._ulint =  get_time_ns() - rx_pdo._ulint;
+            s_rtt(rx_pdo._ulint);
+        }
+
+        if ( _start_log ) {
+            push_back(rx_pdo);
+        }
+
+        xddp_write(rx_pdo);
     }
+
     virtual void on_writePDO(void) {
         tx_pdo._ts = get_time_ns();
     }
  
-    virtual const objd_t * get_SDO_objd() { return SDOs; }
+    virtual const objd_t * get_SDOs() { return SDOs; }
     virtual void init_SDOs(void);
     virtual uint16_t get_ESC_type() { return EC_TEST; }
 
@@ -105,19 +121,18 @@ public:
             init_sdo_lookup();
 
             // set filename with robot_id
-            log_filename = std::string("/tmp/test_"+std::to_string(product_code)+"_log.txt");
+            //log_filename = std::string("/tmp/test_"+std::to_string(product_code)+"_log.txt");
 
             int32_t par_1, par_2;
 
-            getSDO_ptr().par_1 = 123;
-            getSDO_ptr().par_2 = 999;
+            sdo.par_1 = 123;
+            sdo.par_2 = 999;
             getSDO_byname("par_1", par_1);
             writeSDO_byname("par_2", par_2);
             writeSDO_byname<int32_t>("par_2", 777);
             int32_t test;
             readSDO_byname("par_2", test);
             assert(test == 777);
-
 
         } catch (EscWrpError &e ) {
 
@@ -135,7 +150,10 @@ public:
 
 
 private:
+
     objd_t * SDOs;
+
+    stat_t  s_rtt;
 
 };
 

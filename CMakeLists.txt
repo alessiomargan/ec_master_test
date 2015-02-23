@@ -39,6 +39,7 @@ add_library(walkman_master SHARED
     src/mc_lowpwr_esc.cpp
     src/ft6_esc.cpp
     src/test_esc.cpp
+    src/rt_ipc.cpp
 )
 
 target_link_libraries(walkman_master iitecat_iface soem pthread yaml-cpp)
@@ -65,6 +66,7 @@ target_link_libraries(walkman_test_2 walkman_master iitecat_iface soem pthread)
 
 add_executable(
      walkman_test_3
+     test/test_common
      test/walkman_test_3.cpp)
 
 target_link_libraries(walkman_test_3 walkman_master iitecat_iface soem pthread)

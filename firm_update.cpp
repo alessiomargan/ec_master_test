@@ -116,19 +116,29 @@ int main(int argc, char **argv)
         firmware_update["slave_pos_list"] >> slave_list;
         use_rId = false;
     }
+    std::string fw_path;
     std::string bin_file;
     int passwd;
     EscWrapper * esc;
     uint16_t   bType;
     int sPos;
 
+    firmware_update["fw_path"] >> fw_path;
+
     for (auto it = slave_list.begin(); it != slave_list.end(); it++) {
         if ( use_rId ) {
-            sPos = rid2pos[*it];
+            // use rId
+            try { sPos = rid2pos.at(*it); }
+            catch (const std::out_of_range& oor) { DPRINTF("%s\n", oor.what()); }
         } else {
+            // use slave pos
             sPos = *it;
         }
         esc = ec_boards_ctrl->slave_as_EscWrapper(sPos);
+        if ( !esc ) {
+            esc = ec_boards_ctrl->slave_as_Zombie(sPos);
+            DPRINTF("..... try with Z0mb13 %d\n", sPos);
+        }
         if( esc ) {
             bType = esc->get_ESC_type();
             switch ( bType ) {
@@ -151,10 +161,10 @@ int main(int argc, char **argv)
                 default :
                     break;
             }
-            std::cout << *it << " " << bin_file << " " << passwd << std::endl;
-            ret = ec_boards_ctrl->update_board_firmware(sPos, bin_file, passwd);
+            DPRINTF("%d %s 0x%04X \n", *it, (fw_path+bin_file).c_str(), passwd);
+            ret = ec_boards_ctrl->update_board_firmware(sPos, fw_path+bin_file, passwd);
             if ( ! ret  ) {
-                std::cout << "FAIL update slave pos " << sPos << std::endl;
+                DPRINTF("FAIL update slave pos %d\n" ,sPos);
             }
         }
     }

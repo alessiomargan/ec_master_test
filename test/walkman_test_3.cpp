@@ -14,75 +14,17 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 
 using namespace iit::ecat::advr;
-
-static int run_loop = 1;
-
-static void warn_upon_switch(int sig __attribute__((unused)))
-{
-    // handle rt to nrt contex switch
-    void *bt[3];
-    int nentries;
-
-    /* Dump a backtrace of the frame which caused the switch to
-       secondary mode: */
-    nentries = backtrace(bt,sizeof(bt)/sizeof(bt[0]));
-    // dump backtrace 
-    backtrace_symbols_fd(bt,nentries,fileno(stdout));
-}
-
-static void shutdown(int sig __attribute__((unused)))
-{
-    run_loop = 0;
-    DPRINTF("got signal .... Shutdown\n");
-}
-
-static void set_signal_handler(void)
-{
-    signal(SIGINT, shutdown);
-    signal(SIGINT, shutdown);
-    signal(SIGKILL, shutdown);
-#ifdef __XENO__
-    // call pthread_set_mode_np(0, PTHREAD_WARNSW) to cause a SIGXCPU
-    // signal to be sent when the calling thread involontary switches to secondary mode
-    signal(SIGXCPU, warn_upon_switch);
-#endif
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 using namespace iit::ecat;
+
+extern int run_loop;
+extern int main_common(void);
 
 Ec_Boards_ctrl * ec_boards_ctrl; 
 
 
 int main(int argc, char **argv)
 {
-    int ret;
-
-    set_signal_handler();
-
-#ifdef __XENO__
-    
-    int policy = SCHED_FIFO;
-    struct sched_param  schedparam;
-    schedparam.sched_priority = sched_get_priority_max(policy);
-    pthread_setschedparam(pthread_self(), SCHED_FIFO, &schedparam);
-
-    /* Prevent any memory-swapping for this program */
-    ret = mlockall(MCL_CURRENT | MCL_FUTURE);
-    if ( ret < 0 ) {
-        printf("mlockall failed (ret=%d) %s\n", ret, strerror(ret));
-        return 0;
-    }
-    /*
-     * This is a real-time compatible printf() package from
-     * Xenomai's RT Development Kit (RTDK), that does NOT cause
-     * any transition to secondary (i.e. non real-time) mode when
-     * writing output.
-     */
-    rt_print_auto_init(1);
-#endif
-
+    main_common();
 
     if ( argc != 2) {
     printf("Usage: %s config.yaml\n", argv[0]);
@@ -102,12 +44,12 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    ec_boards_ctrl->configure_boards();
+    //ec_boards_ctrl->configure_boards();
 
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
-#if 1
-    Motor * moto = ec_boards_ctrl->slave_as_Motor(1);
+#if 0
+    Motor * moto = ec_boards_ctrl->slave_as_Motor(2);
     assert(moto);
     moto->set_off_sgn(0,1);
     float home;
@@ -143,7 +85,9 @@ int main(int argc, char **argv)
     mc_pdo_tx.PosGainD = 3.0;
     mc_pdo_tx.tor_offs = 0.0;
     mc_pdo_tx.pos_ref = 0;
-    ec_boards_ctrl->setTxPDO(1, mc_pdo_tx);
+
+    moto->setTxPDO(mc_pdo_tx);
+
 
     ec_boards_ctrl->send_to_slaves();
 
@@ -154,10 +98,10 @@ int main(int argc, char **argv)
         }
 
         time += 0.0003;
-        ec_boards_ctrl->getRxPDO(1, mc_pdo_rx);
+        mc_pdo_rx = moto->getRxPDO();
         mc_pdo_tx.pos_ref = home + 1 * sinf(2*M_PI*time);
         //ec_boards_ctrl->setTxPDO(1, mc_pdo_tx);
-        moto->set_posRef(home + 1.0 * sinf(2*M_PI*time));
+        moto->set_posRef(mc_pdo_tx.pos_ref);
 
         //DPRINTF("GO %f\n", mc_pdo_tx.pos_ref);
 
@@ -168,6 +112,7 @@ int main(int argc, char **argv)
 
 #else
 
+#if 0
     HubIoESC * hub_io = dynamic_cast<HubIoESC*>(ec_boards_ctrl->slave_as_EscWrapper(2));
     uint16_t reg_0x1000;
 
@@ -178,6 +123,28 @@ int main(int argc, char **argv)
         sleep(1);
 
     }
+#endif
+
+    if ( ec_boards_ctrl->set_operative() <= 0 ) {
+        std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl; 
+        delete ec_boards_ctrl;
+        return 0;
+    }
+
+    try {
+
+        while (run_loop) {
+    
+            if ( ! ec_boards_ctrl->recv_from_slaves() ) {
+                break;
+            }
+            ec_boards_ctrl->send_to_slaves();
+        }
+
+    } catch (EscWrpError &e) {
+            std::cout << e.what() << std::endl;
+    }
+
 
 #endif
 

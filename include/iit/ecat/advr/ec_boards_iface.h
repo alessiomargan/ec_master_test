@@ -34,16 +34,6 @@ namespace ecat {
 namespace advr {
 
 
-/*
-struct info_item
-{
-    const objd_t* sdo_ptr;
-    int index;
-    int sub_index;
-    int size;
-}; 
-*/ 
-
 
 enum class Robot_IDs : std::int32_t 
 { 
@@ -166,8 +156,8 @@ public:
      * @return int
      */
     int ack_faults(uint16_t sPos, int32_t faults);
-    int set_ctrl_status(uint16_t sPos, uint16_t cmd);
-    int set_flash_cmd(uint16_t sPos, uint16_t cmd);
+    int set_ctrl_status(uint16_t sPos, int16_t cmd);
+    int set_flash_cmd(uint16_t sPos, int16_t cmd);
     int set_cal_matrix(uint16_t sPos, std::vector<std::vector<float>> &cal_matrix);
 
     /**
@@ -185,8 +175,9 @@ public:
     int update_board_firmware(uint16_t slave_pos, std::string firmware, uint32_t passwd_firm);
 
     EscWrapper * slave_as_EscWrapper(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? slaves[sPos].get() : NULL;}
+    EscWrapper * slave_as_Zombie(uint16_t sPos) { return(zombies.find(sPos) != zombies.end()) ? zombies[sPos].get() : NULL;}
 
-    Motor *  slave_as_Motor(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Motor*>(slaves[sPos].get()) : NULL;}
+    Motor * slave_as_Motor(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Motor*>(slaves[sPos].get()) : NULL;}
     //Motor *  slave_as_Motor(uint16_t sPos) { return dynamic_cast<Motor*>(slaves.at(sPos).get()); }
 
     HpESC *  slave_as_HP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<HpESC*>(slaves[sPos].get()) : NULL;}
@@ -208,6 +199,7 @@ protected:
     void factory_board(void);
 
     SlavesMap   slaves;
+    SlavesMap   zombies;
     
     Rid2PosMap  rid2pos;
     YAML::Node  root_cfg;

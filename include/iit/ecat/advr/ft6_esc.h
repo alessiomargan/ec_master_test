@@ -15,6 +15,7 @@
 
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
+#include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -88,29 +89,131 @@ struct Ft6EscSdoTypes {
 *  
 **/ 
 
-class Ft6ESC : public BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes> {
+class Ft6ESC :
+    public BasicEscWrapper<Ft6EscPdoTypes, Ft6EscSdoTypes>, 
+    public PDO_log<Ft6EscPdoTypes::pdo_rx>,
+    public XDDP_pipe<Ft6EscPdoTypes::pdo_rx, Ft6EscPdoTypes::pdo_tx>
+{
+public:
+    typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes>              Base;
+    typedef PDO_log<Ft6EscPdoTypes::pdo_rx>                             Log;
+    typedef XDDP_pipe<Ft6EscPdoTypes::pdo_rx,Ft6EscPdoTypes::pdo_tx>    Xddp;
 
 public:
-    typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes> Base;
-public:
     Ft6ESC(const ec_slavet& slave_descriptor) :
-        Base(slave_descriptor)
-    {
-        init_SDOs();
-        init_sdo_lookup();
-    }
+        Base(slave_descriptor),
+        Log(std::string("/tmp/Ft6ESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
+        Xddp("Ft6ESC_pos"+std::to_string(position), 8192)
+    { }
 
     virtual ~Ft6ESC(void) {
         delete [] SDOs;
-        DPRINTF("~%s %d\n", typeid(this).name(), position); }
+        DPRINTF("~%s pos %d\n", typeid(this).name(), position); }
     
     int set_cal_matrix(std::vector<std::vector<float>> &cal_matrix);
 
-    virtual const objd_t * get_SDO_objd() { return SDOs; }
+    virtual const objd_t * get_SDOs() { return SDOs; }
     virtual void init_SDOs(void);
     virtual uint16_t get_ESC_type() { return FT6; }
 
+    virtual void on_writePDO(void) {
+
+        tx_pdo.ts = get_time_ns();
+    }
+
+    virtual void on_readPDO(void) {
+
+        if ( rx_pdo.rtt ) {
+            rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
+            s_rtt(rx_pdo.rtt);
+        }
+
+        if ( rx_pdo.fault & 0xFFFF) {
+            handle_fault();
+        }
+
+        if ( _start_log ) {
+            Log::log_t log;
+            //log.ts = get_time_ns() -_start_log_ts ;
+            log.force_X     = rx_pdo.force_X;
+            log.force_Y     = rx_pdo.force_Y;
+            log.force_Z     = rx_pdo.force_Z;
+            log.torque_X    = rx_pdo.torque_X;
+            log.torque_Y    = rx_pdo.torque_Y;
+            log.torque_Z    = rx_pdo.torque_Z;  
+            log.fault       = rx_pdo.fault;     
+            log.rtt         = rx_pdo.rtt;       
+            push_back(log);
+        }
+
+        Xddp::xddp_tx_t xddp_tx;
+        xddp_tx.force_X     = rx_pdo.force_X; 
+        xddp_tx.force_Y     = rx_pdo.force_Y; 
+        xddp_tx.force_Z     = rx_pdo.force_Z; 
+        xddp_tx.torque_X    = rx_pdo.torque_X;
+        xddp_tx.torque_Y    = rx_pdo.torque_Y;
+        xddp_tx.torque_Z    = rx_pdo.torque_Z;
+        xddp_tx.fault       = rx_pdo.fault;   
+        xddp_tx.rtt         = rx_pdo.rtt;     
+        xddp_write(xddp_tx);
+    }
+
+    int16_t get_robot_id() {
+        //assert(sdo.Joint_robot_id != -1);
+        return sdo.sensor_robot_id;
+    }
+
+    virtual int init(const YAML::Node & root_cfg) {
+
+        int16_t robot_id = -1;
+
+        try {
+            init_SDOs();
+            init_sdo_lookup();
+            getSDO_byname("Sensor_robot_id", robot_id);
+            //set_flash_cmd_X(this, CTRL_REMOVE_TORQUE_OFFS);
+
+        } catch (EscWrpError &e ) {
+
+            DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
+            return EC_BOARD_INIT_SDO_FAIL;
+        }
+
+#if 0
+        if ( robot_id > 0 ) {
+            try {
+                std::string esc_conf_key = std::string("Ft6ESC_"+std::to_string(robot_id));
+                const YAML::Node& esc_conf = root_cfg[esc_conf_key];
+                if ( esc_conf.Type() != YAML::NodeType::Null ) {
+                }
+            } catch (YAML::KeyNotFound &e) {
+                DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
+                return EC_BOARD_KEY_NOT_FOUND;
+            }
+        }
+#endif
+        // set filename with robot_id
+        log_filename = std::string("/tmp/Ft6ESC_"+std::to_string(sdo.sensor_robot_id)+"_log.txt");
+
+        return EC_BOARD_OK;
+
+    }
+    
+    virtual void start_log(bool start) {
+        Log::start_log(start);
+    }
+
+    virtual void handle_fault(void) {
+
+        fault_t fault;
+        fault.all = rx_pdo.fault;
+        //fault.bit.
+        ack_faults_X(this, fault.all);
+
+    }
+
 private:
+    stat_t  s_rtt;
     objd_t * SDOs;
 };
 
@@ -133,19 +236,15 @@ inline int Ft6ESC::set_cal_matrix(std::vector<std::vector<float>> &cal_matrix)
         writeSDO_byname("matrix_rn_c5",cal_matrix[r][4]);
         writeSDO_byname("matrix_rn_c6",cal_matrix[r][5]);
     
-        writeSDO_byname("flash_params_cmd", flash_row_cmd);
-        readSDO_byname("flash_params_cmd_ack", ack);
-    
-        if ( (res=check_cmd_ack(flash_row_cmd, ack)) ) {
-              return res;
+        if ( set_flash_cmd_X(this, flash_row_cmd) != EC_BOARD_OK ) {
+            return EC_BOARD_FT6_CALIB_FAIL;
         }
-
         // next row cmd
         flash_row_cmd++;
 
     } // for rows
 
-    return res;
+    return EC_BOARD_OK;
 }
 
 

@@ -11,8 +11,8 @@
 
 #include <fstream>
 
-//#define ATI_IFACE_IP    "192.168.1.1"
-#define ATI_IFACE_IP    "169.254.89.61"
+#define ATI_IFACE_IP    "192.168.1.1"
+//#define ATI_IFACE_IP    "169.254.89.61"
 
 ////////////////////
 #undef __XENO__
@@ -116,7 +116,7 @@ int Ati_Sens::recv_data() {
     log_item.rtd_seq = ntohl(data.rtd_seq);
     log_item.ts = get_time_ns() - start_time;
     for( int i = 0; i < 6; i++ ) {
-         log_item.ft[i] = (float) ((int32_t)ntohl(data.ft[i]))/1000000;
+         log_item.ft[i] = (float) ((int32_t)ntohl(data.ft[i]))/1000;
     }
     ati_log.push_back(log_item);
 

@@ -14,7 +14,7 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
 
-#define FT_ECAT_POS 5
+#define FT_ECAT_POS 1
 
 using namespace iit::ecat::advr;
 
@@ -29,20 +29,20 @@ typedef struct {
     void sprint(char *buff, size_t size) {
         snprintf(buff, size, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
 // big sensor
-//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
-// small sensor
                  iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+// small sensor
+//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
     }
     void fprint(FILE *fp) {
         fprintf(fp, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
 // big sensor
-//                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
-// small sensor
                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+// small sensor
+//                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
 
     }
 } sens_data_t ; 
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
     ///////////////////////////////////////////////////////////////////////
 
     std::vector<std::vector<float>> cal_matrix;
-    //load_matrix("RightFootCalibMatrix.txt", cal_matrix);
+    load_matrix("RightFootCalibMatrix.txt", cal_matrix);
     //load_matrix("LeftFootCalibMatrix.txt", cal_matrix);
     //load_matrix("RightWristCalibMatrix.txt", cal_matrix);
     //load_matrix("LeftWristCalibMatrix.txt", cal_matrix);
@@ -183,12 +183,29 @@ int main(int argc, char **argv)
 
     ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
 
-    if ( ec_boards_ctrl->init() <= 0 ) {
-        std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
+    if ( ec_boards_ctrl->init() != EC_BOARD_OK) {
+        std::cout << "Error in boards init()... cannot proceed!" << std::endl;		
         delete ec_boards_ctrl;
         return 0;
     }
+
     ec_boards_ctrl->configure_boards();
+
+    Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
+
+    int cnt = 0;
+
+    
+    ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, CTRL_REMOVE_TORQUE_OFFS);
+
+    //ec_boards_ctrl->set_cal_matrix(FT_ECAT_POS, cal_matrix);
+    //ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, 0x0012);
+
+    Ft6EscPdoTypes::pdo_rx ft_pdo_rx;
+    Ft6EscPdoTypes::pdo_tx ft_pdo_tx;
+
+    ati_log_t   sample;
+    sens_data_t sens_data;
 
     if ( ec_boards_ctrl->set_operative() <= 0 ) {
         std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl; 
@@ -196,26 +213,8 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    int cnt = 0;
-    uint16_t  cmd = CTRL_POWER_MOD_OFF;
+    //sleep(3);
 
-    static double time;
-    McEscPdoTypes::pdo_rx mc_pdo_rx;
-    McEscPdoTypes::pdo_tx mc_pdo_tx;
-
-    Ft6EscPdoTypes::pdo_rx ft_pdo_rx;
-    Ft6EscPdoTypes::pdo_tx ft_pdo_tx;
-
-    ec_boards_ctrl->set_ctrl_status(2,CTRL_POWER_MOD_ON);
-
-    ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, CTRL_REMOVE_TORQUE_OFFS);
-
-    //ec_boards_ctrl->set_cal_matrix(FT_ECAT_POS, cal_matrix);
-    //ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, 0x0012);
-
-
-    ati_log_t   sample;
-    sens_data_t sens_data;
     uint64_t    start = get_time_ns();
 
     while ( run_loop ) {
@@ -229,9 +228,6 @@ int main(int argc, char **argv)
         cnt++;
 
         ///////////////////////////////////////////////////////////////////////
-
-        ec_boards_ctrl->getRxPDO(2, mc_pdo_rx);
-        //mc_pdo_rx.fprint(stderr); 
 
         ec_boards_ctrl->getRxPDO(FT_ECAT_POS, ft_pdo_rx);
         //DPRINTF("IIT\n");
@@ -248,21 +244,9 @@ int main(int argc, char **argv)
 
         ///////////////////////////////////////////////////////////////////////
 
-        ft_pdo_tx.ts = get_time_ns();
-        ec_boards_ctrl->setTxPDO(FT_ECAT_POS, ft_pdo_tx);
-
-        time += 0.001;
-        mc_pdo_tx.pos_ref = 3000 * sinf(2*M_PI*time);
-        mc_pdo_tx.ts = get_time_ns();
-        //ec_boards_ctrl->setTxPDO(2, mc_pdo_tx);
-
-        ///////////////////////////////////////////////////////////////////////
-
         ec_boards_ctrl->send_to_slaves();
 
     }
-
-    ec_boards_ctrl->set_ctrl_status(2,CTRL_POWER_MOD_OFF);
 
     delete ec_boards_ctrl;
     delete ati;

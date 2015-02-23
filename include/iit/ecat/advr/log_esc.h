@@ -7,6 +7,23 @@
 #ifndef __IIT_ECAT_ADVR_LOG_H__
 #define __IIT_ECAT_ADVR_LOG_H__
 
+#include <sys/mman.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <string.h>
+#include <malloc.h>
+#include <pthread.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <rtdk.h>
+#include <rtdm/rtipc.h>
+
+#ifdef __XENO__
+    #include <iit/ecat/advr/rt_ipc.h>
+#endif
+
 #include <boost/circular_buffer.hpp>
 
 // at 1kHz ecat DC clock 3 mins
@@ -25,7 +42,12 @@ public:
         dump_buffer(log_filename, esc_log);
     }
 
-    void push_back(const EscLogTypes& item) {
+    void start_log(bool start) {
+        _start_log = start;
+        _start_log_ts = get_time_ns();
+    }
+
+    void push_back(const log_t & item) {
         esc_log.push_back(item);
     }
 
@@ -33,7 +55,72 @@ protected:
 
     std::string log_filename;
     boost::circular_buffer<EscLogTypes> esc_log;
+
+    bool        _start_log;
+    uint64_t    _start_log_ts;
+
 };
+
+/**
+ * 
+ */
+
+template<class XddpTxTypes, class XddpRxTypes>
+class XDDP_pipe {
+
+public:
+    typedef XddpTxTypes    xddp_tx_t;
+    typedef XddpRxTypes    xddp_rx_t;
+
+    XDDP_pipe(const std::string pipe_name, int pool_size):
+        pipe_name(pipe_name),
+        pool_size(pool_size)
+    {
+#ifdef __XENO__
+        fd = xddp_bind(pipe_name.c_str(), pool_size);
+#else
+        std::string pipe = pipe_prefix + pipe_name;
+        mkfifo(pipe.c_str(), S_IRWXU|S_IRWXG);
+        fd = open(pipe.c_str(), O_RDWR | O_NONBLOCK);
+#endif
+        assert(fd);
+    }
+
+    virtual ~XDDP_pipe()
+    {
+        close(fd);
+#ifndef __XENO__
+        std::string pipe = pipe_prefix + pipe_name;
+        unlink(pipe.c_str());
+#endif
+    }
+
+    int xddp_write(xddp_tx_t & tx)
+    {
+        char buff[pool_size];
+        tx.sprint(buff, sizeof(buff));
+        return ::write(fd, buff, strlen(buff));
+    }
+
+    int xddp_read(void *buffer, ssize_t buff_size)
+    {
+        /////////////////////////////////////////////////////////
+        // NON-BLOCKING, read buff_size byte from pipe or cross domain socket
+#if __XENO__
+        return recvfrom(fd, buffer, buff_size, MSG_DONTWAIT, NULL, 0);
+#else
+        // NON-BLOCKING
+        return ::read(fd, buffer, buff_size);
+#endif
+    }
+
+
+protected:
+    int fd;
+    int pool_size;
+    std::string pipe_name;
+};
+
 
 
 #endif

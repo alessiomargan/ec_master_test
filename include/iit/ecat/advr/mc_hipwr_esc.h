@@ -114,16 +114,21 @@ struct HiPwrLogTypes {
 
 
 class HpESC :
-public BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes>,
-public PDO_log<HiPwrLogTypes>,
-public Motor {
+    public BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes>,
+    public PDO_log<HiPwrLogTypes>,
+    public XDDP_pipe<McEscPdoTypes::pdo_rx,McEscPdoTypes::pdo_tx>,
+    public Motor
+{
+
 public:
     typedef BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes> Base;
     typedef PDO_log<HiPwrLogTypes>                          Log;
+    typedef XDDP_pipe<McEscPdoTypes::pdo_rx,McEscPdoTypes::pdo_tx> Xddp;
 
     HpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
+        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
+        Xddp("HpESC_pos"+std::to_string(position), 8192)
     {
         _start_log = false;
         _actual_state = EC_STATE_PRE_OP;
@@ -132,19 +137,20 @@ public:
     virtual ~HpESC(void) {
 
         delete [] SDOs;
-        DPRINTF("~%s %d\n", typeid(this).name(), position);
+        DPRINTF("~%s pos %d\n", typeid(this).name(), position);
         print_stat(s_rtt);
     }
 
-    int16_t get_joint_robot_id() {
+    int16_t get_robot_id() {
         //assert(sdo.Joint_robot_id != -1);
         return sdo.Joint_robot_id;
     }
 
     void print_info(void) {
 
-        DPRINTF("\nJoint id %c%d\tJoint robot id %d\n", (char)(sdo.Joint_number>>8), sdo.Joint_number&0x0F, sdo.Joint_robot_id);
-        DPRINTF("min pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos);
+        DPRINTF("\tJoint id %c%d\tJoint robot id %d\n", (char)(sdo.Joint_number>>8), sdo.Joint_number&0x0F, sdo.Joint_robot_id);
+        DPRINTF("\tmin pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos);
+        DPRINTF("\tfw_ver %s\n", sdo.firmware_version);
     }
 
 protected :
@@ -165,7 +171,7 @@ protected :
 
         if ( _start_log ) {
             Log::log_t log;
-            log.ts = get_time_ns() -_start_log_ts ;
+            log.ts = get_time_ns() - _start_log_ts ;
             log.pos_ref     = M2J(tx_pdo.pos_ref,_sgn,_offset);
             log.tor_offs    = tx_pdo.tor_offs;
             log.PosGainP    = tx_pdo.PosGainP;
@@ -181,6 +187,8 @@ protected :
             log.rtt         = rx_pdo.rtt;     
             push_back(log);
         }
+
+        xddp_write(rx_pdo);
     }
 
     virtual void on_writePDO(void) {
@@ -219,7 +227,7 @@ protected :
         return EC_BOARD_OK;
     }
 
-    virtual const objd_t * get_SDO_objd() { return SDOs;}
+    virtual const objd_t * get_SDOs() { return SDOs;}
 
     void init_SDOs(void);
 
@@ -237,53 +245,58 @@ public :
         return NO_TYPE;
     }
 
+    virtual const pdo_rx_t& getRxPDO() const        { return Base::getRxPDO(); }
+    virtual const pdo_tx_t& getTxPDO() const        { return Base::getTxPDO(); }
+    virtual void setTxPDO(const pdo_tx_t & pdo_tx)  { Base::setTxPDO(pdo_tx); }
+
     virtual int init(const YAML::Node & root_cfg) {
 
-        int16_t Joint_robot_id;
+        int16_t Joint_robot_id = -1;
 
         try {
-
             // !! sgn and offset must set before init_sdo_lookup !!
             init_SDOs();
             init_sdo_lookup();
-            
             getSDO_byname("Joint_robot_id", Joint_robot_id);
 
-            std::string esc_conf_key = std::string("HpESC_"+std::to_string(Joint_robot_id));
-            const YAML::Node& esc_conf = root_cfg[esc_conf_key];
-            std::vector<float> conf_pid; 
-            if ( esc_conf.Type() != YAML::NodeType::Null ) {
-                esc_conf["sign"] >> _sgn; 
-                esc_conf["pos_offset"] >> _offset;
-                esc_conf["pid"]["position"] >> conf_pid;
-            }
-
-            // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
-            readSDO_byname("Min_pos");
-            readSDO_byname("Max_pos");
-            readSDO_byname("position");
-    
-            // set filename with robot_id
-            log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
-
-            // Paranoid Direct_ref
-            float direct_ref = 0.0;
-            writeSDO_byname("Direct_ref", direct_ref);
-            readSDO_byname("Direct_ref", direct_ref);
-            assert(direct_ref == 0.0);
-            
-                
         } catch (EscWrpError &e ) {
 
-            DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
-            return EC_BOARD_NOK;
-
-        } catch (std::exception &e) {
-    
-            DPRINTF("Exception %s ... %s\n", __FUNCTION__, e.what());
-            return EC_BOARD_NOK;
+            DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
+            return EC_BOARD_INIT_SDO_FAIL;
         }
-        
+
+        if ( Joint_robot_id > 0 ) {
+            try {
+                std::string esc_conf_key = std::string("HpESC_"+std::to_string(Joint_robot_id));
+                const YAML::Node& esc_conf = root_cfg[esc_conf_key];
+                //std::vector<float> conf_pid; 
+                if ( esc_conf.Type() != YAML::NodeType::Null ) {
+                    esc_conf["sign"] >> _sgn; 
+                    esc_conf["pos_offset"] >> _offset;
+                    //esc_conf["pid"]["position"] >> conf_pid;
+                }
+            } catch (YAML::KeyNotFound &e) {
+                DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
+                return EC_BOARD_KEY_NOT_FOUND;
+            }
+        } else {
+            return EC_BOARD_INVALID_ROBOT_ID;
+        }
+
+        // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
+        readSDO_byname("Min_pos");
+        readSDO_byname("Max_pos");
+        readSDO_byname("position");
+
+        // set filename with robot_id
+        log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+
+        // Paranoid Direct_ref
+        float direct_ref = 0.0;
+        writeSDO_byname("Direct_ref", direct_ref);
+        readSDO_byname("Direct_ref", direct_ref);
+        assert(direct_ref == 0.0);
+            
         return EC_BOARD_OK;
         
     }
@@ -332,10 +345,11 @@ public :
         _offset = offset;
         _sgn = sgn;
     }
-    void start_log(bool start) {
-        _start_log = start;
-        _start_log_ts = get_time_ns();
+    
+    virtual void start_log(bool start) {
+        Log::start_log(start);
     }
+
 
     virtual void handle_fault(void) {
 
@@ -369,9 +383,6 @@ private:
 
     float   _offset;
     int     _sgn;
-
-    bool        _start_log;
-    uint64_t    _start_log_ts;
 
     stat_t  s_rtt;
 

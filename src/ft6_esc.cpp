@@ -52,8 +52,8 @@ static const char acName8000_11[] = "matrix_r1_c3";
 static const char acName8000_12[] = "matrix_r1_c4";
 static const char acName8000_13[] = "matrix_r1_c5";
 static const char acName8000_14[] = "matrix_r1_c6";
-static const char acName8000_15[] = "Sensor number";
-static const char acName8000_16[] = "Sensor robot id";
+static const char acName8000_15[] = "Sensor_number";
+static const char acName8000_16[] = "Sensor_robot_id";
 
 static const char acName8001[] = "Parameter";
 static const char acName8001_1[] = "fw_ver";
