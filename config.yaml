@@ -158,6 +158,33 @@ HpESC_14:
   pid :
     position: [40.0 , 0.0 , 1.0]
 
+# RA_WR_1_ = 15
+LpESC_15:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# RA_WR_2_ = 16
+LpESC_16:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# RA_WR_3_ = 17
+LpESC_17:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# RA_HA_ = 19
+LpESC_19:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
 
 #############################
 # LEFT ARM
@@ -187,6 +214,34 @@ HpESC_23:
 # LA_EL_ = 24
 HpESC_24:
   sign: -1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# LA_WR_1_ = 25
+LpESC_25:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# LA_WR_2_ = 26
+LpESC_26:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# LA_WR_3_ = 27
+LpESC_27:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0 , 0.0 , 1.0]
+
+# LA_HA_ = 29
+LpESC_29:
+  sign: 1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
