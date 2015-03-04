@@ -9,8 +9,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <rtdk.h>
-#include <rtdm/rtipc.h>
+//#include <rtdk.h>
+//#include <rtdm/rtipc.h>
 
 
 static void fail(const char *reason)

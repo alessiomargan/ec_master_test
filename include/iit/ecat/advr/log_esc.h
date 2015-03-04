@@ -17,11 +17,12 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <rtdk.h>
-#include <rtdm/rtipc.h>
 
 #ifdef __XENO__
     #include <iit/ecat/advr/rt_ipc.h>
+#else
+    #include <sys/types.h>
+    #include <sys/stat.h>
 #endif
 
 #include <boost/circular_buffer.hpp>
@@ -79,6 +80,7 @@ public:
 #ifdef __XENO__
         fd = xddp_bind(pipe_name.c_str(), pool_size);
 #else
+        pipe_prefix =  "/tmp";
         std::string pipe = pipe_prefix + pipe_name;
         mkfifo(pipe.c_str(), S_IRWXU|S_IRWXG);
         fd = open(pipe.c_str(), O_RDWR | O_NONBLOCK);
@@ -118,6 +120,7 @@ public:
 protected:
     int fd;
     int pool_size;
+    std::string pipe_prefix;
     std::string pipe_name;
 };
 

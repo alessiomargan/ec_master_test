@@ -16,6 +16,7 @@ if(ENABLE_RTNET AND RTNET_INCLUDE_DIR)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${XENO_CFLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -L../../soem_1-3-0/build")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -lnative")
+  set(RT_SRCS src/rt_ipc.cpp)
 endif()
 
 set(HEADER_INSTALL_ROOT $ENV{WALKMAN_ETHERCAT_MASTER_ROOT}/include/ CACHE PATH "Where to install the headers")
@@ -39,7 +40,7 @@ add_library(walkman_master SHARED
     src/mc_lowpwr_esc.cpp
     src/ft6_esc.cpp
     src/test_esc.cpp
-    src/rt_ipc.cpp
+    ${RT_SRCS}
 )
 
 target_link_libraries(walkman_master iitecat_iface soem pthread yaml-cpp)

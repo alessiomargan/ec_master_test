@@ -18,16 +18,17 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-
+ 
 struct TestEscPdoTypes {
     // TX  slave_input -- master output
-    typedef struct {
+    struct pdo_tx {
         uint16_t    _type;
         int32_t     _value;
         uint64_t    _ts;
-    } __attribute__((__packed__)) pdo_tx;
+    } __attribute__((__packed__));
+    
     // RX  slave_output -- master input
-    typedef struct {
+    struct pdo_rx {
         uint8_t     _bit_0:1;
         uint8_t     _bit_1:1;
         uint8_t     _bit_2:1;
@@ -52,7 +53,7 @@ struct TestEscPdoTypes {
         void fprint(FILE *fp) {
             fprintf(fp, "%ld\t%lu\n", _lint,_ulint);
         }
-    } __attribute__((__packed__)) pdo_rx;
+    } __attribute__((__packed__));
 };
 
 

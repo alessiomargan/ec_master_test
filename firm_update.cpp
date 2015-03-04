@@ -105,15 +105,15 @@ int main(int argc, char **argv)
 
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
-    const YAML::Node& doc = ec_boards_ctrl->get_config_YAML_Node();
-    const YAML::Node& firmware_update = doc["firmware_update"];
+    const YAML::Node doc = ec_boards_ctrl->get_config_YAML_Node();
+    const YAML::Node firmware_update = doc["firmware_update"];
 
     std::vector<int> slave_list;
     bool use_rId = true;
     try {
-            firmware_update["slave_rId_list"] >> slave_list;
+            slave_list = firmware_update["slave_rId_list"].as<std::vector<int>>();
     } catch ( YAML::KeyNotFound &e ) {
-        firmware_update["slave_pos_list"] >> slave_list;
+        slave_list = firmware_update["slave_pos_list"].as<std::vector<int>>();
         use_rId = false;
     }
     std::string fw_path;
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
     uint16_t   bType;
     int sPos;
 
-    firmware_update["fw_path"] >> fw_path;
+    fw_path = firmware_update["fw_path"].as<std::string>();
 
     for (auto it = slave_list.begin(); it != slave_list.end(); it++) {
         if ( use_rId ) {
@@ -140,32 +140,37 @@ int main(int argc, char **argv)
             DPRINTF("..... try with Z0mb13 %d\n", sPos);
         }
         if( esc ) {
+            YAML::Node motor_type;
             bType = esc->get_ESC_type();
             switch ( bType ) {
                 case HI_PWR_AC_MC :
-                    firmware_update["big_motor"]["bin_file"] >> bin_file;
-                    firmware_update["big_motor"]["passwd"] >> passwd;
+                    motor_type = firmware_update["big_motor"];
                     break;
                 case HI_PWR_DC_MC :
-                    firmware_update["medium_motor"]["bin_file"] >> bin_file;
-                    firmware_update["medium_motor"]["passwd"] >> passwd;
+                    motor_type = firmware_update["medium_motor"];
                     break;
                 case LO_PWR_DC_MC :
-                    firmware_update["small_motor"]["bin_file"] >> bin_file;
-                    firmware_update["small_motor"]["passwd"] >> passwd;
+                    motor_type = firmware_update["small_motor"];
                     break;
                 case FT6 :
-                    firmware_update["force_torque_6"]["bin_file"] >> bin_file;
-                    firmware_update["force_torque_6"]["passwd"] >> passwd;
+                    motor_type = firmware_update["force_torque_6"];
                     break;
                 default :
                     break;
             }
-            DPRINTF("%d %s 0x%04X \n", *it, (fw_path+bin_file).c_str(), passwd);
-            ret = ec_boards_ctrl->update_board_firmware(sPos, fw_path+bin_file, passwd);
-            if ( ! ret  ) {
-                DPRINTF("FAIL update slave pos %d\n" ,sPos);
+
+            if ( motor_type ) {
+                bin_file    = firmware_update["big_motor"]["bin_file"].as<std::string>();
+                passwd      = firmware_update["big_motor"]["passwd"].as<int>();
+                DPRINTF("%d %s 0x%04X \n", *it, (fw_path+bin_file).c_str(), passwd);
+                ret = ec_boards_ctrl->update_board_firmware(sPos, fw_path+bin_file, passwd);
+                if ( ! ret  ) {
+                    DPRINTF("FAIL update slave pos %d\n" ,sPos);
+                }
+            } else {
+                DPRINTF("Unknown esc type %d\n" ,bType);
             }
+
         }
     }
     

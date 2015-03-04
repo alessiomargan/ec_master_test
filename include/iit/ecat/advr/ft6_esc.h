@@ -23,13 +23,15 @@ namespace iit {
     namespace ecat {
         namespace advr {
 
-struct Ft6EscPdoTypes {
+
+  struct Ft6EscPdoTypes {
     // TX  slave_input -- master output
-    typedef struct {
+    struct pdo_tx {
         uint64_t    ts;
-    }  __attribute__((__packed__)) pdo_tx;
+    }  __attribute__((__packed__));
+
     // RX  slave_output -- master input
-    typedef struct {
+    struct pdo_rx {
         float       force_X;            // N
         float       force_Y;            // N
         float       force_Z;            // N
@@ -44,8 +46,9 @@ struct Ft6EscPdoTypes {
         void fprint(FILE *fp) {
             fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%lu\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
         }
-    }  __attribute__((__packed__)) pdo_rx;
+    }  __attribute__((__packed__));
 };
+
 
 struct Ft6EscSdoTypes {
 

@@ -103,10 +103,10 @@ typedef union{
     struct fault_bits   bit;
 } fault_t;
 
-
+  
 struct McEscPdoTypes {
     // TX  slave_input -- master output
-    typedef struct {
+    struct pdo_tx {
         float	    pos_ref;
         float		tor_offs;
         float		PosGainP;
@@ -121,11 +121,11 @@ struct McEscPdoTypes {
             snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
         }
 
-    }  __attribute__((__packed__)) pdo_tx;
+    }  __attribute__((__packed__));
 
     // RX  slave_output -- master input
-    typedef struct {
-        float		temperature; 	    // C
+    struct pdo_rx {
+        float	temperature; 	    // C
         float	    position;   		// rad
         float		velocity;   		// rad/s
         float		torque;     		// Nm
@@ -133,13 +133,14 @@ struct McEscPdoTypes {
         uint64_t	rtt;        		// ns
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%f\t%f\t0xX%\t%lu\n", temperature,position,velocity,torque,fault,rtt);
+            fprintf(fp, "%f\t%f\t%f\t%f\t0x%X\t%lu\n", temperature,position,velocity,torque,fault,rtt);
         }
         void sprint(char *buff, size_t size) {
             snprintf(buff, size, "%f\t%f\t%f\t%f\t0x%X\t%lu\n", temperature,position,velocity,torque,fault,rtt);
         }
-    }  __attribute__((__packed__)) pdo_rx;
+    }  __attribute__((__packed__));
 };
+
 
 inline int check_cmd_ack(int16_t cmd, int16_t ack)
 {

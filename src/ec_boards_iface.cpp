@@ -1,5 +1,4 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
-#include <iit/ecat/advr/esc.h>
 
 #include <iostream>
 #include <fstream>
@@ -23,13 +22,13 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(std::string config_file) {
         assert(0);
     }
 
-    YAML::Parser parser(fin);
-    parser.GetNextDocument(root_cfg);
+    root_cfg = YAML::LoadFile(config_file);
+
     const YAML::Node& board_ctrl = root_cfg["ec_board_ctrl"];
 
-    board_ctrl["eth_iface"] >> eth_if;
-    board_ctrl["sync_cycle_time_ns"] >> sync_cycle_time_ns;
-    board_ctrl["sync_cycle_offset_ns"] >> sync_cycle_offset_ns;
+    eth_if = board_ctrl["eth_iface"].as<std::string>();
+    sync_cycle_time_ns = board_ctrl["sync_cycle_time_ns"].as<uint64>();
+    sync_cycle_offset_ns = board_ctrl["sync_cycle_offset_ns"].as<uint64>();
 
 }
 
@@ -151,6 +150,10 @@ void Ec_Boards_ctrl::factory_board(void) {
 
     if ( zombies.size() > 0 ) {
         DPRINTF("Warning you got %d zombies !!!\n", zombies.size());
+        for (auto it = zombies.begin(); it != zombies.end(); it++) {
+            DPRINTF("\tpos %d ", it->first);
+        }
+        DPRINTF("\n");
     }
 }
 

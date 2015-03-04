@@ -190,11 +190,10 @@ public:
             try {
                 std::string esc_conf_key = std::string("LpESC_"+std::to_string(Joint_robot_id));
                 const YAML::Node& esc_conf = root_cfg[esc_conf_key];
-                //std::vector<float> conf_pid; 
                 if ( esc_conf.Type() != YAML::NodeType::Null ) {
-                    esc_conf["sign"] >> _sgn; 
-                    esc_conf["pos_offset"] >> _offset;
-                    //esc_conf["pid"]["position"] >> conf_pid;
+                    _sgn = esc_conf["sign"].as<int>(); 
+                    _offset = esc_conf["pos_offset"].as<float>();
+                    _offset = DEG2RAD(_offset);
                 }
             } catch (YAML::KeyNotFound &e) {
                 DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
@@ -231,23 +230,14 @@ public:
 
     }
 
-    /////////////////////////////////////////////
+        /////////////////////////////////////////////
     // set pdo data
-    virtual int set_posRef(float joint_pos) {
-        tx_pdo.pos_ref = joint_pos;
-    }
-    virtual int set_torOffs(float tor_offs) {
-        tx_pdo.tor_offs = tor_offs;
-    }
-    virtual int set_posGainP(float p_gain) {
-        tx_pdo.PosGainP = p_gain;
-    }
-    virtual int set_posGainI(float i_gain) {
-        tx_pdo.PosGainI = i_gain;
-    }
-    virtual int set_posGainD(float d_gain) {
-        tx_pdo.PosGainD = d_gain;
-    }
+    virtual int set_posRef(float joint_pos) { tx_pdo.pos_ref = joint_pos; }
+    virtual int set_torOffs(float tor_offs) { tx_pdo.tor_offs = tor_offs; }
+    virtual int set_posGainP(float p_gain)  { tx_pdo.PosGainP = p_gain;   }
+    virtual int set_posGainI(float i_gain)  { tx_pdo.PosGainI = i_gain;   }
+    virtual int set_posGainD(float d_gain)  { tx_pdo.PosGainD = d_gain;   }
+
 
     virtual void set_off_sgn(float offset, int sgn) {}
 
