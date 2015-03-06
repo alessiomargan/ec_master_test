@@ -131,12 +131,24 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    uint64_t start_time = get_time_ns();
+    uint64_t tNow, tPre = start_time;
+    stat_t  s_loop;
+    int fails = 0;
     try {
 
         while (run_loop) {
-    
-            if ( ! ec_boards_ctrl->recv_from_slaves() ) {
-                break;
+            
+            tNow = get_time_ns();
+            s_loop(tNow - tPre);
+            tPre = tNow;
+            
+            if ( ec_boards_ctrl->recv_from_slaves() != EC_BOARD_OK ) {
+                //break;
+                fails++;
+                if (fails > 3) {
+                    break;
+                }
             }
             ec_boards_ctrl->send_to_slaves();
         }
@@ -145,7 +157,8 @@ int main(int argc, char **argv)
             std::cout << e.what() << std::endl;
     }
 
-
+    DPRINTF("elapsed secs %d\n", (get_time_ns() - start_time)/1000000000L);
+    print_stat(s_loop);
 #endif
 
     delete ec_boards_ctrl;

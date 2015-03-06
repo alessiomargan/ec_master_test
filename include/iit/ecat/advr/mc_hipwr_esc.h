@@ -128,7 +128,7 @@ public:
     HpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
         Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp("HpESC_pos"+std::to_string(position), 8192)
+        Xddp()
     {
         _start_log = false;
         _actual_state = EC_STATE_PRE_OP;
@@ -268,7 +268,7 @@ public :
         if ( Joint_robot_id > 0 ) {
             try {
                 std::string esc_conf_key = std::string("HpESC_"+std::to_string(Joint_robot_id));
-                const YAML::Node& esc_conf = root_cfg[esc_conf_key];
+                const YAML::Node esc_conf = root_cfg[esc_conf_key];
                 if ( esc_conf.Type() != YAML::NodeType::Null ) {
                     _sgn = esc_conf["sign"].as<int>(); 
                     _offset = esc_conf["pos_offset"].as<float>();
@@ -289,7 +289,9 @@ public :
 
         // set filename with robot_id
         log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
-
+        // open pipe with robot_id
+        Xddp::init(std::string("HpESC_"+std::to_string(sdo.Joint_robot_id)));
+    
         // Paranoid Direct_ref
         float direct_ref = 0.0;
         writeSDO_byname("Direct_ref", direct_ref);

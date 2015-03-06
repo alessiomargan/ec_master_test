@@ -73,10 +73,14 @@ public:
     typedef XddpTxTypes    xddp_tx_t;
     typedef XddpRxTypes    xddp_rx_t;
 
-    XDDP_pipe(const std::string pipe_name, int pool_size):
-        pipe_name(pipe_name),
+    XDDP_pipe(int pool_size = 8192):
         pool_size(pool_size)
     {
+        fd = 0;
+    }
+
+    void init(const std::string pipe_name) {
+        
 #ifdef __XENO__
         fd = xddp_bind(pipe_name.c_str(), pool_size);
 #else
@@ -87,9 +91,11 @@ public:
 #endif
         assert(fd);
     }
-
+    
     virtual ~XDDP_pipe()
     {
+        if ( ! fd ) { return; }
+        
         close(fd);
 #ifndef __XENO__
         std::string pipe = pipe_prefix + pipe_name;
@@ -100,12 +106,15 @@ public:
     int xddp_write(xddp_tx_t & tx)
     {
         char buff[pool_size];
+        
+        if ( ! fd ) { return 0; }
         tx.sprint(buff, sizeof(buff));
         return ::write(fd, buff, strlen(buff));
     }
 
     int xddp_read(void *buffer, ssize_t buff_size)
     {
+         if ( ! fd ) { return 0; }
         /////////////////////////////////////////////////////////
         // NON-BLOCKING, read buff_size byte from pipe or cross domain socket
 #if __XENO__

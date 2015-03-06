@@ -44,14 +44,13 @@ Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 }
 
 int Ec_Boards_ctrl::init(void) {
-
-    if ( iit::ecat::initialize(eth_if.c_str()) <= 0 ) {
-        return EC_BOARD_NOK;
+        
+    if ( iit::ecat::initialize(eth_if.c_str()) > 0 ) {
+        factory_board();
+        return EC_BOARD_OK;
     }
 
-    factory_board();
-
-    return EC_BOARD_OK;
+    return EC_BOARD_NOK;
 
 }
 
@@ -311,25 +310,27 @@ int Ec_Boards_ctrl::recv_from_slaves() {
     rd_LOCK();
     int ret = iit::ecat::recv_from_slaves(&timing);
     rd_UNLOCK();
-    if ( ret != 0 ) {
+    if ( ret < 0 ) {
         DPRINTF("fail recv_from_slaves\n");
-        return 0;
+        return EC_BOARD_RECV_FAIL;
     }
-    return 1;
+    
+    return EC_BOARD_OK;
 }
 
 int Ec_Boards_ctrl::send_to_slaves() {
 
-    int wkc, retry = 2;
+    int wkc, retry = 3;
 
     wr_LOCK();
     wkc = iit::ecat::send_to_slaves();
     wr_UNLOCK();
-    while ( wkc < expected_wkc && retry-- ) {
-        DPRINTF("## wkc %d\n", wkc);
+    while ( wkc <= 0  && retry ) {
+        DPRINTF("iit::ecat::send_to_slaves wkc %d retry %d\n", wkc, retry);
         wr_LOCK();
         wkc = iit::ecat::send_to_slaves();
         wr_UNLOCK();
+        retry--;
     }
 
     return wkc;

@@ -75,6 +75,8 @@ enum ec_board_ctrl_err: int {
     EC_BOARD_KEY_NOT_FOUND,
     EC_BOARD_FT6_CALIB_FAIL,
     EC_BOARD_INVALID_ROBOT_ID,
+    EC_BOARD_RECV_FAIL,
+    EC_BOARD_SEND_FAIL,
 
 };
 

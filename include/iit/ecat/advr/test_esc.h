@@ -79,8 +79,8 @@ public:
 
     TestESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/ESC_test_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp("TestESC_pos"+std::to_string(position), 8192)
+        Log(std::string("/tmp/ESC_test_pos"+std::to_string(position)+"log.txt"),DEFAULT_LOG_SIZE),
+        Xddp()
     {
 
     }
@@ -121,9 +121,6 @@ public:
             init_SDOs();
             init_sdo_lookup();
 
-            // set filename with robot_id
-            //log_filename = std::string("/tmp/test_"+std::to_string(product_code)+"_log.txt");
-
             int32_t par_1, par_2;
 
             sdo.par_1 = 123;
@@ -145,6 +142,8 @@ public:
             return EC_WRP_NOK;
         }
 
+        Xddp::init(std::string("/tmp/ESC_test_pos"+std::to_string(position)));
+        
         return EC_WRP_OK;
 
     }

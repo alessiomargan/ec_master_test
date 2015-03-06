@@ -96,7 +96,7 @@ public:
     LpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
         Log(std::string("/tmp/LpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp("LpESC_pos"+std::to_string(position), 8192)
+        Xddp()
     {
 
     }
@@ -129,7 +129,7 @@ public:
         }
 
         if ( rx_pdo.fault & 0x7FFF) {
-            handle_fault();
+            //handle_fault();
         }
 
         // apply transformation from Motor to Joint 
@@ -189,8 +189,9 @@ public:
         if ( Joint_robot_id > 0 ) {
             try {
                 std::string esc_conf_key = std::string("LpESC_"+std::to_string(Joint_robot_id));
-                const YAML::Node& esc_conf = root_cfg[esc_conf_key];
-                if ( esc_conf.Type() != YAML::NodeType::Null ) {
+                const YAML::Node esc_conf = root_cfg[esc_conf_key];
+                //if ( esc_conf.Type() != YAML::NodeType::Null ) {
+                if ( esc_conf ) {
                     _sgn = esc_conf["sign"].as<int>(); 
                     _offset = esc_conf["pos_offset"].as<float>();
                     _offset = DEG2RAD(_offset);
@@ -203,8 +204,14 @@ public:
             return EC_BOARD_INVALID_ROBOT_ID;
         }
 
+        // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
+        readSDO_byname("min_pos");
+        readSDO_byname("max_pos");
+        readSDO_byname("position");
+        
         log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
-
+        Xddp::init(std::string("LpESC_"+std::to_string(sdo.Joint_robot_id)));
+    
 
         return EC_WRP_OK;
 

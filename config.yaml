@@ -10,7 +10,7 @@ ec_board_ctrl:
 firmware_update:
   #
   fw_path: ../firmware/  
-  # slave robot id
+  # slave robot id\
   # legs motors
   #slave_rId_list: [41,41,42,43,44,45,46,51,52,53,54,55,56]
   # upper body big medium motors
@@ -32,6 +32,24 @@ firmware_update:
     bin_file: FT6.bin
     passwd: 0xbeef
 
+
+#############################
+# HEAD
+#############################
+
+#
+LpESC_1:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [20.0 , 0.0 , 2.0]
+
+#
+LpESC_2:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [20.0 , 0.0 , 2.0]
 
 #############################
 # RIGHT LEG
@@ -158,28 +176,28 @@ HpESC_14:
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# RA_WR_1_ = 15
+# RA_WR_1 = 15
 LpESC_15:
   sign: 1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# RA_WR_2_ = 16
+# RA_WR_2 = 16
 LpESC_16:
   sign: 1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# RA_WR_3_ = 17
+# RA_WR_3 = 17
 LpESC_17:
   sign: 1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# RA_HA_ = 19
+# RA_HA = 19
 LpESC_19:
   sign: 1
   pos_offset: 0
@@ -211,35 +229,35 @@ HpESC_23:
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# LA_EL_ = 24
+# LA_EL = 24
 HpESC_24:
   sign: -1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# LA_WR_1_ = 25
+# LA_WR_1 = 25
 LpESC_25:
   sign: 1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# LA_WR_2_ = 26
+# LA_WR_2 = 26
 LpESC_26:
   sign: 1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# LA_WR_3_ = 27
+# LA_WR_3 = 27
 LpESC_27:
   sign: 1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
 
-# LA_HA_ = 29
+# LA_HA = 29
 LpESC_29:
   sign: 1
   pos_offset: 0

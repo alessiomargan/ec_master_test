@@ -106,7 +106,7 @@ public:
     Ft6ESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
         Log(std::string("/tmp/Ft6ESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp("Ft6ESC_pos"+std::to_string(position), 8192)
+        Xddp()
     { }
 
     virtual ~Ft6ESC(void) {
@@ -132,7 +132,7 @@ public:
         }
 
         if ( rx_pdo.fault & 0xFFFF) {
-            handle_fault();
+            //handle_fault();
         }
 
         if ( _start_log ) {
@@ -197,7 +197,8 @@ public:
 #endif
         // set filename with robot_id
         log_filename = std::string("/tmp/Ft6ESC_"+std::to_string(sdo.sensor_robot_id)+"_log.txt");
-
+        Xddp::init(std::string("Ft6ESC_"+std::to_string(sdo.sensor_robot_id)));
+    
         return EC_BOARD_OK;
 
     }
