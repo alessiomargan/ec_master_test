@@ -84,7 +84,7 @@ public:
 #ifdef __XENO__
         fd = xddp_bind(pipe_name.c_str(), pool_size);
 #else
-        pipe_prefix =  "/tmp";
+        pipe_prefix =  "/tmp/";
         std::string pipe = pipe_prefix + pipe_name;
         mkfifo(pipe.c_str(), S_IRWXU|S_IRWXG);
         fd = open(pipe.c_str(), O_RDWR | O_NONBLOCK);

@@ -135,6 +135,7 @@ int main(int argc, char **argv)
     uint64_t tNow, tPre = start_time;
     stat_t  s_loop;
     int fails = 0;
+    int cnt = 0;
     try {
 
         while (run_loop) {
@@ -151,6 +152,10 @@ int main(int argc, char **argv)
                 }
             }
             ec_boards_ctrl->send_to_slaves();
+            
+            //if ((cnt++) % 10000 == 0){
+            //    ec_boards_ctrl->check_DataLayer();
+            //}
         }
 
     } catch (EscWrpError &e) {

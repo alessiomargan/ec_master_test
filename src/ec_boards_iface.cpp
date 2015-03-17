@@ -140,7 +140,7 @@ void Ec_Boards_ctrl::factory_board(void) {
 
         } else {
 
-            DPRINTF("Warning %d not handled !!!\n", ec_slave[i].eep_id);
+            DPRINTF("Warning product code %d not handled !!!\n", ec_slave[i].eep_id);
         }
 
     }
@@ -237,6 +237,13 @@ int Ec_Boards_ctrl::check_sanity(uint16_t sPos) {
     return 0;
 }
 
+void Ec_Boards_ctrl::check_DataLayer(void)
+{
+    for (auto it = slaves.begin(); it != slaves.end(); it++) {
+            it->second.get()->readErrReg();
+        }
+}
+    
 
 int Ec_Boards_ctrl::set_operative() {
 

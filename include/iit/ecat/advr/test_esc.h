@@ -79,7 +79,7 @@ public:
 
     TestESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/ESC_test_pos"+std::to_string(position)+"log.txt"),DEFAULT_LOG_SIZE),
+        Log(std::string("/tmp/ESC_test_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
         Xddp()
     {
 
@@ -142,7 +142,7 @@ public:
             return EC_WRP_NOK;
         }
 
-        Xddp::init(std::string("/tmp/ESC_test_pos"+std::to_string(position)));
+        Xddp::init(std::string("ESC_test_pos"+std::to_string(position)));
         
         return EC_WRP_OK;
 

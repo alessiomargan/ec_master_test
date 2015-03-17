@@ -166,7 +166,8 @@ public:
      * @return int
      */
     int check_sanity(uint16_t sPos);
-
+    void check_DataLayer(void);
+    
     /**
      * @brief update slave firmware using FOE
      * 

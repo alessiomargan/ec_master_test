@@ -111,7 +111,9 @@ public:
 
     virtual ~Ft6ESC(void) {
         delete [] SDOs;
-        DPRINTF("~%s pos %d\n", typeid(this).name(), position); }
+        DPRINTF("~%s pos %d\n", typeid(this).name(), position);
+        print_stat(s_rtt);
+    }
     
     int set_cal_matrix(std::vector<std::vector<float>> &cal_matrix);
 

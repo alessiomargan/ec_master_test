@@ -14,7 +14,7 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
 
-#define FT_ECAT_POS 1
+#define FT_ECAT_POS 3
 
 using namespace iit::ecat::advr;
 
@@ -29,20 +29,20 @@ typedef struct {
     void sprint(char *buff, size_t size) {
         snprintf(buff, size, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
 // big sensor
-                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
-// small sensor
 //                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+//                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+// small sensor
+                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
     }
     void fprint(FILE *fp) {
         fprintf(fp, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
 // big sensor
-                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
-// small sensor
 //                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+//                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+// small sensor
+                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
 
     }
 } sens_data_t ; 
