@@ -61,6 +61,7 @@ public:
     }
 
     virtual int init(const YAML::Node &) = 0;
+    //virtual int start(int controller_type) = 0;
     virtual int start(int controller_type, float _p, float _i, float _d) = 0;
     virtual int stop(void) = 0;
 

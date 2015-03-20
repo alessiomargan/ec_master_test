@@ -168,6 +168,8 @@ public:
     int check_sanity(uint16_t sPos);
     void check_DataLayer(void);
     
+    void start_motors(int);
+    void stop_motors(void);
     /**
      * @brief update slave firmware using FOE
      * 

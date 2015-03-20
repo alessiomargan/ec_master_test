@@ -48,6 +48,9 @@ int main(int argc, char **argv)
 
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
+    ec_boards_ctrl->start_motors(CTRL_SET_DIRECT_MODE);
+     
+        
 #if 0
     Motor * moto = ec_boards_ctrl->slave_as_Motor(2);
     assert(moto);
@@ -165,6 +168,8 @@ int main(int argc, char **argv)
     DPRINTF("elapsed secs %d\n", (get_time_ns() - start_time)/1000000000L);
     print_stat(s_loop);
 #endif
+
+    ec_boards_ctrl->stop_motors();
 
     delete ec_boards_ctrl;
 

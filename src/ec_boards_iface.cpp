@@ -162,6 +162,28 @@ int Ec_Boards_ctrl::configure_boards(void) {
 
 }
 
+
+void Ec_Boards_ctrl::start_motors(int control_type)
+{
+    for (auto it = rid2pos.begin(); it != rid2pos.end(); it++ ) {
+        Motor * moto = slave_as_Motor(it->second);
+        if (moto) {
+            moto->start(control_type, 10, 0.1, 1);
+        }
+    }
+}
+
+void Ec_Boards_ctrl::stop_motors(void)
+{
+    for (auto it = rid2pos.begin(); it != rid2pos.end(); it++ ) {
+    
+        Motor * moto = slave_as_Motor(it->second);
+        if (moto) {
+            moto->stop();
+        }
+    }
+}
+
 /** 
  *  TODO: change to McESC objects !!!! 
  */
