@@ -38,6 +38,13 @@ private:
         return c->readSDO_byname( name.c_str(), value );
     }
 
+    template <class C, typename T>
+    int getSDO_impl(std::string const & name, T & value ) {
+        C *c = dynamic_cast<C*>(this);
+        if (!c) { return EC_WRP_NOK; }
+        return c->getSDO_byname( name.c_str(), value );
+    }
+
 public:
 
     template<typename T>
@@ -60,8 +67,18 @@ public:
         return EC_WRP_NOK;
     }
 
+    template<typename T>
+    int getSDO(std::string const & name, T & value ) {
+        if ( am_i_HpESC() ) {
+            return getSDO_impl<HpESC>(name, value);
+        } else if ( am_i_LpESC() ) {
+            return getSDO_impl<LpESC>(name, value);
+        }
+        return EC_WRP_NOK;
+    }
+
     virtual int init(const YAML::Node &) = 0;
-    //virtual int start(int controller_type) = 0;
+    virtual int start(void) { return EC_BOARD_NOK; }
     virtual int start(int controller_type, float _p, float _i, float _d) = 0;
     virtual int stop(void) = 0;
 
@@ -74,6 +91,8 @@ public:
     virtual int set_posGainP(float p_gain)  = 0;
     virtual int set_posGainI(float i_gain)  = 0;
     virtual int set_posGainD(float d_gain)  = 0;
+
+    virtual int move_to(float pos, float step) { return 0; }
 
     //virtual int get_pos(float &joint_pos)   = 0;
     //virtual int get_posGainP(float &p_gain) = 0;

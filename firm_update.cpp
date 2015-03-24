@@ -110,12 +110,16 @@ int main(int argc, char **argv)
 
     std::vector<int> slave_list;
     bool use_rId = true;
-    try {
-            slave_list = firmware_update["slave_rId_list"].as<std::vector<int>>();
-    } catch ( YAML::KeyNotFound &e ) {
+    
+    if ( firmware_update["slave_rId_list"] ) {
+        slave_list = firmware_update["slave_rId_list"].as<std::vector<int>>();
+    } else if ( firmware_update["slave_pos_list"] ) {
         slave_list = firmware_update["slave_pos_list"].as<std::vector<int>>();
         use_rId = false;
+    } else {
+        std::cout << "NO slave list found !!" << std::endl;      
     }
+    
     std::string fw_path;
     std::string bin_file;
     int passwd;
@@ -160,8 +164,8 @@ int main(int argc, char **argv)
             }
 
             if ( motor_type ) {
-                bin_file    = firmware_update["big_motor"]["bin_file"].as<std::string>();
-                passwd      = firmware_update["big_motor"]["passwd"].as<int>();
+                bin_file    = motor_type["bin_file"].as<std::string>();
+                passwd      = motor_type["passwd"].as<int>();
                 DPRINTF("%d %s 0x%04X \n", *it, (fw_path+bin_file).c_str(), passwd);
                 ret = ec_boards_ctrl->update_board_firmware(sPos, fw_path+bin_file, passwd);
                 if ( ! ret  ) {

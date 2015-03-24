@@ -189,12 +189,13 @@ public:
         if ( Joint_robot_id > 0 ) {
             try {
                 std::string esc_conf_key = std::string("LpESC_"+std::to_string(Joint_robot_id));
-                const YAML::Node esc_conf = root_cfg[esc_conf_key];
-                //if ( esc_conf.Type() != YAML::NodeType::Null ) {
-                if ( esc_conf ) {
-                    _sgn = esc_conf["sign"].as<int>(); 
-                    _offset = esc_conf["pos_offset"].as<float>();
+                if ( root_cfg[esc_conf_key] ) {
+                    _sgn = root_cfg[esc_conf_key]["sign"].as<int>(); 
+                    _offset = root_cfg[esc_conf_key]["pos_offset"].as<float>();
                     _offset = DEG2RAD(_offset);
+                } else {
+                    DPRINTF("NO config for  %s in %s\n", esc_conf_key.c_str(), __PRETTY_FUNCTION__);
+                    return EC_BOARD_KEY_NOT_FOUND;
                 }
             } catch (YAML::KeyNotFound &e) {
                 DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
@@ -245,6 +246,20 @@ public:
     virtual int set_posGainI(float i_gain)  { tx_pdo.PosGainI = i_gain;   }
     virtual int set_posGainD(float d_gain)  { tx_pdo.PosGainD = d_gain;   }
 
+    virtual int move_to(float pos_ref, float step) {
+    
+        if ( fabs(rx_pdo.position - pos_ref) > 0.001 ) {
+            if ( rx_pdo.position > pos_ref ) {
+                tx_pdo.pos_ref -= step;
+            } else {
+                tx_pdo.pos_ref += step; //0.0005;
+            }
+            return 0;
+        } else {
+            return 1;
+        }
+    
+    }
 
     virtual void set_off_sgn(float offset, int sgn) {}
 

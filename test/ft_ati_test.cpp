@@ -14,7 +14,7 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
 
-#define FT_ECAT_POS 3
+#define FT_ECAT_POS 4
 
 using namespace iit::ecat::advr;
 
@@ -158,10 +158,11 @@ int main(int argc, char **argv)
     ///////////////////////////////////////////////////////////////////////
 
     std::vector<std::vector<float>> cal_matrix;
-    load_matrix("RightFootCalibMatrix.txt", cal_matrix);
+    //load_matrix("RightFootCalibMatrix.txt", cal_matrix);
     //load_matrix("LeftFootCalibMatrix.txt", cal_matrix);
     //load_matrix("RightWristCalibMatrix.txt", cal_matrix);
     //load_matrix("LeftWristCalibMatrix.txt", cal_matrix);
+    //load_matrix("ExtraWristCalibMatrix.txt", cal_matrix);
     //load_matrix("ones.txt", cal_matrix);
 
     std::vector<std::vector<float>>::const_iterator it = cal_matrix.begin();

@@ -72,6 +72,13 @@ add_executable(
 
 target_link_libraries(walkman_test_3 walkman_master iitecat_iface soem pthread)
 
+add_executable(
+     sine_joint
+     test/test_common
+     test/sine_joint.cpp)
+
+target_link_libraries(sine_joint walkman_master iitecat_iface soem pthread)
+
 
 add_executable(
      firm_update

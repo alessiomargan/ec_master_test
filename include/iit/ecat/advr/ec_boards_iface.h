@@ -35,23 +35,49 @@ namespace advr {
 
 
 
-enum class Robot_IDs : std::int32_t 
+enum Robot_IDs 
 { 
+    // neck
+    
+    // right arm
+    RA_SH_1 = 11,
+    RA_SH_2,
+    RA_SH_3,
+    RA_EL,
+    RA_WR_1,
+    RA_WR_2,
+    RA_WR_3,
+    RA_FT,
+    RA_HA,
+
+    // left arm
+    LA_SH_1 = 21,
+    LA_SH_2,
+    LA_SH_3,
+    LA_EL,
+    LA_WR_1,
+    LA_WR_2,
+    LA_WR_3,
+    LA_FT,
+    LA_HA,
+    
+    // right leg
     RL_H_Y = 41,
     RL_H_R,
     RL_H_P,
     RL_K,
     RL_A_P,
     RL_A_R,
-
+    RL_FT,
+    
+    // left leg
     LL_H_Y = 51,
     LL_H_R,
     LL_H_P,
     LL_K,
     LL_A_P,
     LL_A_R,
-
-
+    LL_FT,
 }; 
 
 
