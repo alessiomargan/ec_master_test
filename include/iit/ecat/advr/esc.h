@@ -18,8 +18,6 @@
 
 #define DEG2RAD(X)  ((float)X*M_PI)/180.0
 
-#define J2M(p,s,o)  (M_PI - (s*o) + (s*p)) 
-#define M2J(p,s,o)  ((p - M_PI + (s*o))/s) 
 
 // Control commands
 #define CTRL_POWER_MOD_ON		0x00A5

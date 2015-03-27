@@ -38,6 +38,8 @@ namespace advr {
 enum Robot_IDs 
 { 
     // neck
+    HEAD_R = 1,
+    HEAD_P,
     
     // right arm
     RA_SH_1 = 11,

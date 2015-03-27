@@ -25,6 +25,14 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
+namespace lopwr_esc {
+//static float J2M(float p, int s, float o) { return ((s*o) + (s*p)); } 
+//static float M2J(float p, int s, float o) { return ((p + (s*o))/s); }
+static float J2M(float p, int s, float o) { return p; } 
+static float M2J(float p, int s, float o) { return p; } 
+
+}
+
 struct LoPwrEscSdoTypes {
     
     // flash
@@ -133,7 +141,7 @@ public:
         }
 
         // apply transformation from Motor to Joint 
-        rx_pdo.position = M2J(rx_pdo.position,_sgn,_offset); 
+        rx_pdo.position = lopwr_esc::M2J(rx_pdo.position,_sgn,_offset); 
 
         if ( _start_log ) {
             push_back(rx_pdo);
@@ -147,9 +155,37 @@ public:
         tx_pdo.ts = get_time_ns();
 
         // apply transformation from Joint to Motor 
-        tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
+        //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
 
+    virtual int on_readSDO(const objd_t * sdobj)  {
+
+        if ( ! strcmp(sdobj->name, "position") ) {
+            rx_pdo.position = lopwr_esc::M2J(rx_pdo.position,_sgn,_offset);
+            //DPRINTF("on_getSDO M2J position %f\n", rx_pdo.position);
+        } else if ( ! strcmp(sdobj->name, "Min_pos") ) {
+            //DPRINTF("1 on_getSDO M2J min_pos %f\n", sdo.Min_pos);
+            sdo.Min_pos = lopwr_esc::M2J(sdo.Min_pos,_sgn,_offset);
+            //DPRINTF("2 on_getSDO M2J min_pos %f\n", sdo.Min_pos);
+        } else if ( ! strcmp(sdobj->name, "Max_pos") ) {
+            sdo.Max_pos = lopwr_esc::M2J(sdo.Max_pos,_sgn,_offset);
+            //DPRINTF("on_getSDO M2J max_pos %f\n", sdo.Max_pos);
+        }
+        return EC_BOARD_OK;
+    }
+
+    virtual int on_writeSDO(const objd_t * sdo) {
+
+        // do not allow to write sdo that map txPDO
+        //if ( _actual_state == EC_STATE_OPERATIONAL && sdo->index == 0x7000 ) {
+        //    return EC_WRP_SDO_WRITE_CB_FAIL;
+        //}
+        if ( ! strcmp(sdo->name, "pos_ref") ) {
+            tx_pdo.pos_ref = lopwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
+            DPRINTF("on_setSDO J2M pos_ref %f\n", tx_pdo.pos_ref);
+        }
+        return EC_BOARD_OK;
+    }
 
     ///////////////////////////////////////////////////////
     ///
@@ -172,7 +208,7 @@ public:
 
     virtual int init(const YAML::Node & root_cfg) {
 
-        int16_t Joint_robot_id = -1;
+        Joint_robot_id = -1;
 
         try {
             // !! sgn and offset must set before init_sdo_lookup !!
@@ -206,8 +242,8 @@ public:
         }
 
         // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
-        readSDO_byname("min_pos");
-        readSDO_byname("max_pos");
+        readSDO_byname("Min_pos");
+        readSDO_byname("Max_pos");
         readSDO_byname("position");
         
         log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
@@ -218,11 +254,36 @@ public:
 
     }
     virtual int start(int controller_type, float _p, float _i, float _d) {
-        return 0;
+        
+        float act_position;
+        int32_t fault;
+
+        try {
+            // ack errors
+            // set direct mode and power on modulator
+            set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
+            set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
+            // set actual position as reference
+            readSDO_byname("position", act_position);
+            writeSDO_byname("pos_ref", act_position);
+            
+            start_log(true);
+            
+            // set position mode
+            set_ctrl_status_X(this, CTRL_SET_POS_MODE);
+            
+        } catch (EscWrpError &e ) {
+
+            DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
+            return EC_BOARD_NOK;
+        }
+
+        return EC_BOARD_OK;
+
     }
 
     virtual int stop(void) {
-        return 0;
+        return set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
     }
 
     virtual void start_log(bool start) {
@@ -248,14 +309,23 @@ public:
 
     virtual int move_to(float pos_ref, float step) {
     
-        if ( fabs(rx_pdo.position - pos_ref) > 0.001 ) {
-            if ( rx_pdo.position > pos_ref ) {
-                tx_pdo.pos_ref -= step;
+        float pos, tx_pos_ref;
+        
+        readSDO_byname("position", pos);
+        getSDO_byname("pos_ref", tx_pos_ref);
+        tx_pos_ref = tx_pos_ref;
+        if ( fabs(pos - pos_ref) > 0.01 ) {
+            if ( pos > pos_ref ) {
+                tx_pos_ref -= step; 
             } else {
-                tx_pdo.pos_ref += step; //0.0005;
+                tx_pos_ref += step; //0.0005;
             }
+                
+            writeSDO_byname("pos_ref", tx_pos_ref);
+            DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
             return 0;
         } else {
+            DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
             return 1;
         }
     
@@ -265,6 +335,8 @@ public:
 
 private:
 
+    int16_t Joint_robot_id;
+    
     float   _offset;
     int     _sgn;
 
