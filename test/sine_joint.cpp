@@ -94,19 +94,24 @@ std::vector<int> body = {
     //Robot_IDs::LA_HA, 
     
     //Robot_IDs::RL_H_Y,
-    Robot_IDs::RL_H_R,
-    Robot_IDs::RL_H_P,
-    Robot_IDs::RL_K,
-    //Robot_IDs::RL_A_P,
-    Robot_IDs::RL_A_R,
-    //Robot_IDs::RL_FT,
-    
     //Robot_IDs::LL_H_Y,
+    
+    Robot_IDs::RL_H_R,
     Robot_IDs::LL_H_R,
+    
+    Robot_IDs::RL_H_P,
     Robot_IDs::LL_H_P,
+    
+    Robot_IDs::RL_K,
     Robot_IDs::LL_K,
+    
+    Robot_IDs::RL_A_P,
     Robot_IDs::LL_A_P,
+    
+    Robot_IDs::RL_A_R,
     Robot_IDs::LL_A_R,
+    
+    //Robot_IDs::RL_FT,
     //Robot_IDs::LL_FT,
 
     
@@ -164,6 +169,8 @@ int main(int argc, char **argv)
             home[*it] = MID_POS(min_pos,max_pos);
             if (*it == 12 ) { home[*it] = start_pos[*it] + 0.4; }
             if (*it == 22 ) { home[*it] = start_pos[*it] - 0.4; }
+            if (*it == 42 ) { home[*it] = 0; }
+            if (*it == 52 ) { home[*it] = 0; }
             DPRINTF("%d : home pos %f\n", *it, home[*it]);
                         
         } else {
@@ -172,11 +179,13 @@ int main(int argc, char **argv)
     }
 
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-        Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);        
-        while (run_loop) {
-            if ( moto->move_to(home[*it], 0.002) ) { break; }
-            osal_usleep(5000);    
-        }
+        Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]); 
+        //if (moto) {
+            while (run_loop) {
+                if ( moto->move_to(home[*it], 0.002) ) { break; }
+                osal_usleep(5000);    
+            }
+        //}
     }
     
     /////////////////////////////////////////////
@@ -193,15 +202,16 @@ int main(int argc, char **argv)
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
         
         Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
-                
-        ec_boards_ctrl->getRxPDO(rid2pos[*it], mc_pdo_rx);
-        mc_pdo_rx.sprint(buffer, sizeof(buffer));
-        DPRINTF("%d\t %s\n",*it, buffer);
-        ec_boards_ctrl->getTxPDO(rid2pos[*it], mc_pdo_tx);
-        mc_pdo_tx.tor_offs = 0.0;
-        mc_pdo_tx.sprint(buffer, sizeof(buffer));
-        DPRINTF("%d\t %s\n",*it, buffer);
-        ec_boards_ctrl->setTxPDO(rid2pos[*it], mc_pdo_tx);
+        if (moto) {        
+            ec_boards_ctrl->getRxPDO(rid2pos[*it], mc_pdo_rx);
+            mc_pdo_rx.sprint(buffer, sizeof(buffer));
+            DPRINTF("%d\t %s\n",*it, buffer);
+            ec_boards_ctrl->getTxPDO(rid2pos[*it], mc_pdo_tx);
+            mc_pdo_tx.tor_offs = 0.0;
+            mc_pdo_tx.sprint(buffer, sizeof(buffer));
+            DPRINTF("%d\t %s\n",*it, buffer);
+            ec_boards_ctrl->setTxPDO(rid2pos[*it], mc_pdo_tx);
+        }
     }
     
     ec_boards_ctrl->send_to_slaves();
@@ -254,8 +264,11 @@ int main(int argc, char **argv)
             for ( auto it = motors.begin(); it != motors.end(); it++ ) {
                 Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
                 if (moto) {
-                    //moto->set_posRef(home[*it]);
-                    moto->set_posRef(home[*it] + 0.2 * sinf(2*M_PI*time));
+                    //if ( *it == 42 || *it == 52 ) {
+                    //    moto->set_posRef(home[*it]);
+                    //} else {
+                        moto->set_posRef(home[*it] + 0.2 * sinf(2*M_PI*time));
+                    //}
                 }
                 ec_boards_ctrl->getTxPDO(rid2pos[*it], mc_pdo_tx);
                 mc_pdo_tx.sprint(buffer, sizeof(buffer));
