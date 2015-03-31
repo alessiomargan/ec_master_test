@@ -50,8 +50,8 @@ int main(int argc, char **argv)
 
     ec_boards_ctrl->start_motors(CTRL_SET_DIRECT_MODE);
      
-    //Motor * moto = ec_boards_ctrl->slave_as_Motor(4);
-    //moto->writeSDO<float>("Direct_ref", 5.0);
+    Motor * moto = ec_boards_ctrl->slave_as_Motor(4);
+    moto->writeSDO<float>("Direct_ref", 3.0);
         
 #if 0
     Motor * moto = ec_boards_ctrl->slave_as_Motor(2);

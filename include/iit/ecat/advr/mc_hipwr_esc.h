@@ -65,6 +65,9 @@ struct HiPwrEscSdoTypes {
     int16_t     Joint_number;
     int16_t     Joint_robot_id;
 
+    float PosGainP;
+    float PosGainI;
+    float PosGainD;
     // ram
 
     char        firmware_version[8];
@@ -91,10 +94,10 @@ struct HiPwrLogTypes {
 
     uint64_t	ts;        		    // ns
     float	    pos_ref;   		// rad
-    float		tor_offs;
-    float		PosGainP;
-    float		PosGainI;
-    float		PosGainD;
+    //float		tor_offs;
+    //float		PosGainP;
+    //float		PosGainI;
+    //float		PosGainD;
     //                            
     float		temperature; 	// C
     float	    position;   		// rad
@@ -104,14 +107,20 @@ struct HiPwrLogTypes {
     uint64_t	rtt;        		// ns
 
     void fprint(FILE *fp) {
-        fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
-                ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
+//         fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+//                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
+//                 temperature,position,velocity,torque,fault,rtt);
+        fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+                ts,pos_ref,
                 temperature,position,velocity,torque,fault,rtt);
     }
     void sprint(char *buff, size_t size) {
-        snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
-                ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
-                temperature,position,velocity,torque,fault,rtt);
+//         snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+//                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
+//                 temperature,position,velocity,torque,fault,rtt);
+           snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+                  ts,pos_ref,
+                  temperature,position,velocity,torque,fault,rtt);
     }
 };
 
@@ -180,10 +189,10 @@ protected :
             Log::log_t log;
             log.ts = get_time_ns() - _start_log_ts ;
             log.pos_ref     = hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset);
-            log.tor_offs    = tx_pdo.tor_offs;
-            log.PosGainP    = tx_pdo.PosGainP;
-            log.PosGainI    = tx_pdo.PosGainI;
-            log.PosGainD    = tx_pdo.PosGainD;
+            //log.tor_offs    = tx_pdo.tor_offs;
+            //log.PosGainP    = tx_pdo.PosGainP;
+            //log.PosGainI    = tx_pdo.PosGainI;
+            //log.PosGainD    = tx_pdo.PosGainD;
             // for TEST temperature is motor_enc
             log.temperature = hipwr_esc::M2J(rx_pdo.temperature,_sgn,_offset);
             //log.temperature = rx_pdo.temperature;
@@ -377,11 +386,11 @@ public :
 
     /////////////////////////////////////////////
     // set pdo data
-    virtual int set_posRef(float joint_pos) { tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset);; }
-    virtual int set_torOffs(float tor_offs) { tx_pdo.tor_offs = tor_offs; }
-    virtual int set_posGainP(float p_gain)  { tx_pdo.PosGainP = p_gain;   }
-    virtual int set_posGainI(float i_gain)  { tx_pdo.PosGainI = i_gain;   }
-    virtual int set_posGainD(float d_gain)  { tx_pdo.PosGainD = d_gain;   }
+    virtual int set_posRef(float joint_pos) { tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset); }
+    virtual int set_torOffs(float tor_offs) { /*tx_pdo.tor_offs = tor_offs;*/ }
+    virtual int set_posGainP(float p_gain)  { /*tx_pdo.PosGainP = p_gain;*/   }
+    virtual int set_posGainI(float i_gain)  { /*tx_pdo.PosGainI = i_gain;*/   }
+    virtual int set_posGainD(float d_gain)  { /*tx_pdo.PosGainD = d_gain;*/   }
 
     virtual int move_to(float pos_ref, float step) {
         

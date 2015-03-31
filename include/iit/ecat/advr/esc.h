@@ -108,17 +108,19 @@ struct McEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
         float	    pos_ref;
-        float		tor_offs;
-        float		PosGainP;
-        float		PosGainI;
-        float		PosGainD;
+//         float		tor_offs;
+//         float		PosGainP;
+//         float		PosGainI;
+//         float		PosGainD;
         uint64_t	ts;
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
+//             fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
+            fprintf(fp, "%f\t%lu\n", pos_ref,ts);
         }
         void sprint(char *buff, size_t size) {
-            snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
+//             snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
+            snprintf(buff, size, "%f\t%lu\n", pos_ref,ts);
         }
 
     }  __attribute__((__packed__));

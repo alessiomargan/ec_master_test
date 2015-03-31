@@ -118,7 +118,8 @@ std::vector<int> body = {
 };
 
 
-std::vector<int> motors = body; 
+//std::vector<int> motors = body; 
+std::vector<int> motors = { 1000 }; 
 
 std::map<int,float> home;
 std::map<int,float> start_pos;
@@ -207,7 +208,7 @@ int main(int argc, char **argv)
             mc_pdo_rx.sprint(buffer, sizeof(buffer));
             DPRINTF("%d\t %s\n",*it, buffer);
             ec_boards_ctrl->getTxPDO(rid2pos[*it], mc_pdo_tx);
-            mc_pdo_tx.tor_offs = 0.0;
+            //mc_pdo_tx.tor_offs = 0.0;
             mc_pdo_tx.sprint(buffer, sizeof(buffer));
             DPRINTF("%d\t %s\n",*it, buffer);
             ec_boards_ctrl->setTxPDO(rid2pos[*it], mc_pdo_tx);
@@ -289,7 +290,7 @@ int main(int argc, char **argv)
     
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
         Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);        
-        while (run_loop) {
+        while (1) {
             if ( moto->move_to(start_pos[*it], 0.002) ) { break; }
             osal_usleep(5000);    
         }

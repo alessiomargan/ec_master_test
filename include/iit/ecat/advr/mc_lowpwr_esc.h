@@ -302,10 +302,10 @@ public:
         /////////////////////////////////////////////
     // set pdo data
     virtual int set_posRef(float joint_pos) { tx_pdo.pos_ref = joint_pos; }
-    virtual int set_torOffs(float tor_offs) { tx_pdo.tor_offs = tor_offs; }
-    virtual int set_posGainP(float p_gain)  { tx_pdo.PosGainP = p_gain;   }
-    virtual int set_posGainI(float i_gain)  { tx_pdo.PosGainI = i_gain;   }
-    virtual int set_posGainD(float d_gain)  { tx_pdo.PosGainD = d_gain;   }
+    virtual int set_torOffs(float tor_offs) { /*tx_pdo.tor_offs = tor_offs;*/ }
+    virtual int set_posGainP(float p_gain)  { /*tx_pdo.PosGainP = p_gain;*/   }
+    virtual int set_posGainI(float i_gain)  { /*tx_pdo.PosGainI = i_gain;*/   }
+    virtual int set_posGainD(float d_gain)  { /*tx_pdo.PosGainD = d_gain;*/   }
 
     virtual int move_to(float pos_ref, float step) {
     
