@@ -331,13 +331,12 @@ public :
         int32_t fault;
 
         try {
-            // ack errors
-            // set direct mode and power on modulator
-            set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
-            set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
             // set actual position as reference
             readSDO_byname("position", act_position);
             writeSDO_byname("pos_ref", act_position);
+            // set direct mode and power on modulator
+            set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
+            set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
             // set PID gains ... this will set tx_pdo.PosGainP ....
             writeSDO_byname("PosGainP", _p);
             writeSDO_byname("PosGainI", _i);

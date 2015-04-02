@@ -70,8 +70,8 @@ std::vector<int> head = {
 
 std::vector<int> body = {
 
-    //Robot_IDs::HEAD_R,
-    //Robot_IDs::HEAD_P,
+    Robot_IDs::HEAD_R,
+    Robot_IDs::HEAD_P,
     
     Robot_IDs::RA_SH_2,
     Robot_IDs::RA_SH_1,
@@ -118,8 +118,8 @@ std::vector<int> body = {
 };
 
 
-//std::vector<int> motors = body; 
-std::vector<int> motors = { 1000 }; 
+std::vector<int> motors = body; 
+//std::vector<int> motors = { 1000 }; 
 
 std::map<int,float> home;
 std::map<int,float> start_pos;
@@ -181,12 +181,10 @@ int main(int argc, char **argv)
 
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
         Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]); 
-        //if (moto) {
-            while (run_loop) {
-                if ( moto->move_to(home[*it], 0.002) ) { break; }
-                osal_usleep(5000);    
-            }
-        //}
+        if (! moto) { continue; }
+        while ( ! moto->move_to(home[*it], 0.002) && run_loop ) {
+            osal_usleep(2000);    
+        }
     }
     
     /////////////////////////////////////////////
@@ -258,18 +256,19 @@ int main(int argc, char **argv)
             tNow = get_time_ns();
             s_loop(tNow - tPre);
             tPre = tNow;
-            time += 0.0005;
+            time += 0.001; // 0.0005
             
             if ( ec_boards_ctrl->recv_from_slaves() != EC_BOARD_OK ) { break; }
     
             for ( auto it = motors.begin(); it != motors.end(); it++ ) {
                 Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
                 if (moto) {
-                    //if ( *it == 42 || *it == 52 ) {
-                    //    moto->set_posRef(home[*it]);
-                    //} else {
+                    if ( *it == 42 || *it == 52 ) {
+                        moto->set_posRef(home[*it]);
+                    } else {
+                        //moto->set_posRef(home[*it]);
                         moto->set_posRef(home[*it] + 0.2 * sinf(2*M_PI*time));
-                    //}
+                    }
                 }
                 ec_boards_ctrl->getTxPDO(rid2pos[*it], mc_pdo_tx);
                 mc_pdo_tx.sprint(buffer, sizeof(buffer));
@@ -289,10 +288,10 @@ int main(int argc, char **argv)
     req_state_check(0, EC_STATE_PRE_OP);
     
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-        Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);        
-        while (1) {
-            if ( moto->move_to(start_pos[*it], 0.002) ) { break; }
-            osal_usleep(5000);    
+        Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]); 
+        if (! moto) { continue; }
+        while ( ! moto->move_to(home[*it], 0.002) ) {
+            osal_usleep(2000);    
         }
     }
 

@@ -259,13 +259,12 @@ public:
         int32_t fault;
 
         try {
-            // ack errors
-            // set direct mode and power on modulator
-            set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
-            set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
             // set actual position as reference
             readSDO_byname("position", act_position);
             writeSDO_byname("pos_ref", act_position);
+            // set direct mode and power on modulator
+            set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
+            set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
             
             start_log(true);
             
@@ -311,9 +310,11 @@ public:
     
         float pos, tx_pos_ref;
         
+        return 1;
+        
         readSDO_byname("position", pos);
         getSDO_byname("pos_ref", tx_pos_ref);
-        tx_pos_ref = tx_pos_ref;
+        //tx_pos_ref = pos_ref;
         if ( fabs(pos - pos_ref) > 0.01 ) {
             if ( pos > pos_ref ) {
                 tx_pos_ref -= step; 

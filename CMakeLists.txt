@@ -53,17 +53,17 @@ add_executable(
 
 target_link_libraries(ft_ati_test walkman_master iitecat_iface soem pthread)
 
-add_executable(
-     walkman_test
-     test/walkman_test.cpp)
+#add_executable(
+#     walkman_test
+#     test/walkman_test.cpp)
 
-target_link_libraries(walkman_test walkman_master iitecat_iface soem pthread)
+#target_link_libraries(walkman_test walkman_master iitecat_iface soem pthread)
 
-add_executable(
-     walkman_test_2
-     test/walkman_test_2.cpp)
+#add_executable(
+#     walkman_test_2
+#     test/walkman_test_2.cpp)
 
-target_link_libraries(walkman_test_2 walkman_master iitecat_iface soem pthread)
+#target_link_libraries(walkman_test_2 walkman_master iitecat_iface soem pthread)
 
 add_executable(
      walkman_test_3

@@ -3,7 +3,7 @@
 ec_board_ctrl:
   eth_iface: rteth0
   #eth_iface: eth1
-  sync_cycle_time_ns: 1000000
+  sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 500000000
@@ -19,8 +19,9 @@ firmware_update:
   # upper body arms
   #slave_rId_list: [11,12,13,14,21,22,23,24]
   # upper body small motors
-  #slave_rId_list: [15,15,16,17,19,25,26,27,29]
-  slave_pos_list: [13,14,15]
+  #slave_rId_list: [15,16,17,19,25,26,27,29]
+  #slave_pos_list: [4,4,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39]
+  slave_pos_list: [2,2]
   #3,4,5,6,12,13,14,15
   #slave_rId_list: [12]
   big_motor:
