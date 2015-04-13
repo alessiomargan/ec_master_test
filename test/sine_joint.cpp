@@ -72,7 +72,7 @@ std::vector<int> body = {
 
     Robot_IDs::HEAD_R,
     Robot_IDs::HEAD_P,
-    
+   
     Robot_IDs::RA_SH_2,
     Robot_IDs::RA_SH_1,
     Robot_IDs::RA_SH_3,
@@ -93,11 +93,15 @@ std::vector<int> body = {
     //Robot_IDs::LA_FT,
     //Robot_IDs::LA_HA, 
     
-    //Robot_IDs::RL_H_Y,
-    //Robot_IDs::LL_H_Y,
+//     Robot_IDs::WAIST_Y,
+//     Robot_IDs::WAIST_R,
+//     Robot_IDs::WAIST_P,
     
     Robot_IDs::RL_H_R,
     Robot_IDs::LL_H_R,
+
+    Robot_IDs::RL_H_Y,
+    Robot_IDs::LL_H_Y,    
     
     Robot_IDs::RL_H_P,
     Robot_IDs::LL_H_P,
@@ -160,18 +164,31 @@ int main(int argc, char **argv)
     /////////////////////////////////////////////
     float min_pos, max_pos, fault;
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
+        EscWrapper * esc = ec_boards_ctrl->slave_as_EscWrapper(rid2pos[*it]);
         Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
         if (moto) {
-            moto->start(CTRL_SET_MIX_POS_MODE, 200.0, 0.1, 5.0);
+            if ( esc->get_ESC_type() == HI_PWR_AC_MC ) {
+                moto->start(CTRL_SET_MIX_POS_MODE, 1000.0, 0.0, 40.0);
+            } else if ( esc->get_ESC_type() == HI_PWR_DC_MC ) {
+                moto->start(CTRL_SET_MIX_POS_MODE, 250.0, 0.0, 8.0);
+            } else {
+                moto->start(CTRL_SET_MIX_POS_MODE, 0.0, 0.0, 0.0);
+            }
             //moto->start(CTRL_SET_POS_MODE, 200.0, 0.0, 0.0);
             moto->getSDO("Min_pos", min_pos);
             moto->getSDO("Max_pos", max_pos);
             moto->getSDO("position", start_pos[*it]); 
+            // set home to mid pos
             home[*it] = MID_POS(min_pos,max_pos);
+            // special case home
             if (*it == 12 ) { home[*it] = start_pos[*it] + 0.4; }
             if (*it == 22 ) { home[*it] = start_pos[*it] - 0.4; }
-            if (*it == 42 ) { home[*it] = 0; }
-            if (*it == 52 ) { home[*it] = 0; }
+            if (*it == Robot_IDs::WAIST_Y ) { home[*it] = 0; }
+            if (*it == Robot_IDs::RL_H_R ) { home[*it] = 0; }
+            if (*it == Robot_IDs::LL_H_R ) { home[*it] = 0; }
+            if (*it == Robot_IDs::RL_H_Y ) { home[*it] = 0; }
+            if (*it == Robot_IDs::LL_H_Y ) { home[*it] = 0; }
+            
             DPRINTF("%d : home pos %f\n", *it, home[*it]);
                         
         } else {
@@ -179,6 +196,7 @@ int main(int argc, char **argv)
         }
     }
 
+    
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
         Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]); 
         if (! moto) { continue; }
@@ -256,15 +274,21 @@ int main(int argc, char **argv)
             tNow = get_time_ns();
             s_loop(tNow - tPre);
             tPre = tNow;
-            time += 0.001; // 0.0005
+            time += 0.001;      // dc sync 2 ms
+            //time += 0.0005;   // dc sync 1 ms
             
             if ( ec_boards_ctrl->recv_from_slaves() != EC_BOARD_OK ) { break; }
     
             for ( auto it = motors.begin(); it != motors.end(); it++ ) {
                 Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
                 if (moto) {
-                    if ( *it == 42 || *it == 52 ) {
-                        moto->set_posRef(home[*it]);
+                    if (*it == Robot_IDs::RL_H_R || *it == Robot_IDs::LL_H_R ||
+                        *it == Robot_IDs::RL_H_Y || *it == Robot_IDs::LL_H_Y) {
+                        //moto->set_posRef(home[*it]);
+                        moto->set_posRef(home[*it] + 0.1 * sinf(2*M_PI*time));
+                    } else if ( *it == 11 || *it == 21 || *it == Robot_IDs::WAIST_Y ) {
+                        //moto->set_posRef(home[*it]);
+                        moto->set_posRef(home[*it] + 0.4 * sinf(2*M_PI*time));
                     } else {
                         //moto->set_posRef(home[*it]);
                         moto->set_posRef(home[*it] + 0.2 * sinf(2*M_PI*time));

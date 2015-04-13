@@ -63,9 +63,14 @@ enum Robot_IDs
     LA_FT,
     LA_HA,
     
+    // waist
+    WAIST_Y = 31,
+    WAIST_R,
+    WAIST_P,
+    
     // right leg
-    RL_H_Y = 41,
-    RL_H_R,
+    RL_H_R = 41,
+    RL_H_Y,
     RL_H_P,
     RL_K,
     RL_A_P,
@@ -73,8 +78,8 @@ enum Robot_IDs
     RL_FT,
     
     // left leg
-    LL_H_Y = 51,
-    LL_H_R,
+    LL_H_R = 51,
+    LL_H_Y,
     LL_H_P,
     LL_K,
     LL_A_P,

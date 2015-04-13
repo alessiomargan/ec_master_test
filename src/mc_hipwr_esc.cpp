@@ -13,14 +13,14 @@ static const iit::ecat::objd_t source_SDOs[] =
     { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "velocity"                 ,0     },
     { 0X6000, 0x4, DTYPE_REAL32,        32,  ATYPE_RO,   "torque"                   ,0     },
     { 0X6000, 0x5, DTYPE_INTEGER32,     32,  ATYPE_RO,   "fault"                    ,0     },
-    { 0X6000, 0x6, DTYPE_UNSIGNED64,    64,  ATYPE_RO,   "rtt"                      ,0     },
+    { 0X6000, 0x6, DTYPE_UNSIGNED32,    32,  ATYPE_RO,   "rtt"                      ,0     },
     // SD0 0x7000                                                                         
     { 0X7000, 0x1, DTYPE_REAL32,        32,  ATYPE_RW,   "pos_ref"                  ,0     },  
 //     { 0X7000, 0x2, DTYPE_REAL32,        32,  ATYPE_RW,   "tor_offs"                 ,0     },  
 //     { 0X7000, 0x3, DTYPE_REAL32,        32,  ATYPE_RW,   "PosGainP"                 ,0     },  
 //     { 0X7000, 0x4, DTYPE_REAL32,        32,  ATYPE_RW,   "PosGainI"                 ,0     },  
 //     { 0X7000, 0x5, DTYPE_REAL32,        32,  ATYPE_RW,   "PosGainD"                 ,0     },  
-    { 0X7000, 0x2, DTYPE_UNSIGNED64,    64,  ATYPE_RW,   "ts"                       ,0     },  
+    { 0X7000, 0x2, DTYPE_UNSIGNED32,    32,  ATYPE_RW,   "ts"                       ,0     },  
     // SD0 0x8000                                                                         
     { 0x8000, 0x1, DTYPE_REAL32,        32, ATYPE_RW,    "Sensor_type"              ,0     },
     { 0x8000, 0x2, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainP"                 ,0     },

@@ -174,7 +174,7 @@ protected :
     virtual void on_readPDO(void) {
 
         if ( rx_pdo.rtt ) {
-            rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
+            rx_pdo.rtt =  (uint32_t)(get_time_ns()/1000) - rx_pdo.rtt;
             s_rtt(rx_pdo.rtt);
         }
 
@@ -209,7 +209,7 @@ protected :
 
     virtual void on_writePDO(void) {
 
-        tx_pdo.ts = get_time_ns();
+        tx_pdo.ts = (uint32_t)(get_time_ns()/1000);
         // apply transformation from Joint to Motor 
         //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
@@ -238,7 +238,7 @@ protected :
         //}
         if ( ! strcmp(sdo->name, "pos_ref") ) {
             tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
-            DPRINTF("on_setSDO J2M pos_ref %f\n", tx_pdo.pos_ref);
+            //DPRINTF("on_setSDO J2M pos_ref %f\n", tx_pdo.pos_ref);
         }
         return EC_BOARD_OK;
     }
@@ -331,16 +331,17 @@ public :
         int32_t fault;
 
         try {
-            // set actual position as reference
-            readSDO_byname("position", act_position);
-            writeSDO_byname("pos_ref", act_position);
-            // set direct mode and power on modulator
-            set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
-            set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
-            // set PID gains ... this will set tx_pdo.PosGainP ....
+            set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
+             // set PID gains ... this will set tx_pdo.PosGainP ....
             writeSDO_byname("PosGainP", _p);
             writeSDO_byname("PosGainI", _i);
             writeSDO_byname("PosGainD", _d);
+            // set actual position as reference
+            //readSDO_byname("position", act_position);
+            //writeSDO_byname("pos_ref", act_position);
+            // set direct mode and power on modulator
+            set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
+            set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
             
             readSDO_byname("fault", fault);
             handle_fault();
@@ -396,8 +397,10 @@ public :
         float pos, tx_pos_ref;
         
         readSDO_byname("position", pos);
-        getSDO_byname("pos_ref", tx_pos_ref);
-        tx_pos_ref = hipwr_esc::M2J(tx_pos_ref,_sgn,_offset);
+        //readSDO_byname("pos_ref", tx_pos_ref);
+        readSDO_byname("velocity", tx_pos_ref);
+        tx_pos_ref = hipwr_esc::M2J(tx_pos_ref,_sgn,_offset);        
+        
         if ( fabs(pos - pos_ref) > 0.001 ) {
             if ( pos > pos_ref ) {
                 tx_pos_ref -= step; 

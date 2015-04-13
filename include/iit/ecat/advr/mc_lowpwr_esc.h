@@ -132,7 +132,7 @@ public:
     virtual void on_readPDO(void) {
 
         if ( rx_pdo.rtt ) {
-            rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
+            rx_pdo.rtt =  (uint32_t)(get_time_ns()/1000) - rx_pdo.rtt;
             s_rtt(rx_pdo.rtt);
         }
 
@@ -152,7 +152,7 @@ public:
 
     virtual void on_writePDO(void) {
 
-        tx_pdo.ts = get_time_ns();
+        tx_pdo.ts = (uint32_t)(get_time_ns()/1000);
 
         // apply transformation from Joint to Motor 
         //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
@@ -182,7 +182,7 @@ public:
         //}
         if ( ! strcmp(sdo->name, "pos_ref") ) {
             tx_pdo.pos_ref = lopwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
-            DPRINTF("on_setSDO J2M pos_ref %f\n", tx_pdo.pos_ref);
+            //DPRINTF("on_setSDO J2M pos_ref %f\n", tx_pdo.pos_ref);
         }
         return EC_BOARD_OK;
     }
@@ -255,13 +255,18 @@ public:
     }
     virtual int start(int controller_type, float _p, float _i, float _d) {
         
-        float act_position;
+        float act_position, test_ref;
         int32_t fault;
 
         try {
+            set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
             // set actual position as reference
-            readSDO_byname("position", act_position);
-            writeSDO_byname("pos_ref", act_position);
+            //readSDO_byname("position", act_position);
+            //writeSDO_byname("pos_ref", act_position);
+            //osal_usleep(10000);
+            //readSDO_byname("velocity", test_ref);
+            //DPRINTF("%f ... %f\n", act_position , test_ref);
+            //assert(test_ref==act_position); 
             // set direct mode and power on modulator
             set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
             set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
@@ -313,7 +318,8 @@ public:
         return 1;
         
         readSDO_byname("position", pos);
-        getSDO_byname("pos_ref", tx_pos_ref);
+        // get pos_ref_feedback
+        readSDO_byname("velocity", tx_pos_ref);
         //tx_pos_ref = pos_ref;
         if ( fabs(pos - pos_ref) > 0.01 ) {
             if ( pos > pos_ref ) {

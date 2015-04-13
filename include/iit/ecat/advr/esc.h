@@ -112,7 +112,7 @@ struct McEscPdoTypes {
 //         float		PosGainP;
 //         float		PosGainI;
 //         float		PosGainD;
-        uint64_t	ts;
+        uint32_t	ts;
 
         void fprint(FILE *fp) {
 //             fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
@@ -132,7 +132,7 @@ struct McEscPdoTypes {
         float		velocity;   		// rad/s
         float		torque;     		// Nm
         int32_t     fault;
-        uint64_t	rtt;        		// ns
+        uint32_t	rtt;        		// ns
 
         void fprint(FILE *fp) {
             fprintf(fp, "%f\t%f\t%f\t%f\t0x%X\t%lu\n", temperature,position,velocity,torque,fault,rtt);

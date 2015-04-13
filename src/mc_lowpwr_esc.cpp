@@ -126,14 +126,14 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x6000, 0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_vel         ,0   }, 
     {0x6000, 0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_tor         ,0   }, 
     {0x6000, 0x5, DTYPE_INTEGER32,   32, ATYPE_RO, acName6000_fault       ,0   }, 
-    {0x6000, 0x6, DTYPE_UNSIGNED64,  64, ATYPE_RO, acName6000_rtt         ,0   }, 
+    {0x6000, 0x6, DTYPE_UNSIGNED32,  32, ATYPE_RO, acName6000_rtt         ,0   }, 
     // SDO7000[] =                                                        
     {0x7000, 0x1, DTYPE_REAL32,     32, ATYPE_RW, acName7000_1            ,0   },
 //     {0x7000, 0x2, DTYPE_REAL32,     32, ATYPE_RW, acName7000_2            ,0   },
 //     {0x7000, 0x3, DTYPE_REAL32,     32, ATYPE_RW, acName7000_3            ,0   },
 //     {0x7000, 0x4, DTYPE_REAL32,     32, ATYPE_RW, acName7000_4            ,0   },
 //     {0x7000, 0x5, DTYPE_REAL32,     32, ATYPE_RW, acName7000_5            ,0   },
-    {0x7000, 0x2, DTYPE_UNSIGNED64, 64, ATYPE_RW, acName7000_6            ,0   },
+    {0x7000, 0x2, DTYPE_UNSIGNED32, 32, ATYPE_RW, acName7000_6            ,0   },
     // SDO8000[] =                                                          
     {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1         ,0   }, 
     {0x8000, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_2         ,0   }, 
