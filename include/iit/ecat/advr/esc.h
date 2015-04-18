@@ -95,11 +95,10 @@ struct fault_bits {
     uint16_t  flag_13:1;
     uint16_t  flag_14:1;
     uint16_t  irq_alive:1;
-    uint16_t  spare;
 };
 
 typedef union{
-    uint32_t            all;
+    uint16_t            all;
     struct fault_bits   bit;
 } fault_t;
 
@@ -107,38 +106,35 @@ typedef union{
 struct McEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
-        float	    pos_ref;
-//         float		tor_offs;
-//         float		PosGainP;
-//         float		PosGainI;
-//         float		PosGainD;
-        uint32_t	ts;
+        float       pos_ref;
+        uint16_t    fault_ack;
+        uint16_t    gainP;
+        uint16_t    gainD;
+        uint16_t    ts;
 
         void fprint(FILE *fp) {
-//             fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
-            fprintf(fp, "%f\t%lu\n", pos_ref,ts);
+            fprintf(fp, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
         }
         void sprint(char *buff, size_t size) {
-//             snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%lu\n", pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,ts);
-            snprintf(buff, size, "%f\t%lu\n", pos_ref,ts);
+            snprintf(buff, size, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
         }
 
     }  __attribute__((__packed__));
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        float	temperature; 	    // C
-        float	    position;   		// rad
-        float		velocity;   		// rad/s
-        float		torque;     		// Nm
-        int32_t     fault;
-        uint32_t	rtt;        		// ns
+        float       position;     // rad
+        float       pos_ref_fb;   // rad
+        uint16_t    temperature;  // C * 10
+        int16_t     torque;       // Nm * 100
+        uint16_t    fault;
+        uint16_t    rtt;          //
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%f\t%f\t0x%X\t%lu\n", temperature,position,velocity,torque,fault,rtt);
+            fprintf(fp, "%f\t%f\t%d\t%d\t0x%X\t%d\n", position,pos_ref_fb,temperature,torque,fault,rtt);
         }
         void sprint(char *buff, size_t size) {
-            snprintf(buff, size, "%f\t%f\t%f\t%f\t0x%X\t%lu\n", temperature,position,velocity,torque,fault,rtt);
+            snprintf(buff, size, "%f\t%f\t%d\t%d\t0x%X\t%d\n", position,pos_ref_fb,temperature,torque,fault,rtt);
         }
     }  __attribute__((__packed__));
 };

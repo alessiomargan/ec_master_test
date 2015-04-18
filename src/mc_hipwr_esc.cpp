@@ -8,19 +8,18 @@ using namespace iit::ecat;
 static const iit::ecat::objd_t source_SDOs[] =
 {
     // SD0 0x6000
-    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "temperature"              ,0     },
-    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "position"                 ,0     },
-    { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "velocity"                 ,0     },
-    { 0X6000, 0x4, DTYPE_REAL32,        32,  ATYPE_RO,   "torque"                   ,0     },
-    { 0X6000, 0x5, DTYPE_INTEGER32,     32,  ATYPE_RO,   "fault"                    ,0     },
-    { 0X6000, 0x6, DTYPE_UNSIGNED32,    32,  ATYPE_RO,   "rtt"                      ,0     },
+    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "position"                 ,0     },
+    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "pos_ref_fb"               ,0     },
+    { 0X6000, 0x3, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "temperature"              ,0     },
+    { 0X6000, 0x4, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
+    { 0X6000, 0x5, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
+    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
     // SD0 0x7000                                                                         
     { 0X7000, 0x1, DTYPE_REAL32,        32,  ATYPE_RW,   "pos_ref"                  ,0     },  
-//     { 0X7000, 0x2, DTYPE_REAL32,        32,  ATYPE_RW,   "tor_offs"                 ,0     },  
-//     { 0X7000, 0x3, DTYPE_REAL32,        32,  ATYPE_RW,   "PosGainP"                 ,0     },  
-//     { 0X7000, 0x4, DTYPE_REAL32,        32,  ATYPE_RW,   "PosGainI"                 ,0     },  
-//     { 0X7000, 0x5, DTYPE_REAL32,        32,  ATYPE_RW,   "PosGainD"                 ,0     },  
-    { 0X7000, 0x2, DTYPE_UNSIGNED32,    32,  ATYPE_RW,   "ts"                       ,0     },  
+    { 0X7000, 0x2, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "fault_ack"                ,0     },  
+    { 0X7000, 0x3, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gainP"                    ,0     },  
+    { 0X7000, 0x4, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gainD"                    ,0     },  
+    { 0X7000, 0x5, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "ts"                       ,0     },  
     // SD0 0x8000                                                                         
     { 0x8000, 0x1, DTYPE_REAL32,        32, ATYPE_RW,    "Sensor_type"              ,0     },
     { 0x8000, 0x2, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainP"                 ,0     },
@@ -48,7 +47,7 @@ static const iit::ecat::objd_t source_SDOs[] =
                                                                                           
     // SD0 0x8001                                                                         
     { 0x8001, 0x1, DTYPE_VISIBLE_STRING,64, ATYPE_RO,    "firmware_version"  	    ,0     },
-    { 0x8001, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW,    "ack_board_fault_all"      ,0     },
+    { 0x8001, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW,    "enable_pdo_gains"         ,0     },
     { 0x8001, 0x3, DTYPE_REAL32,        32, ATYPE_RW,    "Direct_ref"  			    ,0     },
     { 0x8001, 0x4, DTYPE_REAL32,        32, ATYPE_RO,    "V_batt_filt_100ms" 	    ,0     },
     { 0x8001, 0x5, DTYPE_REAL32,        32, ATYPE_RO,    "Board_Temperature"  	    ,0     },
@@ -80,18 +79,17 @@ void HpESC::init_SDOs(void) {
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));
 
     // 0x6000 
-    SDOs[i++].data = (void*)&HpESC::rx_pdo.temperature;
-    SDOs[i++].data = (void*)&HpESC::rx_pdo.position;       
-    SDOs[i++].data = (void*)&HpESC::rx_pdo.velocity;       
+    SDOs[i++].data = (void*)&HpESC::rx_pdo.position;
+    SDOs[i++].data = (void*)&HpESC::rx_pdo.pos_ref_fb;       
+    SDOs[i++].data = (void*)&HpESC::rx_pdo.temperature;       
     SDOs[i++].data = (void*)&HpESC::rx_pdo.torque;         
     SDOs[i++].data = (void*)&HpESC::rx_pdo.fault;          
     SDOs[i++].data = (void*)&HpESC::rx_pdo.rtt;            
     // 0x7000                                
     SDOs[i++].data = (void*)&HpESC::tx_pdo.pos_ref;        
-//     SDOs[i++].data = (void*)&HpESC::tx_pdo.tor_offs;       
-//     SDOs[i++].data = (void*)&HpESC::tx_pdo.PosGainP;       
-//     SDOs[i++].data = (void*)&HpESC::tx_pdo.PosGainI;       
-//     SDOs[i++].data = (void*)&HpESC::tx_pdo.PosGainD;       
+    SDOs[i++].data = (void*)&HpESC::tx_pdo.fault_ack;       
+    SDOs[i++].data = (void*)&HpESC::tx_pdo.gainP;       
+    SDOs[i++].data = (void*)&HpESC::tx_pdo.gainD;       
     SDOs[i++].data = (void*)&HpESC::tx_pdo.ts;             
     // 0x8000
     SDOs[i++].data = (void*)&HpESC::sdo.Sensor_type;
@@ -119,7 +117,7 @@ void HpESC::init_SDOs(void) {
     SDOs[i++].data = (void*)&HpESC::sdo.Joint_robot_id; 
     // 0x8001
     SDOs[i++].data = (void*)&HpESC::sdo.firmware_version;    
-    SDOs[i++].data = (void*)&HpESC::sdo.ack_board_fault_all; 
+    SDOs[i++].data = (void*)&HpESC::sdo.enable_pdo_gains; 
     SDOs[i++].data = (void*)&HpESC::sdo.Direct_ref;          
     SDOs[i++].data = (void*)&HpESC::sdo.V_batt_filt_100ms;   
     SDOs[i++].data = (void*)&HpESC::sdo.Board_Temperature;   

@@ -33,10 +33,10 @@ typedef struct {
     uint64_t    ts;
     float       ft[6];
     void sprint(char *buff, size_t size) {
-        snprintf(buff, size, "%lld\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", ts, rtd_seq, ft[0],ft[1],ft[2],ft[3],ft[4],ft[5]);
+        snprintf(buff, size, "%lu\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", ts, rtd_seq, ft[0],ft[1],ft[2],ft[3],ft[4],ft[5]);
     }
     void fprint(FILE *fp) {
-        fprintf(fp, "%lld\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", ts, rtd_seq, ft[0],ft[1],ft[2],ft[3],ft[4],ft[5]);
+        fprintf(fp, "%lu\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", ts, rtd_seq, ft[0],ft[1],ft[2],ft[3],ft[4],ft[5]);
     }
 } ati_log_t ; // 36 bytes
 

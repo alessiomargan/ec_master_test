@@ -16,6 +16,7 @@
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -176,7 +177,7 @@ public:
             init_SDOs();
             init_sdo_lookup();
             getSDO_byname("Sensor_robot_id", robot_id);
-            //set_flash_cmd_X(this, CTRL_REMOVE_TORQUE_OFFS);
+            set_flash_cmd_X(this, CTRL_REMOVE_TORQUE_OFFS);
 
         } catch (EscWrpError &e ) {
 
@@ -201,6 +202,9 @@ public:
         log_filename = std::string("/tmp/Ft6ESC_"+std::to_string(sdo.sensor_robot_id)+"_log.txt");
         Xddp::init(std::string("Ft6ESC_"+std::to_string(sdo.sensor_robot_id)));
     
+        // we log when receive PDOs
+        start_log(true);
+            
         return EC_BOARD_OK;
 
     }

@@ -120,20 +120,20 @@ char acName8001_9[] = "flash_params_cmd_ack";
 static const iit::ecat::objd_t source_SDOs[] =
 {
 
-    // SDO6000[] =
-    {0x6000, 0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_temp        ,0   }, 
-    {0x6000, 0x2, DTYPE_REAL32,      32, ATYPE_RO, acName6000_pos         ,0   }, 
-    {0x6000, 0x3, DTYPE_REAL32,      32, ATYPE_RO, acName6000_vel         ,0   }, 
-    {0x6000, 0x4, DTYPE_REAL32,      32, ATYPE_RO, acName6000_tor         ,0   }, 
-    {0x6000, 0x5, DTYPE_INTEGER32,   32, ATYPE_RO, acName6000_fault       ,0   }, 
-    {0x6000, 0x6, DTYPE_UNSIGNED32,  32, ATYPE_RO, acName6000_rtt         ,0   }, 
-    // SDO7000[] =                                                        
-    {0x7000, 0x1, DTYPE_REAL32,     32, ATYPE_RW, acName7000_1            ,0   },
-//     {0x7000, 0x2, DTYPE_REAL32,     32, ATYPE_RW, acName7000_2            ,0   },
-//     {0x7000, 0x3, DTYPE_REAL32,     32, ATYPE_RW, acName7000_3            ,0   },
-//     {0x7000, 0x4, DTYPE_REAL32,     32, ATYPE_RW, acName7000_4            ,0   },
-//     {0x7000, 0x5, DTYPE_REAL32,     32, ATYPE_RW, acName7000_5            ,0   },
-    {0x7000, 0x2, DTYPE_UNSIGNED32, 32, ATYPE_RW, acName7000_6            ,0   },
+    // SD0 0x6000
+    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "position"                 ,0     },
+    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "pos_ref_fb"               ,0     },
+    { 0X6000, 0x3, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "temperature"              ,0     },
+    { 0X6000, 0x4, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
+    { 0X6000, 0x5, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
+    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
+    // SD0 0x7000                                                                         
+    { 0X7000, 0x1, DTYPE_REAL32,        32,  ATYPE_RW,   "pos_ref"                  ,0     },  
+    { 0X7000, 0x2, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "fault_ack"                ,0     },  
+    { 0X7000, 0x3, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gainP"                 ,0     },  
+    { 0X7000, 0x4, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gainD"                 ,0     },  
+    { 0X7000, 0x5, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "ts"                       ,0     },  
+
     // SDO8000[] =                                                          
     {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1         ,0   }, 
     {0x8000, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_2         ,0   }, 
@@ -197,20 +197,19 @@ void LpESC::init_SDOs(void) {
                                                                       
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));            
 
-    // 0x6000        
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.temperature; 
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.position;       
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.velocity;       
+    // 0x6000 
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.position;
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.pos_ref_fb;       
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.temperature;       
     SDOs[i++].data = (void*)&LpESC::rx_pdo.torque;         
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.fault;            
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.fault;          
     SDOs[i++].data = (void*)&LpESC::rx_pdo.rtt;            
-    // 0x7000        
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.pos_ref; 
-//     SDOs[i++].data = (void*)&LpESC::tx_pdo.tor_offs;
-//     SDOs[i++].data = (void*)&LpESC::tx_pdo.PosGainP;
-//     SDOs[i++].data = (void*)&LpESC::tx_pdo.PosGainI;
-//     SDOs[i++].data = (void*)&LpESC::tx_pdo.PosGainD;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.ts;      
+    // 0x7000                                
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.pos_ref;        
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.fault_ack;       
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.gainP;       
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.gainD;       
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.ts;             
     // 0x8000
     SDOs[i++].data = (void*)&LpESC::sdo.Block_control;      
     SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset_low;  
@@ -248,7 +247,7 @@ void LpESC::init_SDOs(void) {
     SDOs[i++].data = (void*)&LpESC::sdo.Joint_robot_id;
     // 0x8001
     SDOs[i++].data = (void*)&LpESC::sdo.firmware_version;     
-    SDOs[i++].data = (void*)&LpESC::sdo.ack_board_fault;      
+    SDOs[i++].data = (void*)&LpESC::sdo.enable_pdo_gains;      
     SDOs[i++].data = (void*)&LpESC::sdo.set_ctrl_status;      
     SDOs[i++].data = (void*)&LpESC::sdo.get_ctrl_status;      
     SDOs[i++].data = (void*)&LpESC::sdo.V_batt_filt_100ms;    

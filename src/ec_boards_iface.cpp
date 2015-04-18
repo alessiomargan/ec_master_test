@@ -148,7 +148,7 @@ void Ec_Boards_ctrl::factory_board(void) {
     iit::ecat::setExpectedSlaves(slaves);
 
     if ( zombies.size() > 0 ) {
-        DPRINTF("Warning you got %d zombies !!!\n", zombies.size());
+        DPRINTF("Warning you got %lud zombies !!!\n", zombies.size());
         for (auto it = zombies.begin(); it != zombies.end(); it++) {
             DPRINTF("\tpos %d ", it->first);
         }

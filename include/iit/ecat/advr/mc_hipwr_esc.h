@@ -19,6 +19,7 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -71,7 +72,7 @@ struct HiPwrEscSdoTypes {
     // ram
 
     char        firmware_version[8];
-    uint16_t    ack_board_fault_all;
+    uint16_t    enable_pdo_gains;
     float       Direct_ref;
     float       V_batt_filt_100ms;
     float       Board_Temperature;
@@ -92,35 +93,33 @@ struct HiPwrEscSdoTypes {
 
 struct HiPwrLogTypes {
 
-    uint64_t	ts;        		    // ns
-    float	    pos_ref;   		// rad
-    //float		tor_offs;
-    //float		PosGainP;
-    //float		PosGainI;
-    //float		PosGainD;
+    uint64_t    ts;        		    // ns
+    float       pos_ref;   		// rad
+    uint16_t    PosGainP;
+    uint16_t    PosGainD;
     //                            
-    float		temperature; 	// C
-    float	    position;   		// rad
-    float		velocity;   		// rad/s
-    float		torque;     		// Nm
-    int32_t     fault;
-    uint64_t	rtt;        		// ns
+    float       position;   		// rad
+    float       pos_ref_fb;   		// rad/s
+    uint16_t    temperature;    // C
+    int16_t     torque;               // Nm
+    uint16_t    fault;
+    uint16_t    rtt;        		// ns
 
     void fprint(FILE *fp) {
 //         fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
 //                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
 //                 temperature,position,velocity,torque,fault,rtt);
-        fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+        fprintf(fp, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d\n"   ,
                 ts,pos_ref,
-                temperature,position,velocity,torque,fault,rtt);
+                temperature,position,pos_ref_fb,torque,fault,rtt);
     }
     void sprint(char *buff, size_t size) {
 //         snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
 //                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
 //                 temperature,position,velocity,torque,fault,rtt);
-           snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+           snprintf(buff, size, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d\n",
                   ts,pos_ref,
-                  temperature,position,velocity,torque,fault,rtt);
+                  temperature,position,pos_ref_fb,torque,fault,rtt);
     }
 };
 
@@ -174,12 +173,12 @@ protected :
     virtual void on_readPDO(void) {
 
         if ( rx_pdo.rtt ) {
-            rx_pdo.rtt =  (uint32_t)(get_time_ns()/1000) - rx_pdo.rtt;
+            rx_pdo.rtt =  (uint16_t)(get_time_ns()/1000 - rx_pdo.rtt);
             s_rtt(rx_pdo.rtt);
         }
 
         if ( rx_pdo.fault & 0x7FFF) {
-            //handle_fault();
+            handle_fault();
         }
 
         // apply transformation from Motor to Joint 
@@ -189,15 +188,11 @@ protected :
             Log::log_t log;
             log.ts = get_time_ns() - _start_log_ts ;
             log.pos_ref     = hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset);
-            //log.tor_offs    = tx_pdo.tor_offs;
-            //log.PosGainP    = tx_pdo.PosGainP;
-            //log.PosGainI    = tx_pdo.PosGainI;
-            //log.PosGainD    = tx_pdo.PosGainD;
-            // for TEST temperature is motor_enc
-            log.temperature = hipwr_esc::M2J(rx_pdo.temperature,_sgn,_offset);
-            //log.temperature = rx_pdo.temperature;
+            log.PosGainP    = tx_pdo.gainP;
+            log.PosGainD    = tx_pdo.gainD;
             log.position    = rx_pdo.position;
-            log.velocity    = rx_pdo.velocity;
+            log.pos_ref_fb  = rx_pdo.pos_ref_fb;
+            log.temperature = rx_pdo.temperature;
             log.torque      = rx_pdo.torque;  
             log.fault       = rx_pdo.fault;   
             log.rtt         = rx_pdo.rtt;     
@@ -209,7 +204,7 @@ protected :
 
     virtual void on_writePDO(void) {
 
-        tx_pdo.ts = (uint32_t)(get_time_ns()/1000);
+        tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
         // apply transformation from Joint to Motor 
         //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
@@ -315,7 +310,10 @@ public :
         writeSDO_byname("Direct_ref", direct_ref);
         readSDO_byname("Direct_ref", direct_ref);
         assert(direct_ref == 0.0);
-            
+        
+        // we log when receive PDOs
+        start_log(true);
+        
         return EC_BOARD_OK;
         
     }
@@ -329,13 +327,23 @@ public :
 
         float act_position;
         int32_t fault;
+        uint32_t enable_pdo_gains = 1;
+        uint16_t gain;
 
         try {
             set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
-             // set PID gains ... this will set tx_pdo.PosGainP ....
+             // set PID gains ... this will NOT set tx_pdo.gainP ....
             writeSDO_byname("PosGainP", _p);
             writeSDO_byname("PosGainI", _i);
             writeSDO_byname("PosGainD", _d);
+            // this will SET tx_pdo.gainP
+            gain = (uint16_t)_p;
+            writeSDO_byname("gainP", gain);
+            gain = (uint16_t)_d;
+            writeSDO_byname("gainD", gain);
+            // pdo gains will be used in OP
+            writeSDO_byname("enable_pdo_gains", enable_pdo_gains);
+            
             // set actual position as reference
             //readSDO_byname("position", act_position);
             //writeSDO_byname("pos_ref", act_position);
@@ -345,8 +353,6 @@ public :
             
             readSDO_byname("fault", fault);
             handle_fault();
-            
-            start_log(true);
             
             // set position mode
             set_ctrl_status_X(this, controller_type);
@@ -360,7 +366,12 @@ public :
         return EC_BOARD_OK;
 
     }
-
+    virtual int start(int controller_type) {
+        
+        
+        //start(controller_type, p, i d,);
+        
+    }
     virtual int stop(void) {
 
         return set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
@@ -380,17 +391,17 @@ public :
         fault_t fault;
         fault.all = rx_pdo.fault;
         //fault.bit.
-        ack_faults_X(this, fault.all);
-
+        tx_pdo.fault_ack = fault.all & 0x7FFF;
+        //ack_faults_X(this, fault.all);
     }
 
     /////////////////////////////////////////////
     // set pdo data
     virtual int set_posRef(float joint_pos) { tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset); }
     virtual int set_torOffs(float tor_offs) { /*tx_pdo.tor_offs = tor_offs;*/ }
-    virtual int set_posGainP(float p_gain)  { /*tx_pdo.PosGainP = p_gain;*/   }
+    virtual int set_posGainP(float p_gain)  { tx_pdo.gainP = p_gain;   }
     virtual int set_posGainI(float i_gain)  { /*tx_pdo.PosGainI = i_gain;*/   }
-    virtual int set_posGainD(float d_gain)  { /*tx_pdo.PosGainD = d_gain;*/   }
+    virtual int set_posGainD(float d_gain)  { tx_pdo.gainD = d_gain;   }
 
     virtual int move_to(float pos_ref, float step) {
         
@@ -398,7 +409,7 @@ public :
         
         readSDO_byname("position", pos);
         //readSDO_byname("pos_ref", tx_pos_ref);
-        readSDO_byname("velocity", tx_pos_ref);
+        readSDO_byname("pos_ref_fb", tx_pos_ref);
         tx_pos_ref = hipwr_esc::M2J(tx_pos_ref,_sgn,_offset);        
         
         if ( fabs(pos - pos_ref) > 0.001 ) {

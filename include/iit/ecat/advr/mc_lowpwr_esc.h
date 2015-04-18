@@ -18,6 +18,7 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -76,7 +77,7 @@ struct LoPwrEscSdoTypes {
     // ram
 
     char        firmware_version[8];
-    uint16_t    ack_board_fault;
+    uint16_t    enable_pdo_gains;
     uint16_t    set_ctrl_status;
     uint16_t    get_ctrl_status;
     float       V_batt_filt_100ms;
@@ -132,12 +133,12 @@ public:
     virtual void on_readPDO(void) {
 
         if ( rx_pdo.rtt ) {
-            rx_pdo.rtt =  (uint32_t)(get_time_ns()/1000) - rx_pdo.rtt;
+            rx_pdo.rtt =  (uint16_t)(get_time_ns()/1000000) - rx_pdo.rtt;
             s_rtt(rx_pdo.rtt);
         }
 
         if ( rx_pdo.fault & 0x7FFF) {
-            //handle_fault();
+            handle_fault();
         }
 
         // apply transformation from Motor to Joint 
@@ -152,7 +153,7 @@ public:
 
     virtual void on_writePDO(void) {
 
-        tx_pdo.ts = (uint32_t)(get_time_ns()/1000);
+        tx_pdo.ts = (uint16_t)(get_time_ns()/1000000);
 
         // apply transformation from Joint to Motor 
         //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
@@ -249,7 +250,9 @@ public:
         log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
         Xddp::init(std::string("LpESC_"+std::to_string(sdo.Joint_robot_id)));
     
-
+        // we log when receive PDOs
+        start_log(true);
+            
         return EC_WRP_OK;
 
     }
@@ -270,8 +273,6 @@ public:
             // set direct mode and power on modulator
             set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
             set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
-            
-            start_log(true);
             
             // set position mode
             set_ctrl_status_X(this, CTRL_SET_POS_MODE);
@@ -299,7 +300,8 @@ public:
         fault_t fault;
         fault.all = rx_pdo.fault;
         //fault.bit.
-        ack_faults_X(this, fault.all);
+        tx_pdo.fault_ack = fault.all & 0xFFFF;
+        //ack_faults_X(this, fault.all);
 
     }
 
@@ -319,7 +321,7 @@ public:
         
         readSDO_byname("position", pos);
         // get pos_ref_feedback
-        readSDO_byname("velocity", tx_pos_ref);
+        readSDO_byname("pos_ref_fb", tx_pos_ref);
         //tx_pos_ref = pos_ref;
         if ( fabs(pos - pos_ref) > 0.01 ) {
             if ( pos > pos_ref ) {

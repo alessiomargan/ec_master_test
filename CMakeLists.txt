@@ -17,6 +17,8 @@ if(ENABLE_RTNET AND RTNET_INCLUDE_DIR)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -L../../soem_1-3-0/build")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -lnative")
   set(RT_SRCS src/rt_ipc.cpp)
+else()
+    set(ENABLE_RTNET  OFF)
 endif()
 
 set(HEADER_INSTALL_ROOT $ENV{WALKMAN_ETHERCAT_MASTER_ROOT}/include/ CACHE PATH "Where to install the headers")
@@ -65,12 +67,12 @@ target_link_libraries(ft_ati_test walkman_master iitecat_iface soem pthread)
 
 #target_link_libraries(walkman_test_2 walkman_master iitecat_iface soem pthread)
 
-add_executable(
-     walkman_test_3
-     test/test_common
-     test/walkman_test_3.cpp)
+#add_executable(
+#     walkman_test_3
+#     test/test_common
+#     test/walkman_test_3.cpp)
 
-target_link_libraries(walkman_test_3 walkman_master iitecat_iface soem pthread)
+#target_link_libraries(walkman_test_3 walkman_master iitecat_iface soem pthread)
 
 add_executable(
      sine_joint
@@ -78,6 +80,13 @@ add_executable(
      test/sine_joint.cpp)
 
 target_link_libraries(sine_joint walkman_master iitecat_iface soem pthread)
+
+add_executable(
+     simple_test
+     test/test_common
+     test/simple_test.cpp)
+
+target_link_libraries(simple_test walkman_master iitecat_iface soem pthread)
 
 
 add_executable(
@@ -90,3 +99,12 @@ target_link_libraries(firm_update walkman_master iitecat_iface soem pthread)
 # Install
 install(DIRECTORY include/  DESTINATION ${HEADER_INSTALL_ROOT})
 install(TARGETS walkman_master  DESTINATION ${LIB_INSTALL_ROOT})
+
+#
+if( NOT ENABLE_RTNET )
+    message("PUO' ACCOMPAGNARE SOLO")
+    foreach(_file firm_update simple_test sine_joint )
+        message("set_cap.sh " ${_file})
+        execute_process(COMMAND set_cap.sh ${_file})
+    endforeach()
+endif()

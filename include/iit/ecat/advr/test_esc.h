@@ -9,6 +9,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 
 #include <map>
 #include <string>

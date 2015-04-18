@@ -320,7 +320,7 @@ int main(int argc, char **argv)
     }
 
     
-    DPRINTF("elapsed secs %d\n", (get_time_ns() - start_time)/1000000000L);
+    DPRINTF("elapsed secs %d\n", (int)(get_time_ns() - start_time/1000000000L));
     print_stat(s_loop);
 
     ec_boards_ctrl->stop_motors();

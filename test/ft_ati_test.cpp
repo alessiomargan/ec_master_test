@@ -14,11 +14,13 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
 
-#define FT_ECAT_POS 4
+#define FT_ECAT_POS 1
+
 
 using namespace iit::ecat::advr;
 
 static int run_loop = 1;
+
 
 
 typedef struct {
@@ -27,22 +29,22 @@ typedef struct {
     float       iit[6];
     float       dummy[6];
     void sprint(char *buff, size_t size) {
-        snprintf(buff, size, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
+        snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
 // big sensor
-//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
-// small sensor
                  iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+// small sensor
+//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
     }
     void fprint(FILE *fp) {
-        fprintf(fp, "%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
+        fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
 // big sensor
-//                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
-// small sensor
                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+                -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5]);
+// small sensor
+//                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
 
     }
 } sens_data_t ; 
@@ -158,7 +160,7 @@ int main(int argc, char **argv)
     ///////////////////////////////////////////////////////////////////////
 
     std::vector<std::vector<float>> cal_matrix;
-    //load_matrix("RightFootCalibMatrix.txt", cal_matrix);
+    load_matrix("RightFootCalibMatrix.txt", cal_matrix);
     //load_matrix("LeftFootCalibMatrix.txt", cal_matrix);
     //load_matrix("RightWristCalibMatrix.txt", cal_matrix);
     //load_matrix("LeftWristCalibMatrix.txt", cal_matrix);
@@ -199,8 +201,8 @@ int main(int argc, char **argv)
     
     ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, CTRL_REMOVE_TORQUE_OFFS);
 
-    //ec_boards_ctrl->set_cal_matrix(FT_ECAT_POS, cal_matrix);
-    //ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, 0x0012);
+    ec_boards_ctrl->set_cal_matrix(FT_ECAT_POS, cal_matrix);
+    ec_boards_ctrl->set_flash_cmd(FT_ECAT_POS, 0x0012);
 
     Ft6EscPdoTypes::pdo_rx ft_pdo_rx;
     Ft6EscPdoTypes::pdo_tx ft_pdo_tx;
