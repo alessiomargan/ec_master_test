@@ -400,12 +400,12 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
         if ( (s->get_ESC_type() == HI_PWR_AC_MC) || 
              (s->get_ESC_type() == HI_PWR_DC_MC)) {
             // pre-update
-            // POWER OFF
+            // POW_ON+RESET+BOOT 0x7
             if ( esc_gpio_ll_wr(configadr, 0x0) <= 0 ) {
                 return 0;
             }
-            sleep(1);
-            // POWER ON and BOOT
+            sleep(3);
+            // todo POW_ON+BOOT 0x5
             if ( esc_gpio_ll_wr(configadr, 0x5) <= 0 ) {
                 return 0;
             }
@@ -444,7 +444,7 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
                 go_ahead = false;
             } else {
                 // read flash_cmd_ack
-                wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM * 3);
+                wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM * 10);
                 DPRINTF("Slave %d wc %d flash_cmd_ack 0x%04X\n", slave_pos, wc, flash_cmd_ack);
                 if ( wc <= 0 ) {
                     DPRINTF("ERROR reading flash_cmd_ack\n");
@@ -465,10 +465,10 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
 
     if ( s ) {
         // post-update ... restore
-        // POWER ON and RESET
+        // RESET
         //if ( esc_gpio_ll_wr(configadr, 0x3) <= 0) { return 0; }
-        //sleep(1);
-        // power ON
+        //sleep(3);
+        // 
         if ( esc_gpio_ll_wr(configadr, 0x1) <= 0 ) {
             return 0;
         }

@@ -122,8 +122,8 @@ std::vector<int> body = {
 };
 
 
-std::vector<int> motors = body; 
-//std::vector<int> motors = { 1000 }; 
+//std::vector<int> motors = body; 
+std::vector<int> motors = { 1000 }; 
 
 std::map<int,float> home;
 std::map<int,float> start_pos;

@@ -95,6 +95,13 @@ add_executable(
 
 target_link_libraries(firm_update walkman_master iitecat_iface soem pthread)
 
+add_executable(
+     zpub
+     test/test_common.cpp
+     test/zpub.cpp)
+
+target_link_libraries(zpub zmq  pthread)
+
 
 # Install
 install(DIRECTORY include/  DESTINATION ${HEADER_INSTALL_ROOT})

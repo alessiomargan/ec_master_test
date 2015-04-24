@@ -110,16 +110,14 @@ struct HiPwrLogTypes {
 //                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
 //                 temperature,position,velocity,torque,fault,rtt);
         fprintf(fp, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d\n"   ,
-                ts,pos_ref,
-                temperature,position,pos_ref_fb,torque,fault,rtt);
+                ts,pos_ref,temperature,position,pos_ref_fb,torque,fault,rtt);
     }
-    void sprint(char *buff, size_t size) {
-//         snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+    int sprint(char *buff, size_t size) {
+//         return snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
 //                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
 //                 temperature,position,velocity,torque,fault,rtt);
-           snprintf(buff, size, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d\n",
-                  ts,pos_ref,
-                  temperature,position,pos_ref_fb,torque,fault,rtt);
+           return snprintf(buff, size, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d\n",
+                           ts,pos_ref,temperature,position,pos_ref_fb,torque,fault,rtt);
     }
 };
 
@@ -326,8 +324,8 @@ public :
     virtual int start(int controller_type, float _p, float _i, float _d) {
 
         float act_position;
-        int32_t fault;
-        uint32_t enable_pdo_gains = 1;
+        uint16_t fault;
+        int32_t enable_pdo_gains = 0;
         uint16_t gain;
 
         try {

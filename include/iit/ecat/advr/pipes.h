@@ -56,8 +56,10 @@ public:
         char buff[pool_size];
         
         if ( ! fd ) { return 0; }
-        tx.sprint(buff, sizeof(buff));
-        return ::write(fd, buff, strlen(buff));
+        //tx.sprint(buff, sizeof(buff));
+        //return ::write(fd, buff, strlen(buff));
+        memcpy((void*)buff, &tx, sizeof(tx));
+        return ::write(fd, buff, sizeof(tx));
     }
 
     int xddp_read(void *buffer, ssize_t buff_size)

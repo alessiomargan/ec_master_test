@@ -115,8 +115,8 @@ struct McEscPdoTypes {
         void fprint(FILE *fp) {
             fprintf(fp, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
         }
-        void sprint(char *buff, size_t size) {
-            snprintf(buff, size, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
+        int sprint(char *buff, size_t size) {
+            return snprintf(buff, size, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
         }
 
     }  __attribute__((__packed__));
@@ -133,8 +133,8 @@ struct McEscPdoTypes {
         void fprint(FILE *fp) {
             fprintf(fp, "%f\t%f\t%d\t%d\t0x%X\t%d\n", position,pos_ref_fb,temperature,torque,fault,rtt);
         }
-        void sprint(char *buff, size_t size) {
-            snprintf(buff, size, "%f\t%f\t%d\t%d\t0x%X\t%d\n", position,pos_ref_fb,temperature,torque,fault,rtt);
+        int sprint(char *buff, size_t size) {
+            return snprintf(buff, size, "%f\t%f\t%d\t%d\t0x%X\t%d", position,pos_ref_fb,temperature,torque,fault,rtt);
         }
     }  __attribute__((__packed__));
 };

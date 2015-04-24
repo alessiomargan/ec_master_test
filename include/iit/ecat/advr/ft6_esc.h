@@ -41,8 +41,8 @@ namespace iit {
         float       torque_Z;           // Nm
         uint16_t    fault;
         uint64_t    rtt;                // ns
-        void sprint(char *buff, size_t size) {
-            snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%lu\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
+        int sprint(char *buff, size_t size) {
+            return snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%lu", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
         }
         void fprint(FILE *fp) {
             fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%lu\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
@@ -152,16 +152,7 @@ public:
             push_back(log);
         }
 
-        Xddp::xddp_tx_t xddp_tx;
-        xddp_tx.force_X     = rx_pdo.force_X; 
-        xddp_tx.force_Y     = rx_pdo.force_Y; 
-        xddp_tx.force_Z     = rx_pdo.force_Z; 
-        xddp_tx.torque_X    = rx_pdo.torque_X;
-        xddp_tx.torque_Y    = rx_pdo.torque_Y;
-        xddp_tx.torque_Z    = rx_pdo.torque_Z;
-        xddp_tx.fault       = rx_pdo.fault;   
-        xddp_tx.rtt         = rx_pdo.rtt;     
-        xddp_write(xddp_tx);
+        xddp_write(rx_pdo);
     }
 
     int16_t get_robot_id() {
