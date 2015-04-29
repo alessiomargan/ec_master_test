@@ -117,7 +117,9 @@ int main(int argc, char **argv)
         slave_list = firmware_update["slave_pos_list"].as<std::vector<int>>();
         use_rId = false;
     } else {
-        std::cout << "NO slave list found !!" << std::endl;      
+        std::cout << "NO slave list found !!" << std::endl;
+        delete ec_boards_ctrl;
+        return 1;
     }
     
     std::string fw_path;

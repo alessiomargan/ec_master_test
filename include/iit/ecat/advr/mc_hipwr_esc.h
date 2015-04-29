@@ -87,7 +87,7 @@ struct HiPwrEscSdoTypes {
     float       angle_enc_load;     
     float       angle_enc_diff;
     float       iq_ref;
-
+    
 };
 
 
@@ -181,6 +181,9 @@ protected :
 
         // apply transformation from Motor to Joint 
         rx_pdo.position = hipwr_esc::M2J(rx_pdo.position,_sgn,_offset); 
+        rx_pdo.pos_ref_fb  = hipwr_esc::M2J(rx_pdo.pos_ref_fb,_sgn,_offset); 
+        
+        xddp_write(rx_pdo);
 
         if ( _start_log ) {
             Log::log_t log;
@@ -197,7 +200,6 @@ protected :
             push_back(log);
         }
 
-        xddp_write(rx_pdo);
     }
 
     virtual void on_writePDO(void) {
@@ -405,24 +407,31 @@ public :
         
         float pos, tx_pos_ref;
         
-        readSDO_byname("position", pos);
-        //readSDO_byname("pos_ref", tx_pos_ref);
-        readSDO_byname("pos_ref_fb", tx_pos_ref);
-        tx_pos_ref = hipwr_esc::M2J(tx_pos_ref,_sgn,_offset);        
-        
-        if ( fabs(pos - pos_ref) > 0.001 ) {
-            if ( pos > pos_ref ) {
-                tx_pos_ref -= step; 
+        try {
+            readSDO_byname("position", pos);
+            readSDO_byname("pos_ref_fb", tx_pos_ref);
+            tx_pos_ref = hipwr_esc::M2J(tx_pos_ref,_sgn,_offset);        
+            
+            if ( fabs(pos - pos_ref) > step ) {
+                if ( pos > pos_ref ) {
+                    tx_pos_ref -= step; 
+                } else {
+                    tx_pos_ref += step;
+                }
+                    
+                writeSDO_byname("pos_ref", tx_pos_ref);
+                //DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+                return 0;
+               
             } else {
-                tx_pos_ref += step; //0.0005;
+                DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+                return 1;
+
             }
-                
-            writeSDO_byname("pos_ref", tx_pos_ref);
-            //DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+
+        } catch (EscWrpError &e ) {
+            DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
             return 0;
-        } else {
-            DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
-            return 1;
         }
 
 #if 0

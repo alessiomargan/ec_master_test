@@ -444,7 +444,7 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
                 go_ahead = false;
             } else {
                 // read flash_cmd_ack
-                wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM * 10);
+                wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM * 20);
                 DPRINTF("Slave %d wc %d flash_cmd_ack 0x%04X\n", slave_pos, wc, flash_cmd_ack);
                 if ( wc <= 0 ) {
                     DPRINTF("ERROR reading flash_cmd_ack\n");

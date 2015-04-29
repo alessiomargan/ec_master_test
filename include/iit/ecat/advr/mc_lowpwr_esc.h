@@ -317,25 +317,28 @@ public:
     
         float pos, tx_pos_ref;
         
-        return 1;
-        
-        readSDO_byname("position", pos);
-        // get pos_ref_feedback
-        readSDO_byname("pos_ref_fb", tx_pos_ref);
-        //tx_pos_ref = pos_ref;
-        if ( fabs(pos - pos_ref) > 0.01 ) {
-            if ( pos > pos_ref ) {
-                tx_pos_ref -= step; 
+        try {
+            readSDO_byname("position", pos);
+            readSDO_byname("pos_ref_fb", tx_pos_ref);
+            //tx_pos_ref = pos_ref;
+            if ( fabs(pos - pos_ref) > step ) {
+                if ( pos > pos_ref ) {
+                    tx_pos_ref -= step*2; 
+                } else {
+                    tx_pos_ref += step*2;
+                }
+                    
+                writeSDO_byname("pos_ref", tx_pos_ref);
+                DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+                return 0;
             } else {
-                tx_pos_ref += step; //0.0005;
+                DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+                return 1;
             }
-                
-            writeSDO_byname("pos_ref", tx_pos_ref);
-            DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+            
+        } catch (EscWrpError &e ) {
+            DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
             return 0;
-        } else {
-            DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
-            return 1;
         }
     
     }
