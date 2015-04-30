@@ -18,7 +18,7 @@
 #include <iostream>
 #include <map>
 
-//#include <jsoncpp/json/json.h>
+#include <jsoncpp/json/json.h>
 #include <zmq.hpp>
 //#include <zmq.h>
 //#include <zmq_utils.h>
@@ -43,7 +43,7 @@
 
 class Abs_Publisher;
 typedef std::map<int, Abs_Publisher*>  PubMap_t;
-
+typedef std::map<std::string, std::string> jmap_t;
 
 #if __XENO__
     static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
@@ -182,8 +182,29 @@ SIGNATURE(int)::publish(void) {
     _msg_id.rebuild(pipe.length());
     memcpy((void*)_msg_id.data(),pipe.data(), pipe.length());
     // prepare _msg
+    //////////////////////////////////////////////////////////
     // -- text format 
     msg_data_size = pub_data.sprint(zbuffer,sizeof(zbuffer));
+    //////////////////////////////////////////////////////////
+    // -- binary format
+    
+    //////////////////////////////////////////////////////////
+    // -- json format
+    static Json::FastWriter writer;
+    static Json::Value      root;
+    static jmap_t           jmap;
+    
+    jmap.clear();
+    pub_data.to_map(jmap);
+    
+    for (jmap_t::iterator it = jmap.begin(); it != jmap.end(); it++) {
+            root[it->first] = ::atof(it->second.c_str()); // std:: it->second; 
+    }
+    std::string json_string(writer.write(root));
+    msg_data_size = json_string.length();
+    memcpy((void*)zbuffer, json_string.c_str(), msg_data_size);
+    
+    // re-build msg
     _msg.rebuild(msg_data_size);
     memcpy((void*)_msg.data(), zbuffer, msg_data_size);
     

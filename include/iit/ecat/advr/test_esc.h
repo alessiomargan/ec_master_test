@@ -54,6 +54,10 @@ struct TestEscPdoTypes {
         void fprint(FILE *fp) {
             fprintf(fp, "%ld\t%lu\n", _lint,_ulint);
         }
+        void to_map(jmap_t & jpdo) {
+            JPDO(_int);
+            JPDO(_ulint);
+        }
     } __attribute__((__packed__));
 };
 

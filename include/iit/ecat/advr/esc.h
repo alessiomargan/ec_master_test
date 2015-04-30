@@ -102,7 +102,11 @@ typedef union{
     struct fault_bits   bit;
 } fault_t;
 
-  
+typedef std::map<std::string, std::string> jmap_t;
+
+#define JPDO(x) jpdo[#x] = std::to_string(x);
+
+
 struct McEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
@@ -136,6 +140,15 @@ struct McEscPdoTypes {
         int sprint(char *buff, size_t size) {
             return snprintf(buff, size, "%f\t%f\t%d\t%d\t0x%X\t%d", position,pos_ref_fb,temperature,torque,fault,rtt);
         }
+        void to_map(jmap_t & jpdo) {
+            JPDO(position);
+            JPDO(pos_ref_fb); 
+            JPDO(temperature);
+            JPDO(torque);
+            JPDO(fault);
+            JPDO(rtt);            
+        }
+        
     }  __attribute__((__packed__));
 };
 

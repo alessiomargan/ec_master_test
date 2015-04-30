@@ -76,14 +76,15 @@ target_link_libraries(ft_ati_test walkman_master iitecat_iface soem pthread)
 
 add_executable(
      sine_joint
-     test/test_common
+     test/test_common.cpp
      test/sine_joint.cpp)
 
 target_link_libraries(sine_joint walkman_master iitecat_iface soem pthread)
+add_custom_command(TARGET sine_joint POST_BUILD COMMAND set_cap.sh sine_joint COMMENT set_cap)
 
 add_executable(
      simple_test
-     test/test_common
+     test/test_common.cpp
      test/simple_test.cpp)
 
 target_link_libraries(simple_test walkman_master iitecat_iface soem pthread)
@@ -94,24 +95,17 @@ add_executable(
      firm_update.cpp)
 
 target_link_libraries(firm_update walkman_master iitecat_iface soem pthread)
+add_custom_command(TARGET firm_update POST_BUILD COMMAND set_cap.sh firm_update COMMENT set_cap)
 
 add_executable(
      zpub
      test/test_common.cpp
      test/zpub.cpp)
 
-target_link_libraries(zpub zmq  pthread)
+target_link_libraries(zpub zmq jsoncpp pthread)
 
 
 # Install
 install(DIRECTORY include/  DESTINATION ${HEADER_INSTALL_ROOT})
 install(TARGETS walkman_master  DESTINATION ${LIB_INSTALL_ROOT})
 
-#
-if( NOT ENABLE_RTNET )
-    message("PUO' ACCOMPAGNARE SOLO")
-    foreach(_file firm_update simple_test sine_joint )
-        message("set_cap.sh " ${_file})
-        execute_process(COMMAND set_cap.sh ${_file})
-    endforeach()
-endif()

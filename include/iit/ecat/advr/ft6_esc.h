@@ -47,6 +47,17 @@ namespace iit {
         void fprint(FILE *fp) {
             fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%lu\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
         }
+        void to_map(jmap_t & jpdo) {
+            JPDO(force_X);
+            JPDO(force_Y);
+            JPDO(force_Z);
+            JPDO(torque_X);
+            JPDO(torque_Y);
+            JPDO(torque_Z);
+            JPDO(fault);
+            JPDO(rtt);        
+        }
+
     }  __attribute__((__packed__));
 };
 

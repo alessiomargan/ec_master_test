@@ -263,13 +263,6 @@ public:
 
         try {
             set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
-            // set actual position as reference
-            //readSDO_byname("position", act_position);
-            //writeSDO_byname("pos_ref", act_position);
-            //osal_usleep(10000);
-            //readSDO_byname("velocity", test_ref);
-            //DPRINTF("%f ... %f\n", act_position , test_ref);
-            //assert(test_ref==act_position); 
             // set direct mode and power on modulator
             set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
             set_ctrl_status_X(this, CTRL_POWER_MOD_ON);

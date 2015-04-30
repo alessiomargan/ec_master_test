@@ -177,6 +177,9 @@ protected :
 
         if ( rx_pdo.fault & 0x7FFF) {
             handle_fault();
+        } else {
+            // clean any previuos fault ack !! 
+            tx_pdo.fault_ack = 0;
         }
 
         // apply transformation from Motor to Joint 
@@ -280,8 +283,9 @@ public :
             try {
                 std::string esc_conf_key = std::string("HpESC_"+std::to_string(Joint_robot_id));
                 if ( root_cfg[esc_conf_key] ) {
-                    _sgn = root_cfg[esc_conf_key]["sign"].as<int>(); 
-                    _offset = root_cfg[esc_conf_key]["pos_offset"].as<float>();
+                    node_cfg = root_cfg[esc_conf_key];
+                    _sgn = node_cfg["sign"].as<int>(); 
+                    _offset = node_cfg["pos_offset"].as<float>();
                     _offset = DEG2RAD(_offset);
                 } else {
                     DPRINTF("NO config for %s\n", esc_conf_key.c_str() );
@@ -330,6 +334,8 @@ public :
         int32_t enable_pdo_gains = 0;
         uint16_t gain;
 
+        DPRINTF("Start motor[%d] 0x%02X %.2f %.2f %.2f\n", Joint_robot_id, controller_type, _p, _i, _d);
+        
         try {
             set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
              // set PID gains ... this will NOT set tx_pdo.gainP ....
@@ -366,12 +372,20 @@ public :
         return EC_BOARD_OK;
 
     }
+    
     virtual int start(int controller_type) {
         
-        
-        //start(controller_type, p, i d,);
-        
+        std::vector<float> pid;
+        try {
+            pid = node_cfg["pid"]["mix_position"].as<std::vector<float>>();
+            assert(pid.size() == 3);
+        } catch (std::exception &e) {
+                DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
+                return EC_BOARD_NOK;
+            }
+        return start(controller_type, pid[0], pid[1], pid[2]);        
     }
+
     virtual int stop(void) {
 
         return set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
@@ -392,7 +406,6 @@ public :
         fault.all = rx_pdo.fault;
         //fault.bit.
         tx_pdo.fault_ack = fault.all & 0x7FFF;
-        //ack_faults_X(this, fault.all);
     }
 
     /////////////////////////////////////////////
@@ -434,26 +447,13 @@ public :
             return 0;
         }
 
-#if 0
-        if ( fabs(rx_pdo.position - pos_ref) > 0.001 ) {
-            tx_pdo.pos_ref = M2J(tx_pdo.pos_ref,_sgn,_offset);
-            if ( rx_pdo.position > pos_ref ) {
-                tx_pdo.pos_ref -= step; 
-            } else {
-                tx_pdo.pos_ref += step; //0.0005;
-            }
-            DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pdo.pos_ref, rx_pdo.position);
-            return 0;
-        } else {
-            return 1;
-        }
-#endif
-        
     }
 
 private:
 
     int16_t Joint_robot_id;
+    
+    YAML::Node node_cfg;
     
     float   _offset;
     int     _sgn;

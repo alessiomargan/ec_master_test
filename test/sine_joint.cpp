@@ -122,8 +122,8 @@ std::vector<int> body = {
 };
 
 
-std::vector<int> motors = body; 
-//std::vector<int> motors = { 1000 }; 
+//std::vector<int> motors = body; 
+std::vector<int> motors = { 1000 }; 
 
 std::map<int,float> home;
 std::map<int,float> start_pos;
@@ -160,13 +160,18 @@ int main(int argc, char **argv)
     char buffer[1024];
     
     /////////////////////////////////////////////
-    // start motor
+    // start motors
+    // use pid gains defined in yaml file
+    // small motor has only CTRL_SET_POS_MODE and fixed gains 
     /////////////////////////////////////////////
+    ec_boards_ctrl->start_motors(CTRL_SET_MIX_POS_MODE);
+
     float min_pos, max_pos, fault;
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-        EscWrapper * esc = ec_boards_ctrl->slave_as_EscWrapper(rid2pos[*it]);
         Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
         if (moto) {
+#if 0
+            EscWrapper * esc = ec_boards_ctrl->slave_as_EscWrapper(rid2pos[*it]);
             if ( esc->get_ESC_type() == HI_PWR_AC_MC ) {
                 moto->start(CTRL_SET_MIX_POS_MODE, 2000.0, 0.0, 20.0);
             } else if ( esc->get_ESC_type() == HI_PWR_DC_MC ) {
@@ -174,7 +179,7 @@ int main(int argc, char **argv)
             } else {
                 moto->start(CTRL_SET_MIX_POS_MODE, 0.0, 0.0, 0.0);
             }
-            //moto->start(CTRL_SET_POS_MODE, 200.0, 0.0, 0.0);
+#endif
             moto->getSDO("Min_pos", min_pos);
             moto->getSDO("Max_pos", max_pos);
             moto->getSDO("position", start_pos[*it]); 
@@ -192,7 +197,9 @@ int main(int argc, char **argv)
             if (*it == Robot_IDs::LL_H_R ) { home[*it] = 0; }
             if (*it == Robot_IDs::RL_H_Y ) { home[*it] = 0; }
             if (*it == Robot_IDs::LL_H_Y ) { home[*it] = 0; }
-            
+
+            if (*it == 1000 ) { home[*it] = M_PI/2; }   
+
             DPRINTF("%d : start pos %f home pos %f\n", *it, start_pos[*it], home[*it]);
                         
         } else {
@@ -210,7 +217,6 @@ int main(int argc, char **argv)
     }
     
     
-    
     /////////////////////////////////////////////
     // set state OP
     /////////////////////////////////////////////
@@ -220,47 +226,6 @@ int main(int argc, char **argv)
         return 0;
     }
 
-#if 0
-    ec_boards_ctrl->recv_from_slaves();
-    
-    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-        
-        Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
-        if (moto) {        
-            ec_boards_ctrl->getRxPDO(rid2pos[*it], mc_pdo_rx);
-            mc_pdo_rx.sprint(buffer, sizeof(buffer));
-            DPRINTF("%d\t %s\n",*it, buffer);
-            ec_boards_ctrl->getTxPDO(rid2pos[*it], mc_pdo_tx);
-            //mc_pdo_tx.tor_offs = 0.0;
-            mc_pdo_tx.sprint(buffer, sizeof(buffer));
-            DPRINTF("%d\t %s\n",*it, buffer);
-            ec_boards_ctrl->setTxPDO(rid2pos[*it], mc_pdo_tx);
-        }
-    }
-    
-    ec_boards_ctrl->send_to_slaves();
-#endif
-    
-#if 0
-    for ( auto it = arm.begin(); it != arm.end(); it++ ) {
-        
-        Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
-        
-        while (run_loop) {
-        
-            if ( ec_boards_ctrl->recv_from_slaves() != EC_BOARD_OK ) {
-                break;
-            }
-            if ( moto->move_to(home[*it], 0.002) ) {
-                break;
-            }
-            ec_boards_ctrl->send_to_slaves();
-    
-            osal_usleep(5000);
-        
-        }    
-    }
-#endif
     
     /////////////////////////////////////////////
     //
@@ -281,8 +246,6 @@ int main(int argc, char **argv)
             tNow = get_time_ns();
             s_loop(tNow - tPre);
             tPre = tNow;
-            time += 0.001;      // dc sync 2 ms
-            //time += 0.0005;   // dc sync 1 ms
             
             if ( ec_boards_ctrl->recv_from_slaves() != EC_BOARD_OK ) { break; }
     
@@ -311,6 +274,10 @@ int main(int argc, char **argv)
                         
                         moto->set_posRef(home[*it] + 2.0 * sinf(2*M_PI*time));
                                     
+                    } else if ( *it == 1000 ) {
+                        
+                        moto->set_posRef(home[*it] + (M_PI/4) * sinf(2*M_PI*time));
+                                    
                     } else {
                         
                         moto->set_posRef(home[*it] + 0.2 * sinf(2*M_PI*time));
@@ -331,6 +298,7 @@ int main(int argc, char **argv)
             //time += 0.0002;   // dc sync 1 ms
             
         }
+        
 
     } catch (EscWrpError &e) {
             std::cout << e.what() << std::endl;
