@@ -72,7 +72,7 @@ struct HiPwrEscSdoTypes {
     // ram
 
     char        firmware_version[8];
-    uint16_t    enable_pdo_gains;
+    uint32_t    board_enable_mask;
     float       Direct_ref;
     float       V_batt_filt_100ms;
     float       Board_Temperature;
@@ -81,8 +81,8 @@ struct HiPwrEscSdoTypes {
     uint16_t    ctrl_status_cmd_ack;
     uint16_t    flash_params_cmd;
     uint16_t    flash_params_cmd_ack;
-    uint64_t    abs_enc_mot;
-    uint64_t    abs_enc_load;     
+    int32_t    abs_enc_mot;
+    int32_t    abs_enc_load;     
     float       angle_enc_mot;
     float       angle_enc_load;     
     float       angle_enc_diff;
@@ -331,8 +331,9 @@ public :
 
         float act_position;
         uint16_t fault;
-        int32_t enable_pdo_gains = 0;
+        uint32_t enable_mask = 0x0;
         uint16_t gain;
+        float max_vel = 3.0;
 
         DPRINTF("Start motor[%d] 0x%02X %.2f %.2f %.2f\n", Joint_robot_id, controller_type, _p, _i, _d);
         
@@ -348,11 +349,12 @@ public :
             gain = (uint16_t)_d;
             writeSDO_byname("gainD", gain);
             // pdo gains will be used in OP
-            writeSDO_byname("enable_pdo_gains", enable_pdo_gains);
+            writeSDO_byname("board_enable_mask", enable_mask);
+            writeSDO_byname("Max_vel", max_vel);
             
             // set actual position as reference
-            //readSDO_byname("position", act_position);
-            //writeSDO_byname("pos_ref", act_position);
+            readSDO_byname("position", act_position);
+            writeSDO_byname("pos_ref", act_position);
             // set direct mode and power on modulator
             set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
             set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
@@ -362,6 +364,10 @@ public :
             
             // set position mode
             set_ctrl_status_X(this, controller_type);
+            
+            // enable trajectory_gen
+            //enable_mask = 0x2;
+            //writeSDO_byname("board_enable_mask", enable_mask);
             
         } catch (EscWrpError &e ) {
 

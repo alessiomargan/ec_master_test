@@ -37,9 +37,11 @@
     #define ZMQ_POLL_MSEC 1 // zmq_poll is msec
 #endif
 
-#define JSON_EMITTER 1
-#define TEXT_EMITTER 2
-#define CSTRUCT_EMITTER 3
+
+namespace iit {
+namespace ecat {
+namespace advr {
+
 
 class Abs_Publisher;
 typedef std::map<int, Abs_Publisher*>  PubMap_t;
@@ -89,9 +91,9 @@ inline Abs_Publisher::Abs_Publisher(std::string uri) {
        
     int opt_linger = 1;
 #if ZMQ_VERSION_MAJOR == 2
-    uint64_t opt_hwm = 1000;
+    uint64_t opt_hwm = 1;
 #else
-    int opt_hwm = 1000;
+    int opt_hwm = 1;
 #endif
         
     _z = new zmq::socket_t(zmq_ctx, ZMQ_PUB);
@@ -218,5 +220,8 @@ SIGNATURE(int)::publish(void) {
 #undef CLASS
 #undef TEMPL
 
+}
+}
+}
 
 #endif

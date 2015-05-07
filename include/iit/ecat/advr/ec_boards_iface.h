@@ -21,6 +21,7 @@
 #include <iit/ecat/advr/mc_lowpwr_esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/hub_esc.h>
+#include <iit/ecat/advr/power_board.h>
 
 #include <string>
 #include <mutex>
@@ -88,18 +89,11 @@ enum Robot_IDs
 }; 
 
 
-//typedef boost::variant<HpESC*, LpESC*, bool> McEscVar;
-//typedef std::map<int, McEscVar>  McSlavesMap;
 
 typedef std::map<int, int>  Rid2PosMap;
 
 
 /**
- * TODO .... The Facade Pattern provides a unified interface to 
- * a set of interfaces in a subsystem. Facade defines a 
- * higher-level interface that makes the subsystem easier to 
- * use. 
- *  
  * @class Ec_Boards_ctrl
  *  
  * @brief Boards_ctrl 
@@ -188,7 +182,6 @@ public:
      * @param cmd 
      * @return int
      */
-    int ack_faults(uint16_t sPos, int32_t faults);
     int set_ctrl_status(uint16_t sPos, int16_t cmd);
     int set_flash_cmd(uint16_t sPos, int16_t cmd);
     int set_cal_matrix(uint16_t sPos, std::vector<std::vector<float>> &cal_matrix);
@@ -224,6 +217,9 @@ public:
 
     const Rid2PosMap & get_Rid2PosMap(void) { return rid2pos; }
     int rid2Pos(int rId) { return rid2pos.find(rId) != rid2pos.end() ? rid2pos[rId] : 0; }
+    
+    //template <class C>
+    int get_esc_bytype(uint16_t ESC_type, std::vector<int> &esc_bytype);
      
     void rd_LOCK(void);
     void rd_UNLOCK(void);

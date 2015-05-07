@@ -161,6 +161,9 @@ int main(int argc, char **argv)
                 case FT6 :
                     motor_type = firmware_update["force_torque_6"];
                     break;
+                case POW_BOARD  :
+                    motor_type = firmware_update["power_hub"];
+                    break;
                 default :
                     break;
             }

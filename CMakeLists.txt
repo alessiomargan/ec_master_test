@@ -40,6 +40,7 @@ add_library(walkman_master SHARED
     src/ec_boards_iface.cpp
     src/mc_hipwr_esc.cpp
     src/mc_lowpwr_esc.cpp
+    src/power_board.cpp
     src/ft6_esc.cpp
     src/test_esc.cpp
     ${RT_SRCS}

@@ -3,7 +3,9 @@
 ec_board_ctrl:
   eth_iface: rteth0
   #eth_iface: eth1
-  sync_cycle_time_ns: 2000000
+  #sync_cycle_time_ns: 500000
+  sync_cycle_time_ns: 1000000
+  #sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 500000000
@@ -19,10 +21,10 @@ firmware_update:
   # upper body arms
   #slave_rId_list: [11,12,13,14,21,22,23,24]
   # small motors
-  slave_rId_list: [15,16,17,19,25,26,27,29,1,2]
+  #slave_rId_list: [15,16,17,19,25,26,27,29,1,2]
   #slave_pos_list: [4,5,6,7,8,9]
   #slave_pos_list: [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40]
-  #slave_pos_list: [2,2]
+  slave_pos_list: [2,2]
   #3,4,5,6,12,13,14,15
   #slave_rId_list: [1]
   big_motor:
@@ -305,14 +307,14 @@ HpESC_999:
   pos_offset: 0
   pid :
     position: [40.0, 0.0, 1.0]
-    mix_pos: [2500.0,0.005,100.0]
+    mix_position: [2500.0,0.005,100.0]
 
 HpESC_1000:
   sign: 1
   pos_offset: 0
   pid :
     position: [40.0, 0.0, 1.0]
-    mix_pos: [2500.0,0.005,100.0]
+    mix_position: [2000.0, 0.0, 20.5]
 
 
 LpESC_666:
@@ -320,4 +322,4 @@ LpESC_666:
   pos_offset: 0
   pid :
     position: [40.0, 0.0, 1.0]
-    mix_pos: [2500.0,0.005,100.0]
+    mix_position: [2500.0,0.005,100.0]

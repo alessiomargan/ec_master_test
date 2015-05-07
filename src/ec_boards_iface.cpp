@@ -115,16 +115,16 @@ void Ec_Boards_ctrl::factory_board(void) {
             }
         }
         ///////////////////////////////////////////////////
-        // Test    
-        else if ( ec_slave[i].eep_id == EC_TEST ) {
+        // Pow board    
+        else if ( ec_slave[i].eep_id == POW_BOARD ) {
 
-            TestESC * test_slave = new TestESC(ec_slave[i]);
-            if ( test_slave->init(root_cfg) != EC_BOARD_OK ) {
+            PowESC * pow = new PowESC(ec_slave[i]);
+            if ( pow->init(root_cfg) != EC_BOARD_OK ) {
                 // skip this slave
-                zombies[i] = iit::ecat::ESCPtr(test_slave);
+                zombies[i] = iit::ecat::ESCPtr(pow);
                 continue;
             }
-            slaves[i] = iit::ecat::ESCPtr(test_slave);            
+            slaves[i] = iit::ecat::ESCPtr(pow);            
         }
         ///////////////////////////////////////////////////
         // Hubs
@@ -137,8 +137,21 @@ void Ec_Boards_ctrl::factory_board(void) {
 
             HubIoESC * hub = new HubIoESC(ec_slave[i]);
             slaves[i] = iit::ecat::ESCPtr(hub); 
+        }
+        ///////////////////////////////////////////////////
+        // Test    
+        else if ( ec_slave[i].eep_id == EC_TEST ) {
 
-        } else {
+            TestESC * test_slave = new TestESC(ec_slave[i]);
+            if ( test_slave->init(root_cfg) != EC_BOARD_OK ) {
+                // skip this slave
+                zombies[i] = iit::ecat::ESCPtr(test_slave);
+                continue;
+            }
+            slaves[i] = iit::ecat::ESCPtr(test_slave);            
+        }
+        ///////////////////////////////////////////////////
+        else {
 
             DPRINTF("Warning product code %d not handled !!!\n", ec_slave[i].eep_id);
         }
@@ -156,6 +169,20 @@ void Ec_Boards_ctrl::factory_board(void) {
     }
 }
 
+int Ec_Boards_ctrl::get_esc_bytype(uint16_t ESC_type, std::vector<int> &esc_bytype) {
+
+    int rid;
+    
+    for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
+        EscWrapper * esc = it->second.get();
+        if ( esc->get_ESC_type() == ESC_type ) {
+            esc_bytype.push_back(it->first);
+        }
+    }
+    
+    return esc_bytype.size();
+}
+    
 int Ec_Boards_ctrl::configure_boards(void) {
 
     return slaves.size();
@@ -213,24 +240,6 @@ int Ec_Boards_ctrl::set_flash_cmd(uint16_t sPos, int16_t cmd) {
     if ( ft ) { return set_flash_cmd_X(ft, cmd); }
     
     return EC_WRP_NOK;
-}
-
-/** 
- *  TODO: change to McESC objects !!!! 
- */
-int Ec_Boards_ctrl::ack_faults(uint16_t sPos, int32_t faults) {
-
-    HpESC * hp = slave_as_HP(sPos);
-    if (hp) { return ack_faults_X(hp, faults); }
-
-    LpESC * lp = slave_as_LP(sPos);
-    if (lp) { return ack_faults_X(lp, faults); }
-
-    Ft6ESC * ft = slave_as_FT(sPos);
-    if (ft) { return ack_faults_X(ft, faults); }
-    
-    return 0; 
-
 }
 
 
@@ -397,7 +406,8 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
 
     // check slave type ... HiPwr uses ET1100 GPIO to force/release bootloader 
     if ( s ) {
-        if ( (s->get_ESC_type() == HI_PWR_AC_MC) || 
+        if ( (s->get_ESC_type() == POW_BOARD) ||
+             (s->get_ESC_type() == HI_PWR_AC_MC) || 
              (s->get_ESC_type() == HI_PWR_DC_MC)) {
             // pre-update
             // POW_ON+RESET+BOOT 0x7
@@ -428,7 +438,8 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
     }
 
     if ( s) {
-        if ( (s->get_ESC_type() == HI_PWR_AC_MC) || 
+        if ( (s->get_ESC_type() == POW_BOARD) ||
+             (s->get_ESC_type() == HI_PWR_AC_MC) || 
              (s->get_ESC_type() == HI_PWR_DC_MC)) {
             // erase flash
             uint16_t flash_cmd = 0x00EE;

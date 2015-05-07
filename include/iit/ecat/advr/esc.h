@@ -57,6 +57,7 @@ enum Board_type : uint16_t
     HI_PWR_DC_MC    = 0x11,
     LO_PWR_DC_MC    = 0x12,
     FT6             = 0x20,
+    POW_BOARD       = 0x30,
     HUB             = 0x100,
     HUB_IO          = 0x101,
     EC_TEST         = 1234,
@@ -179,9 +180,9 @@ inline int ack_faults_X(C *c, int32_t faults)
 
 
 template <class C>
-inline int set_ctrl_status_X(C *c, int16_t cmd)
+inline int set_ctrl_status_X(C *c, uint16_t cmd)
 {
-    int16_t ack;
+    uint16_t ack;
 
     cmd = cmd & 0x00FF;
     c->template writeSDO_byname("ctrl_status_cmd", cmd);
@@ -193,9 +194,9 @@ inline int set_ctrl_status_X(C *c, int16_t cmd)
 }
 
 template <class C>
-inline int set_flash_cmd_X(C *c, int16_t cmd)
+inline int set_flash_cmd_X(C *c, uint16_t cmd)
 {
-    int16_t ack;
+    uint16_t ack;
 
     cmd = cmd & 0x00FF;
     c->template writeSDO_byname("flash_params_cmd", cmd);

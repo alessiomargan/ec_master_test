@@ -9,9 +9,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-//#include <rtdk.h>
-//#include <rtdm/rtipc.h>
-
 
 static void fail(const char *reason)
 {
@@ -19,12 +16,10 @@ static void fail(const char *reason)
     exit(EXIT_FAILURE);
 }
 
-//int (*)(int fd, int event, long arg)
 
 int xddp_bind(const char * label, size_t local_poolsz)
 {
     struct rtipc_port_label plabel;
-    //char port_label[XDDP_LABEL_LEN];
     struct sockaddr_ipc saddr;
     int s;
     struct timeval tv;

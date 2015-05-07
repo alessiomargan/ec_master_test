@@ -150,8 +150,9 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    //ec_boards_ctrl->configure_boards();
-
+    std::vector<int> pow_board;
+    ec_boards_ctrl->get_esc_bytype(POW_BOARD);
+    
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
 
@@ -198,7 +199,7 @@ int main(int argc, char **argv)
             if (*it == Robot_IDs::RL_H_Y ) { home[*it] = 0; }
             if (*it == Robot_IDs::LL_H_Y ) { home[*it] = 0; }
 
-            if (*it == 1000 ) { home[*it] = M_PI/2; }   
+            if (*it == 1000 ) { home[*it] = M_PI/4; }   
 
             DPRINTF("%d : start pos %f home pos %f\n", *it, start_pos[*it], home[*it]);
                         
@@ -276,7 +277,7 @@ int main(int argc, char **argv)
                                     
                     } else if ( *it == 1000 ) {
                         
-                        moto->set_posRef(home[*it] + (M_PI/4) * sinf(2*M_PI*time));
+                        moto->set_posRef(home[*it] + (M_PI/2) * sinf(2*M_PI*time));
                                     
                     } else {
                         
@@ -295,8 +296,8 @@ int main(int argc, char **argv)
             
             //time += 0.001;    // dc sync 2 ms
             time += 0.0005;   // dc sync 1 ms
-            //time += 0.0002;   // dc sync 1 ms
-            
+            //time += 0.0002;   // dc sync 0.5 ms
+           
         }
         
 

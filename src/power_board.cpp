@@ -22,7 +22,7 @@ static const iit::ecat::objd_t source_SDOs[] =
     { 0X7000, 0x3, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "ts"                       ,0     },  
     // SD0 0x8000                                                                         
     // SD0 0x8001                                                                         
-    { 0x8001, 0x1, DTYPE_VISIBLE_STRING,64, ATYPE_RO,    "firmware_version"         ,0     },
+    { 0x8001, 0x1, DTYPE_VISIBLE_STRING, 64, ATYPE_RO,    "firmware_version"         ,0     },
     { 0x8001, 0x2, DTYPE_UNSIGNED16,     16, ATYPE_RW,    "ctrl_status_cmd"          ,0     },
     { 0x8001, 0x3, DTYPE_UNSIGNED16,     16, ATYPE_RO,    "ctrl_status_cmd_ack"      ,0     },
     { 0x8001, 0x4, DTYPE_UNSIGNED16,     16, ATYPE_RW,    "flash_params_cmd"         ,0     },
@@ -33,7 +33,7 @@ static const iit::ecat::objd_t source_SDOs[] =
     { 0x8001, 0x9, DTYPE_UNSIGNED16,     16, ATYPE_RO,    "i_load_adc"               ,0     },
     { 0x8001, 0xa, DTYPE_UNSIGNED16,     16, ATYPE_RO,    "t_batt_adc"               ,0     },
     { 0x8001, 0xb, DTYPE_UNSIGNED16,     16, ATYPE_RO,    "t_board_adc"              ,0     },
-    { 0x8001, 0xc, DTYPE_UNSIGNED16,     16, ATYPE_RO,    "FSM"        ,0     },
+    { 0x8001, 0xc, DTYPE_UNSIGNED16,     16, ATYPE_RO,    "FSM"                ,0     },
     { 0x8001, 0xd, DTYPE_REAL32,         32, ATYPE_RO,    "v_batt_filt"        ,0     },
     { 0x8001, 0xe, DTYPE_REAL32,         32, ATYPE_RO,    "v_pack_filt"        ,0     },
 
