@@ -172,7 +172,7 @@ public:
             if ( rx_pdo.status.bit.state_machine_status == RUN_WAIT_POWER_MOTORS_COMMAND_FSM ) {
                 // 
                 set_ctrl_status_X(this, CTRL_POWER_MOTORS_ON);
-                // set 3 sec to check again
+                // set 5 sec to check again
                 osal_timer_start(&motor_on_timer, 5000000);
             }
         }
@@ -180,6 +180,11 @@ public:
         status.all = rx_pdo.status.all;
     }
     
+    int power_on_ok(void) {
+        
+        return rx_pdo.status.bit.main_rel_status == 1;
+    }
+
     virtual void on_writePDO(void) {
         tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
     }

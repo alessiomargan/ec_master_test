@@ -42,6 +42,8 @@
 // FT6
 #define CTRL_REMOVE_TORQUE_OFFS	0x00CD
 
+#define FLASH_SAVE              0x0012
+
 #define CTRL_CMD_DONE			0x7800
 #define CTRL_CMD_ERROR			0xAA00
 
@@ -76,7 +78,7 @@ enum ec_board_ctrl_err: int {
     EC_BOARD_INVALID_ROBOT_ID,
     EC_BOARD_RECV_FAIL,
     EC_BOARD_SEND_FAIL,
-
+    EC_BOARD_ZERO_POS_FAIL,
 };
 
 struct fault_bits {

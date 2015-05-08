@@ -84,6 +84,14 @@ target_link_libraries(sine_joint walkman_master iitecat_iface soem pthread)
 add_custom_command(TARGET sine_joint POST_BUILD COMMAND set_cap.sh sine_joint COMMENT set_cap)
 
 add_executable(
+     zero
+     test/test_common.cpp
+     test/zero.cpp)
+
+target_link_libraries(zero walkman_master iitecat_iface soem pthread)
+add_custom_command(TARGET zero POST_BUILD COMMAND set_cap.sh zero COMMENT set_cap)
+
+add_executable(
      simple_test
      test/test_common.cpp
      test/simple_test.cpp)

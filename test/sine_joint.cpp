@@ -150,15 +150,37 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    std::vector<int> pow_board;
-    ec_boards_ctrl->get_esc_bytype(POW_BOARD);
-    
-    Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
+    std::vector<PowESC*> pow_boards;
+    if ( ec_boards_ctrl->get_esc_bytype(POW_BOARD, pow_boards) == 1 ) {
+        
+        while ( ! pow_boards[0]->power_on_ok() ) {
+            osal_usleep(1000000);
+            pow_boards[0]->readSDO_byname("status");
+            pow_boards[0]->handle_status();
+        }
+    }
 
+    delete ec_boards_ctrl;
 
+    ///////////////////////////////////////////////////////////////////////////
+    sleep(5);
+    ///////////////////////////////////////////////////////////////////////////
+
+    PowEscPdoTypes::pdo_rx pow_pdo_rx;
     McEscPdoTypes::pdo_rx mc_pdo_rx;
     McEscPdoTypes::pdo_tx mc_pdo_tx;
     char buffer[1024];
+
+    ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
+
+
+    if ( ec_boards_ctrl->init() != EC_BOARD_OK) {
+        std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
+        delete ec_boards_ctrl;
+        return 0;
+    }
+    
+    Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
     
     /////////////////////////////////////////////
     // start motors
@@ -287,9 +309,12 @@ int main(int argc, char **argv)
                     continue;
                 }
                 
-                ec_boards_ctrl->getTxPDO(rid2pos[*it], mc_pdo_tx);
-                mc_pdo_tx.sprint(buffer, sizeof(buffer));
-                //DPRINTF("%d\t %s",*it, buffer);
+                // check emergency wireless btn
+                pow_pdo_rx = pow_boards[0]->getRxPDO();
+                if ( pow_pdo_rx.status.bit.vsc_status ) {
+                    break;
+                }
+                
             }
     
             ec_boards_ctrl->send_to_slaves();

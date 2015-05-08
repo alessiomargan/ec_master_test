@@ -169,20 +169,7 @@ void Ec_Boards_ctrl::factory_board(void) {
     }
 }
 
-int Ec_Boards_ctrl::get_esc_bytype(uint16_t ESC_type, std::vector<int> &esc_bytype) {
-
-    int rid;
-    
-    for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
-        EscWrapper * esc = it->second.get();
-        if ( esc->get_ESC_type() == ESC_type ) {
-            esc_bytype.push_back(it->first);
-        }
-    }
-    
-    return esc_bytype.size();
-}
-    
+   
 int Ec_Boards_ctrl::configure_boards(void) {
 
     return slaves.size();

@@ -455,6 +455,35 @@ public :
 
     }
 
+    /**
+     * - set "Enc_offset" = 0
+     * - set "Calibration_angle" motor coordinate : Motor 3.14159 --> Joint 0
+     * - set "ctrl_status_cmd" =  0x00AB CTRL_SET_ZERO_POSITION
+     * - save params to flash
+     * - 
+     */
+    int set_zero_position(float calibration_angle) {
+        
+        float enc_offset;
+        
+        // do it in PREOP
+        enc_offset = 0.0;
+        DPRINTF("%d : set zero pos %f\n", position, calibration_angle);
+                
+        try {
+            writeSDO_byname("Enc_offset", enc_offset);
+            writeSDO_byname("Calibration_angle", calibration_angle);
+        } catch (EscWrpError &e ) {
+                DPRINTF("Catch Exception %s ... %s\n", __FUNCTION__, e.what());
+                return EC_BOARD_ZERO_POS_FAIL;
+        }
+        set_ctrl_status_X(this, CTRL_SET_ZERO_POSITION);
+        set_flash_cmd_X(this, FLASH_SAVE);
+        
+        return EC_BOARD_OK;
+    }
+    
+
 private:
 
     int16_t Joint_robot_id;
