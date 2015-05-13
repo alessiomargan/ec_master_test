@@ -213,7 +213,7 @@ public:
         // we log when receive PDOs
         start_log(true);
 
-        osal_timer_start(&motor_on_timer, 5000000);
+        osal_timer_start(&motor_on_timer, 0);
         readSDO_byname("status");
         handle_status();
         

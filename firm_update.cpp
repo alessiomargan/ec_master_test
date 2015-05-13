@@ -10,6 +10,7 @@
 #endif
 
 #include <memory>
+#include <numeric>
 
 #include <iit/ecat/advr/ec_boards_iface.h>
 
@@ -122,6 +123,20 @@ int main(int argc, char **argv)
         return 1;
     }
     
+    if ( slave_list.size() == 1 ) {
+        if ( slave_list[0] == 0 ) {
+            slave_list.resize(ec_slavecount);
+            std::cout << "slave list size " << slave_list.size() << std::endl;
+            std::iota(slave_list.begin(), slave_list.end(), 1);
+        
+        } else if ( slave_list[0] == -1 ) {
+            std::vector<HpESC*> hp_boards;
+            ec_boards_ctrl->get_esc_bytype(HI_PWR_AC_MC, hp_boards);
+            slave_list.resize(hp_boards.size());
+            //std::iota(slave_list.begin(), slave_list.end(), 1);
+        }
+    }
+    
     std::string fw_path;
     std::string bin_file;
     int passwd;
@@ -168,7 +183,7 @@ int main(int argc, char **argv)
                     break;
             }
 
-            if ( motor_type ) {
+            if ( ! motor_type.IsNull() ) {
                 bin_file    = motor_type["bin_file"].as<std::string>();
                 passwd      = motor_type["passwd"].as<int>();
                 DPRINTF("%d %s 0x%04X \n", *it, (fw_path+bin_file).c_str(), passwd);

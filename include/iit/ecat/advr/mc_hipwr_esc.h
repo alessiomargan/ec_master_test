@@ -183,7 +183,8 @@ protected :
         }
 
         // apply transformation from Motor to Joint 
-        rx_pdo.position = hipwr_esc::M2J(rx_pdo.position,_sgn,_offset); 
+        rx_pdo.link_pos = hipwr_esc::M2J(rx_pdo.link_pos,_sgn,_offset); 
+        rx_pdo.motor_pos = hipwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset); 
         rx_pdo.pos_ref_fb  = hipwr_esc::M2J(rx_pdo.pos_ref_fb,_sgn,_offset); 
         
         xddp_write(rx_pdo);
@@ -194,7 +195,7 @@ protected :
             log.pos_ref     = hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset);
             log.PosGainP    = tx_pdo.gainP;
             log.PosGainD    = tx_pdo.gainD;
-            log.position    = rx_pdo.position;
+            log.position    = rx_pdo.link_pos;
             log.pos_ref_fb  = rx_pdo.pos_ref_fb;
             log.temperature = rx_pdo.temperature;
             log.torque      = rx_pdo.torque;  
@@ -214,16 +215,15 @@ protected :
 
     virtual int on_readSDO(const objd_t * sdobj)  {
 
-        if ( ! strcmp(sdobj->name, "position") ) {
-            rx_pdo.position = hipwr_esc::M2J(rx_pdo.position,_sgn,_offset);
-            //DPRINTF("on_getSDO M2J position %f\n", rx_pdo.position);
+        if ( ! strcmp(sdobj->name, "link_pos") ) {
+            rx_pdo.link_pos = hipwr_esc::M2J(rx_pdo.link_pos,_sgn,_offset);
+            //DPRINTF("on_getSDO M2J link_pos %f\n", rx_pdo.link_pos);
+        } else if ( ! strcmp(sdobj->name, "motor_pos") ) {
+            rx_pdo.motor_pos = hipwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset);
         } else if ( ! strcmp(sdobj->name, "Min_pos") ) {
-            //DPRINTF("1 on_getSDO M2J min_pos %f\n", sdo.Min_pos);
             sdo.Min_pos = hipwr_esc::M2J(sdo.Min_pos,_sgn,_offset);
-            //DPRINTF("2 on_getSDO M2J min_pos %f\n", sdo.Min_pos);
         } else if ( ! strcmp(sdobj->name, "Max_pos") ) {
             sdo.Max_pos = hipwr_esc::M2J(sdo.Max_pos,_sgn,_offset);
-            //DPRINTF("on_getSDO M2J max_pos %f\n", sdo.Max_pos);
         }
         return EC_BOARD_OK;
     }
@@ -302,7 +302,7 @@ public :
         // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
         readSDO_byname("Min_pos");
         readSDO_byname("Max_pos");
-        readSDO_byname("position");
+        readSDO_byname("link_pos");
 
         // set filename with robot_id
         log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
@@ -353,7 +353,7 @@ public :
             writeSDO_byname("Max_vel", max_vel);
             
             // set actual position as reference
-            readSDO_byname("position", act_position);
+            readSDO_byname("link_pos", act_position);
             writeSDO_byname("pos_ref", act_position);
             // set direct mode and power on modulator
             set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
@@ -427,7 +427,7 @@ public :
         float pos, tx_pos_ref;
         
         try {
-            readSDO_byname("position", pos);
+            readSDO_byname("link_pos", pos);
             readSDO_byname("pos_ref_fb", tx_pos_ref);
             tx_pos_ref = hipwr_esc::M2J(tx_pos_ref,_sgn,_offset);        
             

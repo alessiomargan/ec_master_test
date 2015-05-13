@@ -130,7 +130,8 @@ struct McEscPdoTypes {
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        float       position;     // rad
+        float       link_pos;     // rad
+        float       motor_pos;     // rad
         float       pos_ref_fb;   // rad
         uint16_t    temperature;  // C * 10
         int16_t     torque;       // Nm * 100
@@ -138,13 +139,14 @@ struct McEscPdoTypes {
         uint16_t    rtt;          //
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%d\t%d\t0x%X\t%d\n", position,pos_ref_fb,temperature,torque,fault,rtt);
+            fprintf(fp, "%f\t%f\t%f\t%d\t%d\t0x%X\t%d\n", link_pos,motor_pos,pos_ref_fb,temperature,torque,fault,rtt);
         }
         int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "%f\t%f\t%d\t%d\t0x%X\t%d", position,pos_ref_fb,temperature,torque,fault,rtt);
+            return snprintf(buff, size, "%f\t%f\t%f\t%d\t%d\t0x%X\t%d", link_pos,motor_pos,pos_ref_fb,temperature,torque,fault,rtt);
         }
         void to_map(jmap_t & jpdo) {
-            JPDO(position);
+            JPDO(link_pos);
+            JPDO(motor_pos);
             JPDO(pos_ref_fb); 
             JPDO(temperature);
             JPDO(torque);

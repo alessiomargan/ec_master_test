@@ -4,9 +4,9 @@ project(walkman-ecat)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_path(RTNET_INCLUDE_DIR NAMES rtnet.h PATH_SUFFIXES rtnet/include)
-set(ENABLE_RTNET  ON)
+set(ENABLE_XENO  ON)
 
-if(ENABLE_RTNET AND RTNET_INCLUDE_DIR)
+if(ENABLE_XENO AND RTNET_INCLUDE_DIR)
   message("Found RTNET: ${RTNET_INCLUDE_DIR}")
   include_directories(${RTNET_INCLUDE_DIR})
   # try Xenomai
@@ -81,7 +81,6 @@ add_executable(
      test/sine_joint.cpp)
 
 target_link_libraries(sine_joint walkman_master iitecat_iface soem pthread)
-add_custom_command(TARGET sine_joint POST_BUILD COMMAND set_cap.sh sine_joint COMMENT set_cap)
 
 add_executable(
      zero
@@ -89,7 +88,6 @@ add_executable(
      test/zero.cpp)
 
 target_link_libraries(zero walkman_master iitecat_iface soem pthread)
-add_custom_command(TARGET zero POST_BUILD COMMAND set_cap.sh zero COMMENT set_cap)
 
 add_executable(
      simple_test
@@ -104,7 +102,6 @@ add_executable(
      firm_update.cpp)
 
 target_link_libraries(firm_update walkman_master iitecat_iface soem pthread)
-add_custom_command(TARGET firm_update POST_BUILD COMMAND set_cap.sh firm_update COMMENT set_cap)
 
 add_executable(
      zpub
@@ -112,6 +109,12 @@ add_executable(
      test/zpub.cpp)
 
 target_link_libraries(zpub zmq jsoncpp pthread)
+
+if( NOT (ENABLE_XENO AND RTNET_INCLUDE_DIR) )
+    add_custom_command(TARGET sine_joint POST_BUILD COMMAND set_cap.sh sine_joint COMMENT set_cap)
+    add_custom_command(TARGET zero POST_BUILD COMMAND set_cap.sh zero COMMENT set_cap)
+    add_custom_command(TARGET firm_update POST_BUILD COMMAND set_cap.sh firm_update COMMENT set_cap)
+endif()
 
 
 # Install

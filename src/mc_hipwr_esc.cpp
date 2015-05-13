@@ -8,12 +8,13 @@ using namespace iit::ecat;
 static const iit::ecat::objd_t source_SDOs[] =
 {
     // SD0 0x6000
-    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "position"                 ,0     },
-    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "pos_ref_fb"               ,0     },
-    { 0X6000, 0x3, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "temperature"              ,0     },
-    { 0X6000, 0x4, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
-    { 0X6000, 0x5, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
-    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
+    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "link_pos"                 ,0     },
+    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_pos"                ,0     },
+    { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "pos_ref_fb"               ,0     },
+    { 0X6000, 0x4, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "temperature"              ,0     },
+    { 0X6000, 0x5, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
+    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
+    { 0X6000, 0x7, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
     // SD0 0x7000                                                                         
     { 0X7000, 0x1, DTYPE_REAL32,        32,  ATYPE_RW,   "pos_ref"                  ,0     },  
     { 0X7000, 0x2, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "fault_ack"                ,0     },  
@@ -79,7 +80,8 @@ void HpESC::init_SDOs(void) {
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));
 
     // 0x6000 
-    SDOs[i++].data = (void*)&HpESC::rx_pdo.position;
+    SDOs[i++].data = (void*)&HpESC::rx_pdo.link_pos;
+    SDOs[i++].data = (void*)&HpESC::rx_pdo.motor_pos;
     SDOs[i++].data = (void*)&HpESC::rx_pdo.pos_ref_fb;       
     SDOs[i++].data = (void*)&HpESC::rx_pdo.temperature;       
     SDOs[i++].data = (void*)&HpESC::rx_pdo.torque;         

@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
-    //ec_boards_ctrl->start_motors(CTRL_SET_DIRECT_MODE);
+    ec_boards_ctrl->start_motors(CTRL_SET_DIRECT_MODE);
      
 
     /////////////////////////////////////////////

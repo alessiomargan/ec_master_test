@@ -28,7 +28,7 @@ namespace iit {
   struct Ft6EscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
-        uint64_t    ts;
+        uint16_t    ts;
     }  __attribute__((__packed__));
 
     // RX  slave_output -- master input
@@ -40,12 +40,12 @@ namespace iit {
         float       torque_Y;           // Nm
         float       torque_Z;           // Nm
         uint16_t    fault;
-        uint64_t    rtt;                // ns
+        uint16_t    rtt;                // ns
         int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%lu", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
+            return snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
         }
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%lu\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
+            fprintf(fp, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
         }
         void to_map(jmap_t & jpdo) {
             JPDO(force_X);

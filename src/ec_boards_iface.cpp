@@ -35,10 +35,9 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(std::string config_file) {
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 
     // std::shared_ptr slaves 
-
-#ifndef KEEP_POWER_ON
-    iit::ecat::power_off();
-#endif
+    if ( root_cfg["ec_board_ctrl"]["power_off_boards"] ) {
+        iit::ecat::power_off();
+    }
     iit::ecat::finalize();
 
 }
@@ -371,6 +370,11 @@ static int esc_gpio_ll_wr(uint16_t configadr, uint16_t gpio_val) {
     return wc;
 }
 
+/**
+ * bit0 power_on
+ * bit1 reset
+ * bit2 boot
+ */
 int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmware, uint32_t passwd_firm) {
 
     int wc, ret = 0;
@@ -397,16 +401,16 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
              (s->get_ESC_type() == HI_PWR_AC_MC) || 
              (s->get_ESC_type() == HI_PWR_DC_MC)) {
             // pre-update
-            // POW_ON+RESET+BOOT 0x7
-            if ( esc_gpio_ll_wr(configadr, 0x0) <= 0 ) {
+            // POW_ON+RESET 0x3
+            if ( esc_gpio_ll_wr(configadr, 0x3) <= 0 ) {
                 return 0;
             }
-            sleep(3);
+            sleep(1);
             // todo POW_ON+BOOT 0x5
             if ( esc_gpio_ll_wr(configadr, 0x5) <= 0 ) {
                 return 0;
             }
-            sleep(3);
+            sleep(2);
     
         } else {
             DPRINTF("Slave %d is NOT a XL or a MD motor\n", slave_pos);
@@ -417,13 +421,15 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
     // we do NOT have a state change in the slave
     req_state_check(slave_pos, EC_STATE_BOOT);
 
+    sleep(5);
+
     // second boot state request is handled by bootloader
     // now the slave should go in BOOT state
     if ( req_state_check(slave_pos, EC_STATE_BOOT) != EC_STATE_BOOT ) {
         DPRINTF("Slave %d not changed to BOOT state.\n", slave_pos);
         return 0;
     }
-
+    
     if ( s) {
         if ( (s->get_ESC_type() == POW_BOARD) ||
              (s->get_ESC_type() == HI_PWR_AC_MC) || 
@@ -463,10 +469,12 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
 
     if ( s ) {
         // post-update ... restore
-        // RESET
-        //if ( esc_gpio_ll_wr(configadr, 0x3) <= 0) { return 0; }
-        //sleep(3);
-        // 
+        // POW_ON+RESET 0x3
+        if ( esc_gpio_ll_wr(configadr, 0x3) <= 0 ) {
+            return 0;
+        }
+        sleep(3);
+        // POW_ON 0x1
         if ( esc_gpio_ll_wr(configadr, 0x1) <= 0 ) {
             return 0;
         }

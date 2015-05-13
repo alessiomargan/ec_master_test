@@ -121,12 +121,13 @@ static const iit::ecat::objd_t source_SDOs[] =
 {
 
     // SD0 0x6000
-    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "position"                 ,0     },
-    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "pos_ref_fb"               ,0     },
-    { 0X6000, 0x3, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "temperature"              ,0     },
-    { 0X6000, 0x4, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
-    { 0X6000, 0x5, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
-    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
+    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "link_pos"                 ,0     },
+    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_pos"                 ,0     },
+    { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "pos_ref_fb"               ,0     },
+    { 0X6000, 0x4, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "temperature"              ,0     },
+    { 0X6000, 0x5, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
+    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
+    { 0X6000, 0x7, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
     // SD0 0x7000                                                                         
     { 0X7000, 0x1, DTYPE_REAL32,        32,  ATYPE_RW,   "pos_ref"                  ,0     },  
     { 0X7000, 0x2, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "fault_ack"                ,0     },  
@@ -171,15 +172,15 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x8000, 0x22,DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_34        ,0   }, 
                                                                         
     // SDO8001[] =                                                      
-    {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1      ,0   }, 
-    {0x8001, 0x2, DTYPE_INTEGER32,        32, ATYPE_RW, acName8001_2      ,0   }, 
-    {0x8001, 0x3, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_3      ,0   }, 
-    {0x8001, 0x4, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_4      ,0   }, 
-    {0x8001, 0x5, DTYPE_REAL32,           32, ATYPE_RO, acName8001_5      ,0   }, 
-    {0x8001, 0x6, DTYPE_REAL32,           32, ATYPE_RO, acName8001_6      ,0   }, 
-    {0x8001, 0x7, DTYPE_REAL32,           32, ATYPE_RO, acName8001_7      ,0   }, 
-    {0x8001, 0x8, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_8      ,0   }, 
-    {0x8001, 0x9, DTYPE_INTEGER16,        16, ATYPE_RO, acName8001_9      ,0   }, 
+    {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "fw_ver"                ,0   }, 
+    {0x8001, 0x2, DTYPE_INTEGER32,        32, ATYPE_RW, acName8001_2            ,0   }, 
+    {0x8001, 0x3, DTYPE_UNSIGNED16,       16, ATYPE_RW, "ctrl_status_cmd"       ,0   }, 
+    {0x8001, 0x4, DTYPE_UNSIGNED16,       16, ATYPE_RO, "ctrl_status_cmd_ack"   ,0   }, 
+    {0x8001, 0x5, DTYPE_REAL32,           32, ATYPE_RO, acName8001_5            ,0   }, 
+    {0x8001, 0x6, DTYPE_REAL32,           32, ATYPE_RO, acName8001_6            ,0   }, 
+    {0x8001, 0x7, DTYPE_REAL32,           32, ATYPE_RO, acName8001_7            ,0   }, 
+    {0x8001, 0x8, DTYPE_UNSIGNED16,       16, ATYPE_RW, "flash_params_cmd"      ,0   }, 
+    {0x8001, 0x9, DTYPE_UNSIGNED16,       16, ATYPE_RO, "flash_params_cmd_ack"  ,0   }, 
                                                                       
     {0, 0, 0, 0, 0, 0, 0 }                                                
 };                                                                    
@@ -198,7 +199,8 @@ void LpESC::init_SDOs(void) {
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));            
 
     // 0x6000 
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.position;
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.link_pos;
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.motor_pos;
     SDOs[i++].data = (void*)&LpESC::rx_pdo.pos_ref_fb;       
     SDOs[i++].data = (void*)&LpESC::rx_pdo.temperature;       
     SDOs[i++].data = (void*)&LpESC::rx_pdo.torque;         

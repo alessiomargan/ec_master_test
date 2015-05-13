@@ -35,7 +35,6 @@ namespace ecat {
 namespace advr {
 
 
-
 enum Robot_IDs 
 { 
     // neck

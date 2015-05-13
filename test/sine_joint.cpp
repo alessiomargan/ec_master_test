@@ -140,6 +140,13 @@ int main(int argc, char **argv)
 
     Ec_Boards_ctrl * ec_boards_ctrl;
 
+    PowEscPdoTypes::pdo_rx pow_pdo_rx;
+    McEscPdoTypes::pdo_rx mc_pdo_rx;
+    McEscPdoTypes::pdo_tx mc_pdo_tx;
+    char buffer[1024];
+    std::vector<PowESC*> pow_boards;
+
+#if 0
     ///////////////////////////////////////////////////////////////////////////
 
     ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
@@ -150,7 +157,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    std::vector<PowESC*> pow_boards;
+    
     if ( ec_boards_ctrl->get_esc_bytype(POW_BOARD, pow_boards) == 1 ) {
         
         while ( ! pow_boards[0]->power_on_ok() ) {
@@ -165,11 +172,7 @@ int main(int argc, char **argv)
     ///////////////////////////////////////////////////////////////////////////
     sleep(5);
     ///////////////////////////////////////////////////////////////////////////
-
-    PowEscPdoTypes::pdo_rx pow_pdo_rx;
-    McEscPdoTypes::pdo_rx mc_pdo_rx;
-    McEscPdoTypes::pdo_tx mc_pdo_tx;
-    char buffer[1024];
+#endif
 
     ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
 
@@ -193,19 +196,9 @@ int main(int argc, char **argv)
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
         Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
         if (moto) {
-#if 0
-            EscWrapper * esc = ec_boards_ctrl->slave_as_EscWrapper(rid2pos[*it]);
-            if ( esc->get_ESC_type() == HI_PWR_AC_MC ) {
-                moto->start(CTRL_SET_MIX_POS_MODE, 2000.0, 0.0, 20.0);
-            } else if ( esc->get_ESC_type() == HI_PWR_DC_MC ) {
-                moto->start(CTRL_SET_MIX_POS_MODE, 300.0, 0.0, 10.0);
-            } else {
-                moto->start(CTRL_SET_MIX_POS_MODE, 0.0, 0.0, 0.0);
-            }
-#endif
             moto->getSDO("Min_pos", min_pos);
             moto->getSDO("Max_pos", max_pos);
-            moto->getSDO("position", start_pos[*it]); 
+            moto->getSDO("link_pos", start_pos[*it]); 
             // set home to mid pos
             home[*it] = MID_POS(min_pos,max_pos);
             // special case home
@@ -261,7 +254,7 @@ int main(int argc, char **argv)
     double time = 0;
     
     try {
-
+        sleep(3);
         DPRINTF("STARTING\n");
         
         while (run_loop) {
@@ -309,12 +302,13 @@ int main(int argc, char **argv)
                     continue;
                 }
                 
-                // check emergency wireless btn
-                pow_pdo_rx = pow_boards[0]->getRxPDO();
-                if ( pow_pdo_rx.status.bit.vsc_status ) {
-                    break;
+                if ( pow_boards.size() ) {
+                    // check emergency wireless btn
+                    pow_pdo_rx = pow_boards[0]->getRxPDO();
+                    if ( pow_pdo_rx.status.bit.vsc_status ) {
+                        break;
+                    }
                 }
-                
             }
     
             ec_boards_ctrl->send_to_slaves();
