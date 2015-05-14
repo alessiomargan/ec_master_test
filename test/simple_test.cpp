@@ -31,11 +31,40 @@ int main(int argc, char **argv)
         return 0;
     }
 
-
     Ec_Boards_ctrl * ec_boards_ctrl;
-
+    
+    std::vector<PowESC*> pow_boards;
+    PowEscPdoTypes::pdo_rx pow_pdo_rx;
+    
+#if 0
     ///////////////////////////////////////////////////////////////////////////
 
+    ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
+
+    if ( ec_boards_ctrl->init() != EC_BOARD_OK) {
+        std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
+        delete ec_boards_ctrl;
+        return 0;
+    }
+
+    
+    if ( ec_boards_ctrl->get_esc_bytype(POW_BOARD, pow_boards) == 1 ) {
+        
+        while ( ! pow_boards[0]->power_on_ok() ) {
+            osal_usleep(1000000);
+            pow_boards[0]->readSDO_byname("status");
+            pow_boards[0]->handle_status();
+        }
+    }
+
+    delete ec_boards_ctrl;
+
+    ///////////////////////////////////////////////////////////////////////////
+    sleep(6);
+    ///////////////////////////////////////////////////////////////////////////
+#endif
+    
+    
     ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
 
     if ( ec_boards_ctrl->init() != EC_BOARD_OK) {
@@ -48,7 +77,7 @@ int main(int argc, char **argv)
 
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
-    ec_boards_ctrl->start_motors(CTRL_SET_DIRECT_MODE);
+    //ec_boards_ctrl->start_motors(CTRL_SET_DIRECT_MODE);
      
 
     /////////////////////////////////////////////
@@ -82,11 +111,18 @@ int main(int argc, char **argv)
                     break;
                 }
             }
+
+#if 0
+            if ( pow_boards.size() ) {
+                // check emergency wireless btn
+                pow_pdo_rx = pow_boards[0]->getRxPDO();
+                if ( pow_pdo_rx.status.bit.vsc_status ) {
+                    break;
+                }
+            }
+#endif
             ec_boards_ctrl->send_to_slaves();
             
-            //if ((cnt++) % 10000 == 0){
-            //    ec_boards_ctrl->check_DataLayer();
-            //}
         }
 
     } catch (EscWrpError &e) {

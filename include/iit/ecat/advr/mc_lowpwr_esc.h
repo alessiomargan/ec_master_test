@@ -281,6 +281,12 @@ public:
 
     }
 
+    virtual int start(int controller_type) {
+        
+        // pid not used
+        return start(controller_type, 0, 0, 0);        
+    }
+
     virtual int stop(void) {
         return set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
     }
@@ -312,7 +318,7 @@ public:
         float pos, tx_pos_ref;
         
         try {
-            readSDO_byname("position", pos);
+            readSDO_byname("link_pos", pos);
             readSDO_byname("pos_ref_fb", tx_pos_ref);
             //tx_pos_ref = pos_ref;
             if ( fabs(pos - pos_ref) > step ) {

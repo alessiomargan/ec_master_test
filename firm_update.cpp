@@ -127,7 +127,8 @@ int main(int argc, char **argv)
         if ( slave_list[0] == 0 ) {
             slave_list.resize(ec_slavecount);
             std::cout << "slave list size " << slave_list.size() << std::endl;
-            std::iota(slave_list.begin(), slave_list.end(), 1);
+            // slave_list : [2 .. ec_slavecount)
+            std::iota(slave_list.begin(), slave_list.end(), 2);
         
         } else if ( slave_list[0] == -1 ) {
             std::vector<HpESC*> hp_boards;

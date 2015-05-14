@@ -122,8 +122,8 @@ std::vector<int> body = {
 };
 
 
-//std::vector<int> motors = body; 
-std::vector<int> motors = { 1000 }; 
+std::vector<int> motors = body; 
+//std::vector<int> motors = { 1000 }; 
 
 std::map<int,float> home;
 std::map<int,float> start_pos;
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
     char buffer[1024];
     std::vector<PowESC*> pow_boards;
 
-#if 0
+#if 1
     ///////////////////////////////////////////////////////////////////////////
 
     ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
     delete ec_boards_ctrl;
 
     ///////////////////////////////////////////////////////////////////////////
-    sleep(5);
+    sleep(6);
     ///////////////////////////////////////////////////////////////////////////
 #endif
 
@@ -184,6 +184,9 @@ int main(int argc, char **argv)
     }
     
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
+    
+    pow_boards.clear();
+    ec_boards_ctrl->get_esc_bytype(POW_BOARD, pow_boards);
     
     /////////////////////////////////////////////
     // start motors
@@ -302,21 +305,24 @@ int main(int argc, char **argv)
                     continue;
                 }
                 
-                if ( pow_boards.size() ) {
-                    // check emergency wireless btn
-                    pow_pdo_rx = pow_boards[0]->getRxPDO();
-                    if ( pow_pdo_rx.status.bit.vsc_status ) {
-                        break;
-                    }
-                }
             }
     
             ec_boards_ctrl->send_to_slaves();
-            
-            //time += 0.001;    // dc sync 2 ms
-            time += 0.0005;   // dc sync 1 ms
-            //time += 0.0002;   // dc sync 0.5 ms
-           
+
+            if ( pow_boards.size() > 0 ) {
+                // check emergency wireless btn
+                pow_pdo_rx = pow_boards[0]->getRxPDO();
+                // if not pressed increment time
+                if ( ! pow_pdo_rx.status.bit.vsc_status ) {
+                    //time += 0.001;    // dc sync 2 ms
+                    time += 0.0005;   // dc sync 1 ms
+                    //time += 0.0002;   // dc sync 0.5 ms
+                }
+            } else {
+                //time += 0.001;    // dc sync 2 ms
+                time += 0.0005;   // dc sync 1 ms
+                //time += 0.0002;   // dc sync 0.5 ms
+            }
         }
         
 
