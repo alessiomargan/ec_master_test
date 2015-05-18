@@ -125,16 +125,40 @@ int main(int argc, char **argv)
     
     if ( slave_list.size() == 1 ) {
         if ( slave_list[0] == 0 ) {
+            // all esc
+            use_rId = false;
             slave_list.resize(ec_slavecount);
             std::cout << "slave list size " << slave_list.size() << std::endl;
+            // exclude power board
             // slave_list : [2 .. ec_slavecount)
             std::iota(slave_list.begin(), slave_list.end(), 2);
         
         } else if ( slave_list[0] == -1 ) {
-            std::vector<HpESC*> hp_boards;
-            ec_boards_ctrl->get_esc_bytype(HI_PWR_AC_MC, hp_boards);
-            slave_list.resize(hp_boards.size());
-            //std::iota(slave_list.begin(), slave_list.end(), 1);
+            // big motor
+            use_rId = false;
+            slave_list.clear();
+            std::map<int, HpESC*> hp_boards;
+            ec_boards_ctrl->get_esc_map_bytype(HI_PWR_AC_MC, hp_boards);
+            for (auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
+                slave_list.push_back(it->first);
+            }
+            ec_boards_ctrl->get_zombie_map_bytype(HI_PWR_AC_MC, hp_boards);
+            for (auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
+                slave_list.push_back(it->first);
+            }
+        } else if ( slave_list[0] == -2 ) {
+            // med motor
+            use_rId = false;
+            slave_list.clear();
+            std::map<int, HpESC*> hp_boards;
+            ec_boards_ctrl->get_esc_map_bytype(HI_PWR_DC_MC, hp_boards);
+            for (auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
+                slave_list.push_back(it->first);
+            }
+            ec_boards_ctrl->get_zombie_map_bytype(HI_PWR_DC_MC, hp_boards);
+            for (auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
+                slave_list.push_back(it->first);
+            }
         }
     }
     

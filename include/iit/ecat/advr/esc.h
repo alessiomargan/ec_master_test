@@ -123,7 +123,7 @@ struct McEscPdoTypes {
             fprintf(fp, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
         }
         int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
+            return snprintf(buff, size, "%f\t0x%X\t%d\t%d\t%d", pos_ref,fault_ack,gainP,gainD,ts);
         }
 
     }  __attribute__((__packed__));

@@ -144,9 +144,8 @@ int main(int argc, char **argv)
     McEscPdoTypes::pdo_rx mc_pdo_rx;
     McEscPdoTypes::pdo_tx mc_pdo_tx;
     char buffer[1024];
-    std::vector<PowESC*> pow_boards;
+    std::map<int, PowESC*> pow_boards;
 
-#if 1
     ///////////////////////////////////////////////////////////////////////////
 
     ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
@@ -158,35 +157,33 @@ int main(int argc, char **argv)
     }
 
     
-    if ( ec_boards_ctrl->get_esc_bytype(POW_BOARD, pow_boards) == 1 ) {
+    if ( ec_boards_ctrl->get_esc_map_bytype(POW_BOARD, pow_boards) == 1 ) {
         
-        while ( ! pow_boards[0]->power_on_ok() ) {
+        while ( ! pow_boards[1]->power_on_ok() ) {
             osal_usleep(1000000);
-            pow_boards[0]->readSDO_byname("status");
-            pow_boards[0]->handle_status();
+            pow_boards[1]->readSDO_byname("status");
+            pow_boards[1]->handle_status();
+        }
+        
+        // power on
+        delete ec_boards_ctrl;
+        // wait boards boot up
+        sleep(6);
+
+        ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
+        // scan again
+        if ( ec_boards_ctrl->init() != EC_BOARD_OK) {
+            std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
+            delete ec_boards_ctrl;
+            return 0;
         }
     }
-
-    delete ec_boards_ctrl;
-
     ///////////////////////////////////////////////////////////////////////////
-    sleep(6);
-    ///////////////////////////////////////////////////////////////////////////
-#endif
 
-    ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
-
-
-    if ( ec_boards_ctrl->init() != EC_BOARD_OK) {
-        std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
-        delete ec_boards_ctrl;
-        return 0;
-    }
     
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
     
-    pow_boards.clear();
-    ec_boards_ctrl->get_esc_bytype(POW_BOARD, pow_boards);
+    ec_boards_ctrl->get_esc_map_bytype(POW_BOARD, pow_boards);
     
     /////////////////////////////////////////////
     // start motors
@@ -311,7 +308,7 @@ int main(int argc, char **argv)
 
             if ( pow_boards.size() > 0 ) {
                 // check emergency wireless btn
-                pow_pdo_rx = pow_boards[0]->getRxPDO();
+                pow_pdo_rx = pow_boards[1]->getRxPDO();
                 // if not pressed increment time
                 if ( ! pow_pdo_rx.status.bit.vsc_status ) {
                     //time += 0.001;    // dc sync 2 ms

@@ -135,18 +135,21 @@ public:
 
     virtual void on_writePDO(void) {
 
-        tx_pdo.ts = get_time_ns();
+        tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
     }
 
     virtual void on_readPDO(void) {
 
         if ( rx_pdo.rtt ) {
-            rx_pdo.rtt =  get_time_ns() - rx_pdo.rtt;
+            rx_pdo.rtt =  (uint16_t)(get_time_ns()/1000) - rx_pdo.rtt;
             s_rtt(rx_pdo.rtt);
         }
 
-        if ( rx_pdo.fault & 0xFFFF) {
-            //handle_fault();
+        if ( rx_pdo.fault ) {
+            handle_fault();
+        } else {
+            // clean any previuos fault ack !! 
+            //tx_pdo.fault_ack = 0;
         }
 
         if ( _start_log ) {
@@ -169,6 +172,11 @@ public:
     int16_t get_robot_id() {
         //assert(sdo.Joint_robot_id != -1);
         return sdo.sensor_robot_id;
+    }
+
+    void print_info(void) {
+        DPRINTF("\tSensor id %d\tSensor robot id %d\n", sdo.sensor_number, sdo.sensor_robot_id);
+        DPRINTF("\tfw_ver %s\n", sdo.firmware_version);
     }
 
     virtual int init(const YAML::Node & root_cfg) {
@@ -220,7 +228,7 @@ public:
         fault_t fault;
         fault.all = rx_pdo.fault;
         //fault.bit.
-        ack_faults_X(this, fault.all);
+        //ack_faults_X(this, fault.all);
 
     }
 

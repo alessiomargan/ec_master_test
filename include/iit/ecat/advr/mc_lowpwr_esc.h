@@ -133,12 +133,15 @@ public:
     virtual void on_readPDO(void) {
 
         if ( rx_pdo.rtt ) {
-            rx_pdo.rtt =  (uint16_t)(get_time_ns()/1000000) - rx_pdo.rtt;
+            rx_pdo.rtt =  (uint16_t)(get_time_ns()/1000) - rx_pdo.rtt;
             s_rtt(rx_pdo.rtt);
         }
 
-        if ( rx_pdo.fault & 0x7FFF) {
+        if ( rx_pdo.fault ) {
             handle_fault();
+        } else {
+            // clean any previuos fault ack !! 
+            tx_pdo.fault_ack = 0;
         }
 
         // apply transformation from Motor to Joint 
@@ -155,7 +158,7 @@ public:
 
     virtual void on_writePDO(void) {
 
-        tx_pdo.ts = (uint16_t)(get_time_ns()/1000000);
+        tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
 
         // apply transformation from Joint to Motor 
         //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);

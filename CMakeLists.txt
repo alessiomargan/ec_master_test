@@ -111,6 +111,8 @@ add_executable(
 target_link_libraries(zpub zmq jsoncpp pthread)
 
 if( NOT (ENABLE_XENO AND RTNET_INCLUDE_DIR) )
+    add_custom_command(TARGET ft_ati_test POST_BUILD COMMAND set_cap.sh ft_ati_test COMMENT set_cap)
+    add_custom_command(TARGET simple_test POST_BUILD COMMAND set_cap.sh simple_test COMMENT set_cap)
     add_custom_command(TARGET sine_joint POST_BUILD COMMAND set_cap.sh sine_joint COMMENT set_cap)
     add_custom_command(TARGET zero POST_BUILD COMMAND set_cap.sh zero COMMENT set_cap)
     add_custom_command(TARGET firm_update POST_BUILD COMMAND set_cap.sh firm_update COMMENT set_cap)

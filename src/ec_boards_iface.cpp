@@ -109,6 +109,7 @@ void Ec_Boards_ctrl::factory_board(void) {
             }
             slaves[i] = iit::ecat::ESCPtr(ft_slave);
             rid = ft_slave->get_robot_id();
+            ft_slave->print_info();
             if (rid != -1) {
                 rid2pos[rid] = i;
             }
@@ -381,6 +382,11 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
     char * ec_err_string;
     bool go_ahead = true;
     uint16_t configadr; 
+    uint16_t flash_cmd;
+    uint16_t flash_cmd_ack = 0x0;
+    int size;
+    int tries;
+    char firm_ver[16];
 
     // all slaves in INIT state 
     req_state_check(0, EC_STATE_INIT);
@@ -429,15 +435,22 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
         DPRINTF("Slave %d not changed to BOOT state.\n", slave_pos);
         return 0;
     }
+                   
     
     if ( s) {
         if ( (s->get_ESC_type() == POW_BOARD) ||
              (s->get_ESC_type() == HI_PWR_AC_MC) || 
              (s->get_ESC_type() == HI_PWR_DC_MC)) {
             // erase flash
-            uint16_t flash_cmd = 0x00EE;
-            uint16_t flash_cmd_ack = 0x0;
-            int size;
+            flash_cmd = 0x00EE;
+            flash_cmd_ack = 0x0;
+            tries = 30;
+
+            memset((void*)firm_ver, sizeof(firm_ver), 0);
+            wc = ec_SDOread(slave_pos, 0x8000, 0x4, false, &size, &firm_ver, EC_TIMEOUTRXM * 30);
+            DPRINTF("Slave %d bl fw %s\n", slave_pos, firm_ver);
+
+        
             // write sdo flash_cmd
             DPRINTF("erasing flash ...\n");
             wc = ec_SDOwrite(slave_pos, 0x8000, 0x1, false, sizeof(flash_cmd), &flash_cmd, EC_TIMEOUTRXM * 30); // 21 secs
@@ -447,17 +460,24 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
                 DPRINTF("Ec_error : %s\n", ec_err_string);
                 go_ahead = false;
             } else {
-                // read flash_cmd_ack
-                wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM * 30);
-                DPRINTF("Slave %d wc %d flash_cmd_ack 0x%04X\n", slave_pos, wc, flash_cmd_ack);
-                if ( wc <= 0 ) {
-                    DPRINTF("ERROR reading flash_cmd_ack\n");
-                    ec_err_string =  ec_elist2string();
-                    DPRINTF("Ec_error : %s\n", ec_err_string);
-                    go_ahead = false;
-                } else if ( flash_cmd_ack != CTRL_CMD_DONE ) {
-                    DPRINTF("ERROR erasing flash\n");
-                    go_ahead = false;
+                
+                while ( tries -- ) {
+                    sleep(1);
+                    // read flash_cmd_ack
+                    wc = ec_SDOread(slave_pos, 0x8000, 0x2, false, &size, &flash_cmd_ack, EC_TIMEOUTRXM * 30);
+                    DPRINTF("Slave %d wc %d flash_cmd_ack 0x%04X\n", slave_pos, wc, flash_cmd_ack);
+                    if ( wc <= 0 ) {
+                        DPRINTF("ERROR reading flash_cmd_ack\n");
+                        ec_err_string =  ec_elist2string();
+                        DPRINTF("Ec_error : %s\n", ec_err_string);
+                        go_ahead = false;
+                    } else if ( flash_cmd_ack != CTRL_CMD_DONE ) {
+                        DPRINTF("ERROR erasing flash\n");
+                        go_ahead = false;
+                    } else {
+                        // 
+                        break;
+                    }
                 }
             }
         }

@@ -219,17 +219,33 @@ public:
     const Rid2PosMap & get_Rid2PosMap(void) { return rid2pos; }
     int rid2Pos(int rId) { return rid2pos.find(rId) != rid2pos.end() ? rid2pos[rId] : 0; }
     
-    template <typename T, typename A>
-    int get_esc_bytype(uint16_t ESC_type, std::vector<T,A> &esc_bytype) {
+    //template <typename T, typename A>
+    //int get_esc_bytype(uint16_t ESC_type, std::vector<T,A> &esc_bytype) {
+    template <typename T>
+    int get_esc_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
 
+        esc_bytype.clear();
         for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
             EscWrapper * esc = it->second.get();
             if ( esc->get_ESC_type() == ESC_type ) {
-                esc_bytype.push_back( dynamic_cast<T>(it->second.get()) );
+                //esc_bytype.push_back( dynamic_cast<T>(it->second.get()) );
+                esc_bytype[it->first] = dynamic_cast<T>(it->second.get());
             }
         }
         return esc_bytype.size();
+    }
+    template <typename T>
+    int get_zombie_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
 
+        esc_bytype.clear();
+        for (auto it = zombies.begin(); it != zombies.end(); it++ ) {
+            EscWrapper * esc = it->second.get();
+            if ( esc->get_ESC_type() == ESC_type ) {
+                //esc_bytype.push_back( dynamic_cast<T>(it->second.get()) );
+                esc_bytype[it->first] = dynamic_cast<T>(it->second.get());
+            }
+        }
+        return esc_bytype.size();
     }
      
     void rd_LOCK(void);
