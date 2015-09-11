@@ -38,42 +38,41 @@ struct LoPwrEscSdoTypes {
     
     // flash
 
-    int Block_control;
-    int nonius_offset_low;
-    float PosGainP;
-    float PosGainI;
-    float PosGainD;
-    float TorGainP;
-    float TorGainI;
-    float TorGainD;
-    float Torque_Mult;
-    float Pos_I_lim;
-    float Tor_I_lim;
-    float Min_pos;
-    float Max_pos;
-    int nonius_offset_high;
-    float Max_tor;
-    float Max_cur;
-    int Enc_offset_1;
-    int Enc_offset_2;
-    float Torque_Offset;
+    int     Block_control;
+    int     nonius_offset_low;
+    float   PosGainP;
+    float   PosGainI;
+    float   PosGainD;
+    float   TorGainP;
+    float   TorGainI;
+    float   TorGainD;
+    float   Torque_Mult;
+    float   Pos_I_lim;
+    float   Tor_I_lim;
+    float   Min_pos;
+    float   Max_pos;
+    int     nonius_offset_high;
+    float   Max_tor;
+    float   Max_cur;
+    int     Enc_offset_1;
+    int     Enc_offset_2;
+    float   Torque_Offset;
     int16_t ConfigFlags;
     int16_t ConfigFlags2;
-    int NumEncoderLines;
-    float ImpedancePosGainP;
-    int nonius_offset2_low;
-    float ImpedancePosGainD;
-    int Num_Abs_counts_rev;
-    int MaxPWM;
-    float Gearbox_ratio;
-    int ulCalPosition;
-    int Cal_Abs_Position;
-    int Cal_Abs2_Position;
-    int nonius_offset2_high;
-
-    int16_t     Joint_number;
-    int16_t     Joint_robot_id;
-
+    int     NumEncoderLines;
+    float   ImpedancePosGainP;
+    int     nonius_offset2_low;
+    float   ImpedancePosGainD;
+    int     Num_Abs_counts_rev;
+    int     MaxPWM;
+    float   Gearbox_ratio;
+    int     ulCalPosition;
+    int     Cal_Abs_Position;
+    int     Cal_Abs2_Position;
+    int     nonius_offset2_high;
+    int16_t Joint_number;
+    int16_t Joint_robot_id;
+    float   Target_velocity;
     // ram
 
     char        firmware_version[8];
@@ -122,7 +121,7 @@ public:
 
     void print_info(void) {
         DPRINTF("\tJoint id %d\tJoint robot id %d\n", sdo.Joint_number, sdo.Joint_robot_id);
-        DPRINTF("\tmin pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos);
+        DPRINTF("\tmin pos %f\tmax pos %f\tmax vel %f\n", sdo.Min_pos, sdo.Max_pos, sdo.Target_velocity);
         DPRINTF("\tfw_ver %s\n", sdo.firmware_version);
     }
 
@@ -153,7 +152,9 @@ public:
             push_back(rx_pdo);
         }
 
-        xddp_write(rx_pdo);
+        if ( ! xddp_write(rx_pdo) ) {
+            DPRINTF("Error write to pipe %s\n", pipe_name.c_str());
+        }
     }
 
     virtual void on_writePDO(void) {
@@ -308,7 +309,7 @@ public:
 
     }
 
-        /////////////////////////////////////////////
+    /////////////////////////////////////////////
     // set pdo data
     virtual int set_posRef(float joint_pos) { tx_pdo.pos_ref = joint_pos; }
     virtual int set_torOffs(float tor_offs) { /*tx_pdo.tor_offs = tor_offs;*/ }

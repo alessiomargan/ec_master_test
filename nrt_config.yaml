@@ -1,11 +1,12 @@
 #
 
 ec_board_ctrl:
-  eth_iface: rteth0
+  eth_iface: eth1
   #eth_iface: eth1
   #sync_cycle_time_ns: 500000
   sync_cycle_time_ns: 1000000
   #sync_cycle_time_ns: 2000000
+  #sync_cycle_time_ns: 5000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 0
@@ -354,3 +355,11 @@ LpESC_999:
   pid :
     position: [40.0, 0.0, 1.0]
     mix_position: [2500.0,0.005,100.0]
+
+LpESC_666:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0, 0.0, 1.0]
+    mix_position: [2500.0,0.005,100.0]
+

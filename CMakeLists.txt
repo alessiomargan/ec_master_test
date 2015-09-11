@@ -16,9 +16,9 @@ if(ENABLE_XENO AND RTNET_INCLUDE_DIR)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${XENO_CFLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -L../../soem_1-3-0/build")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -lnative")
-  set(RT_SRCS src/rt_ipc.cpp)
+  set(RT_NRT_SRCS src/rt_ipc.cpp) 
 else()
-    set(ENABLE_RTNET  OFF)
+  set(ENABLE_RTNET  OFF)
 endif()
 
 set(HEADER_INSTALL_ROOT $ENV{WALKMAN_ETHERCAT_MASTER_ROOT}/include/ CACHE PATH "Where to install the headers")
@@ -43,7 +43,7 @@ add_library(walkman_master SHARED
     src/power_board.cpp
     src/ft6_esc.cpp
     src/test_esc.cpp
-    ${RT_SRCS}
+    ${RT_NRT_SRCS}
 )
 
 target_link_libraries(walkman_master iitecat_iface soem pthread yaml-cpp)
@@ -54,54 +54,61 @@ add_executable(
      src/ati_iface.cpp
      test/ft_ati_test.cpp)
 
-target_link_libraries(ft_ati_test walkman_master iitecat_iface soem pthread)
+target_link_libraries(ft_ati_test walkman_master pthread yaml-cpp)
 
 #add_executable(
 #     walkman_test
 #     test/walkman_test.cpp)
 
-#target_link_libraries(walkman_test walkman_master iitecat_iface soem pthread)
+#target_link_libraries(walkman_test walkman_master iitecat_iface soem pthread yaml-cpp)
 
 #add_executable(
 #     walkman_test_2
 #     test/walkman_test_2.cpp)
 
-#target_link_libraries(walkman_test_2 walkman_master iitecat_iface soem pthread)
+#target_link_libraries(walkman_test_2 walkman_master iitecat_iface soem pthread yaml-cpp)
 
 #add_executable(
 #     walkman_test_3
 #     test/test_common
 #     test/walkman_test_3.cpp)
 
-#target_link_libraries(walkman_test_3 walkman_master iitecat_iface soem pthread)
+#target_link_libraries(walkman_test_3 walkman_master iitecat_iface soem pthread yaml-cpp)
 
 add_executable(
      sine_joint
      test/test_common.cpp
      test/sine_joint.cpp)
 
-target_link_libraries(sine_joint walkman_master iitecat_iface soem pthread)
+target_link_libraries(sine_joint walkman_master pthread yaml-cpp)
 
 add_executable(
-     zero
+     coman_sine_joint
      test/test_common.cpp
-     test/zero.cpp)
+     test/coman_sine_joint.cpp)
 
-target_link_libraries(zero walkman_master iitecat_iface soem pthread)
+target_link_libraries(coman_sine_joint walkman_master pthread yaml-cpp)
+
+#add_executable(
+#     zero
+#     test/test_common.cpp
+#     test/zero.cpp)
+
+#target_link_libraries(zero walkman_master iitecat_iface soem pthread yaml-cpp)
 
 add_executable(
      simple_test
      test/test_common.cpp
      test/simple_test.cpp)
 
-target_link_libraries(simple_test walkman_master iitecat_iface soem pthread)
+target_link_libraries(simple_test walkman_master pthread yaml-cpp)
 
 
 add_executable(
      firm_update
      firm_update.cpp)
 
-target_link_libraries(firm_update walkman_master iitecat_iface soem pthread)
+target_link_libraries(firm_update walkman_master pthread yaml-cpp)
 
 add_executable(
      zpub
@@ -114,6 +121,7 @@ if( NOT (ENABLE_XENO AND RTNET_INCLUDE_DIR) )
     add_custom_command(TARGET ft_ati_test POST_BUILD COMMAND set_cap.sh ft_ati_test COMMENT set_cap)
     add_custom_command(TARGET simple_test POST_BUILD COMMAND set_cap.sh simple_test COMMENT set_cap)
     add_custom_command(TARGET sine_joint POST_BUILD COMMAND set_cap.sh sine_joint COMMENT set_cap)
+    add_custom_command(TARGET coman_sine_joint POST_BUILD COMMAND set_cap.sh coman_sine_joint COMMENT set_cap)
     add_custom_command(TARGET zero POST_BUILD COMMAND set_cap.sh zero COMMENT set_cap)
     add_custom_command(TARGET firm_update POST_BUILD COMMAND set_cap.sh firm_update COMMENT set_cap)
 endif()

@@ -100,7 +100,7 @@ char acName8000_31[] = "Cal_Abs2_Position";
 char acName8000_32[] = "nonius offset2 high";
 char acName8000_33[] = "Joint_number";
 char acName8000_34[] = "Joint_robot_id";
-char acName8000_35[] = "Target velocity";
+char acName8000_35[] = "Target_velocity";
 
 char acName8001[] = "Parameter";
 char acName8001_1[] = "fw_ver";
@@ -168,8 +168,9 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x8000, 0x1e, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_30        ,0   }, 
     {0x8000, 0x1f, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_31        ,0   }, 
     {0x8000, 0x20, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_32        ,0   }, 
-    {0x8000, 0x21,DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_33        ,0   }, 
-    {0x8000, 0x22,DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_34        ,0   }, 
+    {0x8000, 0x21, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_33        ,0   }, 
+    {0x8000, 0x22, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_34        ,0   }, 
+    {0x8000, 0x23, DTYPE_REAL32,       32, ATYPE_RW, acName8000_35        ,0   }, 
                                                                         
     // SDO8001[] =                                                      
     {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "fw_ver"                ,0   }, 
@@ -247,6 +248,7 @@ void LpESC::init_SDOs(void) {
     SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset2_high;
     SDOs[i++].data = (void*)&LpESC::sdo.Joint_number;
     SDOs[i++].data = (void*)&LpESC::sdo.Joint_robot_id;
+    SDOs[i++].data = (void*)&LpESC::sdo.Target_velocity;
     // 0x8001
     SDOs[i++].data = (void*)&LpESC::sdo.firmware_version;     
     SDOs[i++].data = (void*)&LpESC::sdo.enable_pdo_gains;      

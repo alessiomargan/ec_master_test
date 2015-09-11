@@ -51,22 +51,23 @@ public:
     typedef XddpTxTypes    xddp_tx_t;
     typedef XddpRxTypes    xddp_rx_t;
 
-    XDDP_pipe(int pool_size = 8192):
-        pool_size(pool_size)
+    XDDP_pipe(int _pool_size = 8192):
+        pool_size(_pool_size)
     {
         fd = 0;
     }
 
     void init(const std::string pipe_name) {
         
+        std::string pipe = pipe_prefix + pipe_name;
+
 #ifdef __XENO__
         fd = xddp_bind(pipe_name.c_str(), pool_size);
 #else
-        std::string pipe = pipe_prefix + pipe_name;
         mkfifo(pipe.c_str(), S_IRWXU|S_IRWXG);
         fd = open(pipe.c_str(), O_RDWR | O_NONBLOCK);
-        //printf(" .... open %s\n", pipe.c_str());
 #endif
+        DPRINTF(" .... open %s\n", pipe.c_str());
         assert(fd > 0);
     }
     
@@ -83,15 +84,17 @@ public:
 
     int xddp_write(xddp_tx_t & tx)
     {
-        char buff[pool_size];
+        //char buff[pool_size];
         
-        if ( ! fd ) { return 0; }
+        if ( fd <= 0) { return 0; }
+        //tx.sprint(buff,sizeof(buff));
+        //printf("%s\n", buff);
         return ::write(fd, (void*)&tx, sizeof(tx));
     }
 
     int xddp_read(xddp_rx_t & rx)
     {
-         if ( ! fd ) { return 0; }
+         if ( fd <= 0) { return 0; }
         /////////////////////////////////////////////////////////
         // NON-BLOCKING, read buff_size byte from pipe or cross domain socket
 #if __XENO__
@@ -104,9 +107,12 @@ public:
 
 
 protected:
+    std::string pipe_name;
+
+private:
     int fd;
     int pool_size;
-    std::string pipe_name;
+
 };
 
 #endif

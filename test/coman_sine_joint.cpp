@@ -62,11 +62,6 @@ std::vector<int> left_leg = {
     //Robot_IDs::LL_FT,
 };
 
-std::vector<int> head = {
-
-    Robot_IDs::HEAD_R,
-    Robot_IDs::HEAD_P,
-};    
 
 std::vector<int> body = {
 
@@ -74,9 +69,6 @@ std::vector<int> body = {
     Robot_IDs::WAIST_Y,
     Robot_IDs::WAIST_P,
 
-    Robot_IDs::HEAD_R,
-    Robot_IDs::HEAD_P,
-   
     Robot_IDs::RA_SH_2,
     Robot_IDs::RA_SH_1,
     Robot_IDs::RA_SH_3,
@@ -157,42 +149,10 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    
-    if ( ec_boards_ctrl->get_esc_map_bytype(POW_BOARD, pow_boards) == 1 ) {
-        
-        while ( ! pow_boards[1]->power_on_ok() ) {
-            osal_usleep(1000000);
-            pow_boards[1]->readSDO_byname("status");
-            pow_boards[1]->handle_status();
-        }
-        
-        // power on
-        delete ec_boards_ctrl;
-        // wait boards boot up
-        sleep(6);
-
-        ec_boards_ctrl = new Ec_Boards_ctrl(argv[1]); 
-        // scan again
-        if ( ec_boards_ctrl->init() != EC_BOARD_OK) {
-            std::cout << "Error in boards init()... cannot proceed!" << std::endl;      
-            delete ec_boards_ctrl;
-            return 0;
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
-
-    
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
     
     ec_boards_ctrl->get_esc_map_bytype(POW_BOARD, pow_boards);
     
-    /////////////////////////////////////////////
-    // start motors
-    // use pid gains defined in yaml file
-    // small motor has only CTRL_SET_POS_MODE and fixed gains 
-    /////////////////////////////////////////////
-    //ec_boards_ctrl->start_motors(CTRL_SET_MIX_POS_MODE);
-
     float min_pos, max_pos, fault;
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
         Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
@@ -204,6 +164,7 @@ int main(int argc, char **argv)
             moto->getSDO("link_pos", start_pos[*it]); 
             // set home to mid pos
             home[*it] = MID_POS(min_pos,max_pos);
+#if 0
             // special case home
             if (*it == Robot_IDs::RA_SH_2 ) { home[*it] = start_pos[*it] + 1.0; }
             if (*it == Robot_IDs::LA_SH_2 ) { home[*it] = start_pos[*it] - 1.0; }
@@ -218,7 +179,7 @@ int main(int argc, char **argv)
             if (*it == Robot_IDs::LL_H_Y ) { home[*it] = 0; }
 
             if (*it == 1000 ) { home[*it] = M_PI/4; }   
-
+#endif
             DPRINTF("%d : start pos %f home pos %f\n", *it, start_pos[*it], home[*it]);
                         
         } else {
@@ -270,36 +231,7 @@ int main(int argc, char **argv)
             for ( auto it = motors.begin(); it != motors.end(); it++ ) {
                 Motor * moto = ec_boards_ctrl->slave_as_Motor(rid2pos[*it]);
                 if (moto) {
-                    if (*it == Robot_IDs::RL_H_R || *it == Robot_IDs::LL_H_R ||
-                        *it == Robot_IDs::RL_H_Y || *it == Robot_IDs::LL_H_Y ||
-                        *it == Robot_IDs::WAIST_P|| *it == Robot_IDs::WAIST_R) {
-                        
-                        moto->set_posRef(home[*it] + 0.1 * sinf(2*M_PI*time));
-                            
-                    } else if ( *it == Robot_IDs::LA_SH_1 || *it == Robot_IDs::RA_SH_1 ||
-                                *it == Robot_IDs::LA_EL   || *it == Robot_IDs::RA_EL ||
-                                *it == Robot_IDs::LA_WR_1 || *it == Robot_IDs::RA_WR_1 ||
-                                *it == Robot_IDs::LA_WR_2 || *it == Robot_IDs::RA_WR_2 ||
-                                *it == Robot_IDs::LA_WR_3 || *it == Robot_IDs::RA_WR_3 ) {
-                        
-                        moto->set_posRef(home[*it] + 0.4 * sinf(2*M_PI*time));
-                                                            
-                    } else if ( *it == Robot_IDs::LA_SH_2 || *it == Robot_IDs::RA_SH_2 ) {
-                        
-                        moto->set_posRef(home[*it] + 0.6 * sinf(2*M_PI*time));
-                                    
-                    } else if ( *it == Robot_IDs::LA_HA || *it == Robot_IDs::RA_HA ) {
-                        
-                        moto->set_posRef(home[*it] + 2.0 * sinf(2*M_PI*time));
-                                    
-                    } else if ( *it == 1000 ) {
-                        
-                        moto->set_posRef(home[*it] + (M_PI/2) * sinf(2*M_PI*time));
-                                    
-                    } else {
-                        
-                        moto->set_posRef(home[*it] + 0.2 * sinf(2*M_PI*time));
-                    }
+                    moto->set_posRef(home[*it] + 3.0 * sinf(2*M_PI*time));
                 } else {
                     continue;
                 }
@@ -308,20 +240,10 @@ int main(int argc, char **argv)
     
             ec_boards_ctrl->send_to_slaves();
 
-            if ( pow_boards.size() > 0 ) {
-                // check emergency wireless btn
-                pow_pdo_rx = pow_boards[1]->getRxPDO();
-                // if pressed NOT increment time
-                if ( pow_pdo_rx.status.bit.vsc_status ) {
-                    //
-                    continue;
-                }
-            }
-
             //time += 0.001;    // dc sync 2 ms
-            time += 0.0005;   // dc sync 1 ms
+            //time += 0.0005;   // dc sync 1 ms
             //time += 0.0002;   // dc sync 0.5 ms
-            //time += 0.0001;   // really slow
+            time += 0.0001;   // really slow
 
         }
         

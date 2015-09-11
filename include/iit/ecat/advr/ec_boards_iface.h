@@ -28,8 +28,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <boost/variant.hpp>
-
 // [ECat_master] o: 410   i: 788 = 1198
 
 namespace iit {
