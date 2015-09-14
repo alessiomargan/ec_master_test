@@ -32,6 +32,9 @@ void EC_boards_joint_joy::homing(void) {
     float min_pos, max_pos, velocity;
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
 	
+// 	if ( it->first != rid2pos[JOINT_TEST] ) {
+// 	  continue;
+// 	}
 	it->second->start(CTRL_SET_MIX_POS_MODE);
 	it->second->getSDO("Min_pos", min_pos);
 	it->second->getSDO("Max_pos", max_pos);
@@ -136,7 +139,7 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
 		    break;
 		default:
 		    if (cmd.value) {
-			slave_as_LP(rid2pos[1])->print_info();
+			//slave_as_LP(rid2pos[JOINT_TEST])->print_info();
 		    }
 		    break;
 	    }
@@ -155,19 +158,50 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
 
 int EC_boards_joint_joy::user_loop(void) {
 
+    std::map<int, iit::ecat::advr::LpESC*> motors;
+    get_esc_map_bytype(iit::ecat::advr::LO_PWR_DC_MC, motors);
+    
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::LpESC::pdo_rx_t motor_pdo_rx;
+    
     static float ds; 
 
-    moto = slave_as_Motor(rid2pos[1]);
-    motor_pdo_rx = moto->getRxPDO();
-    
     //
     if ( user_input(ds) > 0 ) {
-	DPRINTF(">> %f %f\n", motor_pdo_rx.pos_ref_fb, ds);
+	DPRINTF(">> %f\n", ds);
     }
-	
+
+    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
+	moto =  it->second;
+	motor_pdo_rx = moto->getRxPDO();
+	// pos_ref_fb is the previous reference
+	moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
+    }
+    
+#if 0
+    moto = slave_as_Motor(rid2pos[10]);
+    motor_pdo_rx = moto->getRxPDO();
     moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
 
+    moto = slave_as_Motor(rid2pos[15]);
+    motor_pdo_rx = moto->getRxPDO();
+    moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
+
+    moto = slave_as_Motor(rid2pos[8]);
+    motor_pdo_rx = moto->getRxPDO();
+    moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
+
+    moto = slave_as_Motor(rid2pos[13]);
+    motor_pdo_rx = moto->getRxPDO();
+    moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
+
+    moto = slave_as_Motor(rid2pos[9]);
+    motor_pdo_rx = moto->getRxPDO();
+    moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
+
+    moto = slave_as_Motor(rid2pos[14]);
+    motor_pdo_rx = moto->getRxPDO();
+    moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
     
+#endif
 }
