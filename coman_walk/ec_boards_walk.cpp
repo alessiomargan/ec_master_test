@@ -5,7 +5,6 @@
 extern void test_joint(std::vector<float> homePos, int size, double freq, int r_pos[]);
 
 #define MID_POS(m,M)    (m+(M-m)/2)
-#define DEG2RAD(X)  (X*M_PI)/180.0
 
 // home position in degree
 static const std::vector<float> homePos = {
