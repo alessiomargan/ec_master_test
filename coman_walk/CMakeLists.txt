@@ -16,7 +16,7 @@ if(ENABLE_XENO AND RTNET_INCLUDE_DIR)
   execute_process(COMMAND xeno-config --skin=posix --ldflags OUTPUT_VARIABLE XENO_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${XENO_CFLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${XENO_CFLAGS}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -L../../soem_1-3-0/build")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -lnative")
   set(RT_NRT_SRCS src/rt_ipc.cpp) 
 else()
@@ -24,12 +24,21 @@ else()
   message("NOT Found RTNET")
 endif()
 
-include_directories(include)
 set(SHARED_SRC ${PROJECT_SOURCE_DIR}/../shared_src) 
+
+include_directories(include)
+include_directories("${SHARED_SRC}")
 include_directories("${COMAN_ROOT}/include")
 link_directories("${COMAN_ROOT}/lib")
 
+add_definitions(-DEPFL -DDEMO_TYPE=2)
+
 add_executable(coman_walk
+GlobalExt.cpp
+Matrix.cpp
+RTControl.cpp
+Stabilizer.cpp
+TestJoint.cpp
 ec_boards_walk.cpp
 ${SHARED_SRC}/test_common.cpp
 main_walk.cpp

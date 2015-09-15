@@ -49,13 +49,21 @@ private :
     
     virtual void homing(void);
     
+    int user_loop_walk(void);
+    int user_loop_test_joint(void);
+    
     stat_t  s_loop;
     uint64_t start_time, tNow, tPre;
     
     iit::ecat::advr::Rid2PosMap	rid2pos;
     
-    std::map<int,float> home;
-    std::map<int,float> start_pos;
+    // key is robot_id
+    std::map<int,float> home_rId;
+    // key is robot_id
+    std::map<int,float> start_pos_rId;
+    
+    iit::ecat::advr::Ft6ESC * leftFoot, * rightFoot;
+    std::map<int, iit::ecat::advr::LpESC*> motors;
 
 };
 

@@ -29,23 +29,22 @@ void EC_boards_joint_joy::homing(void) {
     std::map<int, iit::ecat::advr::LpESC*> motors;
     get_esc_map_bytype(iit::ecat::advr::LO_PWR_DC_MC, motors);
     
+    int rId;
     float min_pos, max_pos, velocity;
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-	
-// 	if ( it->first != rid2pos[JOINT_TEST] ) {
-// 	  continue;
-// 	}
+	rId = rid2pos[it->first];
 	it->second->start(CTRL_SET_MIX_POS_MODE);
 	it->second->getSDO("Min_pos", min_pos);
 	it->second->getSDO("Max_pos", max_pos);
-	it->second->getSDO("link_pos", start_pos[it->first]);
+	it->second->getSDO("link_pos", start_pos_rId[rId]);
 	
 	// set home to mid pos
-	home[it->first] = MID_POS(min_pos,max_pos);
-	while ( ! it->second->move_to(home[it->first], 0.003) ) {
-            osal_usleep(2000);    
+	home_rId[rId] = MID_POS(min_pos,max_pos);
+	while ( ! it->second->move_to(home_rId[rId], 0.002) ) {
+            osal_usleep(1000);    
         }
     }
+
 
 }
 
@@ -60,6 +59,7 @@ void EC_boards_joint_joy::th_init(void*)
     
     InXddp::init("EC_board_input");
     
+    // start controller
     homing();
     
     if ( set_operative() <= 0 ) {
