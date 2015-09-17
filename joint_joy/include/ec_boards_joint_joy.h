@@ -49,7 +49,7 @@ private :
     
     virtual void homing(void);
     
-    stat_t  s_loop;
+    iit::ecat::stat_t  s_loop;
     uint64_t start_time, tNow, tPre;
     
     iit::ecat::advr::Rid2PosMap	rid2pos;

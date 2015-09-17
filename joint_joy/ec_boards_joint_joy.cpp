@@ -21,7 +21,7 @@ EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) : Ec_Boards_ct
 
 EC_boards_joint_joy::~EC_boards_joint_joy()
 {
-    print_stat(s_loop);
+    iit::ecat::print_stat(s_loop);
 }
 
 void EC_boards_joint_joy::homing(void) {

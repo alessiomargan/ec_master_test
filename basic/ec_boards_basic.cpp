@@ -21,7 +21,7 @@ EC_boards_basic::EC_boards_basic(const char* config_yaml) : Ec_Boards_ctrl(confi
 
 EC_boards_basic::~EC_boards_basic()
 {
-    print_stat(s_loop);
+    iit::ecat::print_stat(s_loop);
 }
 
 void EC_boards_basic::homing(void) {
@@ -45,7 +45,7 @@ void EC_boards_basic::th_init(void*)
 	throw "something else wrong";
     }
     
-    start_time = get_time_ns();
+    start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;
 }
 

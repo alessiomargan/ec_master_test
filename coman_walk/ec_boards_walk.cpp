@@ -5,18 +5,6 @@
 extern void test_joint(std::vector<float> homePos, int size, double freq, int r_pos[]);
 
 #define MID_POS(m,M)    (m+(M-m)/2)
-#define DEG2RAD(X)  (X*M_PI)/180.0
-
-// home position in degree
-static const std::vector<float> homePos = {
-    // lower body #15
-//    0, -1,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,   0,  0,  0,
-    0, 6,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,   0,  0,  0,
-//  1,  2,  3,  4,  5,  6,  7,   8,  9, 10,  11, 12,  13, 14, 15
-    // upper body #10 right arm to left arm, last 2 are right and left neck
-    0, 90,  0,  -90, 0, -90,  0, -90,  0,  0};
-// 16, 17, 18,  19, 20,  21, 22,  23, 24, 25
-
 
 // home position in degree
 static const std::vector<float> homePos = {
@@ -48,7 +36,7 @@ EC_boards_walk::EC_boards_walk(const char* config_yaml) : Ec_Boards_ctrl(config_
 
 EC_boards_walk::~EC_boards_walk()
 {
-    print_stat(s_loop);
+    iit::ecat::print_stat(s_loop);
 }
 
 void EC_boards_walk::homing(void) {

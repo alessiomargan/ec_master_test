@@ -52,7 +52,7 @@ private :
     int user_loop_walk(void);
     int user_loop_test_joint(void);
     
-    stat_t  s_loop;
+    iit::ecat::stat_t  s_loop;
     uint64_t start_time, tNow, tPre;
     
     iit::ecat::advr::Rid2PosMap	rid2pos;
