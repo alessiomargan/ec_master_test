@@ -35,12 +35,12 @@ public:
         esc_log.set_capacity(capacity);
     }
     virtual ~PDO_log() {
-        dump_buffer(log_filename, esc_log);
+        iit::ecat::dump_buffer(log_filename, esc_log);
     }
 
     void start_log(bool start) {
         _start_log = start;
-        _start_log_ts = get_time_ns();
+        _start_log_ts = iit::ecat::get_time_ns();
     }
 
     void push_back(const log_t & item) {

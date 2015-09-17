@@ -83,7 +83,7 @@ Ati_Sens::~Ati_Sens(void) {
     }
 
     close(udp_sock);
-    dump_buffer(std::string("/tmp/ati_log.txt"), ati_log);
+    iit::ecat::dump_buffer(std::string("/tmp/ati_log.txt"), ati_log);
     DPRINTF("~%s\n", typeid(this).name());
 
 }
@@ -114,7 +114,7 @@ int Ati_Sens::recv_data() {
 
     // adjust byte order ...
     log_item.rtd_seq = ntohl(data.rtd_seq);
-    log_item.ts = get_time_ns() - start_time;
+    log_item.ts = iit::ecat::get_time_ns() - start_time;
     for( int i = 0; i < 6; i++ ) {
         // small sensor 1000000 big sensor 1000
         //log_item.ft[i] = (float) ((int32_t)ntohl(data.ft[i]))/1000000;
@@ -152,7 +152,7 @@ void * Ati_Sens::rx_thread(void *_) {
     ati_cmd.cmd = htons(0x0042);
     kls->send_cmd(ati_cmd);
 
-    kls->start_time = get_time_ns();
+    kls->start_time = iit::ecat::get_time_ns();
 
 #ifdef __XENO__
     pthread_set_mode_np(0, PTHREAD_WARNSW);
