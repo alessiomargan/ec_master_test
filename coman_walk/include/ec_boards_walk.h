@@ -57,10 +57,10 @@ private :
     
     iit::ecat::advr::Rid2PosMap	rid2pos;
     
-    // key is robot_id
-    std::map<int,float> home_rId;
-    // key is robot_id
-    std::map<int,float> start_pos_rId;
+    // key is slave_pos
+    std::map<int,float> home;
+    // key is slave_pos
+    std::map<int,float> start_pos;
     
     iit::ecat::advr::Ft6ESC * leftFoot, * rightFoot;
     std::map<int, iit::ecat::advr::LpESC*> motors;

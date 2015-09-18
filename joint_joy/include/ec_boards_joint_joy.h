@@ -54,8 +54,8 @@ private :
     
     iit::ecat::advr::Rid2PosMap	rid2pos;
     
-    std::map<int,float> home_rId;
-    std::map<int,float> start_pos_rId;
+    std::map<int,float> home;
+    std::map<int,float> start_pos;
 
 };
 

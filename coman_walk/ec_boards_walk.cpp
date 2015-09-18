@@ -41,22 +41,25 @@ EC_boards_walk::~EC_boards_walk()
 
 void EC_boards_walk::homing(void) {
 
-    int rId;
+    iit::ecat::advr::LpESC * moto;
+    int slave_pos;
     float min_pos, max_pos, velocity;
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-	rId = rid2pos[it->first];
-	it->second->start(CTRL_SET_MIX_POS_MODE);
-	it->second->getSDO("Min_pos", min_pos);
-	it->second->getSDO("Max_pos", max_pos);
-	it->second->getSDO("link_pos", start_pos_rId[rId]);
+	slave_pos = it->first;
+	moto = it->second;
+	moto->start(CTRL_SET_MIX_POS_MODE);
+	moto->getSDO("Min_pos", min_pos);
+	moto->getSDO("Max_pos", max_pos);
+	moto->getSDO("link_pos", start_pos[slave_pos]);
 	
 	// set home to mid pos
-	home_rId[rId] = MID_POS(min_pos,max_pos);
-	//home_rId[rId] = DEG2RAD( homePos[rId-1] );
-	while ( ! it->second->move_to(home_rId[rId], 0.002) ) {
+	home[slave_pos] = MID_POS(min_pos,max_pos);
+	while ( ! it->second->move_to(home[slave_pos], 0.002) ) {
             osal_usleep(1000);    
         }
     }
+
+
 }
 
 void EC_boards_walk::th_init(void*)
@@ -193,6 +196,15 @@ int EC_boards_walk::user_loop_walk(void) {
 	// !! NOTE set_posRef use rad
 	//moto->set_posRef(rtControl_pos[]);
     }
+    
+    /*
+    maybe use a robot_Id vector and iterate on it ....
+    
+    moto = slave_as_Motor(rid2pos[iit::ecat::advr::coman::RL_H_R]);
+    moto->set_posRef(rtControl_pos[??]);
+	
+    */
+    
     
     return 0;
 }
