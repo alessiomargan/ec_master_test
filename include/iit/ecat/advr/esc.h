@@ -65,6 +65,7 @@ enum Board_type : uint16_t
     EC_TEST         = 1234,
 }; 
 
+
 /* Possible error codes returned */
 enum ec_board_ctrl_err: int {
     /* No error */

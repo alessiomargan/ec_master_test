@@ -7,6 +7,8 @@
 #ifndef __IIT_ECAT_ADVR_PIPE_H__
 #define __IIT_ECAT_ADVR_PIPE_H__
 
+#include <string>
+
 static const std::string pipe_prefix("/tmp/");
 
 #ifdef __XENO__

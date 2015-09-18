@@ -233,6 +233,22 @@ public:
         return esc_bytype.size();
     }
     template <typename T>
+    int get_esc_map_byclass(std::map<int, T> &esc_bytype) {
+
+	EscWrapper * esc;
+	T t;
+        esc_bytype.clear();
+        for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
+            EscWrapper * esc = it->second.get();
+            t = dynamic_cast<T>(esc);
+	    if ( t ) {
+                esc_bytype[it->first] = t;
+            }
+        }
+        return esc_bytype.size();
+    }
+
+    template <typename T>
     int get_zombie_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
 
         esc_bytype.clear();
