@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <exception>
 
-#include <ec_boards_basic.h>
+#include <ec_boards_sine.h>
 
 
 extern void main_common(void);
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) try {
 
     main_common();
     
-    threads["boards_ctrl"] = new Ec_Boards_basic(argv[1]);
+    threads["boards_ctrl"] = new Ec_Boards_sine(argv[1]);
     threads["boards_ctrl"]->create(false);
 
     while (looping()) {

@@ -23,14 +23,14 @@
 typedef struct js_event 		input_t;
 typedef XDDP_pipe<input_t,input_t> 	InXddp;
 
-class Ec_Boards_basic :
+class Ec_Boards_sine :
     public Ec_Thread_Boards_base,
     public InXddp
 {
 public:
     
-    Ec_Boards_basic(const char * config_yaml);
-    virtual ~Ec_Boards_basic();
+    Ec_Boards_sine(const char * config_yaml);
+    virtual ~Ec_Boards_sine();
 
     template<class C>
     int user_input(C &user_cmd);
@@ -41,7 +41,7 @@ private :
     virtual void init_preOP(void);
     virtual void init_OP(void);
     
-
+    std::map<int, iit::ecat::advr::Motor*> motors;
 };
 
 

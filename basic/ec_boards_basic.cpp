@@ -2,7 +2,7 @@
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
-EC_boards_basic::EC_boards_basic(const char* config_yaml) : Ec_Boards_ctrl(config_yaml), InXddp()
+Ec_Boards_basic::Ec_Boards_basic(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml), InXddp()
 {
 
     name = "EC_boards_basic";
@@ -16,66 +16,26 @@ EC_boards_basic::EC_boards_basic(const char* config_yaml) : Ec_Boards_ctrl(confi
 #endif
     priority = sched_get_priority_max(schedpolicy);
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
-    
-}
 
-EC_boards_basic::~EC_boards_basic()
-{
-    iit::ecat::print_stat(s_loop);
-}
-
-void EC_boards_basic::homing(void) {
-
-}
-
-void EC_boards_basic::th_init(void*)
-{
-    // init Ec_Boards_ctrl
-    if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK) {
-	throw "something wrong";
-    }
-    // get Robot_Id map 
-    rid2pos = get_Rid2PosMap();
-    
+    // open pipe ... xeno xddp or fifo 
     InXddp::init("EC_board_input");
-    
-    homing();
-    
-    if ( set_operative() <= 0 ) {
-	throw "something else wrong";
-    }
-    
-    start_time = iit::ecat::get_time_ns();
-    tNow, tPre = start_time;
+
 }
 
-void EC_boards_basic::th_loop(void*)
-{
-  
-    tNow = get_time_ns();
-    s_loop(tNow - tPre);
-    tPre = tNow;
+Ec_Boards_basic::~Ec_Boards_basic() {
     
-    try {
-	
-	if ( recv_from_slaves() != iit::ecat::advr::EC_BOARD_OK ) {
-	    // TODO
-	    DPRINTF("recv_from_slaves FAIL !\n");
-	    return;
-	}
-	    
-	user_loop();
+}
 
-	send_to_slaves();	
-	
-    } catch (iit::ecat::EscWrpError &e) {
-            std::cout << e.what() << std::endl;
-    }
-            
+void Ec_Boards_basic::init_preOP(void) {
+
+}
+
+void Ec_Boards_basic::init_OP(void) {
+  
 }
 
 template<class C>
-int EC_boards_basic::user_input(C &user_cmd) {
+int Ec_Boards_basic::user_input(C &user_cmd) {
     
     static int	bytes_cnt;
     int		bytes;
@@ -92,7 +52,7 @@ int EC_boards_basic::user_input(C &user_cmd) {
     return bytes;
 }
 
-int EC_boards_basic::user_loop(void) {
+int Ec_Boards_basic::user_loop(void) {
 
     int what;
     user_input(what);
