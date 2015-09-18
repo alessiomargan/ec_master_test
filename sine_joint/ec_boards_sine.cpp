@@ -46,11 +46,19 @@ void Ec_Boards_sine::init_preOP(void) {
         home[slave_pos] = MID_POS(min_pos,max_pos);
 
     }
- 
-    moto = motors[rid2pos[1]];
-    while ( ! moto->move_to(home[slave_pos], 0.005) ) {
-	osal_usleep(2000);    
+    
+    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
+	slave_pos = it->first;
+	moto = it->second;
+	while ( ! moto->move_to(home[slave_pos], 0.005) ) {
+	    osal_usleep(2000);    
+	}
     }
+    
+//     moto = motors[rid2pos[1]];
+//     while ( ! moto->move_to(home[slave_pos], 0.005) ) {
+//     	osal_usleep(2000);    
+//     }
 
 }
 
@@ -88,6 +96,7 @@ int Ec_Boards_sine::user_loop(void) {
     start_time_sine = start_time_sine ? start_time_sine : iit::ecat::get_time_ns();
     uint64_t time = iit::ecat::get_time_ns();
     float dt = (time - start_time) / 1e9;
+    // !!!!! if too fast adjust this
     float freq = 0.05;
     float A;
     iit::ecat::advr::Motor * moto;
