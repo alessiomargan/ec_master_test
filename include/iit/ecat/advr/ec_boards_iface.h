@@ -25,6 +25,7 @@
 
 #include <string>
 #include <mutex>
+#include <algorithm>
 
 #include <yaml-cpp/yaml.h>
 
@@ -90,6 +91,7 @@ enum Robot_IDs
 
 
 typedef std::map<int, int>  Rid2PosMap;
+typedef std::map<int, int>  Pos2RidMap;
 
 
 /**
@@ -216,7 +218,10 @@ public:
 
     const Rid2PosMap & get_Rid2PosMap(void) { return rid2pos; }
     int rid2Pos(int rId) { return rid2pos.find(rId) != rid2pos.end() ? rid2pos[rId] : 0; }
-    
+
+    const Pos2RidMap & get_Pos2RidMap(void) { return pos2rid; }
+    int pos2Rid(int pos) { return pos2rid.find(pos) != pos2rid.end() ? pos2rid[pos] : 0; }
+
     //template <typename T, typename A>
     //int get_esc_bytype(uint16_t ESC_type, std::vector<T,A> &esc_bytype) {
     template <typename T>
@@ -232,6 +237,7 @@ public:
         }
         return esc_bytype.size();
     }
+
     template <typename T>
     int get_esc_map_byclass(std::map<int, T> &esc_bytype) {
 
@@ -243,6 +249,25 @@ public:
             t = dynamic_cast<T>(esc);
 	    if ( t ) {
                 esc_bytype[it->first] = t;
+            }
+        }
+        return esc_bytype.size();
+    }
+
+    template <typename T>
+    int get_esc_map_byclass(std::map<int, T> &esc_bytype, std::vector<int> rId_vect) {
+
+	EscWrapper * esc;
+	T t;
+	// N log N
+	std::sort(rId_vect.begin(), rId_vect.end());
+        esc_bytype.clear();
+        for ( auto const& item : slaves ) {
+            EscWrapper * esc = item.second.get();
+            t = dynamic_cast<T>(esc);
+	    // log N + O(1)
+	    if ( t && std::binary_search(rId_vect.begin(), rId_vect.end(), pos2Rid(item.first)) ) {
+                esc_bytype[item.first] = t;
             }
         }
         return esc_bytype.size();
@@ -275,6 +300,7 @@ protected:
     SlavesMap   zombies;
     
     Rid2PosMap  rid2pos;
+    Pos2RidMap  pos2rid;
     YAML::Node  root_cfg;
 
 private:

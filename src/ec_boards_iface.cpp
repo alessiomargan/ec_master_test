@@ -78,6 +78,7 @@ void Ec_Boards_ctrl::factory_board(void) {
             mc_slave->print_info();
             if (rid != -1) {
                 rid2pos[rid] = i;
+		pos2rid[i] = rid;
             }
         }
         ///////////////////////////////////////////////////
@@ -95,6 +96,7 @@ void Ec_Boards_ctrl::factory_board(void) {
             mc_slave->print_info();
             if (rid != -1) {
                 rid2pos[rid] = i;
+		pos2rid[i] = rid;
             }
         }
         ///////////////////////////////////////////////////
@@ -112,6 +114,7 @@ void Ec_Boards_ctrl::factory_board(void) {
             ft_slave->print_info();
             if (rid != -1) {
                 rid2pos[rid] = i;
+		pos2rid[i] = rid;
             }
         }
         ///////////////////////////////////////////////////

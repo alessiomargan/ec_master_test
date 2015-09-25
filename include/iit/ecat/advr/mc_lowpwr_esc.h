@@ -214,6 +214,7 @@ public:
 
     virtual int init(const YAML::Node & root_cfg) {
 
+	std::string esc_conf_key;
         Joint_robot_id = -1;
 
         try {
@@ -230,15 +231,14 @@ public:
 
         if ( Joint_robot_id > 0 ) {
             try {
-                std::string esc_conf_key = std::string("LpESC_"+std::to_string(Joint_robot_id));
-                if ( root_cfg[esc_conf_key] ) {
-                    _sgn = root_cfg[esc_conf_key]["sign"].as<int>(); 
-                    _offset = root_cfg[esc_conf_key]["pos_offset"].as<float>();
-                    _offset = DEG2RAD(_offset);
-                } else {
-                    DPRINTF("NO config for  %s in %s\n", esc_conf_key.c_str(), __PRETTY_FUNCTION__);
-                    return EC_BOARD_KEY_NOT_FOUND;
-                }
+                esc_conf_key = std::string("LpESC_"+std::to_string(Joint_robot_id));
+		if ( read_conf(esc_conf_key, root_cfg) != EC_WRP_OK ) {
+		    esc_conf_key = std::string("LpESC_X");
+		    if ( read_conf(esc_conf_key, root_cfg) != EC_WRP_OK ) {
+			DPRINTF("NO config for LpESC_%d in %s\n", Joint_robot_id, __PRETTY_FUNCTION__);
+			return EC_BOARD_KEY_NOT_FOUND;
+		    }
+		}
             } catch (YAML::KeyNotFound &e) {
                 DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
                 return EC_BOARD_KEY_NOT_FOUND;
@@ -351,6 +351,21 @@ public:
 
 private:
 
+    int read_conf(std::string conf_key, const YAML::Node & root_cfg) {
+	
+	if ( ! root_cfg[conf_key] ) {
+    	    return EC_BOARD_KEY_NOT_FOUND;
+	}
+	    
+	DPRINTF("Using config %s\n", conf_key.c_str());
+	    
+	_sgn = root_cfg[conf_key]["sign"].as<int>(); 
+	_offset = root_cfg[conf_key]["pos_offset"].as<float>();
+	_offset = DEG2RAD(_offset);
+
+	return EC_WRP_OK;
+    }
+    
     int16_t Joint_robot_id;
     
     float   _offset;
