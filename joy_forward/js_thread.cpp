@@ -9,13 +9,13 @@
 #include <sys/stat.h>
 
 #include <iostream>
+#include <sstream>
 
 #include <unistd.h>
 #include <termios.h>
 
-#include <sstream>
-#include <linux/joystick.h>
 
+#include <linux/joystick.h>
 #define JOY_DEV "/dev/input/js0"
 
 #define __XENO__

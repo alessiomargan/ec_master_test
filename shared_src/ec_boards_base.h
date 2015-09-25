@@ -49,6 +49,7 @@ protected :
     uint64_t start_time, tNow, tPre;
     
     iit::ecat::advr::Rid2PosMap	rid2pos;
+    iit::ecat::advr::Pos2RidMap	pos2rid;
     
     std::map<int,float> home;
     std::map<int,float> start_pos;
@@ -64,6 +65,7 @@ inline void Ec_Thread_Boards_base::th_init(void *) {
     }
     // get Robot_Id map 
     rid2pos = get_Rid2PosMap();
+    pos2rid = get_Pos2RidMap();
     
     init_preOP();
     

@@ -34,22 +34,22 @@ void Ec_Boards_sine::init_preOP(void) {
     
     // fill motors map
     get_esc_map_byclass(motors);
-    DPRINTF("found %d <Motor> instance\n");
-    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-	slave_pos = it->first;
-	moto = it->second;
+    DPRINTF("found %lu <Motor> instance\n", motors.size());
+    
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
 	moto->start(CTRL_SET_MIX_POS_MODE);
         moto->getSDO("Min_pos", min_pos);
         moto->getSDO("Max_pos", max_pos);
         moto->getSDO("link_pos", start_pos[slave_pos]); 
         // set home to mid pos
         home[slave_pos] = MID_POS(min_pos,max_pos);
-
     }
     
-    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-	slave_pos = it->first;
-	moto = it->second;
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
 	while ( ! moto->move_to(home[slave_pos], 0.005) ) {
 	    osal_usleep(2000);    
 	}

@@ -17,7 +17,7 @@ static const std::vector<float> homePos = {
 // 16, 17, 18,  19, 20,  21, 22,  23, 24, 25
 
 
-EC_boards_walk::EC_boards_walk(const char* config_yaml) : Ec_Boards_ctrl(config_yaml), InXddp()
+EC_boards_walk::EC_boards_walk(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml), InXddp()
 {
 
     name = "EC_boards_walk";
@@ -32,6 +32,9 @@ EC_boards_walk::EC_boards_walk(const char* config_yaml) : Ec_Boards_ctrl(config_
     priority = sched_get_priority_max(schedpolicy);
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
     
+    // open pipe ... xeno xddp or fifo 
+    InXddp::init("EC_board_input");
+    
 }
 
 EC_boards_walk::~EC_boards_walk()
@@ -39,38 +42,12 @@ EC_boards_walk::~EC_boards_walk()
     iit::ecat::print_stat(s_loop);
 }
 
-void EC_boards_walk::homing(void) {
+void EC_boards_walk::init_preOP(void) {
 
     iit::ecat::advr::LpESC * moto;
     int slave_pos;
     float min_pos, max_pos, velocity;
-    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-	slave_pos = it->first;
-	moto = it->second;
-	moto->start(CTRL_SET_MIX_POS_MODE);
-	moto->getSDO("Min_pos", min_pos);
-	moto->getSDO("Max_pos", max_pos);
-	moto->getSDO("link_pos", start_pos[slave_pos]);
-	
-	// set home to mid pos
-	home[slave_pos] = MID_POS(min_pos,max_pos);
-	while ( ! it->second->move_to(home[slave_pos], 0.002) ) {
-            osal_usleep(1000);    
-        }
-    }
 
-
-}
-
-void EC_boards_walk::th_init(void*)
-{
-    // init Ec_Boards_ctrl
-    if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK) {
-	throw "something wrong";
-    }
-
-    InXddp::init("EC_board_input");
-    
     // get Robot_Id map 
     rid2pos = get_Rid2PosMap();
     
@@ -81,40 +58,31 @@ void EC_boards_walk::th_init(void*)
     assert(rightFoot);
     // get low_power motors
     get_esc_map_bytype(iit::ecat::advr::LO_PWR_DC_MC, motors);
-     
-    homing();
     
-    if ( set_operative() <= 0 ) {
-	throw "something else wrong";
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
+	moto->start(CTRL_SET_MIX_POS_MODE);
+	moto->getSDO("Min_pos", min_pos);
+	moto->getSDO("Max_pos", max_pos);
+	moto->getSDO("link_pos", start_pos[slave_pos]);
+	
+	// set home to mid pos
+	home[slave_pos] = MID_POS(min_pos,max_pos);
     }
     
-    start_time = get_time_ns();
-    tNow, tPre = start_time;
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
+	while ( ! moto->move_to(home[slave_pos], 0.005) ) {
+	    osal_usleep(2000);    
+	}
+    }
+
 }
 
-void EC_boards_walk::th_loop(void*)
-{
-  
-    tNow = get_time_ns();
-    s_loop(tNow - tPre);
-    tPre = tNow;
+void EC_boards_walk::init_OP(void) {
     
-    try {
-	
-	if ( recv_from_slaves() != iit::ecat::advr::EC_BOARD_OK ) {
-	    // TODO
-	    DPRINTF("recv_from_slaves FAIL !\n");
-	    return;
-	}
-	    
-	user_loop();
-
-	send_to_slaves();	
-	
-    } catch (iit::ecat::EscWrpError &e) {
-            std::cout << e.what() << std::endl;
-    }
-            
 }
 
 template<class C>
@@ -187,8 +155,8 @@ int EC_boards_walk::user_loop_walk(void) {
     ////////////////////////////////////////////////////////////
     
     //set_position(_pos, sizeof(_pos));
-    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-	moto =  it->second;
+    for ( auto const& item : motors ) {
+	moto = item.second;
 	motor_pdo_rx = moto->getRxPDO();
 	// pos_ref_fb is the previous reference
 	moto->set_posRef(motor_pdo_rx.pos_ref_fb);

@@ -15,7 +15,6 @@
 #define __EC_BOARDS_BASIC_H__
 
 #include <linux/joystick.h>
-//#include <iit/ecat/advr/pipes.h>
 #include <ec_boards_base.h>
 /**
  */

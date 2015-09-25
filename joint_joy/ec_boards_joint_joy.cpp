@@ -1,8 +1,9 @@
 #include <ec_boards_joint_joy.h>
+#include <coman_robot_id.h>
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
-EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) : Ec_Boards_ctrl(config_yaml), InXddp()
+EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml), InXddp()
 {
 
     name = "EC_boards_joint_joy";
@@ -17,84 +18,60 @@ EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) : Ec_Boards_ct
     priority = sched_get_priority_max(schedpolicy);
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
     
+    // open pipe ... xeno xddp or fifo 
+    InXddp::init("EC_board_input");
 }
 
 EC_boards_joint_joy::~EC_boards_joint_joy()
 {
-    iit::ecat::print_stat(s_loop);
+    
 }
 
-void EC_boards_joint_joy::homing(void) {
+void EC_boards_joint_joy::init_preOP(void) {
 
-    iit::ecat::advr::LpESC * moto;
-    std::map<int, iit::ecat::advr::LpESC*> motors;
-    get_esc_map_bytype(iit::ecat::advr::LO_PWR_DC_MC, motors);
-    
+    iit::ecat::advr::Motor * moto;
     int slave_pos;
-    float min_pos, max_pos, velocity;
-    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-	slave_pos = it->first;
-	moto = it->second;
+    float min_pos, max_pos;
+    
+    //std::map<int, iit::ecat::advr::LpESC*> lp_motors;
+    //get_esc_map_bytype(iit::ecat::advr::LO_PWR_DC_MC, lp_motors);
+    
+    std::vector<int> wrist_rid = std::initializer_list<int> {
+	iit::ecat::advr::coman::LA_WR_1,
+	iit::ecat::advr::coman::LA_WR_2,
+	iit::ecat::advr::coman::LA_WR_3,
+	
+    };
+    
+    // fill motors map
+    //get_esc_map_byclass(motors);
+    get_esc_map_byclass(motors, iit::ecat::advr::coman::robot_left_arm_ids);
+    //get_esc_map_byclass(motors, wrist_rid);
+    DPRINTF("found %lu <Motor> instance\n", motors.size());
+    
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
 	moto->start(CTRL_SET_MIX_POS_MODE);
-	moto->getSDO("Min_pos", min_pos);
-	moto->getSDO("Max_pos", max_pos);
-	moto->getSDO("link_pos", start_pos[slave_pos]);
-	
-	// set home to mid pos
-	home[slave_pos] = MID_POS(min_pos,max_pos);
-	while ( ! it->second->move_to(home[slave_pos], 0.002) ) {
-            osal_usleep(1000);    
-        }
-    }
-
-
-}
-
-void EC_boards_joint_joy::th_init(void*)
-{
-    // init Ec_Boards_ctrl
-    if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK) {
-	throw "something wrong";
-    }
-    // get Robot_Id map 
-    rid2pos = get_Rid2PosMap();
-    
-    InXddp::init("EC_board_input");
-    
-    // start controller
-    homing();
-    
-    if ( set_operative() <= 0 ) {
-	throw "something else wrong";
+        moto->getSDO("Min_pos", min_pos);
+        moto->getSDO("Max_pos", max_pos);
+        moto->getSDO("link_pos", start_pos[slave_pos]); 
+        // set home to mid pos
+        home[slave_pos] = MID_POS(min_pos,max_pos);
     }
     
-    start_time = get_time_ns();
-    tNow, tPre = start_time;
-}
-
-void EC_boards_joint_joy::th_loop(void*)
-{
-  
-    tNow = get_time_ns();
-    s_loop(tNow - tPre);
-    tPre = tNow;
-    
-    try {
-	
-	if ( recv_from_slaves() != iit::ecat::advr::EC_BOARD_OK ) {
-	    // TODO
-	    DPRINTF("recv_from_slaves FAIL !\n");
-	    return;
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
+	while ( ! moto->move_to(home[slave_pos], 0.005) ) {
+	    osal_usleep(2000);    
 	}
-	    
-	user_loop();
-
-	send_to_slaves();	
-	
-    } catch (iit::ecat::EscWrpError &e) {
-            std::cout << e.what() << std::endl;
     }
-            
+
+}
+
+void EC_boards_joint_joy::init_OP(void) {
+  
 }
 
 template<class C>
@@ -112,6 +89,7 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
     //DPRINTF(">> %d\n",cmd.value);
 
+#if 0
     //////////////////////////////////////////////////////////////////////
     float ax_value = 0;
     
@@ -151,18 +129,17 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
 	    break;
 		    
     }
-
-		    
     //////////////////////////////////////////////////////////////////////
-    
+#else
+    // [-1..1] / 200 ==> 0.005 rad/ms
+    user_cmd = ((float)cmd.motion.ry / (350.0)) / 200;
+#endif
+
     return bytes;
 }
 
 int EC_boards_joint_joy::user_loop(void) {
 
-    std::map<int, iit::ecat::advr::LpESC*> motors;
-    get_esc_map_bytype(iit::ecat::advr::LO_PWR_DC_MC, motors);
-    
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::LpESC::pdo_rx_t motor_pdo_rx;
     
@@ -173,8 +150,8 @@ int EC_boards_joint_joy::user_loop(void) {
 	DPRINTF(">> %f\n", ds);
     }
 
-    for ( auto it = motors.begin(); it != motors.end(); it++ ) {
-	moto =  it->second;
+    for ( auto const& item : motors ) {
+	moto =  item.second;
 	motor_pdo_rx = moto->getRxPDO();
 	// pos_ref_fb is the previous reference
 	moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);

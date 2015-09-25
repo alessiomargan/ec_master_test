@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sine_joint)
-
+get_filename_component(PRJ_DIR ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${PRJ_DIR})
 
 include_directories(include)
 

@@ -36,6 +36,15 @@ firmware_update:
     bin_file: FT6.bin
     passwd: 0xbeef
 
+#############################
+# GENERIC LpESC config
+#############################
+
+LpESC_X:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [20.0 , 0.0 , 1.0]
 
 #############################
 # LOWER BODY
