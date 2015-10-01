@@ -39,16 +39,16 @@ namespace advr {
 
     
 struct status_bits {
-    uint16_t  key_status:1;
-    uint16_t  vsc_status:1;
-    uint16_t  cpu_rel_status:1;
-    uint16_t  prech_rel_status:1;
-    uint16_t  main_rel_status:1;
-    uint16_t  fan_1_status:1;
-    uint16_t  fan_2_status:1;
-    uint16_t  spare:1;
-    uint16_t  state_machine_status:8;
-    };
+    uint8_t main_rel_status:1;
+    uint8_t pwr_sw_status:1;
+    uint8_t prech_rel_status:1;
+    uint8_t spare_bit_4:1;
+    uint8_t spare_bit_5:1;
+    uint8_t spare_bit_6:1;
+    uint8_t spare_bit_7:1;
+    uint8_t spare_bit_8:1;
+    uint8_t status_fsm;
+};
 
 typedef union{
     uint16_t all;
@@ -56,31 +56,29 @@ typedef union{
 } status_t;
 
  
-struct PowEscPdoTypes {
+struct PowCmnEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
         uint16_t    master_command;
-        uint16_t    fault_ack;
+        //uint16_t    fault_ack;
         uint16_t    ts;
     } __attribute__((__packed__));
     
     // RX  slave_output -- master input
     struct pdo_rx {
+        float       temperature;
+        float       v_batt;
         status_t    status;
-        uint16_t    board_temp;         // °C
-        uint16_t    battery_temp;       // °C
-        uint16_t    battery_volt;       // V
-        int16_t     battery_curr;       // A
-        int16_t     load_curr;          // A
-        uint16_t    fault;
         uint16_t    rtt;                // us
         int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "0x%02X\t%d\t%d\t%d", status.all,board_temp,board_temp,rtt);
+            return snprintf(buff, size, "%f\t%f\t0x%02X\t%d", temperature, v_batt, status.all, rtt);
         }
         void fprint(FILE *fp) {
-            fprintf(fp, "0x%02X\t%d\t%d\t%d", status.all,board_temp,board_temp,rtt);
+            fprintf(fp, "%f\t%f\t0x%02X\t%d", temperature, v_batt, status.all, rtt);
         }
         void to_map(jmap_t & jpdo) {
+            JPDO(temperature);
+            JPDO(v_batt);
             JPDO(status.all);
             JPDO(rtt);
         }
@@ -88,40 +86,32 @@ struct PowEscPdoTypes {
 };
 
 
-struct PowEscSdoTypes {
+struct PowCmnEscSdoTypes {
     // flash param
     //...
     // ram param
     char        firmware_version[8];
+    float       temperature_filtered;
+    float       v_batt_filtered;
+    float       v_pack_filtered;
     uint16_t    ctrl_status_cmd;
     uint16_t    ctrl_status_cmd_ack;
-    uint16_t    flash_params_cmd;
-    uint16_t    flash_params_cmd_ack;
-    uint16_t    v_pack_adc;
-    uint16_t    v_batt_adc;
-    uint16_t    i_batt_adc;
-    uint16_t    i_load_adc;
-    uint16_t    t_batt_adc;
-    uint16_t    t_board_adc;
-    uint16_t    FSM;
-    float       v_batt_filt;
-    float       v_pack_filt;
 };
 
-class PowESC :
-    public BasicEscWrapper<PowEscPdoTypes,PowEscSdoTypes>,
-    public PDO_log<PowEscPdoTypes::pdo_rx>,
-    public XDDP_pipe<PowEscPdoTypes::pdo_rx,PowEscPdoTypes::pdo_tx>
+class PowCmnESC :
+    public BasicEscWrapper<PowCmnEscPdoTypes,PowCmnEscSdoTypes>,
+    public PDO_log<PowCmnEscPdoTypes::pdo_rx>,
+    public XDDP_pipe<PowCmnEscPdoTypes::pdo_rx,PowCmnEscPdoTypes::pdo_tx>
 {
 
 public:
-    typedef BasicEscWrapper<PowEscPdoTypes,PowEscSdoTypes>    Base;
-    typedef PDO_log<PowEscPdoTypes::pdo_rx>                    Log;
-    typedef XDDP_pipe<PowEscPdoTypes::pdo_rx,PowEscPdoTypes::pdo_tx> Xddp;
+    typedef BasicEscWrapper<PowCmnEscPdoTypes,PowCmnEscSdoTypes>    Base;
+    typedef PDO_log<PowCmnEscPdoTypes::pdo_rx>                    Log;
+    typedef XDDP_pipe<PowCmnEscPdoTypes::pdo_rx,PowCmnEscPdoTypes::pdo_tx> Xddp;
 
-    PowESC(const ec_slavet& slave_descriptor) :
+    PowCmnESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/PowESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
+        Log(std::string("/tmp/PowCmnESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
         Xddp()
     {
         _start_log = false;
@@ -129,7 +119,7 @@ public:
 
     }
 
-    virtual ~PowESC(void) {
+    virtual ~PowCmnESC(void) {
         delete [] SDOs;
         DPRINTF("~%s %d\n", typeid(this).name(), position);
         print_stat(s_rtt);
@@ -155,28 +145,7 @@ public:
     void handle_status(void) {
     
         static status_t status;
-        
-        if ( rx_pdo.status.bit.key_status != status.bit.key_status ) {
-            // parking and shutdown
-            if (rx_pdo.status.bit.key_status) { DPRINTF("KEY ON\n");  
-            } else { DPRINTF("KEY OFF\n"); }
-        }
-
-        if ( rx_pdo.status.bit.vsc_status != status.bit.vsc_status ) {
-            // red button
-            if (rx_pdo.status.bit.vsc_status) { DPRINTF("VCS ON press \n");  
-            } else { DPRINTF("VCS OFF release\n"); }
-        }
-                
-        if (osal_timer_is_expired(&motor_on_timer)) {
-            if ( rx_pdo.status.bit.state_machine_status == RUN_WAIT_POWER_MOTORS_COMMAND_FSM ) {
-                // 
-                set_ctrl_status_X(this, CTRL_POWER_MOTORS_ON);
-                // set 5 sec to check again
-                osal_timer_start(&motor_on_timer, 5000000);
-            }
-        }
-        
+     
         status.all = rx_pdo.status.all;
     }
     
@@ -206,9 +175,9 @@ public:
         }
 
         // set filename with robot_id
-        log_filename = std::string("/tmp/PowESC_pos"+std::to_string(position)+"_log.txt");
+        log_filename = std::string("/tmp/PowCmnESC_pos"+std::to_string(position)+"_log.txt");
         // open pipe with robot_id
-        Xddp::init(std::string("PowESC_pos"+std::to_string(position)));
+        Xddp::init(std::string("PowCmnESC_pos"+std::to_string(position)));
         
         // we log when receive PDOs
         start_log(true);
@@ -216,10 +185,6 @@ public:
         osal_timer_start(&motor_on_timer, 0);
         readSDO_byname("status");
         handle_status();
-        
-        set_ctrl_status_X(this, CTRL_FAN_1_ON);
-        set_ctrl_status_X(this, CTRL_FAN_2_ON);
-        
         
         return EC_BOARD_OK;
     }
