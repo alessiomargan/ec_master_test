@@ -20,10 +20,6 @@ namespace ecat {
 namespace advr {
 
 // master_command
-#define CTRL_FAN_1_ON           0x0026
-#define CTRL_FAN_1_OFF          0x0062
-#define CTRL_FAN_2_ON           0x0027
-#define CTRL_FAN_2_OFF          0x0072
 #define CTRL_POWER_MOTORS_ON    0x0048
 #define CTRL_POWER_MOTORS_OFF   0x0084
 #define CTRL_POWER_ROBOT_OFF    0x00DD
@@ -38,7 +34,7 @@ namespace advr {
 #define RUN_POWER_ROBOT_OFF_FSM             5
 
     
-struct status_bits {
+struct status_cmn_pow_bits {
     uint8_t main_rel_status:1;
     uint8_t pwr_sw_status:1;
     uint8_t prech_rel_status:1;
@@ -52,24 +48,23 @@ struct status_bits {
 
 typedef union{
     uint16_t all;
-    struct status_bits bit;
-} status_t;
+    struct status_cmn_pow_bits bit;
+} status_cmn_pow_t;
 
  
 struct PowCmnEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
         uint16_t    master_command;
-        //uint16_t    fault_ack;
         uint16_t    ts;
     } __attribute__((__packed__));
     
     // RX  slave_output -- master input
     struct pdo_rx {
-        float       temperature;
-        float       v_batt;
-        status_t    status;
-        uint16_t    rtt;                // us
+        float       		temperature;
+	float			v_batt;
+        status_cmn_pow_t	status;
+        uint16_t		rtt;  // us
         int sprint(char *buff, size_t size) {
             return snprintf(buff, size, "%f\t%f\t0x%02X\t%d", temperature, v_batt, status.all, rtt);
         }
@@ -144,7 +139,7 @@ public:
 
     void handle_status(void) {
     
-        static status_t status;
+        static status_cmn_pow_t status;
      
         status.all = rx_pdo.status.all;
     }
@@ -160,7 +155,7 @@ public:
  
     virtual const objd_t * get_SDOs() { return SDOs; }
     virtual void init_SDOs(void);
-    virtual uint16_t get_ESC_type() { return POW_BOARD; }
+    virtual uint16_t get_ESC_type() { return POW_CMN_BOARD; }
 
     virtual int init(const YAML::Node & root_cfg) {
 

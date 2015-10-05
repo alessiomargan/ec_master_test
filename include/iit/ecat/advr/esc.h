@@ -60,6 +60,7 @@ enum Board_type : uint16_t
     LO_PWR_DC_MC    = 0x12,
     FT6             = 0x20,
     POW_BOARD       = 0x30,
+    POW_CMN_BOARD   = 0x31,
     HUB             = 0x100,
     HUB_IO          = 0x101,
     EC_TEST         = 1234,

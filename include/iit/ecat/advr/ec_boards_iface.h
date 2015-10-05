@@ -22,6 +22,7 @@
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/hub_esc.h>
 #include <iit/ecat/advr/power_board.h>
+#include <iit/ecat/advr/power_coman_board.h>
 
 #include <string>
 #include <mutex>

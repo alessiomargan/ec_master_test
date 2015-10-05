@@ -130,6 +130,18 @@ void Ec_Boards_ctrl::factory_board(void) {
             slaves[i] = iit::ecat::ESCPtr(pow);            
         }
         ///////////////////////////////////////////////////
+        // Pow coman board    
+        else if ( ec_slave[i].eep_id == POW_CMN_BOARD ) {
+
+            PowCmnESC * pow = new PowCmnESC(ec_slave[i]);
+            if ( pow->init(root_cfg) != EC_BOARD_OK ) {
+                // skip this slave
+                zombies[i] = iit::ecat::ESCPtr(pow);
+                continue;
+            }
+            slaves[i] = iit::ecat::ESCPtr(pow);            
+        }
+        ///////////////////////////////////////////////////
         // Hubs
         else if ( ec_slave[i].eep_id == HUB ) {
 
