@@ -16,7 +16,7 @@
 
 #include <spnav.h>
 
-#define JOY_DEV "spnav"
+#define DEFAULT_PIPE_NAME "EC_board_nav_input"
 
 #ifdef __XENO__
     static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
@@ -54,14 +54,14 @@ static void print_spnav_ev(spnav_event &sev) {
 }    
 
     
-void * spnav_nrt_thread(void *)
+void * spnav_nrt_thread(void * arg)
 {
     int nbytes, fd_in;
     char c;
     std::string line;
     spnav_event sev;
     
-    std::string pipe_name("EC_board_input");
+    std::string pipe_name((char*)arg);
     std::string pipe(pipe_prefix + pipe_name);
     xddp_sock = open(pipe.c_str(), O_WRONLY);
 
@@ -96,11 +96,20 @@ void * spnav_nrt_thread(void *)
 }
 
 
-int main(void) {
+int main(int argc, char *argv[]) try {
 
     struct sched_param param;
     int policy = SCHED_OTHER;
+    char * pipe_arg = 0;
+    
+    if ( argc < 2 ) {
+	pipe_arg = (char*)DEFAULT_PIPE_NAME;
+    } else if ( argc == 2 ) {
+	pipe_arg = argv[1];    
+    }
 
+    printf("Using pipe name %s\n", pipe_arg);
+    
     set_signal_handler();
 
     param.sched_priority = sched_get_priority_max(policy);
@@ -109,7 +118,12 @@ int main(void) {
             exit(-1);
     }
 
-    spnav_nrt_thread(0);
+    spnav_nrt_thread(pipe_arg);
     
     return 0;
+    
+} catch (std::exception& e) {
+
+    std::cout << "Main catch .... " <<  e.what() << std::endl;
+
 }

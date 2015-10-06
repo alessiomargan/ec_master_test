@@ -18,7 +18,6 @@
 #include <linux/joystick.h>
 #define JOY_DEV "/dev/input/js0"
 
-#define __XENO__
 #ifdef __XENO__
     static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
 #else
@@ -60,7 +59,7 @@ void * js_nrt_thread(void *)
     std::string line;
     struct js_event js_ev;
 
-     std::string pipe_name("EC_board_input");
+     std::string pipe_name("EC_board_js_input");
      std::string pipe(pipe_prefix + pipe_name);
      xddp_sock = open(pipe.c_str(), O_WRONLY);
 

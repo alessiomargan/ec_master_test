@@ -3,7 +3,10 @@
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
-EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml), InXddp()
+EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) :
+    Ec_Thread_Boards_base(config_yaml),
+    JsInXddp(),
+    NavInXddp()
 {
 
     name = "EC_boards_joint_joy";
@@ -19,7 +22,9 @@ EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) : Ec_Thread_Bo
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
     
     // open pipe ... xeno xddp or fifo 
-    InXddp::init("EC_board_input");
+    JsInXddp::init("EC_board_js_input");
+    NavInXddp::init("EC_board_nav_input");
+    
 }
 
 EC_boards_joint_joy::~EC_boards_joint_joy()
@@ -44,8 +49,8 @@ void EC_boards_joint_joy::init_preOP(void) {
     };
     
     // fill motors map
-    //get_esc_map_byclass(motors);
-    get_esc_map_byclass(motors, iit::ecat::advr::coman::robot_left_arm_ids);
+    get_esc_map_byclass(motors);
+    //get_esc_map_byclass(motors, iit::ecat::advr::coman::robot_left_arm_ids);
     //get_esc_map_byclass(motors, wrist_rid);
     DPRINTF("found %lu <Motor> instance\n", motors.size());
     
@@ -79,16 +84,48 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
     
     static int	bytes_cnt;
     int		bytes;
-    input_t	cmd;
-
-    if ( (bytes=xddp_read(cmd)) <= 0 ) {
-	return bytes;
+    
+    spnav_input_t	nav_cmd;
+    js_input_t		js_cmd;
+    
+    if ( (bytes = NavInXddp::xddp_read(nav_cmd)) > 0 ) {
+	//user_cmd = process_spnav_input(nav_cmd);
+	// [-1.0 .. 1.0] / 200 ==> 0.005 rad/ms
+	user_cmd = ((float)nav_cmd.motion.ry / (350.0)) / 200 ;
     }
     
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
-    //DPRINTF(">> %d\n",cmd.value);
 
+    if ( (bytes = JsInXddp::xddp_read(js_cmd)) > 0 ) {
+	//user_cmd = process_js_input(js_cmd);
+	switch (js_cmd.type & ~JS_EVENT_INIT)
+	{
+	    case JS_EVENT_AXIS:
+		switch ( js_cmd.number ) {
+		    case 0 :
+			// [-1.0 .. 1.0] / 500 ==> [-0.002 .. 0.002] rads
+			user_cmd = ((float)js_cmd.value/(32767.0)) / 500 ;
+			break;
+		    case 2 :
+			// [-1.0 .. 1.0] / 250 ==> [-0.004 .. 0.004] rads
+			user_cmd = ((float)js_cmd.value/(32767.0)) / 250 ;
+			break;
+		    default:
+			break;
+		}
+		break;
+            
+	    default:
+		break;
+		    
+	}
+	
+    }
+
+    bytes_cnt += bytes;
+    //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
+    
 #if 0
     //////////////////////////////////////////////////////////////////////
     float ax_value = 0;
@@ -132,7 +169,7 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
     //////////////////////////////////////////////////////////////////////
 #else
     // [-1..1] / 200 ==> 0.005 rad/ms
-    user_cmd = ((float)cmd.motion.ry / (350.0)) / 200;
+    //user_cmd = ((float)nav_cmd.motion.ry / (350.0)) / 200;
 #endif
 
     return bytes;

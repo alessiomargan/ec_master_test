@@ -22,14 +22,17 @@
 /**
  */
 
-//typedef struct js_event	input_t;
-typedef spnav_event 	input_t;
+typedef struct js_event	js_input_t;
+typedef spnav_event	spnav_input_t;
 
-typedef XDDP_pipe<input_t,input_t> 	InXddp;
+typedef XDDP_pipe<js_input_t,js_input_t> 	JsInXddp;
+typedef XDDP_pipe<spnav_input_t,spnav_input_t> 	NavInXddp;
 
 class EC_boards_joint_joy :
     public Ec_Thread_Boards_base,
-    public InXddp
+    public JsInXddp,
+    public NavInXddp
+    
 {
 public:
     
