@@ -47,6 +47,7 @@ private :
     
     virtual void init_preOP(void);
     virtual void init_OP(void);
+    bool go_there(std::map<int,float> target_pos, float eps);
     
     std::map<int, iit::ecat::advr::Motor*> motors;
     

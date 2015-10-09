@@ -38,9 +38,6 @@ void EC_boards_joint_joy::init_preOP(void) {
     int slave_pos;
     float min_pos, max_pos;
     
-    //std::map<int, iit::ecat::advr::LpESC*> lp_motors;
-    //get_esc_map_bytype(iit::ecat::advr::LO_PWR_DC_MC, lp_motors);
-    
     std::vector<int> wrist_rid = std::initializer_list<int> {
 	iit::ecat::advr::coman::LA_WR_1,
 	iit::ecat::advr::coman::LA_WR_2,
@@ -52,31 +49,72 @@ void EC_boards_joint_joy::init_preOP(void) {
     get_esc_map_byclass(motors);
     //get_esc_map_byclass(motors, iit::ecat::advr::coman::robot_left_arm_ids);
     //get_esc_map_byclass(motors, wrist_rid);
+    
     DPRINTF("found %lu <Motor> instance\n", motors.size());
     
     for ( auto const& item : motors ) {
 	slave_pos = item.first;
 	moto = item.second;
-	moto->start(CTRL_SET_MIX_POS_MODE);
-        moto->getSDO("Min_pos", min_pos);
+	moto->getSDO("Min_pos", min_pos);
         moto->getSDO("Max_pos", max_pos);
         moto->getSDO("link_pos", start_pos[slave_pos]); 
-        // set home to mid pos
+        // home to mid pos
         home[slave_pos] = MID_POS(min_pos,max_pos);
+	// set pos to current position 
+	moto->set_posRef(start_pos[slave_pos]);
+	// start controller
+	moto->start(CTRL_SET_MIX_POS_MODE);
     }
     
     for ( auto const& item : motors ) {
 	slave_pos = item.first;
 	moto = item.second;
+#if 0
 	while ( ! moto->move_to(home[slave_pos], 0.005) ) {
 	    osal_usleep(2000);    
 	}
+#endif
+	
     }
 
 }
 
+bool EC_boards_joint_joy::go_there(std::map<int,float> target_pos, float eps) {
+
+    bool all_true = true;
+    float pos_ref;
+    int slave_pos;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::LpESC::pdo_rx_t motor_pdo_rx;
+    std::vector<bool> truth_vect(motors.size()-1);
+        
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto =  item.second;
+	
+	// check in the target_pos map if the current slave_pos exist
+	try { pos_ref = target_pos.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) { continue; }
+	
+	motor_pdo_rx = moto->getRxPDO();
+	moto->set_posRef(pos_ref);
+	
+	truth_vect.push_back(
+	    abs(motor_pdo_rx.link_pos  - pos_ref) <= eps ||
+	    abs(motor_pdo_rx.motor_pos - pos_ref) <= eps );
+    }
+    
+    //DPRINTF("---\n");
+    std::for_each(truth_vect.begin(),truth_vect.end(),[&](bool b){
+	all_true &= b;
+	//DPRINTF("%d\n",b);
+    });
+
+    return all_true; 
+}
+
 void EC_boards_joint_joy::init_OP(void) {
-  
+    
 }
 
 template<class C>
@@ -120,7 +158,6 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
 		break;
 		    
 	}
-	
     }
 
     bytes_cnt += bytes;
@@ -180,18 +217,37 @@ int EC_boards_joint_joy::user_loop(void) {
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::LpESC::pdo_rx_t motor_pdo_rx;
     
+    static int user_state = HOMING;
     static float ds; 
-
+    
     //
     if ( user_input(ds) > 0 ) {
 	DPRINTF(">> %f\n", ds);
     }
-
-    for ( auto const& item : motors ) {
-	moto =  item.second;
-	motor_pdo_rx = moto->getRxPDO();
-	// pos_ref_fb is the previous reference
-	moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
+    
+    //
+    switch (user_state) {
+	
+	case HOMING :
+	
+	    if ( go_there(home, 0.001) ) {
+		user_state = MOVING;
+		DPRINTF("At Home ....\n");
+	    }
+	    break;
+	    
+	case MOVING :
+    
+	    for ( auto const& item : motors ) {
+		moto =  item.second;
+		motor_pdo_rx = moto->getRxPDO();
+		// pos_ref_fb is the previous reference
+		moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
+	    }
+	    break;
+	    
+	default:
+	    break;
     }
     
 #if 0
