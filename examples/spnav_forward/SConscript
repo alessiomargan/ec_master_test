@@ -1,0 +1,13 @@
+js = Environment()
+
+libs = Split("""
+m
+dl
+stdc++
+spnav
+""")
+
+js.Append(CCFLAGS = ['-std=c++11','-g','-O3'])
+
+js.Program( target = 'spnav_console', source = ['spnav_thread.cpp'] )
+
