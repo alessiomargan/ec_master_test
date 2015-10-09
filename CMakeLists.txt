@@ -31,6 +31,8 @@ set(COMMON_LIBS
     iitecat_iface
     soem
     pthread
+    zmq
+    jsoncpp
 )
 
 optional_build(basic 		examples/basic		ON)

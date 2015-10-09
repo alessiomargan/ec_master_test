@@ -23,13 +23,6 @@
 /**
  */
 
-enum user_state : int
-{ 
-    // waist
-    HOMING	= 1,
-    MOVING,
-};
-
 
 class Ec_Thread_Boards_base :
     public Thread_hook,
