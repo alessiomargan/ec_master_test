@@ -14,14 +14,28 @@ if ( ${ENABLE_XENO} )
 endif()
 
 set(SHARED_SRC ${CMAKE_CURRENT_SOURCE_DIR}/shared_src) 
+add_library(shared_utils SHARED
+    ${SHARED_SRC}/test_common.cpp
+)
+install(TARGETS shared_utils DESTINATION lib)
 
-include_directories("${SHARED_SRC}")
+include_directories("${SHARED_SRC}/include")
+link_directories("${SHARED_SRC}")
+
 include_directories("${COMAN_ROOT}/include")
 link_directories("${COMAN_ROOT}/lib")
 
-optional_build(basic 		basic		OFF)
-optional_build(sine_joint 	sine_joint	OFF)
-optional_build(joint_joy 	joint_joy	OFF)
-optional_build(coman_walk	coman_walk	OFF)
-optional_build(joy_forward 	joy_forward	OFF)
-optional_build(spnav_forward 	spnav_forward	OFF)
+set(COMMON_LIBS
+    shared_utils
+    walkman_master
+    iitecat_iface
+    soem
+    pthread
+)
+
+optional_build(basic 		examples/basic		ON)
+optional_build(sine_joint 	examples/sine_joint	OFF)
+optional_build(joint_joy 	examples/joint_joy	OFF)
+optional_build(coman_walk	examples/coman_walk	OFF)
+optional_build(joy_forward 	examples/joy_forward	OFF)
+optional_build(spnav_forward 	examples/spnav_forward	OFF)

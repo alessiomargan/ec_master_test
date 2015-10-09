@@ -5,7 +5,7 @@ project(${PRJ_DIR})
 include_directories(include)
 
 add_executable(${PROJECT_NAME}
-js_thread.cpp
+    js_thread.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} pthread)
