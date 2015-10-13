@@ -9,7 +9,12 @@
 
 #include <string>
 
-static const std::string pipe_prefix("/tmp/");
+#if __XENO__
+    static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
+#else
+    static const std::string pipe_prefix("/tmp/");
+#endif
+
 
 #ifdef __XENO__
     #include <iit/ecat/advr/rt_ipc.h>

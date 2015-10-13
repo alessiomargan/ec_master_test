@@ -50,10 +50,10 @@ int main(int argc, char **argv)
     else { delete zpub; }
     
     while (run_loop) {
-        for (auto it = zmap.begin(); it != zmap.end(); it++) { it->second->publish(); }
+	for ( auto const& item : zmap ) { item.second->publish(); }
     }
     
-    for (auto it = zmap.begin(); it != zmap.end(); it++) { delete it->second; }
+    for ( auto const& item : zmap ) { delete item.second; }
     
     return 1;
 }

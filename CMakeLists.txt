@@ -111,12 +111,12 @@ add_executable(
 
 target_link_libraries(firm_update walkman_master pthread yaml-cpp)
 
-add_executable(
-     zpub
-     test/test_common.cpp
-     test/zpub.cpp)
-
-target_link_libraries(zpub zmq jsoncpp pthread)
+# add_executable(
+#      zpub
+#      test/test_common.cpp
+#      test/zpub.cpp)
+# 
+# target_link_libraries(zpub zmq jsoncpp pthread)
 
 if( NOT (ENABLE_XENO AND RTNET_INCLUDE_DIR) )
     add_custom_command(TARGET ft_ati_test POST_BUILD COMMAND set_cap.sh ft_ati_test COMMENT set_cap)
