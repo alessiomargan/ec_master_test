@@ -16,7 +16,6 @@
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -106,19 +105,16 @@ struct Ft6EscSdoTypes {
 
 class Ft6ESC :
     public BasicEscWrapper<Ft6EscPdoTypes, Ft6EscSdoTypes>, 
-    public PDO_log<Ft6EscPdoTypes::pdo_rx>,
-    public XDDP_pipe<Ft6EscPdoTypes::pdo_rx, Ft6EscPdoTypes::pdo_tx>
+    public PDO_log<Ft6EscPdoTypes::pdo_rx>
 {
 public:
     typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes>              Base;
     typedef PDO_log<Ft6EscPdoTypes::pdo_rx>                             Log;
-    typedef XDDP_pipe<Ft6EscPdoTypes::pdo_rx,Ft6EscPdoTypes::pdo_tx>    Xddp;
 
 public:
     Ft6ESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/Ft6ESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp()
+        Log(std::string("/tmp/Ft6ESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     { }
 
     virtual ~Ft6ESC(void) {
@@ -166,7 +162,6 @@ public:
             push_back(log);
         }
 
-        xddp_write(rx_pdo);
     }
 
     int16_t get_robot_id() {
@@ -210,7 +205,6 @@ public:
 #endif
         // set filename with robot_id
         log_filename = std::string("/tmp/Ft6ESC_"+std::to_string(sdo.sensor_robot_id)+"_log.txt");
-        Xddp::init(std::string("Ft6ESC_"+std::to_string(sdo.sensor_robot_id)));
     
         // we log when receive PDOs
         start_log(true);

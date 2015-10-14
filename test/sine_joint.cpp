@@ -146,6 +146,7 @@ int main(int argc, char **argv)
     McEscPdoTypes::pdo_tx mc_pdo_tx;
     char buffer[1024];
     std::map<int, PowESC*> pow_boards;
+    std::map<int, PowComanESC*> powCmn_boards;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -157,6 +158,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    ec_boards_ctrl->get_esc_map_bytype(POW_CMN_BOARD, powCmn_boards);
     
     if ( ec_boards_ctrl->get_esc_map_bytype(POW_BOARD, pow_boards) == 1 ) {
         

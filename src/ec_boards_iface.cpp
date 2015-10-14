@@ -133,7 +133,7 @@ void Ec_Boards_ctrl::factory_board(void) {
         // Pow coman board    
         else if ( ec_slave[i].eep_id == POW_CMN_BOARD ) {
 
-            PowCmnESC * pow = new PowCmnESC(ec_slave[i]);
+            PowComanESC * pow = new PowComanESC(ec_slave[i]);
             if ( pow->init(root_cfg) != EC_BOARD_OK ) {
                 // skip this slave
                 zombies[i] = iit::ecat::ESCPtr(pow);
@@ -183,14 +183,12 @@ void Ec_Boards_ctrl::factory_board(void) {
         DPRINTF("\n");
     }
 }
-
-   
+  
 int Ec_Boards_ctrl::configure_boards(void) {
 
     return slaves.size();
 
 }
-
 
 void Ec_Boards_ctrl::start_motors(int control_type)
 {

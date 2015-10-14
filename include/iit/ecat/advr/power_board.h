@@ -9,7 +9,6 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <iit/ecat/advr/pipes.h>
 
 #include <map>
 #include <string>
@@ -110,22 +109,18 @@ struct PowEscSdoTypes {
 
 class PowESC :
     public BasicEscWrapper<PowEscPdoTypes,PowEscSdoTypes>,
-    public PDO_log<PowEscPdoTypes::pdo_rx>,
-    public XDDP_pipe<PowEscPdoTypes::pdo_rx,PowEscPdoTypes::pdo_tx>
+    public PDO_log<PowEscPdoTypes::pdo_rx>
 {
 
 public:
     typedef BasicEscWrapper<PowEscPdoTypes,PowEscSdoTypes>    Base;
     typedef PDO_log<PowEscPdoTypes::pdo_rx>                    Log;
-    typedef XDDP_pipe<PowEscPdoTypes::pdo_rx,PowEscPdoTypes::pdo_tx> Xddp;
 
     PowESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/PowESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp()
+        Log(std::string("/tmp/PowESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
         _start_log = false;
-        //_actual_state = EC_STATE_PRE_OP;
 
     }
 
@@ -144,12 +139,44 @@ public:
 
         handle_status();
         
-        xddp_write(rx_pdo);
-
         if ( _start_log ) {
             push_back(rx_pdo);
         }
 
+    }
+
+    virtual void on_writePDO(void) {
+        tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
+    }
+ 
+    virtual const objd_t * get_SDOs() { return SDOs; }
+    virtual uint16_t get_ESC_type() { return POW_BOARD; }
+
+    void init_SDOs(void);
+    
+    int init(const YAML::Node & root_cfg) {
+
+        try {
+            init_SDOs();
+            init_sdo_lookup();
+
+        } catch (EscWrpError &e ) {
+
+            DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
+            return EC_BOARD_INIT_SDO_FAIL;
+        }
+
+        // we log when receive PDOs
+        start_log(true);
+
+        osal_timer_start(&motor_on_timer, 0);
+        readSDO_byname("status");
+        handle_status();
+        
+        set_ctrl_status_X(this, CTRL_FAN_1_ON);
+        set_ctrl_status_X(this, CTRL_FAN_2_ON);
+        
+        return EC_BOARD_OK;
     }
 
     void handle_status(void) {
@@ -184,46 +211,6 @@ public:
         
         return rx_pdo.status.bit.main_rel_status == 1;
     }
-
-    virtual void on_writePDO(void) {
-        tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
-    }
- 
-    virtual const objd_t * get_SDOs() { return SDOs; }
-    virtual void init_SDOs(void);
-    virtual uint16_t get_ESC_type() { return POW_BOARD; }
-
-    virtual int init(const YAML::Node & root_cfg) {
-
-        try {
-            init_SDOs();
-            init_sdo_lookup();
-
-        } catch (EscWrpError &e ) {
-
-            DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
-            return EC_BOARD_INIT_SDO_FAIL;
-        }
-
-        // set filename with robot_id
-        log_filename = std::string("/tmp/PowESC_pos"+std::to_string(position)+"_log.txt");
-        // open pipe with robot_id
-        Xddp::init(std::string("PowESC_pos"+std::to_string(position)));
-        
-        // we log when receive PDOs
-        start_log(true);
-
-        osal_timer_start(&motor_on_timer, 0);
-        readSDO_byname("status");
-        handle_status();
-        
-        set_ctrl_status_X(this, CTRL_FAN_1_ON);
-        set_ctrl_status_X(this, CTRL_FAN_2_ON);
-        
-        
-        return EC_BOARD_OK;
-    }
-
 
 private:
 

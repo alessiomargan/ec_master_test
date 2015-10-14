@@ -208,12 +208,13 @@ public:
     EscWrapper * slave_as_EscWrapper(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? slaves[sPos].get() : NULL;}
     EscWrapper * slave_as_Zombie(uint16_t sPos) { return(zombies.find(sPos) != zombies.end()) ? zombies[sPos].get() : NULL;}
 
-    Motor * slave_as_Motor(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Motor*>(slaves[sPos].get()) : NULL;}
-    //Motor *  slave_as_Motor(uint16_t sPos) { return dynamic_cast<Motor*>(slaves.at(sPos).get()); }
-
-    HpESC *  slave_as_HP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<HpESC*>(slaves[sPos].get()) : NULL;}
-    LpESC *  slave_as_LP(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<LpESC*>(slaves[sPos].get()) : NULL;}
-    Ft6ESC * slave_as_FT(uint16_t sPos) { return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Ft6ESC*>(slaves[sPos].get()) : NULL;}
+    template <typename T>
+    T * slave_as(uint16_t sPos)	{ return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<T*>(slaves[sPos].get()) : NULL;}
+    
+    Motor * 	slave_as_Motor(uint16_t sPos)	{ return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Motor*>(slaves[sPos].get()) : NULL;}
+    HpESC *  	slave_as_HP(uint16_t sPos)	{ return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<HpESC*>(slaves[sPos].get()) : NULL;}
+    LpESC *  	slave_as_LP(uint16_t sPos)	{ return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<LpESC*>(slaves[sPos].get()) : NULL;}
+    Ft6ESC * 	slave_as_FT(uint16_t sPos)	{ return(slaves.find(sPos) != slaves.end()) ? dynamic_cast<Ft6ESC*>(slaves[sPos].get()) : NULL;}
 
     const YAML::Node & get_config_YAML_Node(void) { return root_cfg; }
 
@@ -226,67 +227,16 @@ public:
     //template <typename T, typename A>
     //int get_esc_bytype(uint16_t ESC_type, std::vector<T,A> &esc_bytype) {
     template <typename T>
-    int get_esc_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
-
-        esc_bytype.clear();
-        for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
-            EscWrapper * esc = it->second.get();
-            if ( esc->get_ESC_type() == ESC_type ) {
-                //esc_bytype.push_back( dynamic_cast<T>(it->second.get()) );
-                esc_bytype[it->first] = dynamic_cast<T>(it->second.get());
-            }
-        }
-        return esc_bytype.size();
-    }
+    int get_esc_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype);
 
     template <typename T>
-    int get_esc_map_byclass(std::map<int, T> &esc_bytype) {
-
-	EscWrapper * esc;
-	T t;
-        esc_bytype.clear();
-        for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
-            EscWrapper * esc = it->second.get();
-            t = dynamic_cast<T>(esc);
-	    if ( t ) {
-                esc_bytype[it->first] = t;
-            }
-        }
-        return esc_bytype.size();
-    }
+    int get_esc_map_byclass(std::map<int, T> &esc_bytype);
 
     template <typename T>
-    int get_esc_map_byclass(std::map<int, T> &esc_bytype, std::vector<int> rId_vect) {
-
-	EscWrapper * esc;
-	T t;
-	// N log N
-	std::sort(rId_vect.begin(), rId_vect.end());
-        esc_bytype.clear();
-        for ( auto const& item : slaves ) {
-            EscWrapper * esc = item.second.get();
-            t = dynamic_cast<T>(esc);
-	    // log N + O(1)
-	    if ( t && std::binary_search(rId_vect.begin(), rId_vect.end(), pos2Rid(item.first)) ) {
-                esc_bytype[item.first] = t;
-            }
-        }
-        return esc_bytype.size();
-    }
+    int get_esc_map_byclass(std::map<int, T> &esc_bytype, std::vector<int> rId_vect);
 
     template <typename T>
-    int get_zombie_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
-
-        esc_bytype.clear();
-        for (auto it = zombies.begin(); it != zombies.end(); it++ ) {
-            EscWrapper * esc = it->second.get();
-            if ( esc->get_ESC_type() == ESC_type ) {
-                //esc_bytype.push_back( dynamic_cast<T>(it->second.get()) );
-                esc_bytype[it->first] = dynamic_cast<T>(it->second.get());
-            }
-        }
-        return esc_bytype.size();
-    }
+    int get_zombie_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype);
      
     void rd_LOCK(void);
     void rd_UNLOCK(void);
@@ -325,6 +275,71 @@ private:
 
 
 };
+
+
+
+//template <typename T, typename A>
+//int get_esc_bytype(uint16_t ESC_type, std::vector<T,A> &esc_bytype) {
+template <typename T>
+inline int Ec_Boards_ctrl::get_esc_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
+
+    esc_bytype.clear();
+    for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
+	EscWrapper * esc = it->second.get();
+	if ( esc->get_ESC_type() == ESC_type ) {
+	    esc_bytype[it->first] = dynamic_cast<T>(it->second.get());
+	}
+    }
+    return esc_bytype.size();
+}
+
+template <typename T>
+inline int Ec_Boards_ctrl::get_esc_map_byclass(std::map<int, T> &esc_bytype) {
+
+    EscWrapper * esc;
+    T t;
+    esc_bytype.clear();
+    for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
+	EscWrapper * esc = it->second.get();
+	t = dynamic_cast<T>(esc);
+	if ( t ) {
+	    esc_bytype[it->first] = t;
+	}
+    }
+    return esc_bytype.size();
+}
+
+template <typename T>
+inline int Ec_Boards_ctrl::get_esc_map_byclass(std::map<int, T> &esc_bytype, std::vector<int> rId_vect) {
+
+    EscWrapper * esc;
+    T t;
+    // N log N
+    std::sort(rId_vect.begin(), rId_vect.end());
+    esc_bytype.clear();
+    for ( auto const& item : slaves ) {
+	EscWrapper * esc = item.second.get();
+	t = dynamic_cast<T>(esc);
+	// log N + O(1)
+	if ( t && std::binary_search(rId_vect.begin(), rId_vect.end(), pos2Rid(item.first)) ) {
+	    esc_bytype[item.first] = t;
+	}
+    }
+    return esc_bytype.size();
+}
+
+template <typename T>
+inline int Ec_Boards_ctrl::get_zombie_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
+
+    esc_bytype.clear();
+    for (auto it = zombies.begin(); it != zombies.end(); it++ ) {
+	EscWrapper * esc = it->second.get();
+	if ( esc->get_ESC_type() == ESC_type ) {
+	    esc_bytype[it->first] = dynamic_cast<T>(it->second.get());
+	}
+    }
+    return esc_bytype.size();
+}
 
 
 inline void Ec_Boards_ctrl::rd_LOCK(void)

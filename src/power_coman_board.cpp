@@ -28,8 +28,7 @@ static const iit::ecat::objd_t source_SDOs[] =
 
 };
 
-
-void PowCmnESC::init_SDOs(void) {
+void PowComanESC::init_SDOs(void) {
 
     int objd_num, i = 0;
 
@@ -39,23 +38,24 @@ void PowCmnESC::init_SDOs(void) {
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));
 
     // 0x6000 
-    SDOs[i++].data = (void*)&PowCmnESC::rx_pdo.temperature;
-    SDOs[i++].data = (void*)&PowCmnESC::rx_pdo.v_batt;       
-    SDOs[i++].data = (void*)&PowCmnESC::rx_pdo.status;       
-    SDOs[i++].data = (void*)&PowCmnESC::rx_pdo.rtt;            
+    SDOs[i++].data = (void*)&PowComanESC::rx_pdo.temperature;
+    SDOs[i++].data = (void*)&PowComanESC::rx_pdo.v_batt;       
+    SDOs[i++].data = (void*)&PowComanESC::rx_pdo.status;       
+    SDOs[i++].data = (void*)&PowComanESC::rx_pdo.rtt;            
     // 0x7000                                
-    SDOs[i++].data = (void*)&PowCmnESC::tx_pdo.master_command;        
-    SDOs[i++].data = (void*)&PowCmnESC::tx_pdo.ts;             
+    SDOs[i++].data = (void*)&PowComanESC::tx_pdo.master_command;        
+    SDOs[i++].data = (void*)&PowComanESC::tx_pdo.ts;             
     // 0x8000
     // 0x8001
-    SDOs[i++].data = (void*)&PowCmnESC::sdo.firmware_version;    
-    SDOs[i++].data = (void*)&PowCmnESC::sdo.temperature_filtered;     
-    SDOs[i++].data = (void*)&PowCmnESC::sdo.v_batt_filtered; 
-    SDOs[i++].data = (void*)&PowCmnESC::sdo.v_pack_filtered; 
-    SDOs[i++].data = (void*)&PowCmnESC::sdo.ctrl_status_cmd;    
-    SDOs[i++].data = (void*)&PowCmnESC::sdo.ctrl_status_cmd_ack;
+    SDOs[i++].data = (void*)&PowComanESC::sdo.firmware_version;    
+    SDOs[i++].data = (void*)&PowComanESC::sdo.temperature_filtered;     
+    SDOs[i++].data = (void*)&PowComanESC::sdo.v_batt_filtered; 
+    SDOs[i++].data = (void*)&PowComanESC::sdo.v_pack_filtered; 
+    SDOs[i++].data = (void*)&PowComanESC::sdo.ctrl_status_cmd;    
+    SDOs[i++].data = (void*)&PowComanESC::sdo.ctrl_status_cmd_ack;
     // end marker
     SDOs[i++].data = 0;
 
     assert ( objd_num == i );
 }
+

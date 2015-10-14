@@ -19,7 +19,6 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -129,19 +128,16 @@ struct HiPwrLogTypes {
 class HpESC :
     public BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes>,
     public PDO_log<HiPwrLogTypes>,
-    public XDDP_pipe<McEscPdoTypes::pdo_rx,McEscPdoTypes::pdo_tx>,
     public Motor
 {
 
 public:
     typedef BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes> Base;
     typedef PDO_log<HiPwrLogTypes>                          Log;
-    typedef XDDP_pipe<McEscPdoTypes::pdo_rx,McEscPdoTypes::pdo_tx> Xddp;
-
+    
     HpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp()
+        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
         _start_log = false;
         _actual_state = EC_STATE_PRE_OP;
@@ -154,7 +150,7 @@ public:
         print_stat(s_rtt);
     }
 
-    int16_t get_robot_id() {
+    virtual int16_t get_robot_id() {
         //assert(sdo.Joint_robot_id != -1);
         return sdo.Joint_robot_id;
     }
@@ -187,8 +183,6 @@ protected :
         rx_pdo.motor_pos = hipwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset); 
         rx_pdo.pos_ref_fb  = hipwr_esc::M2J(rx_pdo.pos_ref_fb,_sgn,_offset); 
         
-        xddp_write(rx_pdo);
-
         if ( _start_log ) {
             Log::log_t log;
             log.ts = get_time_ns() - _start_log_ts ;
@@ -306,8 +300,6 @@ public :
 
         // set filename with robot_id
         log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
-        // open pipe with robot_id
-        Xddp::init(std::string("HpESC_"+std::to_string(sdo.Joint_robot_id)));
     
         // Paranoid Direct_ref
         float direct_ref = 0.0;

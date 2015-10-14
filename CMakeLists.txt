@@ -16,14 +16,13 @@ if(ENABLE_XENO AND RTNET_INCLUDE_DIR)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${XENO_CFLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -lnative")
-  set(RT_NRT_SRCS src/rt_ipc.cpp) 
 else()
   set(ENABLE_RTNET  OFF)
 endif()
 
 set(HEADER_INSTALL_ROOT $ENV{WALKMAN_ETHERCAT_MASTER_ROOT}/include/ CACHE PATH "Where to install the headers")
 set(LIB_INSTALL_ROOT    $ENV{WALKMAN_ETHERCAT_MASTER_ROOT}/lib/     CACHE PATH "Where to install the libraries")
-set(SOEM_ROOT            $ENV{SOEM_ROOT}     CACHE PATH "Base path of the SOEM headers")
+set(SOEM_ROOT           $ENV{SOEM_ROOT}     CACHE PATH "Base path of the SOEM headers")
 
 add_definitions(-DKEEP_POWER_ON)
 
@@ -44,7 +43,6 @@ add_library(walkman_master SHARED
     src/power_coman_board.cpp
     src/ft6_esc.cpp
     src/test_esc.cpp
-    ${RT_NRT_SRCS}
 )
 
 target_link_libraries(walkman_master iitecat_iface soem pthread yaml-cpp)

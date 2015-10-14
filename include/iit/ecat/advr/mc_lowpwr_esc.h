@@ -18,7 +18,6 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -93,28 +92,27 @@ struct LoPwrEscSdoTypes {
 class LpESC :
     public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>,
     public PDO_log<McEscPdoTypes::pdo_rx>,
-    public XDDP_pipe<McEscPdoTypes::pdo_rx,McEscPdoTypes::pdo_tx>,
     public Motor
 {
 public:
     typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> Base;
     typedef PDO_log<McEscPdoTypes::pdo_rx>                   Log;
-    typedef XDDP_pipe<McEscPdoTypes::pdo_rx,McEscPdoTypes::pdo_tx> Xddp;
 
     LpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/LpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp()
+        Log(std::string("/tmp/LpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
-
+	_start_log = false;
+        _actual_state = EC_STATE_PRE_OP;
     }
+    
     virtual ~LpESC(void) { 
         delete [] SDOs;
         DPRINTF("~%s %d\n", typeid(this).name(), position);
         print_stat(s_rtt);
     }
 
-    int16_t get_robot_id() {
+    virtual int16_t get_robot_id() {
         //assert(sdo.Joint_robot_id != -1);
         return sdo.Joint_robot_id;
     }
@@ -150,10 +148,6 @@ public:
 
         if ( _start_log ) {
             push_back(rx_pdo);
-        }
-
-        if ( ! xddp_write(rx_pdo) ) {
-            DPRINTF("Error write to pipe %s\n", pipe_name.c_str());
         }
     }
 
@@ -253,8 +247,7 @@ public:
         readSDO_byname("link_pos");
         
         log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
-        Xddp::init(std::string("LpESC_"+std::to_string(sdo.Joint_robot_id)));
-    
+        
         // we log when receive PDOs
         start_log(true);
             

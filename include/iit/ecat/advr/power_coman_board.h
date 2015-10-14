@@ -9,7 +9,6 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <iit/ecat/advr/pipes.h>
 
 #include <map>
 #include <string>
@@ -19,7 +18,6 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-// master_command
 #define CTRL_POWER_MOTORS_ON    0x0048
 #define CTRL_POWER_MOTORS_OFF   0x0084
 #define CTRL_POWER_ROBOT_OFF    0x00DD
@@ -33,7 +31,6 @@ namespace advr {
 #define RUN_LOOP_FSM                        4
 #define RUN_POWER_ROBOT_OFF_FSM             5
 
-    
 struct status_cmn_pow_bits {
     uint8_t main_rel_status:1;
     uint8_t pwr_sw_status:1;
@@ -93,28 +90,25 @@ struct PowCmnEscSdoTypes {
     uint16_t    ctrl_status_cmd_ack;
 };
 
-class PowCmnESC :
+
+class PowComanESC :
     public BasicEscWrapper<PowCmnEscPdoTypes,PowCmnEscSdoTypes>,
-    public PDO_log<PowCmnEscPdoTypes::pdo_rx>,
-    public XDDP_pipe<PowCmnEscPdoTypes::pdo_rx,PowCmnEscPdoTypes::pdo_tx>
+    public PDO_log<PowCmnEscPdoTypes::pdo_rx>
 {
 
 public:
-    typedef BasicEscWrapper<PowCmnEscPdoTypes,PowCmnEscSdoTypes>    Base;
-    typedef PDO_log<PowCmnEscPdoTypes::pdo_rx>                    Log;
-    typedef XDDP_pipe<PowCmnEscPdoTypes::pdo_rx,PowCmnEscPdoTypes::pdo_tx> Xddp;
+    typedef BasicEscWrapper<PowCmnEscPdoTypes,PowCmnEscSdoTypes>	Base;
+    typedef PDO_log<PowCmnEscPdoTypes::pdo_rx>                    	Log;
 
-    PowCmnESC(const ec_slavet& slave_descriptor) :
+    PowComanESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/PowCmnESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp()
+        Log(std::string("/tmp/PowCmnESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
         _start_log = false;
         //_actual_state = EC_STATE_PRE_OP;
-
     }
 
-    virtual ~PowCmnESC(void) {
+    virtual ~PowComanESC(void) {
         delete [] SDOs;
         DPRINTF("~%s %d\n", typeid(this).name(), position);
         print_stat(s_rtt);
@@ -129,35 +123,22 @@ public:
 
         handle_status();
         
-        xddp_write(rx_pdo);
-
         if ( _start_log ) {
             push_back(rx_pdo);
         }
 
     }
 
-    void handle_status(void) {
-    
-        static status_cmn_pow_t status;
-     
-        status.all = rx_pdo.status.all;
-    }
-    
-    int power_on_ok(void) {
-        
-        return rx_pdo.status.bit.main_rel_status == 1;
-    }
-
     virtual void on_writePDO(void) {
         tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
     }
- 
-    virtual const objd_t * get_SDOs() { return SDOs; }
-    virtual void init_SDOs(void);
-    virtual uint16_t get_ESC_type() { return POW_CMN_BOARD; }
 
-    virtual int init(const YAML::Node & root_cfg) {
+    virtual const objd_t * get_SDOs() 	{ return SDOs; }
+    virtual uint16_t get_ESC_type(void) { return POW_CMN_BOARD; }
+
+    void init_SDOs(void);
+    
+    int init(const YAML::Node & root_cfg) {
 
         try {
             init_SDOs();
@@ -169,11 +150,6 @@ public:
             return EC_BOARD_INIT_SDO_FAIL;
         }
 
-        // set filename with robot_id
-        log_filename = std::string("/tmp/PowCmnESC_pos"+std::to_string(position)+"_log.txt");
-        // open pipe with robot_id
-        Xddp::init(std::string("PowCmnESC_pos"+std::to_string(position)));
-        
         // we log when receive PDOs
         start_log(true);
 
@@ -184,6 +160,16 @@ public:
         return EC_BOARD_OK;
     }
 
+    void handle_status(void) {
+    
+        static status_cmn_pow_t status;
+	status.all = rx_pdo.status.all;
+    }
+    
+    int power_on_ok(void) {
+        
+        return rx_pdo.status.bit.main_rel_status == 1;
+    }
 
 private:
 
@@ -196,7 +182,6 @@ private:
     stat_t  s_rtt;
 
 };
-
 
 
 }

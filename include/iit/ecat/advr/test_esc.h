@@ -9,7 +9,6 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <iit/ecat/advr/pipes.h>
 
 #include <map>
 #include <string>
@@ -73,19 +72,16 @@ struct TestEscSdoTypes {
 
 class TestESC :
     public BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>,
-    public PDO_log<TestEscPdoTypes::pdo_rx>,
-    public XDDP_pipe<TestEscPdoTypes::pdo_rx,TestEscPdoTypes::pdo_tx>
+    public PDO_log<TestEscPdoTypes::pdo_rx>
 {
 
 public:
     typedef BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>    Base;
     typedef PDO_log<TestEscPdoTypes::pdo_rx>                    Log;
-    typedef XDDP_pipe<TestEscPdoTypes::pdo_rx,TestEscPdoTypes::pdo_tx> Xddp;
 
     TestESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/ESC_test_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE),
-        Xddp()
+        Log(std::string("/tmp/ESC_test_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
 
     }
@@ -107,7 +103,6 @@ public:
             push_back(rx_pdo);
         }
 
-        xddp_write(rx_pdo);
     }
 
     virtual void on_writePDO(void) {
@@ -146,8 +141,6 @@ public:
             DPRINTF("Exception %s ... %s\n", __FUNCTION__, e.what());
             return EC_WRP_NOK;
         }
-
-        Xddp::init(std::string("ESC_test_pos"+std::to_string(position)));
         
         return EC_WRP_OK;
 
