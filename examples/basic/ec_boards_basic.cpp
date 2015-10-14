@@ -2,12 +2,12 @@
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
-Ec_Boards_basic::Ec_Boards_basic(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml), InXddp()
+Ec_Boards_basic::Ec_Boards_basic(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml)
 {
 
     name = "EC_boards_basic";
-    // do not go above .... 
-    period.period = {0,500};
+    // non periodic 
+    period.period = {0,1};
 
 #ifdef __XENO__
     schedpolicy = SCHED_FIFO;
@@ -18,7 +18,7 @@ Ec_Boards_basic::Ec_Boards_basic(const char* config_yaml) : Ec_Thread_Boards_bas
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
 
     // open pipe ... xeno xddp or fifo 
-    InXddp::init("EC_board_input");
+    inXddp.init("EC_board_input");
 
 }
 
@@ -41,7 +41,7 @@ int Ec_Boards_basic::user_input(C &user_cmd) {
     int		bytes;
     input_t	cmd;
 
-    if ( (bytes=xddp_read(cmd)) <= 0 ) {
+    if ( (bytes = inXddp.xddp_read(cmd)) <= 0 ) {
 	return bytes;
     }
     

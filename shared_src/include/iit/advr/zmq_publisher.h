@@ -40,6 +40,7 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/power_board.h>
+#include <iit/ecat/advr/power_coman_board.h>
 #include <iit/ecat/advr/test_esc.h>
 
 namespace iit {
@@ -78,6 +79,7 @@ public:
 
 protected:
 
+    int poll();
     int publish_msg();
     
 protected:
@@ -131,6 +133,21 @@ inline int Abs_Publisher::open_pipe(std::string pipe_name) {
     return 0;
 }
 
+inline int Abs_Publisher::poll() {
+
+    fd_set rfds;
+    struct timeval tv;
+    int retval;
+    
+    FD_ZERO(&rfds);
+    FD_SET(xddp_sock, &rfds);
+    tv.tv_sec = 3;
+    tv.tv_usec = 0;
+
+    return  select(xddp_sock+1, &rfds, NULL, NULL, &tv);
+    
+}
+
 inline int Abs_Publisher::publish_msg() {
 
     try { 
@@ -181,11 +198,16 @@ SIGNATURE(int)::publish(void) {
     int nbytes, msg_data_size;
     int expected_bytes = sizeof(pub_data_t);
 
-    nbytes = read(xddp_sock, (void*)&pub_data, expected_bytes);
+    if ( poll() > 0 ) {
+	
+	nbytes = read(xddp_sock, (void*)&pub_data, expected_bytes);
 
-    if (nbytes != expected_bytes) {
-        //printf("zmq rx %d expected %d\n", nbytes, expected_bytes);
-        return 1;
+	if (nbytes != expected_bytes) {
+	    //printf("zmq rx %d expected %d\n", nbytes, expected_bytes);
+	    return 1;
+	}
+    } else {
+	return 0;
     }
     
     // prepare _msg_id
@@ -240,6 +262,7 @@ class ZMQ_Pub_thread : public Thread_hook {
     typedef Publisher<Ft6EscPdoTypes::pdo_rx> FtPub;
     typedef Publisher<McEscPdoTypes::pdo_rx> McPub;
     typedef Publisher<PowEscPdoTypes::pdo_rx> PwPub;
+    typedef Publisher<PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
     
     iit::ecat::stat_t loop_time;
     uint64_t	tNow, dt;
@@ -250,7 +273,8 @@ public:
     ZMQ_Pub_thread() {
 
         name = "ZMQ_Pub_thread";
-        period.period = {0,100}; 
+	// non periodic
+        period.period = {0,1}; 
         
         schedpolicy = SCHED_OTHER;
         priority = sched_get_priority_max(schedpolicy)/2;
@@ -261,6 +285,8 @@ public:
     ~ZMQ_Pub_thread() {
 
 	for ( auto const& item : zmap ) { delete item.second; }
+	
+	print_stat(loop_time);
     }
 
     virtual void th_init(void *) { 
@@ -271,8 +297,12 @@ public:
 	std::string uri("tcp://*:");
 	
 	base_port++;
+	zpub = new PwCmnPub(uri+std::to_string(base_port));
+	if ( zpub->open_pipe("PowCmn_pos_4") == 0 ) { zmap[base_port] = zpub; }
+	else { delete zpub; }
+	base_port++;
 	zpub = new McPub(uri+std::to_string(base_port));
-	if ( zpub->open_pipe("LpESC_1") == 0 ) { zmap[base_port] = zpub; }
+	if ( zpub->open_pipe("Motor_id_1") == 0 ) { zmap[base_port] = zpub; }
 	else { delete zpub; }
 
 #if 0

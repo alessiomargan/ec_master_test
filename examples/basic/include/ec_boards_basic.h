@@ -15,17 +15,13 @@
 #define __EC_BOARDS_BASIC_H__
 
 #include <linux/joystick.h>
-//#include <iit/ecat/advr/pipes.h>
-#include <ec_boards_base.h>
+#include <iit/advr/ec_boards_base.h>
 /**
  */
 
 typedef struct js_event 		input_t;
-typedef XDDP_pipe<input_t,input_t> 	InXddp;
 
-class Ec_Boards_basic :
-    public Ec_Thread_Boards_base,
-    public InXddp
+class Ec_Boards_basic : public Ec_Thread_Boards_base
 {
 public:
     
@@ -41,7 +37,7 @@ private :
     virtual void init_preOP(void);
     virtual void init_OP(void);
     
-
+     XDDP_pipe inXddp;
 };
 
 

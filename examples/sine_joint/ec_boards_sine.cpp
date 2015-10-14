@@ -2,7 +2,7 @@
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
-Ec_Boards_sine::Ec_Boards_sine(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml), InXddp()
+Ec_Boards_sine::Ec_Boards_sine(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml)
 {
 
     name = "EC_boards_basic";
@@ -18,7 +18,7 @@ Ec_Boards_sine::Ec_Boards_sine(const char* config_yaml) : Ec_Thread_Boards_base(
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
 
     // open pipe ... xeno xddp or fifo 
-    InXddp::init("EC_board_input");
+    inXddp.init("EC_board_input");
 
 }
 
@@ -73,7 +73,7 @@ int Ec_Boards_sine::user_input(C &user_cmd) {
     int		bytes;
     input_t	cmd;
 
-    if ( (bytes=xddp_read(cmd)) <= 0 ) {
+    if ( (bytes = inXddp.xddp_read(cmd)) <= 0 ) {
 	return bytes;
     }
     

@@ -4,7 +4,7 @@
 #include <exception>
 
 #include <ec_boards_joint_joy.h>
-#include <zmq_publisher.h>
+#include <iit/advr/zmq_publisher.h>
 
 extern void main_common(void);
 extern int looping(void);
@@ -25,11 +25,14 @@ int main(int argc, char *argv[]) try {
     main_common();
     
     threads["EC_boards_joint_joy"] = new EC_boards_joint_joy(argv[1]);
-    threads["EC_boards_joint_joy"]->create(true);
+    threads["EC_boards_joint_joy"]->create(true,2);
 
-    //sleep(10);
-    //threads["ZMQ_pub"] = new iit::ecat::advr::ZMQ_Pub_thread();
-    //threads["ZMQ_pub"]->create(false);
+    // ZMQ_pub wait for pipe creation
+    while ( ! dynamic_cast<Ec_Thread_Boards_base*>(threads["EC_boards_joint_joy"])->init_OK() ) {
+        sleep(1);
+    }
+    threads["ZMQ_pub"] = new iit::ecat::advr::ZMQ_Pub_thread();
+    threads["ZMQ_pub"]->create(false,3);
 
     while (looping()) {
         sleep(1);

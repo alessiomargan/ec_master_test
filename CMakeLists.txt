@@ -4,19 +4,24 @@ project(ec_master_test)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroOptionalBuild)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
-set(COMAN_ROOT      $ENV{COMAN_ROOT}     CACHE PATH "Base path of the COMAN_shared")
-set(ENABLE_XENO  CACHE BOOL "OFF")
+set(CMAKE_CXX_FLAGS 	"${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+set(COMAN_ROOT      	$ENV{COMAN_ROOT}     CACHE PATH "Base path of the COMAN_shared")
+set(ENABLE_XENO  	CACHE BOOL "OFF")
+set(SHARED_SRC 		${CMAKE_CURRENT_SOURCE_DIR}/shared_src) 
 
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
     find_package(RTnet)
+    set(RT_SRC ${SHARED_SRC}/rt_ipc.cpp)
 endif()
 
-set(SHARED_SRC ${CMAKE_CURRENT_SOURCE_DIR}/shared_src) 
 add_library(shared_utils SHARED
+    ${SHARED_SRC}/ec_boards_base.cpp
     ${SHARED_SRC}/test_common.cpp
+    ${RT_SRC}
 )
+
+install(DIRECTORY ${SHARED_SRC}/include/  DESTINATION include)
 install(TARGETS shared_utils DESTINATION lib)
 
 include_directories("${SHARED_SRC}/include")

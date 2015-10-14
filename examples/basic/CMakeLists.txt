@@ -10,10 +10,12 @@ basic_test.cpp
 )
 
 if(ENABLE_XENO)
-     target_link_libraries(${PROJECT_NAME} coman_os_rt ${COMMON_LIBS})
+    set(RT_NRT_LIBS coman_os_rt)
 else()
-    target_link_libraries(${PROJECT_NAME} coman_os ${COMMON_LIBS})
+    set(RT_NRT_LIBS coman_os)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND set_cap.sh ${PROJECT_NAME} COMMENT set_cap)
 endif()
+
+target_link_libraries(${PROJECT_NAME} ${COMMON_LIBS} ${RT_NRT_LIBS})
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)

@@ -1,5 +1,5 @@
 #include <ec_boards_walk.h>
-#include <coman_robot_id.h>
+#include <iit/advr/coman_robot_id.h>
 
 #include <RTControl.h>
 extern void test_joint(std::vector<float> homePos, int size, double freq, int r_pos[]);
@@ -17,7 +17,7 @@ static const std::vector<float> homePos = {
 // 16, 17, 18,  19, 20,  21, 22,  23, 24, 25
 
 
-EC_boards_walk::EC_boards_walk(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml), InXddp()
+EC_boards_walk::EC_boards_walk(const char* config_yaml) : Ec_Thread_Boards_base(config_yaml)
 {
 
     name = "EC_boards_walk";
@@ -33,7 +33,7 @@ EC_boards_walk::EC_boards_walk(const char* config_yaml) : Ec_Thread_Boards_base(
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
     
     // open pipe ... xeno xddp or fifo 
-    InXddp::init("EC_board_input");
+    jsInXddp.init("EC_board_js_input");
     
 }
 
@@ -91,7 +91,7 @@ int EC_boards_walk::user_input(C &user_cmd) {
     static int	bytes_cnt;
     int		bytes;
 
-    if ( (bytes=xddp_read(user_cmd)) <= 0 ) {
+    if ( (bytes = jsInXddp.xddp_read(user_cmd)) <= 0 ) {
 	return bytes;
     }
     

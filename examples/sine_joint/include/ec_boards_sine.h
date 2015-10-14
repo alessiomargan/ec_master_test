@@ -15,16 +15,15 @@
 #define __EC_BOARDS_BASIC_H__
 
 #include <linux/joystick.h>
-#include <ec_boards_base.h>
+#include <iit/advr/ec_boards_base.h>
 /**
  */
 
-typedef struct js_event 		input_t;
-typedef XDDP_pipe<input_t,input_t> 	InXddp;
+typedef struct js_event input_t;
+typedef XDDP_pipe	InXddp;
 
 class Ec_Boards_sine :
-    public Ec_Thread_Boards_base,
-    public InXddp
+    public Ec_Thread_Boards_base
 {
 public:
     
@@ -41,6 +40,8 @@ private :
     virtual void init_OP(void);
     
     std::map<int, iit::ecat::advr::Motor*> motors;
+    
+    XDDP_pipe inXddp;
 };
 
 

@@ -14,7 +14,7 @@
 #ifndef __EC_BOARDS_JOINT_JOY_H__
 #define __EC_BOARDS_JOINT_JOY_H__
 
-#include <ec_boards_base.h>
+#include <iit/advr/ec_boards_base.h>
 
 #include <linux/joystick.h>
 #include <spnav.h>
@@ -25,14 +25,7 @@
 typedef struct js_event	js_input_t;
 typedef spnav_event	spnav_input_t;
 
-typedef XDDP_pipe<js_input_t,js_input_t> 	JsInXddp;
-typedef XDDP_pipe<spnav_input_t,spnav_input_t> 	NavInXddp;
-
-class EC_boards_joint_joy :
-    public Ec_Thread_Boards_base,
-    public JsInXddp,
-    public NavInXddp
-    
+class EC_boards_joint_joy : public Ec_Thread_Boards_base
 {
 public:
     
@@ -57,10 +50,10 @@ private :
     virtual void init_OP(void);
     bool go_there(std::map<int,float> target_pos, float eps);
     
-    std::map<int, iit::ecat::advr::Motor*> motors;
-    
     std::map<int,float> step_1;
     std::map<int,float> step_2;
+    
+    XDDP_pipe jsInXddp, navInXddp;
 
 };
 

@@ -1,17 +1,15 @@
 #include <ec_boards_joint_joy.h>
-#include <coman_robot_id.h>
+#include <iit/advr/coman_robot_id.h>
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
 EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) :
-    Ec_Thread_Boards_base(config_yaml),
-    JsInXddp(),
-    NavInXddp()
+    Ec_Thread_Boards_base(config_yaml)
 {
 
     name = "EC_boards_joint_joy";
-    // do not go above .... 
-    period.period = {0,500};
+    // not periodic 
+    period.period = {0,1};
 
 #ifdef __XENO__
     schedpolicy = SCHED_FIFO;
@@ -22,8 +20,8 @@ EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) :
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
     
     // open pipe ... xeno xddp or fifo 
-    JsInXddp::init("EC_board_js_input");
-    NavInXddp::init("EC_board_nav_input");
+    jsInXddp.init("EC_board_js_input");
+    navInXddp.init("EC_board_nav_input");
     
 }
 
@@ -124,7 +122,7 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
     spnav_input_t	nav_cmd;
     js_input_t		js_cmd;
     
-    if ( (bytes = NavInXddp::xddp_read(nav_cmd)) > 0 ) {
+    if ( (bytes = navInXddp.xddp_read(nav_cmd)) > 0 ) {
 	//user_cmd = process_spnav_input(nav_cmd);
 	// [-1.0 .. 1.0] / 200 ==> 0.005 rad/ms
 	user_cmd = ((float)nav_cmd.motion.ry / (350.0)) / 200 ;
@@ -133,7 +131,7 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
 
-    if ( (bytes = JsInXddp::xddp_read(js_cmd)) > 0 ) {
+    if ( (bytes = jsInXddp.xddp_read(js_cmd)) > 0 ) {
 	//user_cmd = process_js_input(js_cmd);
 	switch (js_cmd.type & ~JS_EVENT_INIT)
 	{

@@ -16,18 +16,15 @@
 
 #include <linux/joystick.h>
 
-#include <ec_boards_base.h>
+#include <iit/advr/ec_boards_base.h>
 
 
 /**
  */
 
 typedef struct js_event 		input_t;
-typedef XDDP_pipe<input_t,input_t> 	InXddp;
 
-class EC_boards_walk :
-    public Ec_Thread_Boards_base,
-    public InXddp
+class EC_boards_walk : public Ec_Thread_Boards_base
 {
 public:
     
@@ -56,6 +53,7 @@ private :
     iit::ecat::advr::Ft6ESC * leftFoot, * rightFoot;
     std::map<int, iit::ecat::advr::LpESC*> motors;
 
+    XDDP_pipe jsInXddp;
 };
 
 

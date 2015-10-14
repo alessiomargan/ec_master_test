@@ -19,11 +19,12 @@
 #include <thread_util.h>
 
 #include <iit/ecat/advr/ec_boards_iface.h>
+#include <iit/advr/pipes.h>
 
 /**
  */
 
-
+		  
 class Ec_Thread_Boards_base :
     public Thread_hook,
     public iit::ecat::advr::Ec_Boards_ctrl
@@ -35,6 +36,8 @@ public:
 	 iit::ecat::print_stat(s_loop);
     }
 
+    bool init_OK() { return init_done; };
+
     virtual void th_init(void *);
     virtual void th_loop(void *);
     
@@ -45,6 +48,9 @@ protected :
     virtual void init_preOP(void) = 0;
     virtual void init_OP(void) = 0;
     
+    void xddps_init(void);
+    void xddps_loop(void);
+    
     iit::ecat::stat_t  s_loop;
     uint64_t start_time, tNow, tPre;
     
@@ -54,55 +60,20 @@ protected :
     std::map<int,float> home;
     std::map<int,float> start_pos;
 
+    std::map<int,XDDP_pipe*> xddps;
+
+    std::map<int, iit::ecat::advr::Motor*> 	motors;
+    std::map<int, iit::ecat::advr::Ft6ESC*> 	fts;
+    std::map<int, iit::ecat::advr::PowESC*> 	pows;
+    std::map<int, iit::ecat::advr::PowComanESC*>powCmns;
+    std::map<int, iit::ecat::advr::TestESC*> 	tests;
+
+private:
+    
+    bool init_done;
+    
 };
 
-
-inline void Ec_Thread_Boards_base::th_init(void *) {
-    
-    // init Ec_Boards_ctrl
-    if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK) {
-	throw "something wrong";
-    }
-    // get Robot_Id map 
-    rid2pos = get_Rid2PosMap();
-    pos2rid = get_Pos2RidMap();
-    
-    init_preOP();
-    
-    if ( set_operative() <= 0 ) {
-	throw "something else wrong";
-    }
-    
-    start_time = iit::ecat::get_time_ns();
-    tNow, tPre = start_time;
-    
-    init_OP();
-	
-}
-
-inline void Ec_Thread_Boards_base::th_loop(void *) {
-	
-    tNow = get_time_ns();
-    s_loop(tNow - tPre);
-    tPre = tNow;
-    
-    try {
-	
-	if ( recv_from_slaves() != iit::ecat::advr::EC_BOARD_OK ) {
-	    // TODO
-	    DPRINTF("recv_from_slaves FAIL !\n");
-	    return;
-	}
-	    
-	user_loop();
-
-	send_to_slaves();	
-	
-    } catch (iit::ecat::EscWrpError &e) {
-	    std::cout << e.what() << std::endl;
-    }
-    
-}
 
 
 #endif
