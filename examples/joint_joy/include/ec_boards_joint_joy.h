@@ -29,7 +29,7 @@ class EC_boards_joint_joy : public Ec_Thread_Boards_base
 {
 public:
     
-    enum user_state : int
+    enum user_state_t : int
     { 
 	HOMING	= 1,
 	MOVING,
@@ -48,13 +48,16 @@ private :
     
     virtual void init_preOP(void);
     virtual void init_OP(void);
-    bool go_there(std::map<int,float> target_pos, float eps);
+    bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
+		  std::map<int,float> target_pos,
+		  float eps);
     
     std::map<int,float> step_1;
     std::map<int,float> step_2;
     
     XDDP_pipe jsInXddp, navInXddp;
-
+    
+    user_state_t user_state;
 };
 
 

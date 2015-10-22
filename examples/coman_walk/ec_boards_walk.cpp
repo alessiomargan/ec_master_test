@@ -148,7 +148,7 @@ int EC_boards_walk::user_loop_walk(void) {
     FTSensor[10] = ft6_pdo_rx.torque_Y * 0.001;
     FTSensor[11] = ft6_pdo_rx.torque_Z * 0.001;
     
-    RTtime = (get_time_ns()-start_time)/1e9;
+    RTtime = (iit::ecat::get_time_ns()-start_time)/1e9;
 
     //////////////// walking pattern ////////////////////////////
     RTControl(RTtime, FTSensor, homePos, homePos.size(), rtControl_pos);
@@ -185,7 +185,7 @@ int EC_boards_walk::user_loop_test_joint(void) {
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::LpESC::pdo_rx_t motor_pdo_rx;
     
-    RTtime = (get_time_ns()-start_time)/1e9;
+    RTtime = (iit::ecat::get_time_ns()-start_time)/1e9;
 
     if (RTtime > 3 ) {
 

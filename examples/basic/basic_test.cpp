@@ -4,7 +4,6 @@
 #include <exception>
 
 #include <ec_boards_basic.h>
-#include <iit/advr/zmq_publisher.h>
 
 extern void main_common(void);
 extern int looping(void);
@@ -26,13 +25,6 @@ int main(int argc, char *argv[]) try {
     
     threads["boards_ctrl"] = new Ec_Boards_basic(argv[1]);
     threads["boards_ctrl"]->create(true);
-
-    while ( ! dynamic_cast<Ec_Thread_Boards_base*>(threads["boards_ctrl"])->init_OK() ) {
-        sleep(1);
-    }
-    
-    threads["ZMQ_pub"] = new iit::ecat::advr::ZMQ_Pub_thread();
-    threads["ZMQ_pub"]->create(false);
 
     while (looping()) {
         sleep(1);

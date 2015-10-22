@@ -15,8 +15,7 @@
 #define __EC_THREAD_BOARDS_BASE_H__
 
 
-#include <utils.h>
-#include <thread_util.h>
+#include <iit/advr/thread_util.h>
 
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <iit/advr/pipes.h>

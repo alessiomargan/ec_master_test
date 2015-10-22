@@ -6,8 +6,8 @@ project(${PRJ_DIR})
 include_directories(include)
 
 add_executable(${PROJECT_NAME}
-ec_boards_joint_joy.cpp
-joint_joy_test.cpp
+    ec_boards_joint_joy.cpp
+    joint_joy_test.cpp
 )
 
 if(ENABLE_XENO)

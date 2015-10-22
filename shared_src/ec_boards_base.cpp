@@ -17,6 +17,8 @@
 
 void Ec_Thread_Boards_base::th_init(void *) {
     
+    const YAML::Node config = get_config_YAML_Node();
+
     init_done = false;
     
     // init Ec_Boards_ctrl
@@ -44,14 +46,16 @@ void Ec_Thread_Boards_base::th_init(void *) {
     
     init_OP();
 	
-    xddps_init();
+    if ( config["ec_boards_base"]["create_pipes"] ) {
+	xddps_init();
+    }
     
     init_done = true;
 }
 
 void Ec_Thread_Boards_base::th_loop(void *) {
 	
-    tNow = get_time_ns();
+    tNow = iit::ecat::get_time_ns();
     s_loop(tNow - tPre);
     tPre = tNow;
     

@@ -23,6 +23,7 @@ EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) :
     jsInXddp.init("EC_board_js_input");
     navInXddp.init("EC_board_nav_input");
     
+    user_state = HOMING;
 }
 
 EC_boards_joint_joy::~EC_boards_joint_joy()
@@ -73,16 +74,18 @@ void EC_boards_joint_joy::init_preOP(void) {
 
 }
 
-bool EC_boards_joint_joy::go_there(std::map<int,float> target_pos, float eps) {
+bool EC_boards_joint_joy::go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
+				   std::map<int,float> target_pos,
+				   float eps) {
 
     bool all_true = true;
     float pos_ref;
     int slave_pos;
     iit::ecat::advr::Motor * moto;
-    iit::ecat::advr::LpESC::pdo_rx_t motor_pdo_rx;
-    std::vector<bool> truth_vect(motors.size()-1);
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    std::vector<bool> truth_vect(motor_set.size()-1);
         
-    for ( auto const& item : motors ) {
+    for ( auto const& item : motor_set ) {
 	slave_pos = item.first;
 	moto =  item.second;
 	
@@ -125,7 +128,12 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
     if ( (bytes = navInXddp.xddp_read(nav_cmd)) > 0 ) {
 	//user_cmd = process_spnav_input(nav_cmd);
 	// [-1.0 .. 1.0] / 200 ==> 0.005 rad/ms
-	user_cmd = ((float)nav_cmd.motion.ry / (350.0)) / 200 ;
+	if ( nav_cmd.type == SPNAV_EVENT_MOTION ) {
+	    user_cmd = ((float)nav_cmd.motion.ry / (350.0)) / 200 ;
+	} else if (nav_cmd.type == SPNAV_EVENT_BUTTON ) {
+	    user_state = MOVING;
+	    DPRINTF("Moving ....\n");
+	}
     }
     
     bytes_cnt += bytes;
@@ -213,7 +221,6 @@ int EC_boards_joint_joy::user_loop(void) {
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::LpESC::pdo_rx_t motor_pdo_rx;
     
-    static int user_state = HOMING;
     static float ds; 
     
     //
@@ -226,7 +233,7 @@ int EC_boards_joint_joy::user_loop(void) {
 	
 	case HOMING :
 	
-	    if ( go_there(home, 0.005) ) {
+	    if ( go_there(motors, home, 0.005) ) {
 		user_state = STEP_1;
 		DPRINTF("At Home ....\n");
 	    }
@@ -234,7 +241,7 @@ int EC_boards_joint_joy::user_loop(void) {
 	
 	case STEP_1 :
 	    
-	    if ( go_there(step_1, 0.005) ) {
+	    if ( go_there(motors, step_1, 0.005) ) {
 		user_state = STEP_2;
 		DPRINTF("At Step 1 ....\n");
 	    }
@@ -242,7 +249,7 @@ int EC_boards_joint_joy::user_loop(void) {
 
 	case STEP_2 :
 	    
-	    if ( go_there(step_2, 0.005) ) {
+	    if ( go_there(motors, step_2, 0.005) ) {
 		user_state = HOMING;
 		DPRINTF("At Step 2 ....\n");
 	    }

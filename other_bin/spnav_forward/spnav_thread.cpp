@@ -83,7 +83,9 @@ void * spnav_nrt_thread(void * arg)
 	* zero if it's not an spnav event (see spnav.h).
 	*/
     while(spnav_wait_event(&sev)) {
+#ifdef DEBUG
 	print_spnav_ev(sev);
+#endif
 	if ( xddp_sock > 0 ) {
 	    nbytes = write(xddp_sock, (void*)&sev, sizeof(sev));
 	}

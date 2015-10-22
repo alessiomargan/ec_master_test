@@ -12,6 +12,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <typeinfo>
 #include <string>
@@ -43,9 +44,9 @@
 #include <iit/ecat/advr/power_coman_board.h>
 #include <iit/ecat/advr/test_esc.h>
 
+#include <iit/advr/thread_util.h>
+
 namespace iit {
-namespace ecat {
-namespace advr {
 
 
 class Abs_Publisher;
@@ -71,6 +72,7 @@ class Abs_Publisher {
 
 public:
     
+    
     Abs_Publisher(std::string uri);
     virtual ~Abs_Publisher();
     
@@ -79,7 +81,8 @@ public:
 
 protected:
 
-    int poll();
+    template<typename T>
+    int read_pipe(const T &t);
     int publish_msg();
     
 protected:
@@ -130,11 +133,16 @@ inline int Abs_Publisher::open_pipe(std::string pipe_name) {
         return 1;
     }
     
+    
+    
     return 0;
 }
 
-inline int Abs_Publisher::poll() {
+template<typename T>
+inline int Abs_Publisher::read_pipe(const T &t) {
 
+    int nbytes = 0;
+    int expected_bytes = sizeof(t);
     fd_set rfds;
     struct timeval tv;
     int retval;
@@ -144,8 +152,18 @@ inline int Abs_Publisher::poll() {
     tv.tv_sec = 3;
     tv.tv_usec = 0;
 
-    return  select(xddp_sock+1, &rfds, NULL, NULL, &tv);
+    if ( select(xddp_sock+1, &rfds, NULL, NULL, &tv) > 0 ) {
     
+	nbytes = read(xddp_sock, (void*)&t, expected_bytes);
+	if (nbytes != expected_bytes) {
+	    //printf("zmq rx %d expected %d\n", nbytes, expected_bytes);
+	    return -1;
+	}
+    } else {
+	return -ETIMEDOUT;
+    }
+    
+    return nbytes;
 }
 
 inline int Abs_Publisher::publish_msg() {
@@ -157,7 +175,7 @@ inline int Abs_Publisher::publish_msg() {
         //printf("***\n");
     } catch (zmq::error_t& e) { // Interrupted system call
         printf(">>> zsend ... catch %s\n", e.what());
-        return 1;
+        return -1;
     }
     
     return 0;
@@ -169,8 +187,17 @@ inline int Abs_Publisher::publish_msg() {
 /// Publisher
 ///
 ///////////////////////////////////////////////////////////////////////
+template<typename T>
+std::string json_serializer(T &t) {
+    Json::FastWriter writer;
+    Json::Value      root;
+    jmap_t           jmap;
+    t.to_map(jmap);
+    for ( auto const& item : jmap ) { root[item.first] = ::atof(item.second.c_str()); }
+    return std::string(writer.write(root));
+}
 
-template<class PubDataTypes>
+template<typename PubDataTypes>
 class Publisher : public Abs_Publisher {
 
 public:
@@ -180,75 +207,42 @@ public:
     Publisher(std::string uri) : Abs_Publisher(uri) { }
     virtual ~Publisher() { std::cout << "~" << typeid(this).name() << std::endl; }
     
-    virtual int publish(void);
+    virtual int publish(void) {
+    
+	int msg_data_size;
+
+	if ( read_pipe(pub_data) <= 0 ) {
+	    return -1;
+	}
+	// prepare _msg_id just once
+	_msg_id.rebuild(pipe.length());
+	memcpy((void*)_msg_id.data(),pipe.data(), pipe.length());
+    
+	// prepare _msg
+	//////////////////////////////////////////////////////////
+	// -- text format 
+	msg_data_size = pub_data.sprint(zbuffer,sizeof(zbuffer));
+	//////////////////////////////////////////////////////////
+	// -- binary format
+	//////////////////////////////////////////////////////////
+	// -- json format
+	std::string json_string = json_serializer(pub_data);
+	
+	msg_data_size = json_string.length();
+	_msg.rebuild(msg_data_size);
+	memcpy((void*)_msg.data(), json_string.c_str(), msg_data_size);
+	
+	//printf("%s", (char*)_msg.data());
+	
+	return publish_msg();
+	
+    }
 
 protected:
-    
+        
     pub_data_t pub_data;
 
 };
-
-
-#define TEMPL template<class PubDataTypes>
-#define CLASS Publisher<PubDataTypes>
-#define SIGNATURE(type) TEMPL inline type CLASS
-
-SIGNATURE(int)::publish(void) {
-    
-    int nbytes, msg_data_size;
-    int expected_bytes = sizeof(pub_data_t);
-
-    if ( poll() > 0 ) {
-	
-	nbytes = read(xddp_sock, (void*)&pub_data, expected_bytes);
-
-	if (nbytes != expected_bytes) {
-	    //printf("zmq rx %d expected %d\n", nbytes, expected_bytes);
-	    return 1;
-	}
-    } else {
-	return 0;
-    }
-    
-    // prepare _msg_id
-    _msg_id.rebuild(pipe.length());
-    memcpy((void*)_msg_id.data(),pipe.data(), pipe.length());
-    // prepare _msg
-    //////////////////////////////////////////////////////////
-    // -- text format 
-    msg_data_size = pub_data.sprint(zbuffer,sizeof(zbuffer));
-    //////////////////////////////////////////////////////////
-    // -- binary format
-    
-    //////////////////////////////////////////////////////////
-    // -- json format
-    static Json::FastWriter writer;
-    static Json::Value      root;
-    static jmap_t           jmap;
-    
-    jmap.clear();
-    pub_data.to_map(jmap);
-    
-    for (jmap_t::iterator it = jmap.begin(); it != jmap.end(); it++) {
-            root[it->first] = ::atof(it->second.c_str()); // std:: it->second; 
-    }
-    std::string json_string(writer.write(root));
-    msg_data_size = json_string.length();
-    memcpy((void*)zbuffer, json_string.c_str(), msg_data_size);
-    
-    // re-build msg
-    _msg.rebuild(msg_data_size);
-    memcpy((void*)_msg.data(), zbuffer, msg_data_size);
-    
-    //printf("%s", (char*)_msg.data());
-    
-    return publish_msg();
-    
-}
-
-#undef SIGNATURE
-#undef CLASS
-#undef TEMPL
 
 ///////////////////////////////////////////////////////////////////////
 ///
@@ -258,11 +252,11 @@ SIGNATURE(int)::publish(void) {
 
 class ZMQ_Pub_thread : public Thread_hook {
     
-    typedef Publisher<TestEscPdoTypes::pdo_rx> TestPub;
-    typedef Publisher<Ft6EscPdoTypes::pdo_rx> FtPub;
-    typedef Publisher<McEscPdoTypes::pdo_rx> McPub;
-    typedef Publisher<PowEscPdoTypes::pdo_rx> PwPub;
-    typedef Publisher<PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
+    typedef Publisher<ecat::advr::TestEscPdoTypes::pdo_rx> TestPub;
+    typedef Publisher<ecat::advr::Ft6EscPdoTypes::pdo_rx> FtPub;
+    typedef Publisher<ecat::advr::McEscPdoTypes::pdo_rx> McPub;
+    typedef Publisher<ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
+    typedef Publisher<ecat::advr::PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
     
     iit::ecat::stat_t loop_time;
     uint64_t	tNow, dt;
@@ -286,7 +280,7 @@ public:
 
 	for ( auto const& item : zmap ) { delete item.second; }
 	
-	print_stat(loop_time);
+	ecat::print_stat(loop_time);
     }
 
     virtual void th_init(void *) { 
@@ -330,11 +324,11 @@ public:
 
     virtual void th_loop(void *) { 
 
-        tNow = get_time_ns();
+        tNow = iit::ecat::get_time_ns();
 
 	for ( auto const& item : zmap ) { item.second->publish(); }
 
-	dt = get_time_ns()-tNow;
+	dt = iit::ecat::get_time_ns()-tNow;
         loop_time(dt);
 
     }
@@ -342,8 +336,6 @@ public:
 };
 
 
-}
-}
 }
 
 #endif
