@@ -284,10 +284,10 @@ template <typename T>
 inline int Ec_Boards_ctrl::get_esc_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
 
     esc_bytype.clear();
-    for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
-	EscWrapper * esc = it->second.get();
+    for ( auto const& item : slaves ) {
+	EscWrapper * esc = item.second.get();
 	if ( esc->get_ESC_type() == ESC_type ) {
-	    esc_bytype[it->first] = dynamic_cast<T>(it->second.get());
+	    esc_bytype[item.first] = dynamic_cast<T>(item.second.get());
 	}
     }
     return esc_bytype.size();
@@ -299,11 +299,11 @@ inline int Ec_Boards_ctrl::get_esc_map_byclass(std::map<int, T> &esc_bytype) {
     EscWrapper * esc;
     T t;
     esc_bytype.clear();
-    for (auto it = slaves.begin(); it != slaves.end(); it++ ) {
-	EscWrapper * esc = it->second.get();
+    for ( auto const& item : slaves ) {
+	EscWrapper * esc = item.second.get();
 	t = dynamic_cast<T>(esc);
 	if ( t ) {
-	    esc_bytype[it->first] = t;
+	    esc_bytype[item.first] = t;
 	}
     }
     return esc_bytype.size();
@@ -332,10 +332,10 @@ template <typename T>
 inline int Ec_Boards_ctrl::get_zombie_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype) {
 
     esc_bytype.clear();
-    for (auto it = zombies.begin(); it != zombies.end(); it++ ) {
-	EscWrapper * esc = it->second.get();
+    for ( auto const& item : zombies ) {
+	EscWrapper * esc = item.second.get();
 	if ( esc->get_ESC_type() == ESC_type ) {
-	    esc_bytype[it->first] = dynamic_cast<T>(it->second.get());
+	    esc_bytype[item.first] = dynamic_cast<T>(item.second.get());
 	}
     }
     return esc_bytype.size();
