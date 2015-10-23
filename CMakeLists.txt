@@ -12,15 +12,18 @@ set(SHARED_SRC 		${CMAKE_CURRENT_SOURCE_DIR}/shared_src)
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
     find_package(RTnet)
-    set(RT_SRC
+    set(RT_NRT_SRC
 	${SHARED_SRC}/rt_ipc.cpp
 	${SHARED_SRC}/rt_thread.cpp)
+else()
+    set(RT_NRT_SRC
+	${SHARED_SRC}/nrt_thread.cpp)
 endif()
 
 add_library(shared_utils SHARED
     ${SHARED_SRC}/ec_boards_base.cpp
     ${SHARED_SRC}/test_common.cpp
-    ${RT_SRC}
+    ${RT_NRT_SRC}
 )
 
 install(DIRECTORY ${SHARED_SRC}/include/  DESTINATION include)
@@ -50,3 +53,4 @@ optional_build(coman_walk	examples/coman_walk	OFF)
 optional_build(joy_forward 	other_bin/joy_forward	OFF)
 optional_build(spnav_forward 	other_bin/spnav_forward	OFF)
 optional_build(zmq_pub          other_bin/zmq_pub	OFF)
+optional_build(spline_test      other_bin/spline_test	OFF)

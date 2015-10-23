@@ -46,6 +46,15 @@ void * rt_non_periodic_thread(Thread_hook_Ptr);
 void * nrt_thread(Thread_hook_Ptr);
 
 
+inline void tsnorm(struct timespec *ts)
+{
+	while (ts->tv_nsec >= NSEC_PER_SEC) {
+		ts->tv_nsec -= NSEC_PER_SEC;
+		ts->tv_sec++;
+	}
+}
+
+
 class Thread_hook {
 
 public:

@@ -1,7 +1,102 @@
 #include <ec_boards_joint_joy.h>
 #include <iit/advr/coman_robot_id.h>
 
+#include <iit/advr/spline.h>
+#include <iit/advr/pos_spline.h>
+
+#include <linux/joystick.h>
+#include <spnav.h>
+
 #define MID_POS(m,M)    (m+(M-m)/2)
+
+typedef struct js_event	js_input_t;
+typedef spnav_event	spnav_input_t;
+
+
+
+
+
+inline bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
+				   std::map<int,float> target_pos,
+				   float eps) {
+
+    bool all_true = true;
+    float pos_ref;
+    int slave_pos;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    std::vector<bool> truth_vect(motor_set.size()-1);
+        
+    for ( auto const& item : motor_set ) {
+	slave_pos = item.first;
+	moto =  item.second;
+	
+	// check in the target_pos map if the current slave_pos exist
+	try { pos_ref = target_pos.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) { continue; }
+	
+	motor_pdo_rx = moto->getRxPDO();
+	moto->set_posRef(pos_ref);
+	
+	truth_vect.push_back(
+	    fabs(motor_pdo_rx.link_pos  - pos_ref) <= eps ||
+	    fabs(motor_pdo_rx.motor_pos - pos_ref) <= eps );
+    
+	//DPRINTF("%f %f %f\n",pos_ref, motor_pdo_rx.link_pos, motor_pdo_rx.motor_pos);
+    }
+    
+    //DPRINTF("---\n");
+    std::for_each(truth_vect.begin(),truth_vect.end(),[&](bool b){
+	all_true &= b;
+	//DPRINTF("%d\n",b);
+    });
+
+    return all_true; 
+}
+
+
+inline bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
+				   std::map<int,tk::spline> spline_trj,
+				   float eps) {
+
+    bool all_true = true;
+    float pos_ref;
+    int slave_pos;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    std::vector<bool> truth_vect(motor_set.size()-1);
+        
+    for ( auto const& item : motor_set ) {
+	slave_pos = item.first;
+	moto =  item.second;
+	
+	// check in the target_pos map if the current slave_pos exist
+	//try { pos_ref = target_pos.at(slave_pos); }
+	//catch ( const std::out_of_range& oor ) { continue; }
+	
+	motor_pdo_rx = moto->getRxPDO();
+	moto->set_posRef(pos_ref);
+	
+	truth_vect.push_back(
+	    fabs(motor_pdo_rx.link_pos  - pos_ref) <= eps ||
+	    fabs(motor_pdo_rx.motor_pos - pos_ref) <= eps );
+    
+	//DPRINTF("%f %f %f\n",pos_ref, motor_pdo_rx.link_pos, motor_pdo_rx.motor_pos);
+    }
+    
+    //DPRINTF("---\n");
+    std::for_each(truth_vect.begin(),truth_vect.end(),[&](bool b){
+	all_true &= b;
+	//DPRINTF("%d\n",b);
+    });
+
+    return all_true; 
+}
+
+
+
+
+
 
 EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) :
     Ec_Thread_Boards_base(config_yaml)
@@ -74,43 +169,7 @@ void EC_boards_joint_joy::init_preOP(void) {
 
 }
 
-bool EC_boards_joint_joy::go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
-				   std::map<int,float> target_pos,
-				   float eps) {
 
-    bool all_true = true;
-    float pos_ref;
-    int slave_pos;
-    iit::ecat::advr::Motor * moto;
-    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
-    std::vector<bool> truth_vect(motor_set.size()-1);
-        
-    for ( auto const& item : motor_set ) {
-	slave_pos = item.first;
-	moto =  item.second;
-	
-	// check in the target_pos map if the current slave_pos exist
-	try { pos_ref = target_pos.at(slave_pos); }
-	catch ( const std::out_of_range& oor ) { continue; }
-	
-	motor_pdo_rx = moto->getRxPDO();
-	moto->set_posRef(pos_ref);
-	
-	truth_vect.push_back(
-	    fabs(motor_pdo_rx.link_pos  - pos_ref) <= eps ||
-	    fabs(motor_pdo_rx.motor_pos - pos_ref) <= eps );
-    
-	//DPRINTF("%f %f %f\n",pos_ref, motor_pdo_rx.link_pos, motor_pdo_rx.motor_pos);
-    }
-    
-    //DPRINTF("---\n");
-    std::for_each(truth_vect.begin(),truth_vect.end(),[&](bool b){
-	all_true &= b;
-	//DPRINTF("%d\n",b);
-    });
-
-    return all_true; 
-}
 
 void EC_boards_joint_joy::init_OP(void) {
     

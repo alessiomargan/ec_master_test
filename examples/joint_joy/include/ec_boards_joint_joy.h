@@ -16,14 +16,10 @@
 
 #include <iit/advr/ec_boards_base.h>
 
-#include <linux/joystick.h>
-#include <spnav.h>
 
 /**
  */
 
-typedef struct js_event	js_input_t;
-typedef spnav_event	spnav_input_t;
 
 class EC_boards_joint_joy : public Ec_Thread_Boards_base
 {
@@ -48,9 +44,9 @@ private :
     
     virtual void init_preOP(void);
     virtual void init_OP(void);
-    bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
-		  std::map<int,float> target_pos,
-		  float eps);
+//     bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
+// 		  std::map<int,float> target_pos,
+// 		  float eps);
     
     std::map<int,float> step_1;
     std::map<int,float> step_2;

@@ -5,14 +5,9 @@ project(${PRJ_DIR})
 include_directories(include)
 
 add_executable(${PROJECT_NAME}
-    ec_boards_basic.cpp
-    basic_test.cpp
+    spline_test.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} ${COMMON_LIBS})
-
-if(NOT ENABLE_XENO)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND set_cap.sh ${PROJECT_NAME} COMMENT set_cap)
-endif()
+target_link_libraries(${PROJECT_NAME} boost_system)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)

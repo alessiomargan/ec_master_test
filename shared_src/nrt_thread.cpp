@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <thread_util.h>
-
+#include <iit/advr/thread_util.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // 

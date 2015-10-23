@@ -16,10 +16,9 @@ add_executable(coman_walk
     main_walk.cpp
 )
 
-if(ENABLE_XENO)
-     target_link_libraries(${PROJECT_NAME} coman_os_rt ${COMMON_LIBS})
-else()
-    target_link_libraries(${PROJECT_NAME} coman_os ${COMMON_LIBS})
+target_link_libraries(${PROJECT_NAME} ${COMMON_LIBS})
+
+if(NOT ENABLE_XENO)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND set_cap.sh ${PROJECT_NAME} COMMENT set_cap)
 endif()
 
