@@ -142,6 +142,8 @@ public:
             return EC_WRP_NOK;
         }
         
+        start_log(true);
+        
         return EC_WRP_OK;
 
     }

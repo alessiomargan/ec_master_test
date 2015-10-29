@@ -7,18 +7,6 @@
 #ifndef __IIT_ECAT_ADVR_LOG_H__
 #define __IIT_ECAT_ADVR_LOG_H__
 
-#include <sys/mman.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-#include <string.h>
-#include <malloc.h>
-#include <pthread.h>
-#include <fcntl.h>
-#include <errno.h>
-
-#include <iit/ecat/utils.h>
 
 #include <boost/circular_buffer.hpp>
 

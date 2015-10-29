@@ -128,7 +128,7 @@ struct McEscPdoTypes {
             return snprintf(buff, size, "%f\t0x%X\t%d\t%d\t%d", pos_ref,fault_ack,gainP,gainD,ts);
         }
 
-    }  __attribute__((__packed__));
+    }  __attribute__((__packed__));  // 12 bytes
 
     // RX  slave_output -- master input
     struct pdo_rx {
@@ -156,7 +156,7 @@ struct McEscPdoTypes {
             JPDO(rtt);            
         }
         
-    }  __attribute__((__packed__));
+    }  __attribute__((__packed__)); // 20 bytes
 };
 
 

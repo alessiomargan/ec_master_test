@@ -85,25 +85,40 @@ struct LoPwrEscSdoTypes {
     uint16_t    flash_params_cmd_ack;     
 };
 
+
+struct LoPwrLogTypes {
+
+    uint64_t    		ts;           // ns
+    McEscPdoTypes::pdo_rx	rx_pdo;
+
+    void fprint(FILE *fp) {
+            fprintf(fp, "%lu\t", ts);
+	    rx_pdo.fprint(fp);
+        }
+    int sprint(char *buff, size_t size) {
+	int l = snprintf(buff, size, "%lu\t", ts); 
+	return l + rx_pdo.sprint(buff+l,size-l);
+    }
+};
+
 /**
  *  
  **/ 
 
 class LpESC :
     public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>,
-    public PDO_log<McEscPdoTypes::pdo_rx>,
+    public PDO_log<LoPwrLogTypes>,
     public Motor
 {
 public:
-    typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> Base;
-    typedef PDO_log<McEscPdoTypes::pdo_rx>                   Log;
+    typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> 	Base;
+    typedef PDO_log<LoPwrLogTypes>                   		Log;
 
     LpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
         Log(std::string("/tmp/LpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
-	_start_log = false;
-        _actual_state = EC_STATE_PRE_OP;
+	_actual_state = EC_STATE_PRE_OP;
     }
     
     virtual ~LpESC(void) { 
@@ -146,8 +161,11 @@ public:
         rx_pdo.motor_pos = lopwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset); 
         rx_pdo.pos_ref_fb  = lopwr_esc::M2J(rx_pdo.pos_ref_fb,_sgn,_offset);
 
-        if ( _start_log ) {
-            push_back(rx_pdo);
+	if ( _start_log ) {
+	    Log::log_t log;
+            log.ts = get_time_ns() - _start_log_ts ;
+	    log.rx_pdo = rx_pdo;
+            push_back(log);
         }
     }
 
@@ -248,7 +266,7 @@ public:
         
         log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
         
-        // we log when receive PDOs
+	// we log when receive PDOs
         start_log(true);
             
         return EC_WRP_OK;
