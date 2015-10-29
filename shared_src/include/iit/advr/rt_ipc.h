@@ -22,7 +22,9 @@ purpose.
 extern "C" {
 #endif
 
+
 int xddp_bind(const char * label, size_t poolsz);
+
 int xddp_connect(const char * label);
 
 #ifdef __cplusplus

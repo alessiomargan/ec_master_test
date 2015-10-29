@@ -9,12 +9,15 @@ set(CMAKE_CXX_FLAGS 	"${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 set(ENABLE_XENO  	CACHE BOOL "OFF")
 set(SHARED_SRC 		${CMAKE_CURRENT_SOURCE_DIR}/shared_src) 
 
+
+	
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
     find_package(RTnet)
     set(RT_NRT_SRC
 	${SHARED_SRC}/rt_ipc.cpp
-	${SHARED_SRC}/rt_thread.cpp)
+	${SHARED_SRC}/rt_thread.cpp
+	${SHARED_SRC}/nrt_thread.cpp)
 else()
     set(RT_NRT_SRC
 	${SHARED_SRC}/nrt_thread.cpp)

@@ -1,3 +1,5 @@
+#ifndef __POS_SPLINE_H__
+#define __POS_SPLINE_H__
 
 #include "boost/chrono.hpp"
 #include "Eigen/Splines"
@@ -64,3 +66,5 @@ const Position Trajectory::operator() (const double positionTime) const{
   
     return calcPosition;
 }
+
+#endif

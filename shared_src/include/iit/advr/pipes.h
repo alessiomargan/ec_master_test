@@ -9,54 +9,24 @@
 
 #include <string>
 
+#ifdef __XENO__
+    #include <iit/advr/rt_ipc.h>
+#else
+    #include <sys/types.h>
+    #include <sys/stat.h>
+    #include <fcntl.h>
+#endif
+
+
 #if __XENO__
     static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
 #else
     static const std::string pipe_prefix("/tmp/");
 #endif
 
-
-#ifdef __XENO__
-    #include <iit/advr/rt_ipc.h>
-#else
-    #include <sys/types.h>
-    #include <sys/stat.h>
-#if 0
-    static int xddp_bind(const char * label, size_t local_poolsz) {
-    
-        int socket_fd;
-        struct sockaddr_un server_address; 
-        struct sockaddr_un client_address; 
-        int bytes_received, bytes_sent, address_length;
-        int integer_buffer;
-        socklen_t address_length = sizeof(struct sockaddr_un);
-
-        if((socket_fd = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0) {
-            perror("server: socket");
-            return 1;
-        }
-        
-        memset(&server_address, 0, sizeof(server_address));
-        server_address.sun_family = AF_UNIX;
-        strcpy(server_address.sun_path, "./UDSDGSRV");
-        
-        unlink("./UDSDGSRV");       
-        if(bind(socket_fd, (const struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
-            close(socket_fd);
-            perror("server: bind");
-            return 1;
-        }
-    }
-#endif
-#endif
-
-
-//template<class XddpTxTypes, class XddpRxTypes>
 class XDDP_pipe {
 
 public:
-    //typedef XddpTxTypes    xddp_tx_t;
-    //typedef XddpRxTypes    xddp_rx_t;
 
     XDDP_pipe(int _pool_size = 8192):
         pool_size(_pool_size)

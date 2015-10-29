@@ -2,36 +2,41 @@
 
 #include "iit/advr/pos_spline.h"
 #include "iit/advr/spline.h"
+#include "iit/advr/trajectory.h"
 
+#define SAMPLE_NUM 100
 
 int main(void) {
 
-    std::vector<double> X(5), Y(5);
-    X[0]=0.0; X[1]=4.0; X[2]=12.0; X[3]=18.0; X[4]=20.0;
-    Y[0]=0.1; Y[1]=0.7; Y[2]=0.6; Y[3]=1.1; Y[4]=0.9;
-
+    //std::vector<double> X = std::initializer_list<double> {   0,   5,  10,  15,  20 };
+    //std::vector<double> Y = std::initializer_list<double> { 0.1, 0.7, 0.6, 1.1, 0.9 };
+    std::vector<double> X = std::initializer_list<double> {   0,   1,   2 };
+    std::vector<double> Y = std::initializer_list<double> { 0.0, 3.9, 1.0 };
+    
     tk::spline s;
     s.set_points(X,Y);    // currently it is required that X is already sorted
 
-    std::vector<Position> Pos(5);
-    Pos[0].mPositionTime = 0.0;
-    Pos[0].mLocation << 0.1, 0.0, 0.0;
-    Pos[1].mPositionTime = 4.0;
-    Pos[1].mLocation << 0.7, 0.0, 0.0;
-    Pos[2].mPositionTime = 12.0;
-    Pos[2].mLocation << 0.6, 0.0, 0.0;
-    Pos[3].mPositionTime = 18.0;
-    Pos[3].mLocation << 1.1, 0.0, 0.0;
-    Pos[4].mPositionTime = 20.0;
-    Pos[4].mLocation << 0.9, 0.0, 0.0;
+    std::vector<Position> Pos(X.size());
+    for (int i=0; i<X.size(); i++) {
+	Pos[i].mPositionTime = X[i];
+	Pos[i].mLocation << Y[i], 0.0, 0.0;
+    	
+    }	
     
     Trajectory trj;
     trj.set_points(Pos);
+  
+    advr::trajectory myt;
+    myt.set_points(X,Y);
     
-    double x = 20.0/100;
     
-    for (int i=0; i < 100; i++) {
-	printf("spline at %f is %f\t%f\n", x*i, s(x*i), trj(x*i).mLocation[0]);
+    double x = (X.back())/SAMPLE_NUM;
+    
+    for (int i=0; i < SAMPLE_NUM; i++) {
+	
+	printf("%f\t%f\t%f\t%f\t%f\n", x*i, s(x*i), trj(x*i).mLocation[0], myt(x*i), myt() );
+	usleep(2000000/SAMPLE_NUM);
+		
     }
     return 0;
 }

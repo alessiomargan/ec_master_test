@@ -1,9 +1,6 @@
 #include <ec_boards_joint_joy.h>
 #include <iit/advr/coman_robot_id.h>
 
-#include <iit/advr/spline.h>
-#include <iit/advr/pos_spline.h>
-
 #include <linux/joystick.h>
 #include <spnav.h>
 
@@ -56,12 +53,13 @@ inline bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
 
 
 inline bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
-				   std::map<int,tk::spline> spline_trj,
-				   float eps) {
+		     std::map<int,advr::trajectory*> spline_trj,
+		     float eps) {
 
     bool all_true = true;
     float pos_ref;
     int slave_pos;
+    advr::trajectory *trj;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
     std::vector<bool> truth_vect(motor_set.size()-1);
@@ -70,16 +68,20 @@ inline bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
 	slave_pos = item.first;
 	moto =  item.second;
 	
-	// check in the target_pos map if the current slave_pos exist
-	//try { pos_ref = target_pos.at(slave_pos); }
-	//catch ( const std::out_of_range& oor ) { continue; }
+	
+	// test if the current slave_pos exist
+	try { trj = spline_trj.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) { continue; }
 	
 	motor_pdo_rx = moto->getRxPDO();
+	pos_ref = (float)(*trj)();
 	moto->set_posRef(pos_ref);
-	
+
 	truth_vect.push_back(
-	    fabs(motor_pdo_rx.link_pos  - pos_ref) <= eps ||
-	    fabs(motor_pdo_rx.motor_pos - pos_ref) <= eps );
+	    (fabs(motor_pdo_rx.link_pos  - trj->end_point()) <= eps ||
+	     fabs(motor_pdo_rx.motor_pos - trj->end_point()) <= eps ) &&
+	    trj->finish()
+	);
     
 	//DPRINTF("%f %f %f\n",pos_ref, motor_pdo_rx.link_pos, motor_pdo_rx.motor_pos);
     }
@@ -163,8 +165,21 @@ void EC_boards_joint_joy::init_preOP(void) {
     for ( auto const& item : motors ) {
 	slave_pos = item.first;
 	moto = item.second;
-        step_1[slave_pos] = home[slave_pos] + 2.0;
-        step_2[slave_pos] = home[slave_pos] - 2.0;
+        step_1[slave_pos] = home[slave_pos] + 1.0;
+        step_2[slave_pos] = home[slave_pos] - 1.0;
+    }
+
+    std::vector<double> X = std::initializer_list<double> { 0, 1, 2, 3, 4, 5, 6, 10 };
+    std::map<int,std::vector<double>> Ys;
+    
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	Ys[slave_pos] = std::initializer_list<double> {  step_2[slave_pos], 1.5, 2.5, 1.0, 2.2, 1.0 , 2.0, home[slave_pos] };
+	spline1_trj[slave_pos] = new advr::trajectory();
+	spline1_trj[slave_pos]->set_points(X,Ys[slave_pos]);
+	spline2_trj[slave_pos] = new advr::trajectory();
+	Ys[slave_pos] = std::initializer_list<double> {  home[slave_pos], 5.0, 3.5, 4.5, 4.0, 3.0 , 3.5, step_1[slave_pos] };
+	spline2_trj[slave_pos]->set_points(X,Ys[slave_pos]);
     }
 
 }
@@ -277,11 +292,12 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
 
 int EC_boards_joint_joy::user_loop(void) {
 
+    int slave_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::LpESC::pdo_rx_t motor_pdo_rx;
-    
     static float ds; 
     
+   
     //
     if ( user_input(ds) > 0 ) {
 	DPRINTF(">> %f\n", ds);
@@ -292,28 +308,46 @@ int EC_boards_joint_joy::user_loop(void) {
 	
 	case HOMING :
 	
-	    if ( go_there(motors, home, 0.005) ) {
-		user_state = STEP_1;
+	    if ( go_there(motors, home, 0.01) ) {
+		user_state = STEP_1;		
 		DPRINTF("At Home ....\n");
 	    }
 	    break;
 	
 	case STEP_1 :
 	    
-	    if ( go_there(motors, step_1, 0.005) ) {
-		user_state = STEP_2;
+	    if ( go_there(motors, step_1, 0.01) ) {
 		DPRINTF("At Step 1 ....\n");
+		user_state = STEP_2;
 	    }
 	    break;
 
 	case STEP_2 :
 	    
-	    if ( go_there(motors, step_2, 0.005) ) {
-		user_state = HOMING;
+	    if ( go_there(motors, step_2, 0.01) ) {
+		user_state = TRJ_1;
 		DPRINTF("At Step 2 ....\n");
+		for ( auto const& item : spline1_trj ) { item.second->start_time(); }
 	    }
 	    break;
 
+	case TRJ_1 :
+	    
+	    if ( go_there(motors, spline1_trj, 0.01) ) {
+		user_state = TRJ_2;
+		DPRINTF("At trj_1 end ....\n");
+		for ( auto const& item : spline2_trj ) { item.second->start_time(); }
+	    }
+	    break;
+
+	case TRJ_2 :
+	    
+	    if ( go_there(motors, spline2_trj, 0.01) ) {
+		user_state = HOMING;
+		DPRINTF("At trj_2 end ....\n");
+	    }
+	    break;
+	    
 	case MOVING :
     
 	    for ( auto const& item : motors ) {
