@@ -45,7 +45,8 @@ Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 int Ec_Boards_ctrl::init(void) {
         
     if ( iit::ecat::initialize(eth_if.c_str()) > 0 ) {
-        factory_board();
+        
+	factory_board();
         return EC_BOARD_OK;
     }
 
@@ -203,7 +204,6 @@ void Ec_Boards_ctrl::start_motors(int control_type)
 void Ec_Boards_ctrl::stop_motors(void)
 {
     for (auto it = rid2pos.begin(); it != rid2pos.end(); it++ ) {
-    
         Motor * moto = slave_as_Motor(it->second);
         if (moto) {
             moto->stop();
@@ -276,10 +276,15 @@ void Ec_Boards_ctrl::check_DataLayer(void)
 }
     
 
-int Ec_Boards_ctrl::set_operative() {
+int Ec_Boards_ctrl::set_operative(void) {
 
     expected_wkc = iit::ecat::operational(&sync_cycle_time_ns, &sync_cycle_offset_ns);
     return expected_wkc;
+}
+
+int Ec_Boards_ctrl::set_pre_op(void) {
+
+    return iit::ecat::pre_operational();
 }
 
 int Ec_Boards_ctrl::getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo)

@@ -125,8 +125,9 @@ public:
 
             sdo.par_1 = 123;
             sdo.par_2 = 999;
-            getSDO_byname("par_1", par_1);
-            writeSDO_byname("par_2", par_2);
+            //getSDO_byname("par_1", par_1);
+            readSDO_byname("par_1", par_1);
+	    writeSDO_byname("par_2", par_2);
             writeSDO_byname<int32_t>("par_2", 777);
             int32_t test;
             readSDO_byname("par_2", test);

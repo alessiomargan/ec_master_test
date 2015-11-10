@@ -7,11 +7,12 @@
 #ifndef __IIT_ECAT_ADVR_MOTOR_H__
 #define __IIT_ECAT_ADVR_MOTOR_H__
 
+#include <iit/ecat/advr/esc.h>
+
 namespace iit {
 namespace ecat {
 namespace advr {
 
-#include <iit/ecat/advr/esc.h>
 
 class HpESC;
 class LpESC;
@@ -38,12 +39,12 @@ private:
         return c->readSDO_byname( name.c_str(), value );
     }
 
-    template <class C, typename T>
-    int getSDO_impl(std::string const & name, T & value ) {
-        C *c = dynamic_cast<C*>(this);
-        if (!c) { return EC_WRP_NOK; }
-        return c->getSDO_byname( name.c_str(), value );
-    }
+//     template <class C, typename T>
+//     int getSDO_impl(std::string const & name, T & value ) {
+//         C *c = dynamic_cast<C*>(this);
+//         if (!c) { return EC_WRP_NOK; }
+//         return c->getSDO_byname( name.c_str(), value );
+//     }
 
 public:
 
@@ -67,15 +68,15 @@ public:
         return EC_WRP_NOK;
     }
 
-    template<typename T>
-    int getSDO(std::string const & name, T & value ) {
-        if ( am_i_HpESC() ) {
-            return getSDO_impl<HpESC>(name, value);
-        } else if ( am_i_LpESC() ) {
-            return getSDO_impl<LpESC>(name, value);
-        }
-        return EC_WRP_NOK;
-    }
+//     template<typename T>
+//     int getSDO(std::string const & name, T & value ) {
+//         if ( am_i_HpESC() ) {
+//             return getSDO_impl<HpESC>(name, value);
+//         } else if ( am_i_LpESC() ) {
+//             return getSDO_impl<LpESC>(name, value);
+//         }
+//         return EC_WRP_NOK;
+//     }
 
     virtual int init(const YAML::Node &) = 0;
     virtual int start(int controller_type) { return EC_BOARD_NOK; }

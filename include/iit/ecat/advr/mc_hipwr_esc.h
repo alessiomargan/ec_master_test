@@ -265,7 +265,9 @@ public :
             // !! sgn and offset must set before init_sdo_lookup !!
             init_SDOs();
             init_sdo_lookup();
-            getSDO_byname("Joint_robot_id", Joint_robot_id);
+            readSDO_byname("Joint_robot_id", Joint_robot_id);
+	    readSDO_byname("Joint_number");
+	    readSDO_byname("fw_ver");
 
         } catch (EscWrpError &e ) {
 
@@ -293,12 +295,13 @@ public :
             return EC_BOARD_INVALID_ROBOT_ID;
         }
 
-        // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
-        readSDO_byname("Min_pos");
-        readSDO_byname("Max_pos");
-        readSDO_byname("link_pos");
+	// redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
+	readSDO_byname("Min_pos");
+	readSDO_byname("Max_pos");
+	readSDO_byname("Target_velocity");
+	readSDO_byname("link_pos");
 
-        // set filename with robot_id
+	// set filename with robot_id
         log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
     
         // Paranoid Direct_ref

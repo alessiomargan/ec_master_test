@@ -181,7 +181,7 @@ public:
         try {
             init_SDOs();
             init_sdo_lookup();
-            getSDO_byname("Sensor_robot_id", robot_id);
+            readSDO_byname("Sensor_robot_id", robot_id);
             set_flash_cmd_X(this, CTRL_REMOVE_TORQUE_OFFS);
 
         } catch (EscWrpError &e ) {

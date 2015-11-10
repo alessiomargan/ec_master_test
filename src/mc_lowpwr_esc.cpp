@@ -174,7 +174,7 @@ static const iit::ecat::objd_t source_SDOs[] =
                                                                         
     // SDO8001[] =                                                      
     {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "fw_ver"                ,0   }, 
-    {0x8001, 0x2, DTYPE_INTEGER32,        32, ATYPE_RW, acName8001_2            ,0   }, 
+    {0x8001, 0x2, DTYPE_UNSIGNED32,       32, ATYPE_RW, acName8001_2            ,0   }, 
     {0x8001, 0x3, DTYPE_UNSIGNED16,       16, ATYPE_RW, "ctrl_status_cmd"       ,0   }, 
     {0x8001, 0x4, DTYPE_UNSIGNED16,       16, ATYPE_RO, "ctrl_status_cmd_ack"   ,0   }, 
     {0x8001, 0x5, DTYPE_REAL32,           32, ATYPE_RO, acName8001_5            ,0   }, 

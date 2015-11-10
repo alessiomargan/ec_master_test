@@ -233,7 +233,9 @@ public:
             // !! sgn and offset must set before init_sdo_lookup !!
             init_SDOs();
             init_sdo_lookup();
-            getSDO_byname("Joint_robot_id", Joint_robot_id);
+            readSDO_byname("Joint_robot_id", Joint_robot_id);
+            readSDO_byname("Joint_number");
+	    readSDO_byname("fw_ver");
 
         } catch (EscWrpError &e ) {
 
@@ -258,12 +260,13 @@ public:
         } else {
             return EC_BOARD_INVALID_ROBOT_ID;
         }
-
-        // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
-        readSDO_byname("Min_pos");
-        readSDO_byname("Max_pos");
-        readSDO_byname("link_pos");
         
+	// redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
+	readSDO_byname("Min_pos");
+	readSDO_byname("Max_pos");
+	readSDO_byname("Target_velocity");
+	readSDO_byname("link_pos");
+
         log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
         
 	// we log when receive PDOs
@@ -279,11 +282,14 @@ public:
 
         try {
             set_ctrl_status_X(this, CTRL_POWER_MOD_OFF);
-            // set direct mode and power on modulator
+	    // set actual position as reference
+            readSDO_byname("link_pos", act_position);
+            writeSDO_byname("pos_ref", act_position);
+            DPRINTF("start %f\n", act_position);
+	    // set direct mode and power on modulator
             set_ctrl_status_X(this, CTRL_SET_DIRECT_MODE);
             set_ctrl_status_X(this, CTRL_POWER_MOD_ON);
-            
-            // set position mode
+	    // set position mode
             set_ctrl_status_X(this, CTRL_SET_POS_MODE);
             
         } catch (EscWrpError &e ) {

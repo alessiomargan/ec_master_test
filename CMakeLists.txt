@@ -20,8 +20,6 @@ else()
   set(ENABLE_RTNET  OFF)
 endif()
 
-set(HEADER_INSTALL_ROOT $ENV{WALKMAN_ETHERCAT_MASTER_ROOT}/include/ CACHE PATH "Where to install the headers")
-set(LIB_INSTALL_ROOT    $ENV{WALKMAN_ETHERCAT_MASTER_ROOT}/lib/     CACHE PATH "Where to install the libraries")
 set(SOEM_ROOT           $ENV{SOEM_ROOT}     CACHE PATH "Base path of the SOEM headers")
 
 add_definitions(-DKEEP_POWER_ON)
@@ -49,6 +47,6 @@ target_link_libraries(walkman_master iitecat_iface soem pthread yaml-cpp)
 
 
 # Install
-install(DIRECTORY include/  DESTINATION ${HEADER_INSTALL_ROOT})
-install(TARGETS walkman_master  DESTINATION ${LIB_INSTALL_ROOT})
+install(DIRECTORY include/  DESTINATION include)
+install(TARGETS walkman_master  DESTINATION lib)
 

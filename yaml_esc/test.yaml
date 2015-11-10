@@ -31,7 +31,14 @@ sdos :
     
     0x8001 : [
         ["fw_ver",s64,RO],
-
+        ["ack_board_faults",I,RW],
+        ["ctrl_status_cmd",H,RW],
+        ["ctrl_status_cmd_ack",H,RO],
+        ["direct_ref",f,RW],
+        ["abs_pos",f,RO],
+        ["m_current",f,RO],
+        ["flash_params_cmd",H,RW],
+        ["flash_params_cmd_ack",H,RO]
     ]
 
             
