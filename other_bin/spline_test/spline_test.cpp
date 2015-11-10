@@ -12,6 +12,8 @@ int main(void) {
     //std::vector<double> Y = std::initializer_list<double> { 0.1, 0.7, 0.6, 1.1, 0.9 };
     std::vector<double> X = std::initializer_list<double> {   0,   1,   2 };
     std::vector<double> Y = std::initializer_list<double> { 0.0, 3.9, 1.0 };
+    std::vector<double> A = std::initializer_list<double> {   0,   2 };
+    std::vector<double> B = std::initializer_list<double> { 0.0, 1.0 };
     
     tk::spline s;
     s.set_points(X,Y);    // currently it is required that X is already sorted
@@ -26,17 +28,24 @@ int main(void) {
     Trajectory trj;
     trj.set_points(Pos);
   
-    advr::trajectory myt;
+    advr::Spline_Trj myt;
     myt.set_points(X,Y);
-    
-    
+
+    advr::Spline_Trj two_points;
+    two_points.set_points(A,B);
+   
     double x = (X.back())/SAMPLE_NUM;
     
     for (int i=0; i < SAMPLE_NUM; i++) {
 	
-	printf("%f\t%f\t%f\t%f\t%f\n", x*i, s(x*i), trj(x*i).mLocation[0], myt(x*i), myt() );
+	//printf("%f\t%f\t%f\t%f\t%f\t%f\n", x*i, s(x*i), trj(x*i).mLocation[0], myt(x*i), myt(), two_points() );
+	printf("%f\t%f\t%f\t%f\t%f\n", x*i, s(x*i), myt(x*i), myt(), two_points() );
 	usleep(2000000/SAMPLE_NUM);
 		
     }
+    
+
+ 
+    
     return 0;
 }

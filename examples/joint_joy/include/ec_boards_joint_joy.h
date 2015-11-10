@@ -14,7 +14,6 @@
 #define __EC_BOARDS_JOINT_JOY_H__
 
 #include <iit/advr/ec_boards_base.h>
-
 #include <iit/advr/trajectory.h>
 
 /**
@@ -32,6 +31,8 @@ public:
 	STEP_2,
 	TRJ_1,
 	TRJ_2,
+	//
+	IDLE,
     };
    
     EC_boards_joint_joy(const char * config_yaml);
@@ -45,15 +46,13 @@ private :
     
     virtual void init_preOP(void);
     virtual void init_OP(void);
-//     bool go_there(std::map<int, iit::ecat::advr::Motor*> motor_set,
-// 		  std::map<int,float> target_pos,
-// 		  float eps);
     
     std::map<int,float> step_1;
     std::map<int,float> step_2;
     
-    std::map<int,advr::trajectory*> spline1_trj;
-    std::map<int,advr::trajectory*> spline2_trj;
+    advr::Spline_ptr_map spline1_trj;
+    advr::Spline_ptr_map spline2_trj;
+    advr::Spline_ptr_map spline_start2home;
     
     XDDP_pipe jsInXddp, navInXddp;
     

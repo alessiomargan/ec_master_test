@@ -13,6 +13,12 @@
 
 #include <iit/advr/ec_boards_base.h>
 
+Ec_Thread_Boards_base::~Ec_Thread_Boards_base() {
+ 	
+    set_pre_op();
+    stop_motors();
+    iit::ecat::print_stat(s_loop);
+}
 
 
 void Ec_Thread_Boards_base::th_init(void *) {
@@ -25,9 +31,6 @@ void Ec_Thread_Boards_base::th_init(void *) {
     if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK) {
 	throw "something wrong";
     }
-    // get Robot_Id map 
-    rid2pos = get_Rid2PosMap();
-    pos2rid = get_Pos2RidMap();
     
     get_esc_map_byclass(motors);
     get_esc_map_byclass(fts);
@@ -40,6 +43,20 @@ void Ec_Thread_Boards_base::th_init(void *) {
     if ( set_operative() <= 0 ) {
 	throw "something else wrong";
     }
+
+    ////////////////////////////////////////////////////////////////
+    std::chrono::time_point<std::chrono::system_clock> start, now;
+    start = now = std::chrono::system_clock::now();
+    std::chrono::seconds loop_delay(1);
+    while ( now - start <= loop_delay ) {
+	try {
+	    send_to_slaves();	
+	} catch (iit::ecat::EscWrpError &e) {
+		std::cout << e.what() << std::endl;
+	}
+	now = std::chrono::system_clock::now();
+    }
+    ////////////////////////////////////////////////////////////////
     
     start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;

@@ -33,18 +33,20 @@ void Ec_Boards_sine::init_preOP(void) {
     float min_pos, max_pos;
     
     // fill motors map
-    get_esc_map_byclass(motors);
     DPRINTF("found %lu <Motor> instance\n", motors.size());
     
     for ( auto const& item : motors ) {
 	slave_pos = item.first;
 	moto = item.second;
-	moto->start(CTRL_SET_MIX_POS_MODE);
-        moto->getSDO("Min_pos", min_pos);
-        moto->getSDO("Max_pos", max_pos);
-        moto->getSDO("link_pos", start_pos[slave_pos]); 
+	moto->readSDO("Min_pos", min_pos);
+        moto->readSDO("Max_pos", max_pos);
+        moto->readSDO("link_pos", start_pos[slave_pos]); 
         // set home to mid pos
         home[slave_pos] = MID_POS(min_pos,max_pos);
+	// set pos to current position 
+	moto->set_posRef(start_pos[slave_pos]);
+	// start controller
+	moto->start(CTRL_SET_MIX_POS_MODE);
     }
     
     for ( auto const& item : motors ) {
@@ -55,15 +57,20 @@ void Ec_Boards_sine::init_preOP(void) {
 	}
     }
     
-//     moto = motors[rid2pos[1]];
-//     while ( ! moto->move_to(home[slave_pos], 0.005) ) {
-//     	osal_usleep(2000);    
-//     }
 
 }
 
 void Ec_Boards_sine::init_OP(void) {
-  
+
+    iit::ecat::advr::Motor * moto;
+    int slave_pos;
+    
+//     for ( auto const& item : motors ) {
+// 	slave_pos = item.first;
+// 	moto = item.second;
+// 	moto->set_posRef(home[slave_pos]);
+//     }
+    
 }
 
 template<class C>
@@ -97,14 +104,14 @@ int Ec_Boards_sine::user_loop(void) {
     uint64_t tNow = iit::ecat::get_time_ns();
     float dt = (tNow - start_time) / 1e9;
     // !!!!! if too fast adjust this
-    float freq = 0.05;
+    float freq = 0.01;
     float A;
     iit::ecat::advr::Motor * moto;
     int slave_pos;
     for ( auto const& item : motors ) {
 	slave_pos = item.first;
 	moto = item.second;
-	A = home[slave_pos] - 0.2;
+	A = home[slave_pos] - 0.1;
 	moto->set_posRef(home[slave_pos] + A * sinf(2*M_PI*freq*dt));
     }
     //////////////////////////////////////////////////////

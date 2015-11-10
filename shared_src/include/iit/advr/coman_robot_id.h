@@ -1,5 +1,6 @@
 #include <initializer_list>
 #include <algorithm>
+#include <map>
 
 namespace iit {
 namespace ecat {
@@ -56,12 +57,12 @@ enum Robot_IDs : int
     
 }; 
 
-std::vector<int> robot_waist_ids = std::initializer_list<int> { 
+const std::vector<int> robot_waist_ids = std::initializer_list<int> { 
     // waist
     WAIST_Y, WAIST_P, WAIST_R
 };
 
-std::vector<int> robot_right_leg_ids = std::initializer_list<int> { 
+const std::vector<int> robot_right_leg_ids = std::initializer_list<int> { 
     // right leg
     RL_H_R,
     RL_H_Y,
@@ -72,7 +73,7 @@ std::vector<int> robot_right_leg_ids = std::initializer_list<int> {
     RL_FT,
 };
 
-std::vector<int> robot_left_leg_ids = std::initializer_list<int> { 
+const std::vector<int> robot_left_leg_ids = std::initializer_list<int> { 
     // left leg
     LL_H_R,
     LL_H_Y,
@@ -83,7 +84,7 @@ std::vector<int> robot_left_leg_ids = std::initializer_list<int> {
     LL_FT,
 };
 
-std::vector<int> robot_right_arm_ids = std::initializer_list<int> { 
+const std::vector<int> robot_right_arm_ids = std::initializer_list<int> { 
     // right arm
     RA_SH_1,
     RA_SH_2,
@@ -96,7 +97,7 @@ std::vector<int> robot_right_arm_ids = std::initializer_list<int> {
     RA_HA,
 };
 
-std::vector<int> robot_left_arm_ids = std::initializer_list<int> { 
+const std::vector<int> robot_left_arm_ids = std::initializer_list<int> { 
     // left arm
     LA_SH_1,
     LA_SH_2,
@@ -109,7 +110,7 @@ std::vector<int> robot_left_arm_ids = std::initializer_list<int> {
     LA_HA,
 };
     
-std::vector<int> robot_ids = std::initializer_list<int> {
+const std::vector<int> robot_ids = std::initializer_list<int> {
     // waist
     WAIST_Y, WAIST_P, WAIST_R,
     // right leg
@@ -122,6 +123,22 @@ std::vector<int> robot_ids = std::initializer_list<int> {
     LA_SH_1, LA_SH_2, LA_SH_3, LA_EL, LA_WR_1, LA_WR_2, LA_WR_3, LA_FT, LA_HA,
     
 };
+
+std::map<int, float> robot_ids_home_pos_deg = {
+
+    {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
+    
+    {RL_H_R, 0.0}, {RL_H_Y, 0.0}, {RL_H_P, 0.0}, {RL_K, 10.0}, {RL_A_P, 0.0}, {RL_A_R, 0.0},
+    
+    {LL_H_R, 0.0}, {LL_H_Y, 0.0}, {LL_H_P, 0.0}, {LL_K, 10.0}, {LL_A_P, 0.0}, {LL_A_R, 0.0},
+    
+    {RA_SH_1, 0.0}, {RA_SH_2, 70.0}, {RA_SH_3, 0.0}, {RA_EL, -30.0}, {RA_WR_1, 0.0}, {RA_WR_2, 0.0}, {RA_WR_3, 0.0}, {RA_HA, 0.0},
+    
+    {LA_SH_1, 0.0}, {LA_SH_2,-70.0}, {LA_SH_3, 0.0}, {LA_EL, -30.0}, {LA_WR_1, 0.0}, {LA_WR_2, 0.0}, {LA_WR_3, 0.0}, {LA_HA, 0.0}
+    
+};
+
+
 
 }
 }

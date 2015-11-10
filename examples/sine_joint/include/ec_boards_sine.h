@@ -39,8 +39,6 @@ private :
     virtual void init_preOP(void);
     virtual void init_OP(void);
     
-    std::map<int, iit::ecat::advr::Motor*> motors;
-    
     XDDP_pipe inXddp;
 };
 

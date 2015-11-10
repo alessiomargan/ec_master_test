@@ -16,33 +16,53 @@
 //#include "iit/advr/pos_spline.h"
 #include "iit/advr/spline.h"
 #include "iit/ecat/utils.h"
+#include "iit/ecat/advr/motor_iface.h"
 
 #include <chrono>
 
+
 namespace advr {
-    
+
+
+template <typename T>    
 class trajectory {
 
 public :
     
-    trajectory() {}
+//     trajectory(int size=128) {
+// 	_x.reserve(size);
+// 	_y.reserve(size);
+//     }
     
     void set_points(const std::vector<double> &x, const std::vector<double> &y) {
     
 	_x = x;
 	_y = y;
 	for (int i=0; i<_x.size(); i++ ) { _x[i] -= _x.front(); }
-	s.set_points(_x,_y);
+    
+	assert(_x.size() == _y.size());
+	assert(_y.size() > 1);
+	if ( _y.size() == 2 ) {
+	    
+	    _y.resize(3,_y[1]);
+	    _y[1] = (_y[0]+_y[1])/2;
+	    
+	    _x.resize(3,_x[1]);
+	    _x[1] = _x[1]/2;
+	}
+	
+	//for (int i=0;i<_x.size();i++)
+	//    std::cout << ' ' << _x[i] << ' ' << _y[i] << '\n';
+	
+	t.set_points(_x,_y);
 	sT = std::chrono::system_clock::now();
     };
-
-    void start_time() { sT = std::chrono::system_clock::now(); }
     
     double operator() (double x) const {
 	
 	if ( x < _x.front() ) return _y.front();
 	if ( x > _x.back() ) return _y.back();
-	return s(x);
+	return t(x);
 	
     };
     
@@ -54,6 +74,8 @@ public :
    
     };
     
+    void start_time() { sT = std::chrono::system_clock::now(); }
+
     double end_point(void) { return _y.back(); }
     
     bool finish(void) { 
@@ -67,9 +89,17 @@ protected:
     
     std::chrono::time_point<std::chrono::system_clock> sT;
     std::vector<double> _x, _y;
-    tk::spline s;
+    T t;
     
 };
+
+template<typename T> using Trj = trajectory<T>;
+typedef Trj<tk::spline> Spline_Trj;
+typedef std::map<int,Spline_Trj*> Spline_ptr_map;
+
+inline void reset_spline_trj(Spline_ptr_map  spls) {
+    for ( auto const& item : spls ) { item.second->start_time(); }
+}
 
 }
 

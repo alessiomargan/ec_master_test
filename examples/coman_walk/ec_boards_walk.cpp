@@ -44,7 +44,7 @@ EC_boards_walk::~EC_boards_walk()
 
 void EC_boards_walk::init_preOP(void) {
 
-    iit::ecat::advr::LpESC * moto;
+    iit::ecat::advr::Motor * moto;
     int slave_pos;
     float min_pos, max_pos, velocity;
 
@@ -63,9 +63,9 @@ void EC_boards_walk::init_preOP(void) {
 	slave_pos = item.first;
 	moto = item.second;
 	moto->start(CTRL_SET_MIX_POS_MODE);
-	moto->getSDO("Min_pos", min_pos);
-	moto->getSDO("Max_pos", max_pos);
-	moto->getSDO("link_pos", start_pos[slave_pos]);
+	moto->readSDO("Min_pos", min_pos);
+	moto->readSDO("Max_pos", max_pos);
+	moto->readSDO("link_pos", start_pos[slave_pos]);
 	
 	// set home to mid pos
 	home[slave_pos] = MID_POS(min_pos,max_pos);

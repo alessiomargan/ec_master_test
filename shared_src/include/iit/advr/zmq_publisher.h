@@ -82,7 +82,7 @@ public:
 protected:
 
     template<typename T>
-    int read_pipe(const T &t);
+    int read_pipe(T &t);
     int publish_msg();
     
 protected:
@@ -139,7 +139,7 @@ inline int Abs_Publisher::open_pipe(std::string pipe_name) {
 }
 
 template<typename T>
-inline int Abs_Publisher::read_pipe(const T &t) {
+inline int Abs_Publisher::read_pipe(T &t) {
 
     int nbytes = 0;
     int expected_bytes = sizeof(t);
