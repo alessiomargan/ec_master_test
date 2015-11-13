@@ -25,6 +25,7 @@ endif()
 add_library(shared_utils SHARED
     ${SHARED_SRC}/ec_boards_base.cpp
     ${SHARED_SRC}/test_common.cpp
+    ${SHARED_SRC}/spline.cpp
     ${RT_NRT_SRC}
 )
 

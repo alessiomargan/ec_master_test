@@ -4,10 +4,17 @@
 #include <execinfo.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h> // needed for sysconf(int name);
+#include <malloc.h>
+#include <sys/time.h> // needed for getrusage
+#include <sys/resource.h> // needed for getrusage
 
 #ifdef __XENO__
     #include <rtdk.h>
 #endif
+
+#define MEM_LOCKED (500*1024*1024) // 500MB
 
 static int main_loop = 1;
 
@@ -43,6 +50,59 @@ static void set_signal_handler(void)
 #endif
 }
 
+
+static int lock_mem(int byte_size)
+   {
+       // Allocate some memory
+       int ret, i, page_size;
+       char* buffer;
+       struct rusage usage;
+
+       // Now lock all current and future pages from preventing of being paged
+       if ( (ret=mlockall(MCL_CURRENT | MCL_FUTURE )) < 0 ) 
+       {
+           return ret;
+       }
+
+       // Turn off malloc trimming.
+       mallopt (M_TRIM_THRESHOLD, -1);
+       // Turn off mmap usage.
+       mallopt (M_MMAP_MAX, 0);
+       page_size = sysconf(_SC_PAGESIZE);
+       buffer = (char*)malloc(byte_size);
+
+       getrusage(RUSAGE_SELF, &usage);
+       printf("Major-pagefaults:%d, Minor Pagefaults:%d\n", usage.ru_majflt, usage.ru_minflt);
+
+       // Touch page to prove there will be no page fault later
+       for (i=0; i < byte_size; i+=page_size)
+       {
+           // Each write to this buffer will *not* generate a pagefault.
+           // Even if nothing has been written to the newly allocated memory, the physical page
+           //  is still provisioned to the process because mlockall() has been called with
+           //  the MCL_FUTURE flag
+           buffer[i] = 0;
+           // print the number of major and minor pagefaults this application has triggered
+           //getrusage(RUSAGE_SELF, &usage);
+           //printf("Major-pagefaults:%d, Minor Pagefaults:%d\n", usage.ru_majflt, usage.ru_minflt);
+       }
+       
+       getrusage(RUSAGE_SELF, &usage);
+       printf("Major-pagefaults:%d, Minor Pagefaults:%d\n", usage.ru_majflt, usage.ru_minflt);
+
+       free(buffer);
+       // buffer is now released. As glibc is configured such that it never gives back memory to
+       // the kernel, the memory allocated above is locked for this process. All malloc() and new()
+       // calls come from the memory pool reserved and locked above. Issuing free() and delete()
+       // does NOT make this locking undone. So, with this locking mechanism we can build C++ applications
+       // that will never run into a major/minor pagefault, even with swapping enabled.
+       
+
+       //<do your RT-thing>
+       
+
+       return 0;
+   }
 ///////////////////////////////////////////////////////////////////////////////
 
 int looping(void) {
@@ -72,10 +132,11 @@ void main_common(void)
 #ifdef __XENO__
 
     /* Prevent any memory-swapping for this program */
-    ret = mlockall(MCL_CURRENT | MCL_FUTURE);
+    //ret = mlockall(MCL_CURRENT | MCL_FUTURE);
+    ret = lock_mem(MEM_LOCKED);
     if ( ret < 0 ) {
         printf("mlockall failed (ret=%d) %s\n", ret, strerror(ret));
-        return;
+        exit(0);
     }
     /*
      * This is a real-time compatible printf() package from

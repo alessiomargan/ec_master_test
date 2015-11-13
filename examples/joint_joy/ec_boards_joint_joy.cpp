@@ -9,6 +9,14 @@
 typedef struct js_event	js_input_t;
 typedef spnav_event	spnav_input_t;
 
+static const std::vector<double> Xt = std::initializer_list<double> { 0, 1, 2, 3, 4, 5, 6, 10 };
+static const std::vector<double> Xt_1s  = std::initializer_list<double> { 0, 1 };
+static const std::vector<double> Xt_3s  = std::initializer_list<double> { 0, 3 };
+static const std::vector<double> Xt_5s  = std::initializer_list<double> { 0, 5 };
+static const std::vector<double> Xt_10s = std::initializer_list<double> { 0, 10 };
+static const std::vector<double> Xt_20s = std::initializer_list<double> { 0, 20 };
+
+
 EC_boards_joint_joy::EC_boards_joint_joy(const char* config_yaml) :
     Ec_Thread_Boards_base(config_yaml)
 {
@@ -42,12 +50,6 @@ void EC_boards_joint_joy::init_preOP(void) {
     int slave_pos;
     float min_pos, max_pos;
 
-    std::vector<double> Xt = std::initializer_list<double> { 0, 1, 2, 3, 4, 5, 6, 10 };
-    std::vector<double> Xt_1s  = std::initializer_list<double> { 0, 1 };
-    std::vector<double> Xt_3s  = std::initializer_list<double> { 0, 3 };
-    std::vector<double> Xt_5s  = std::initializer_list<double> { 0, 5 };
-    std::vector<double> Xt_10s = std::initializer_list<double> { 0, 10 };
-    std::vector<double> Xt_20s = std::initializer_list<double> { 0, 20 };
     std::vector<double> Ys;
     
     std::vector<int> test_rid = std::initializer_list<int> {
@@ -75,17 +77,19 @@ void EC_boards_joint_joy::init_preOP(void) {
 	DPRINTF("%d home %f mid %f step %f\n", pos2Rid(slave_pos), home[slave_pos],step_1[slave_pos],step_2[slave_pos]);
 
 	Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-	spline_start2home[slave_pos] = new advr::Spline_Trj();
-	spline_start2home[slave_pos]->set_points(Xt_3s,Ys);
+	//spline_start2home[slave_pos] = new advr::Spline_Trj();
+	spline_start2home[slave_pos].set_points(Xt_5s,Ys);
 
 	Ys = std::initializer_list<double> { step_2[slave_pos], 1.5, 2.5, 1.0, 2.2, 1.0 , 2.0, home[slave_pos] };
-	spline1_trj[slave_pos] = new advr::Spline_Trj();
-	spline1_trj[slave_pos]->set_points(Xt,Ys);
+	//spline1_trj[slave_pos] = new advr::Spline_Trj();
+	spline1_trj[slave_pos].set_points(Xt,Ys);
 	
 	Ys = std::initializer_list<double> { home[slave_pos], 5.0, 3.5, 4.5, 4.0, 3.0 , 3.5, step_1[slave_pos] };
-	spline2_trj[slave_pos] = new advr::Spline_Trj();
-	spline2_trj[slave_pos]->set_points(Xt,Ys);
+	//spline2_trj[slave_pos] = new advr::Spline_Trj();
+	spline2_trj[slave_pos].set_points(Xt,Ys);
   
+	//spline_any2home[slave_pos] = new advr::Spline_Trj();
+	
 	//////////////////////////////////////////////////////////////////////////
 	// start controller :
 	// - read actual joint position and set as pos_ref 
@@ -93,10 +97,9 @@ void EC_boards_joint_joy::init_preOP(void) {
 	
     }
     
-    user_state = IDLE;
+    user_state = HOMING;
 
 }
-
 
 
 void EC_boards_joint_joy::init_OP(void) {
@@ -124,7 +127,7 @@ int EC_boards_joint_joy::user_loop(void) {
 	
 	case HOMING :
 	    //if ( go_there(motors, home, 0.05) ) {
-	    if ( go_there(motors, spline_start2home, 0.05) ) {
+	    if ( go_there(motors, spline_start2home, 0.05, true) ) {
 		user_state = STEP_1;		
 		DPRINTF("At Home ....\n");
 	    }
@@ -150,18 +153,27 @@ int EC_boards_joint_joy::user_loop(void) {
 	    if ( go_there(motors, spline1_trj, 0.05) ) {
 		user_state = TRJ_2;
 		DPRINTF("At trj_1 end ....\n");
-		advr::reset_spline_trj(spline1_trj);
+		advr::reset_spline_trj(spline2_trj);
 	    }
 	    break;
 
 	case TRJ_2 :
-	    
 	    if ( go_there(motors, spline2_trj, 0.05) ) {
-		user_state = IDLE;
+		//user_state = IDLE;
+		/////////////////////////////
+		user_state = ANY2HOME;
+		set_any2home(spline_any2home);
 		DPRINTF("At trj_2 end ....\n");
 	    }
 	    break;
 	    
+	case ANY2HOME :
+	    if ( go_there(motors, spline_any2home, 0.05) ) {
+		user_state = STEP_1;
+		DPRINTF("At Home ....\n");
+	    }
+	    break;
+
 	case MOVING :
 	    for ( auto const& item : motors ) {
 		moto =  item.second;
@@ -172,7 +184,7 @@ int EC_boards_joint_joy::user_loop(void) {
 	    break;
 	    
 	default:
-	    DPRINTF("Wring user state ....\n");
+	    DPRINTF("Wrong user state ....\n");
 	    break;
     }
     
@@ -197,9 +209,9 @@ int EC_boards_joint_joy::user_input(C &user_cmd) {
 	    if ( nav_cmd.button.press ) {
 		switch ( nav_cmd.button.bnum ) {
 		    case 1 :
-		    	user_state = HOMING;
-			advr::reset_spline_trj(spline_start2home);
-			DPRINTF("HOMING ....\n");
+		    	user_state = ANY2HOME;
+			set_any2home(spline_any2home);
+			DPRINTF("ANY2HOME ....\n");
 			break;
 		    case 0 :
 		    	user_state = MOVING;

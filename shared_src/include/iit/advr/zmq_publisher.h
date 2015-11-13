@@ -1,4 +1,4 @@
-/*
+ /*
 
    Copyright (C) 2015 Italian Institute of Technology
 
@@ -297,6 +297,10 @@ public:
 	base_port++;
 	zpub = new McPub(uri+std::to_string(base_port));
 	if ( zpub->open_pipe("Motor_id_1") == 0 ) { zmap[base_port] = zpub; }
+	else { delete zpub; }
+	base_port++;
+	zpub = new McPub(uri+std::to_string(base_port));
+	if ( zpub->open_pipe("Motor_id_21") == 0 ) { zmap[base_port] = zpub; }
 	else { delete zpub; }
 
 #if 0

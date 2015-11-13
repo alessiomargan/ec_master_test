@@ -44,10 +44,11 @@ void Ec_Thread_Boards_base::th_init(void *) {
 	throw "something else wrong";
     }
 
+    DPRINTF("warm up\n");
     ////////////////////////////////////////////////////////////////
     std::chrono::time_point<std::chrono::system_clock> start, now;
     start = now = std::chrono::system_clock::now();
-    std::chrono::seconds loop_delay(1);
+    std::chrono::seconds loop_delay(3);
     while ( now - start <= loop_delay ) {
 	try {
 	    send_to_slaves();	
@@ -57,6 +58,7 @@ void Ec_Thread_Boards_base::th_init(void *) {
 	now = std::chrono::system_clock::now();
     }
     ////////////////////////////////////////////////////////////////
+    DPRINTF("warm end\n");
     
     start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;
@@ -95,6 +97,7 @@ void Ec_Thread_Boards_base::th_loop(void *) {
     }
     
 }
+
 
 void Ec_Thread_Boards_base::xddps_init(void) {
 
@@ -172,5 +175,190 @@ void Ec_Thread_Boards_base::xddps_loop(void) {
 		break;
 	}
     }
+}
+
+/**
+ * NOTE this is a step reference !!!
+ * LoPowerMotor (i.e. Coman) has a trajectory generator with max speed 0.5 rad/s
+ * HiPowerMotor does NOT have it
+ */
+bool Ec_Thread_Boards_base::go_there(const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+				            const std::map<int,float> &target_pos,
+				            float eps, bool debug) {
+
+    int cond, cond_cnt, cond_sum;
+    float pos_ref, motor_err, link_err, motor_link_err;
+    int slave_pos;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    std::vector<int> truth_vect;
+    
+    cond = cond_cnt = cond_sum = 0;
+        
+    for ( auto const& item : motor_set ) {
+	slave_pos = item.first;
+	moto =  item.second;
+	
+	// check in the target_pos map if the current slave_pos exist
+	try { pos_ref = target_pos.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) { continue; }
+	
+	motor_pdo_rx = moto->getRxPDO();
+	moto->set_posRef(pos_ref);
+	
+	link_err = fabs(motor_pdo_rx.link_pos  - pos_ref);
+	motor_err = fabs(motor_pdo_rx.motor_pos - pos_ref);
+	motor_link_err = fabs(motor_pdo_rx.motor_pos - motor_pdo_rx.link_pos);
+
+	cond = (link_err <= eps || motor_err <= eps) ? 1 : 0;
+	cond_cnt++;
+	cond_sum += cond;
+	    
+	if (debug) {
+	    truth_vect.push_back(cond);
+	    if ( ! cond ) {
+		DPRINTF("%d %f %f{%f} %f{%f} {{%f}}\n",
+			pos2Rid(slave_pos), pos_ref,
+			motor_pdo_rx.link_pos, link_err,
+			motor_pdo_rx.motor_pos, motor_err,
+			motor_link_err);
+	    }
+	}
+    }
+    
+    if (debug) {
+	DPRINTF("---\n");
+	for ( auto b : truth_vect ) { DPRINTF("%d ",b); }
+	DPRINTF("\n=^=\n");
+    }
+
+    return (cond_cnt == cond_sum);
+}
+
+//template <typename T>
+bool Ec_Thread_Boards_base::go_there(const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+					    //const std::map<int,advr::trajectory<T>> &spline_map_trj,
+					    const advr::Spline_map &spline_map_trj,
+					    float eps, bool debug) {
+
+    int cond, cond_cnt, cond_sum;
+    float pos_ref, motor_err, link_err, motor_link_err;
+    int slave_pos;
+    //advr::trajectory<T> trj;
+    advr::Spline_Trj trj;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    std::vector<int> truth_vect;
+    
+    cond = cond_cnt = cond_sum = 0;
+    
+    for ( auto const& item : motor_set ) {
+	slave_pos = item.first;
+	moto =  item.second;
+	
+	// check in the spline_trj map if the current slave_pos exist
+	try { trj = spline_map_trj.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) { continue; }
+	
+	motor_pdo_rx = moto->getRxPDO();
+	//pos_ref = (float)(*trj)();
+	pos_ref = (float)trj();
+	moto->set_posRef(pos_ref);
+
+	link_err = fabs(motor_pdo_rx.link_pos  - pos_ref);
+	motor_err = fabs(motor_pdo_rx.motor_pos - pos_ref);
+	motor_link_err = fabs(motor_pdo_rx.motor_pos - motor_pdo_rx.link_pos);
+	
+	cond = ((link_err <= eps || motor_err <= eps) && trj.finish()) ? 1 : 0;
+	cond_cnt++;
+	cond_sum += cond;
+	    
+	if (debug) {
+	    truth_vect.push_back(cond);
+	    if ( ! cond ) {
+		DPRINTF("%d %f %f{%f} %f{%f} {{%f}}\n",
+			pos2Rid(slave_pos), pos_ref,
+			motor_pdo_rx.link_pos, link_err,
+			motor_pdo_rx.motor_pos, motor_err,
+			motor_link_err);
+	    }
+	}
+    }
+    
+    if (debug) {
+	DPRINTF("---\n");
+	for ( auto b : truth_vect ) { DPRINTF("%d ",b); }
+ 	DPRINTF("\n=^=\n");
+    }
+
+    return (cond_cnt == cond_sum); 
+}
+
+void Ec_Thread_Boards_base::get_trj_for_end_points(advr::Spline_map &spline_map_trj,
+							  std::map<int,float> &end_points,
+							  float secs)
+{
+    int slave_pos;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    std::vector<double> Ys;
+    std::vector<double> Xs = std::initializer_list<double> { 0, secs };
+    advr::Spline_Trj spln;
+    
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
+	motor_pdo_rx = moto->getRxPDO();
+	
+	try { end_points.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) {
+	    DPRINTF("Skip ends_points for slave_pos %d\n", slave_pos);
+	    continue;
+	}
+	try { spln = spline_map_trj.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) {
+	    DPRINTF("CAZZO\n");
+	    continue;
+	}
+	
+	Ys = std::initializer_list<double> { motor_pdo_rx.link_pos, end_points[slave_pos] };
+	//Ys = std::initializer_list<double> { motor_pdo_rx.link_pos, motor_pdo_rx.link_pos + 0.01 };
+	spline_map_trj[slave_pos].set_points(Xs ,Ys);
+	//spln.set_points(Xs ,Ys);
+	//spline_map_trj[slave_pos] = spln;
+    }
+    
+    advr::reset_spline_trj(spline_map_trj);
+}
+
+void Ec_Thread_Boards_base::set_any2home(advr::Spline_map &spline_map_trj) {
+
+#if 0    
+    int slave_pos;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    std::vector<double> Ys;
+    std::vector<double> Xs = std::initializer_list<double> { 0, 5 };
+    
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
+	motor_pdo_rx = moto->getRxPDO();
+	Ys = std::initializer_list<double> { motor_pdo_rx.link_pos, home[slave_pos] };
+	
+	try { spline_map_trj.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) { DPRINTF("CAZZO\n");}
+	
+    	spline_map_trj[slave_pos].set_points(Xs ,Ys);
+	
+    }
+    
+    advr::reset_spline_trj(spline_map_trj);
+#else
+    get_trj_for_end_points(spline_map_trj, home, 5);
+#endif    
+
+    DPRINTF("Set_any2home\n");
+
 }
 

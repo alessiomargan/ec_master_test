@@ -31,6 +31,7 @@ public:
 	STEP_2,
 	TRJ_1,
 	TRJ_2,
+	ANY2HOME,
 	//
 	IDLE,
     };
@@ -50,9 +51,10 @@ private :
     std::map<int,float> step_1;
     std::map<int,float> step_2;
     
-    advr::Spline_ptr_map spline1_trj;
-    advr::Spline_ptr_map spline2_trj;
-    advr::Spline_ptr_map spline_start2home;
+    advr::Spline_map spline1_trj;
+    advr::Spline_map spline2_trj;
+    advr::Spline_map spline_start2home;
+    advr::Spline_map spline_any2home;
     
     XDDP_pipe jsInXddp, navInXddp;
     

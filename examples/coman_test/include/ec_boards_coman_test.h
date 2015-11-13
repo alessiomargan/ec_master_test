@@ -56,15 +56,13 @@ private :
     virtual void init_preOP(void);
     virtual void init_OP(void);
     
-    void set_any2home(void);
-    
     std::map<int,float> mid_pos;
     std::map<int,float> step_2;
     
-    std::map<int,advr::Spline_Trj*> spline_start2home;
-    std::map<int,advr::Spline_Trj*> spline_home2mid;
-    std::map<int,advr::Spline_Trj*> spline_mid2home;
-    std::map<int,advr::Spline_Trj*> spline_any2home;
+    advr::Spline_map spline_start2home;
+    advr::Spline_map spline_home2mid;
+    advr::Spline_map spline_mid2home;
+    advr::Spline_map spline_any2home;
     
     
     XDDP_pipe jsInXddp, navInXddp;
@@ -77,9 +75,7 @@ private :
     std::map<int, iit::ecat::advr::Motor*> 	left_arm;;
     std::map<int, iit::ecat::advr::Motor*> 	right_arm;
     std::map<int, iit::ecat::advr::Motor*> 	waist;
-    
-    std::vector<double> Ys;
-    std::vector<double> Xs;
+ 
 
 };
 

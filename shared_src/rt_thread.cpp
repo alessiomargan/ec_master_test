@@ -48,6 +48,8 @@ void * rt_periodic_thread(Thread_hook_Ptr th_hook)
         exit(1);
     }
 
+    DPRINTF("THREAD INIT: start looping ...\n");
+
     while ( th_hook->_run_loop ) {
 
         // return 0 if the period expires as expected
@@ -108,6 +110,8 @@ void * rt_non_periodic_thread(Thread_hook_Ptr th_hook)
                 th_hook->name, ret);
         exit(1);
     }
+
+    DPRINTF("THREAD INIT: start looping ...\n");
 
     while ( th_hook->_run_loop ) {
 
