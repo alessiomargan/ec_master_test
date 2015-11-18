@@ -141,7 +141,7 @@ inline void Thread_hook::create(int rt=true, int cpu_nr=0) {
     pthread_attr_t      attr;
     struct sched_param  schedparam;
     cpu_set_t           cpu_set;
-    
+    size_t 		dflt_stacksize;
     _run_loop = 1;
 
     CPU_ZERO(&cpu_set);
@@ -152,7 +152,10 @@ inline void Thread_hook::create(int rt=true, int cpu_nr=0) {
     pthread_attr_setschedpolicy(&attr, schedpolicy);
     schedparam.sched_priority = priority;
     pthread_attr_setschedparam(&attr, &schedparam);
-    if (stacksize > 0) {
+    
+    pthread_attr_getstacksize(&attr, &dflt_stacksize);
+    DPRINTF("default stack size %ld\n", dflt_stacksize);
+        if (stacksize > 0) {
         pthread_attr_setstacksize(&attr, stacksize);
     }
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);

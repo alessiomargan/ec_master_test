@@ -57,12 +57,20 @@ public :
 	t.set_points(_x,_y,cubic_spline);
 	sT = std::chrono::steady_clock::now();
     };
+
+    double get_value(double x, bool limits=true) const {
+    
+	if ( limits ) { 
+	    if ( x < _x.front() ) return _y.front();
+	    if ( x > _x.back() ) return _y.back();
+	}
+	return t(x);
+
+    };
     
     double operator() (double x) const {
 	
-	if ( x < _x.front() ) return _y.front();
-	if ( x > _x.back() ) return _y.back();
-	return t(x);
+	return get_value(x);
 	
     };
     
@@ -70,13 +78,15 @@ public :
 	
 	std::chrono::duration<double> x = std::chrono::steady_clock::now() - sT;
 	//DPRINTF("%f\n", x.count());
-	return trajectory::operator()(x.count());
+	return get_value(x.count());
    
     };
-    
+
     void start_time() { sT = std::chrono::steady_clock::now(); }
+    void get_start_time(std::chrono::time_point<std::chrono::steady_clock> &start) { start = sT; }
 
     double end_point(void) { return _y.back(); }
+    double end_time(void) { return _x.back(); }
     
     bool finish(void) { 
 	

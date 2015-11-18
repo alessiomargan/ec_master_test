@@ -63,12 +63,12 @@ void Ec_Thread_Boards_base::th_init(void *) {
     start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;
     
-    init_OP();
-	
     if ( config["ec_boards_base"]["create_pipes"] ) {
 	xddps_init();
     }
-    
+
+    init_OP();
+
     init_done = true;
 }
 
@@ -294,16 +294,67 @@ bool Ec_Thread_Boards_base::go_there(const std::map<int, iit::ecat::advr::Motor*
     return (cond_cnt == cond_sum); 
 }
 
-void Ec_Thread_Boards_base::get_trj_for_end_points(advr::Spline_map &spline_map_trj,
-							  std::map<int,float> &end_points,
-							  float secs)
+
+void Ec_Thread_Boards_base::smooth_splines_trj(advr::Spline_map &new_spline_trj,
+					       const advr::Spline_map &old_spline_trj,
+					       double smooth_time)
 {
     int slave_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    advr::Spline_Trj spln, old_spln;
+    std::vector<double> Ys;
+    std::vector<double> Xs;
+    double t1 = smooth_time;
+    double t0_point, t1_point;
+    std::chrono::time_point<std::chrono::steady_clock> old_spline_start_time;
+    std::chrono::duration<double> old_spline_xtime; 
+    
+    for ( auto const& item : motors ) {
+	slave_pos = item.first;
+	moto = item.second;
+	motor_pdo_rx = moto->getRxPDO();
+	
+	try { spln = new_spline_trj.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) {
+	    DPRINTF("new_spline error\n");
+	    continue;
+	}
+	try { old_spln = old_spline_trj.at(slave_pos); }
+	catch ( const std::out_of_range& oor ) {
+	    DPRINTF("old_spline error\n");
+	    continue;
+	}
+
+	if ( old_spln.finish() ) {
+	    t0_point = old_spln.end_point();
+	    t1_point = old_spln.get_value(old_spln.end_time()+(smooth_time/5) ,false);
+	} else {
+	    //t0_point =  motor_pdo_rx.link_pos;
+	    t0_point =  old_spln();
+	    old_spln.get_start_time(old_spline_start_time);
+	    old_spline_xtime = std::chrono::steady_clock::now() - old_spline_start_time;
+	    t1_point = old_spln.get_value(old_spline_xtime.count()+(smooth_time/5), false);
+	}
+	
+	Xs = std::initializer_list<double> { 0, t1, t1+spln.end_time() };
+	Ys = std::initializer_list<double> {t0_point, t1_point, spln.end_point() };
+	new_spline_trj[slave_pos].set_points(Xs ,Ys);
+    }
+    
+}
+
+
+void Ec_Thread_Boards_base::get_trj_for_end_points(advr::Spline_map &new_spline_trj,
+						   std::map<int,float> &end_points,
+						   float secs)
+{
+    int slave_pos;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    advr::Spline_Trj spln;
     std::vector<double> Ys;
     std::vector<double> Xs = std::initializer_list<double> { 0, secs };
-    advr::Spline_Trj spln;
     
     for ( auto const& item : motors ) {
 	slave_pos = item.first;
@@ -315,48 +366,21 @@ void Ec_Thread_Boards_base::get_trj_for_end_points(advr::Spline_map &spline_map_
 	    DPRINTF("Skip ends_points for slave_pos %d\n", slave_pos);
 	    continue;
 	}
-	try { spln = spline_map_trj.at(slave_pos); }
+	try { spln = new_spline_trj.at(slave_pos); }
 	catch ( const std::out_of_range& oor ) {
-	    DPRINTF("CAZZO\n");
+	    DPRINTF("new_spline error\n");
 	    continue;
 	}
 	
-	Ys = std::initializer_list<double> { motor_pdo_rx.link_pos, end_points[slave_pos] };
-	//Ys = std::initializer_list<double> { motor_pdo_rx.link_pos, motor_pdo_rx.link_pos + 0.01 };
-	spline_map_trj[slave_pos].set_points(Xs ,Ys);
-	//spln.set_points(Xs ,Ys);
-	//spline_map_trj[slave_pos] = spln;
+	Ys = std::initializer_list<double> {motor_pdo_rx.link_pos, end_points[slave_pos] };
+	new_spline_trj[slave_pos].set_points(Xs ,Ys);
     }
     
-    advr::reset_spline_trj(spline_map_trj);
 }
 
-void Ec_Thread_Boards_base::set_any2home(advr::Spline_map &spline_map_trj) {
+void Ec_Thread_Boards_base::set_any2home(advr::Spline_map &new_spline_trj, advr::Spline_map &old_spline_trj) {
 
-#if 0    
-    int slave_pos;
-    iit::ecat::advr::Motor * moto;
-    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
-    std::vector<double> Ys;
-    std::vector<double> Xs = std::initializer_list<double> { 0, 5 };
-    
-    for ( auto const& item : motors ) {
-	slave_pos = item.first;
-	moto = item.second;
-	motor_pdo_rx = moto->getRxPDO();
-	Ys = std::initializer_list<double> { motor_pdo_rx.link_pos, home[slave_pos] };
-	
-	try { spline_map_trj.at(slave_pos); }
-	catch ( const std::out_of_range& oor ) { DPRINTF("CAZZO\n");}
-	
-    	spline_map_trj[slave_pos].set_points(Xs ,Ys);
-	
-    }
-    
-    advr::reset_spline_trj(spline_map_trj);
-#else
-    get_trj_for_end_points(spline_map_trj, home, 5);
-#endif    
+    get_trj_for_end_points(new_spline_trj, home, 5);
 
     DPRINTF("Set_any2home\n");
 

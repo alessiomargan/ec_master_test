@@ -11,6 +11,7 @@ typedef struct js_event	js_input_t;
 typedef spnav_event	spnav_input_t;
 
 
+static const std::vector<double> Xt_2s = std::initializer_list<double> { 0, 2 };
 static const std::vector<double> Xt_3s = std::initializer_list<double> { 0, 3 };
 static const std::vector<double> Xt_5s = std::initializer_list<double> { 0, 5 };
 static const std::vector<double> Xt_9s = std::initializer_list<double> { 0, 9 };
@@ -30,7 +31,7 @@ EC_boards_coman_test::EC_boards_coman_test(const char* config_yaml) :
     schedpolicy = SCHED_OTHER;
 #endif
     priority = sched_get_priority_max(schedpolicy)-10;
-    stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
+    stacksize = ECAT_PTHREAD_STACK_SIZE;
     
     // open pipe ... xeno xddp or fifo 
     jsInXddp.init("EC_board_js_input");
@@ -99,16 +100,13 @@ void EC_boards_coman_test::init_preOP(void) {
 	DPRINTF("Joint_id %d start %f home %f mid %f\n", pos2Rid(slave_pos), start_pos[slave_pos], home[slave_pos], mid_pos[slave_pos]);
 	
 	Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-	//spline_start2home[slave_pos] = new advr::Spline_Trj();
 	spline_start2home[slave_pos].set_points(Xt_3s, Ys);
 
 	Ys = std::initializer_list<double> { home[slave_pos], mid_pos[slave_pos] };
-	//spline_home2mid[slave_pos] = new advr::Spline_Trj();
-	spline_home2mid[slave_pos].set_points(Xt_5s, Ys);
+	spline_home2mid[slave_pos].set_points(Xt_3s, Ys);
 
 	Ys = std::initializer_list<double> { mid_pos[slave_pos], home[slave_pos] };
-	//spline_mid2home[slave_pos] = new advr::Spline_Trj();
-	spline_mid2home[slave_pos].set_points(Xt_5s, Ys);
+	spline_mid2home[slave_pos].set_points(Xt_3s, Ys);
 
 	/* If k does not match the key of any element in the container, the function inserts a new element with that key
 	 * and returns a reference to its mapped value. Notice that this always increases the container size by one,
@@ -123,52 +121,36 @@ void EC_boards_coman_test::init_preOP(void) {
 	moto->start(CTRL_SET_MIX_POS_MODE);
     }
 
-    /////////////////////////////////////////////////////
-    // 
-    /////////////////////////////////////////////////////
-    user_state = HOMING;
-    //user_state = IDLE;
-    home_state = TEST_HOME;
-    //home_state = LEFT_LEG_HOME;
+    //
+    q_spln.push(&spline_start2home);
+    q_spln.push(&spline_home2mid);
+    q_spln.push(&spline_mid2home);
     
 }
 
 
 void EC_boards_coman_test::init_OP(void) {
     
-#if 0
-    char buff[128];
-    int slave_pos;
-    iit::ecat::advr::Motor * moto;
-    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
-    iit::ecat::advr::Motor::motor_pdo_tx_t motor_pdo_tx;
+    user_state = HOMING;
+    //user_state = IDLE;
+    home_state = TEST_HOME;
     
-    for ( auto const& item : motors ) {
-	slave_pos = item.first;
-	moto = item.second;
-	motor_pdo_tx = moto->getTxPDO();
-	motor_pdo_tx.sprint(buff, sizeof(buff));
-	DPRINTF("[%d] %s\n",slave_pos, buff);
-	motor_pdo_rx = moto->getRxPDO();
-	motor_pdo_rx.sprint(buff, sizeof(buff));
-	DPRINTF("[%d] %s\n",slave_pos, buff);
+    if ( ! q_spln.empty() ) {
+    	running_spline = q_spln.front();
+	last_run_spline = running_spline;
+	advr::reset_spline_trj(*running_spline);
     }
-#endif
-
-    advr::reset_spline_trj(spline_start2home);
     DPRINTF("End Init_OP\n");
 }
 
 int EC_boards_coman_test::user_loop(void) {
 
-    int slave_pos;
-    iit::ecat::advr::Motor * moto;
-    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
     static float ds; 
     static int count;
     
     if ((count++)%1000 == 0 ) {
 	DPRINTF("alive\n");
+	//DPRINTF("%ld\n", q_spln.size());
 	//set_any2home(spline_any2home);
     }
     
@@ -176,103 +158,58 @@ int EC_boards_coman_test::user_loop(void) {
 	DPRINTF(">> %f\n", ds);
     }
     
-    if ( user_state != MOVING) { ds = 0; }
-    
-    //
-    switch (user_state) {
+#if 0
+    {
+	int slave_pos;
+	iit::ecat::advr::Motor * moto;
+	iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
 	
-	case IDLE :
-	    break;
-	    
-	case HOMING :
-	    switch (home_state) {
-		case TEST_HOME :
-		    if ( go_there(motors, spline_start2home, 0.05, true) ) {
-			DPRINTF("Test at Home ....\n");
-			home_state = END_HOME;
-			advr::reset_spline_trj(spline_start2home);
-		    }
-		    break;
-		///////////////////////////////////////////////////////////
-		case LEFT_LEG_HOME :
-		    if ( go_there(left_leg, spline_start2home, 0.05) ) {
-			DPRINTF("Left leg at Home ....\n");
-			home_state = LEFT_ARM_HOME;
-			advr::reset_spline_trj(spline_start2home);
-		    }
-		    break;
-		case LEFT_ARM_HOME :
-		    if ( go_there(left_arm, spline_start2home, 0.05) ) {
-			DPRINTF("Left arm at Home ....\n");
-			home_state = RIGHT_LEG_HOME;		
-			advr::reset_spline_trj(spline_start2home);
-		    }
-		    break;
-		case RIGHT_LEG_HOME :
-		    if ( go_there(right_leg, spline_start2home, 0.05) ) {
-			DPRINTF("Right leg at Home ....\n");
-			home_state = RIGHT_ARM_HOME;		
-			advr::reset_spline_trj(spline_start2home);
-		    }
-		    break;
-		case RIGHT_ARM_HOME :
-		    if ( go_there(right_arm, spline_start2home, 0.05) ) {
-			DPRINTF("Right arm at Home ....\n");
-			home_state = WAIST_HOME;		
-			advr::reset_spline_trj(spline_start2home);
-		    }
-		    break;
-		case WAIST_HOME :
-		    if ( go_there(waist, spline_start2home, 0.05) ) {
-			DPRINTF("Waist at Home ....\n");
-			home_state = END_HOME;		
-		    }
-		    break;
-		/////////////////////////////////////////////////////////////
-		case END_HOME :
-		    DPRINTF("End Home ....\n");
-		    user_state = HOME2MID;
-		    break;
-		default:
-		    DPRINTF("Wrong home state ....\n");
-		    break;
-	    } // end home_state switch
-	    break;
-		    
-	case HOME2MID :
-	    if ( go_there(motors, spline_home2mid, 0.05) ) {
-		user_state = MID2HOME;
-		DPRINTF("End home2mid ....state IDLE\n");
-	    }
-	    break;
-	   
-	case MID2HOME :
-	    if ( go_there(motors, spline_mid2home, 0.05) ) {
-		user_state = HOME2MID;
-		DPRINTF("End mid2home ....state IDLE\n");
-	    }
-	    break;
-	    
-	case ANY2HOME :
-	    if ( go_there(motors, spline_any2home, 0.05, true) ) {
-		user_state = HOME2MID;
-		DPRINTF("End ant2home ....state IDLE\n");
-	    }
-	    break;
-	    
-	case MOVING :
+	if ( user_state == MOVING) {
 	    for ( auto const& item : motors ) {
 		moto =  item.second;
 		motor_pdo_rx = moto->getRxPDO();
 		// pos_ref_fb is the previous reference
 		moto->set_posRef(motor_pdo_rx.pos_ref_fb + ds);
 	    }
-	    break;
 	    
-	default:
-	    DPRINTF("Wrong user state ....\n");
-	    break;
+	} else {
+	    ds = 0;
+	}
     }
+#endif
+
+    if ( ! q_spln.empty() ) {
+    
+	running_spline = q_spln.front();
+	if ( running_spline ) {
+	    if ( go_there(motors, *running_spline, 0.05, false) ) {
+		// running spline has finish !! 
+		last_run_spline = running_spline;
+		q_spln.pop();
+		if ( ! q_spln.empty() ) {
+		    running_spline = q_spln.front();
+		    smooth_splines_trj(*running_spline, *last_run_spline);
+		    advr::reset_spline_trj(*running_spline);
+		}
+	    }
+	} else {
+	    DPRINTF("Error NULL running spline ... pop it\n");
+	    q_spln.pop();
+	} 
+    } else {
+	//
+	running_spline = last_run_spline = 0;
+	
+	// add splines ....
+	q_spln.push(&spline_home2mid);
+	q_spln.push(&spline_mid2home);
+	// !!! since queue was empty reset the first spline
+	running_spline = q_spln.front();
+	last_run_spline = running_spline;
+	advr::reset_spline_trj(*running_spline);
+	
+    }
+  
     
 }
 
@@ -294,8 +231,11 @@ int EC_boards_coman_test::user_input(C &user_cmd) {
 	    if ( nav_cmd.button.press ) {
 		switch ( nav_cmd.button.bnum ) {
 		    case 1 :
-		    	user_state = ANY2HOME;
-			set_any2home(spline_any2home);
+			while( ! q_spln.empty() ) { q_spln.pop(); }
+		    	get_trj_for_end_points(spline_any2home, home, 2);
+			if ( running_spline ) { smooth_splines_trj(spline_any2home, *running_spline, 1.0); }
+			advr::reset_spline_trj(spline_any2home);
+			q_spln.push(&spline_any2home);
 			DPRINTF("ANY2HOME ....\n");
 			break;
 		    case 0 :
@@ -350,7 +290,7 @@ int EC_boards_coman_test::user_input(C &user_cmd) {
 			break;
 		    case 2 :
 			if (js_cmd.value && user_state == IDLE) { 
-			    set_any2home(spline_any2home);
+			    set_any2home(spline_any2home, *running_spline);
 			    user_state = ANY2HOME;
 			    advr::reset_spline_trj(spline_any2home);
 			}

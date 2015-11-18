@@ -20,6 +20,10 @@
 #include <iit/advr/pipes.h>
 #include <iit/advr/trajectory.h>
 
+#include <queue>
+
+#define ECAT_PTHREAD_STACK_SIZE (16*1024*1024) // 16MB
+
 /**
  */
 
@@ -51,6 +55,10 @@ protected :
     std::map<int,float> home;
     std::map<int,float> start_pos;
 
+    std::queue<advr::Spline_map *> q_spln;
+    advr::Spline_map * running_spline;
+    advr::Spline_map * last_run_spline;
+    
     void xddps_init(void);
     void xddps_loop(void);
     std::map<int,XDDP_pipe*> xddps;
@@ -72,11 +80,15 @@ protected :
 		  float eps, bool debug = false);
 
 
-    void get_trj_for_end_points(advr::Spline_map &spline_map_trj,
+    void get_trj_for_end_points(advr::Spline_map &new_spline_trj,
 				std::map<int,float> &end_points,
 				float secs);
     
-    void set_any2home(advr::Spline_map &spline_map_trj);
+    void smooth_splines_trj(advr::Spline_map &new_spline_trj,
+			    const advr::Spline_map &old_spline_trj,
+			    double smooth_time=0.5);
+
+    void set_any2home(advr::Spline_map &new_spline_trj, advr::Spline_map &old_spline_trj);
 
     
 private:
