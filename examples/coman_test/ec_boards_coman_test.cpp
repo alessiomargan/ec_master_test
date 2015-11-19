@@ -153,7 +153,9 @@ int EC_boards_coman_test::user_loop(void) {
 	//DPRINTF("%ld\n", q_spln.size());
 	//set_any2home(spline_any2home);
     }
-    
+
+    ///////////////////////////////////////////////////////
+    //
     if ( user_input(ds) > 0 ) {
 	DPRINTF(">> %f\n", ds);
     }
@@ -197,7 +199,7 @@ int EC_boards_coman_test::user_loop(void) {
 	    q_spln.pop();
 	} 
     } else {
-	//
+	// q_spln is empty 
 	running_spline = last_run_spline = 0;
 	
 	// add splines ....
@@ -232,7 +234,7 @@ int EC_boards_coman_test::user_input(C &user_cmd) {
 		switch ( nav_cmd.button.bnum ) {
 		    case 1 :
 			while( ! q_spln.empty() ) { q_spln.pop(); }
-		    	get_trj_for_end_points(spline_any2home, home, 2);
+		    	get_trj_for_end_points(spline_any2home, home, 2.0);
 			if ( running_spline ) { smooth_splines_trj(spline_any2home, *running_spline, 1.0); }
 			advr::reset_spline_trj(spline_any2home);
 			q_spln.push(&spline_any2home);

@@ -337,7 +337,12 @@ void Ec_Thread_Boards_base::smooth_splines_trj(advr::Spline_map &new_spline_trj,
 	    t1_point = old_spln.get_value(old_spline_xtime.count()+(smooth_time/5), false);
 	}
 	
-	Xs = std::initializer_list<double> { 0, t1, t1+spln.end_time() };
+	//
+	if ( spln.end_time() > t1 ) { 
+	    Xs = std::initializer_list<double> { 0, t1, spln.end_time() };
+	} else {
+	    Xs = std::initializer_list<double> { 0, t1, t1+spln.end_time() };
+	}
 	Ys = std::initializer_list<double> {t0_point, t1_point, spln.end_point() };
 	new_spline_trj[slave_pos].set_points(Xs ,Ys);
     }
