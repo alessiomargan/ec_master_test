@@ -74,6 +74,7 @@ void ImuHandler::imu_data_cb(ImuData imu_data, const char* id ) {
     printf("<ImuHandler method> [%s] Timestamp=%f, qW=%f, qX=%f, qY=%f, qZ=%f\n",
 	   id, imu_data.timeStamp, imu_data.q[0], imu_data.q[1], imu_data.q[2], imu_data.q[3]);
     
+    
     int	nbytes;
     if ( xddp_sock > 0 ) {
 	nbytes = write(xddp_sock, (void*)&imu_data, sizeof(imu_data));
@@ -150,7 +151,7 @@ int main(int argc, char *argv[])
     lpms_cb = std::bind( &ImuHandler::imu_data_cb, &imu, _1, _2);
     imu.setup(std::string("Lpms_imu"),use_cb);
     
-    lpms_cb(ImuData(), "test_imu_cb");
+    //lpms_cb(ImuData(), "test_imu_cb");
     
     if ( ! use_cb ) {
 	std::thread t(std::ref(imu));
