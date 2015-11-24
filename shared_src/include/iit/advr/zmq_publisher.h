@@ -53,10 +53,10 @@ class Abs_Publisher;
 typedef std::map<int, Abs_Publisher*>  PubMap_t;
 typedef std::map<std::string, std::string> jmap_t;
 
-#if __XENO__
-    static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
+#if __XENO_PIPE__
+    const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
 #else
-    static const std::string pipe_prefix("/tmp/");
+    const std::string pipe_prefix("/tmp/");
 #endif
 
 zmq::context_t zmq_ctx(1);

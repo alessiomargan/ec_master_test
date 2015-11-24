@@ -4,7 +4,12 @@ project(${PRJ_DIR})
 
 include_directories(include)
 
+if ( Xenomai_FOUND )
+    add_definitions("-D__XENO_PIPE__")
+endif()
+
 add_executable(${PROJECT_NAME}
+    ${SHARED_SRC}/test_common.cpp
     js_thread.cpp
 )
 

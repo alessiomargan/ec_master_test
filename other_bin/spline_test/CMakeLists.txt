@@ -9,6 +9,6 @@ add_executable(${PROJECT_NAME}
     ${SHARED_SRC}/spline.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} boost_system)
+target_link_libraries(${PROJECT_NAME})
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)

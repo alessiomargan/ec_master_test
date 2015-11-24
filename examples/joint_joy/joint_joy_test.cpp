@@ -1,13 +1,20 @@
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
+#include <signal.h>
 #include <exception>
 
 #include <ec_boards_joint_joy.h>
-//#include <iit/advr/zmq_publisher.h>
 
-extern void main_common(void);
-extern int looping(void);
+extern void main_common(__sighandler_t sig_handler);
+
+static int main_loop = 1;
+
+void shutdown(int sig __attribute__((unused)))
+{
+    main_loop = 0;
+    printf("got signal .... Shutdown\n");
+}
 
 ////////////////////////////////////////////////////
 // Main
@@ -22,7 +29,7 @@ int main(int argc, char *argv[]) try {
         return 0;
     }
 
-    main_common();
+    main_common(shutdown);
     
     threads["EC_boards_joint_joy"] = new EC_boards_joint_joy(argv[1]);
     threads["EC_boards_joint_joy"]->create(true,2);
@@ -36,7 +43,7 @@ int main(int argc, char *argv[]) try {
     threads["ZMQ_pub"]->create(false,3);
 #endif
 
-    while (looping()) {
+    while (main_loop) {
         sleep(1);
     }
 

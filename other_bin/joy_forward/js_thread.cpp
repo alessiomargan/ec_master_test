@@ -18,12 +18,15 @@
 #include <linux/joystick.h>
 #define JOY_DEV "/dev/input/js0"
 
-#ifdef __XENO__
+#ifdef __XENO_PIPE__
     static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
 #else
     static const std::string pipe_prefix("/tmp/");
 #endif
  
+extern void main_common(__sighandler_t sig_handler);
+extern void set_main_sched_policy(int);
+
 static int main_loop = 1;
 
 static void shutdown(int sig __attribute__((unused)))
@@ -31,14 +34,6 @@ static void shutdown(int sig __attribute__((unused)))
     main_loop = 0;
     printf("got signal .... Shutdown\n");
 }
-
-static void set_signal_handler(void)
-{
-    signal(SIGINT, shutdown);
-    signal(SIGTERM, shutdown);
-    signal(SIGKILL, shutdown);
-}
-
     
 static void print_js_ev(struct js_event &js_ev) {
 
@@ -137,17 +132,11 @@ void * js_nrt_thread(void *)
 
 int main(void) {
 
-    struct sched_param param;
     int policy = SCHED_OTHER;
-
-    set_signal_handler();
-
-    param.sched_priority = sched_get_priority_max(policy);
-    if(sched_setscheduler(0, policy, &param) == -1) {
-            perror("sched_setscheduler failed");
-            exit(-1);
-    }
-
+    
+    main_common(shutdown);
+    set_main_sched_policy(sched_get_priority_max(policy));
+    
     js_nrt_thread(0);
     
     return 0;

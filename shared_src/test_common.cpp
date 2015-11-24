@@ -16,8 +16,6 @@
 
 #define MEM_LOCKED (500*1024*1024) // 500MB
 
-static int main_loop = 1;
-
 
 static void warn_upon_switch(int sig __attribute__((unused)))
 {
@@ -32,17 +30,12 @@ static void warn_upon_switch(int sig __attribute__((unused)))
     backtrace_symbols_fd(bt,nentries,fileno(stdout));
 }
 
-static void shutdown(int sig __attribute__((unused)))
-{
-    main_loop = 0;
-    printf("got signal .... Shutdown\n");
-}
 
-static void set_signal_handler(void)
+static void set_signal_handler(__sighandler_t sig_handler)
 {
-    signal(SIGINT, shutdown);
-    signal(SIGINT, shutdown);
-    signal(SIGKILL, shutdown);
+    signal(SIGINT, sig_handler);
+    signal(SIGINT, sig_handler);
+    signal(SIGKILL, sig_handler);
 #ifdef __XENO__
     // call pthread_set_mode_np(0, PTHREAD_WARNSW) to cause a SIGXCPU
     // signal to be sent when the calling thread involontary switches to secondary mode
@@ -72,7 +65,7 @@ static int lock_mem(int byte_size)
        buffer = (char*)malloc(byte_size);
 
        getrusage(RUSAGE_SELF, &usage);
-       printf("Major-pagefaults:%d, Minor Pagefaults:%d\n", usage.ru_majflt, usage.ru_minflt);
+       printf("Major-pagefaults:%ld, Minor Pagefaults:%ld\n", usage.ru_majflt, usage.ru_minflt);
 
        // Touch page to prove there will be no page fault later
        for (i=0; i < byte_size; i+=page_size)
@@ -88,7 +81,7 @@ static int lock_mem(int byte_size)
        }
        
        getrusage(RUSAGE_SELF, &usage);
-       printf("Major-pagefaults:%d, Minor Pagefaults:%d\n", usage.ru_majflt, usage.ru_minflt);
+       printf("Major-pagefaults:%ld, Minor Pagefaults:%ld\n", usage.ru_majflt, usage.ru_minflt);
 
        free(buffer);
        // buffer is now released. As glibc is configured such that it never gives back memory to
@@ -105,9 +98,6 @@ static int lock_mem(int byte_size)
    }
 ///////////////////////////////////////////////////////////////////////////////
 
-int looping(void) {
-    return main_loop;
-}
 
 void set_main_sched_policy(int priority) {
 
@@ -123,11 +113,11 @@ void set_main_sched_policy(int priority) {
     return;
 }
 
-void main_common(void)
+void main_common(__sighandler_t sig_handler)
 {
     int ret;
 
-    set_signal_handler();
+    set_signal_handler(sig_handler);
     
 #ifdef __XENO__
 

@@ -10,9 +10,13 @@ add_executable(${PROJECT_NAME}
     coman_test.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} boost_system ${COMMON_LIBS})
+if ( Xenomai_FOUND )
+    set_xeno_flags(${PROJECT_NAME})
+endif()
 
-if(NOT ENABLE_XENO)
+target_link_libraries(${PROJECT_NAME} ${COMMON_LIBS})
+
+if( NOT Xenomai_FOUND )
     # when install file loose setcap .... TO FIX
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND set_cap.sh ${PROJECT_NAME} COMMENT set_cap)
 endif()

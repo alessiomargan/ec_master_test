@@ -48,7 +48,7 @@ public:
     virtual ~EC_boards_coman_test();
 
     template<class C>
-    int user_input(C &user_cmd);
+    int xddp_input(C &user_cmd);
     int user_loop(void);
 
 private :
@@ -64,8 +64,7 @@ private :
     advr::Spline_map spline_mid2home;
     advr::Spline_map spline_any2home;
     
-    
-    XDDP_pipe jsInXddp, navInXddp;
+    XDDP_pipe jsInXddp, navInXddp, imuInXddp;
     
     user_state_t user_state;
     home_state_t home_state;

@@ -13,27 +13,11 @@ set(SHARED_SRC 		${CMAKE_CURRENT_SOURCE_DIR}/shared_src)
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
     find_package(RTnet)
-    set(RT_NRT_SRC
-	${SHARED_SRC}/rt_ipc.cpp
-	${SHARED_SRC}/rt_thread.cpp
-	${SHARED_SRC}/nrt_thread.cpp)
-else()
-    set(RT_NRT_SRC
-	${SHARED_SRC}/nrt_thread.cpp)
 endif()
 
-add_library(shared_utils SHARED
-    ${SHARED_SRC}/ec_boards_base.cpp
-    ${SHARED_SRC}/test_common.cpp
-    ${SHARED_SRC}/spline.cpp
-    ${RT_NRT_SRC}
-)
-
-install(DIRECTORY ${SHARED_SRC}/include/  DESTINATION include)
-install(TARGETS shared_utils DESTINATION lib)
 
 include_directories("${SHARED_SRC}/include")
-link_directories("${SHARED_SRC}")
+#link_directories("${SHARED_SRC}")
 
 set(COMMON_LIBS
     shared_utils
@@ -45,6 +29,8 @@ set(COMMON_LIBS
     jsoncpp
 )
 
+add_subdirectory(${SHARED_SRC})
+
 optional_build(basic 		examples/basic		ON)
 optional_build(sine_joint 	examples/sine_joint	OFF)
 optional_build(joint_joy 	examples/joint_joy	OFF)
@@ -55,3 +41,4 @@ optional_build(joy_forward 	other_bin/joy_forward	OFF)
 optional_build(spnav_forward 	other_bin/spnav_forward	OFF)
 optional_build(zmq_pub          other_bin/zmq_pub	OFF)
 optional_build(spline_test      other_bin/spline_test	OFF)
+optional_build(lpms_forward 	other_bin/lpms_forward	OFF)

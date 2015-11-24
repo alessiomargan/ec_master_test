@@ -21,7 +21,7 @@ void * nrt_thread(Thread_hook_Ptr th_hook)
 #ifdef __XENO__
     ret = pthread_set_name_np(pthread_self(), (*th_hook).name);
 #else
-    //int ret = pthread_setname_np(pthread_self(), (*th_hook).name);
+    ret = pthread_setname_np(pthread_self(), (*th_hook).name);
 #endif
     if ( ret != 0 ) {
         DPRINTF("%s : pthread_set_name_np() return code %d\n",

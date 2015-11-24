@@ -18,29 +18,21 @@
 
 #define DEFAULT_PIPE_NAME "EC_board_nav_input"
 
-#ifdef __XENO__
+#ifdef __XENO_PIPE__
     static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
 #else
     static const std::string pipe_prefix("/tmp/");
 #endif
  
+extern void main_common(__sighandler_t sig_handler);
+extern void set_main_sched_policy(int);
+
 static int main_loop = 1;
-static int xddp_sock = 0;
 
 static void shutdown(int sig __attribute__((unused)))
 {
     main_loop = 0;
     printf("got signal .... Shutdown\n");
-    spnav_close();
-    close(xddp_sock);
-    exit(0);
-}
-
-static void set_signal_handler(void)
-{
-    signal(SIGINT, shutdown);
-    signal(SIGTERM, shutdown);
-    signal(SIGKILL, shutdown);
 }
 
 static void print_spnav_ev(spnav_event &sev) {
@@ -56,7 +48,7 @@ static void print_spnav_ev(spnav_event &sev) {
     
 void * spnav_nrt_thread(void * arg)
 {
-    int nbytes, fd_in;
+    int nbytes, fd_in, xddp_sock;
     char c;
     std::string line;
     spnav_event sev;
@@ -77,12 +69,9 @@ void * spnav_nrt_thread(void * arg)
     }
     
     /* spnav_wait_event() and spnav_poll_event(), will silently ignore any non-spnav X11 events.
-	*
-	* If you need to handle other X11 events you will have to use a regular XNextEvent() loop,
-	* and pass any ClientMessage events to spnav_x11_event, which will return the event type or
-	* zero if it's not an spnav event (see spnav.h).
-	*/
-    while(spnav_wait_event(&sev)) {
+     * spnav_wait_event() blocks waiting for space-nav events
+     */
+    while(spnav_wait_event(&sev) && main_loop) {
 #ifdef DEBUG
 	print_spnav_ev(sev);
 #endif
@@ -97,11 +86,12 @@ void * spnav_nrt_thread(void * arg)
     return 0;
 }
 
+/////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv[]) try {
 
-    struct sched_param param;
-    int policy = SCHED_OTHER;
     char * pipe_arg = 0;
     
     if ( argc < 2 ) {
@@ -112,13 +102,10 @@ int main(int argc, char *argv[]) try {
 
     printf("Using pipe name %s\n", pipe_arg);
     
-    set_signal_handler();
-
-    param.sched_priority = sched_get_priority_max(policy);
-    if(sched_setscheduler(0, policy, &param) == -1) {
-            perror("sched_setscheduler failed");
-            exit(-1);
-    }
+    int policy = SCHED_OTHER;
+    
+    main_common(shutdown);
+    set_main_sched_policy(sched_get_priority_max(policy));
 
     spnav_nrt_thread(pipe_arg);
     

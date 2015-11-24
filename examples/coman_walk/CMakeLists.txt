@@ -16,9 +16,13 @@ add_executable(coman_walk
     main_walk.cpp
 )
 
+if ( Xenomai_FOUND )
+    set_xeno_flags(${PROJECT_NAME})
+endif()
+
 target_link_libraries(${PROJECT_NAME} ${COMMON_LIBS})
 
-if(NOT ENABLE_XENO)
+if( NOT Xenomai_FOUND )
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND set_cap.sh ${PROJECT_NAME} COMMENT set_cap)
 endif()
 

@@ -4,10 +4,15 @@ project(${PRJ_DIR})
 
 include_directories(include)
 
-#set(CMAKE_CXX_FLAGS 	"${CMAKE_CXX_FLAGS} -DDEBUG")
+if ( Xenomai_FOUND )
+    add_definitions("-D__XENO_PIPE__")
+endif()
+
+#add_definitions("-DDEBUG")
 
 add_executable(${PROJECT_NAME}
-spnav_thread.cpp
+    ${SHARED_SRC}/test_common.cpp
+    spnav_thread.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} pthread spnav)
