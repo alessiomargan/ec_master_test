@@ -12,6 +12,7 @@
 #include <LpmsSensorI.h>
 #include <LpmsSensorManagerI.h>
 
+#include <iit/advr/zmq_publisher.h>
 
 #ifdef __XENO_PIPE__
     static const std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
@@ -31,7 +32,7 @@ static void shutdown(int sig __attribute__((unused)))
 }
 
 //typedef void (*LpmsCallback)(ImuData d, const char* id);  
-std::function<void(ImuData,const char *)> lpms_cb; 
+std::function<void(const ImuData &,const char *)> lpms_cb; 
 static void cb_hook(ImuData imu_data, const char * id) { lpms_cb(imu_data,id); }
 
 using namespace std::chrono;
@@ -44,22 +45,42 @@ namespace {
     
 class ImuHandler
 {
+    typedef std::map<std::string, std::string> jmap_t;
+    #define JPDO(x) jpdo[#x] = std::to_string(x);
+
+    typedef struct ImuDataExt {
+	ImuDataExt() {}
+	ImuDataExt(const ImuData &d) { data=d;qW=data.q[0];qX=data.q[1];qY=data.q[2];qZ=data.q[3]; }
+	int sprint(char *buff, size_t size) {
+            return snprintf(buff, size, "%f\t%f\t%f\t%f\t%f", data.timeStamp, data.q[0], data.q[1], data.q[2], data.q[3]);
+        }
+        void to_map(jmap_t & jpdo) {
+	    JPDO(qW); JPDO(qX); JPDO(qY); JPDO(qZ);           
+        }
+	private :
+	    ImuData data;
+	    float qW,qX,qY,qZ;
+    } ImuDataExt;
+    typedef iit::Publisher<ImuDataExt> ImuPub;
+    
 public:
     ~ImuHandler();
     void setup(std::string pipe_name, bool use_cb);
     void operator()() const;
-    void imu_data_cb(ImuData, const char*);
+    void imu_data_cb(const ImuData &, const char*);
     void stop() { loop = false; }
 private:
     int			xddp_sock;
     LpmsSensorManagerI*	manager;
     LpmsSensorI* 	lpms;
     bool 		loop;
+    ImuPub		* imuPub;
 };
 
 
 ImuHandler::~ImuHandler()
 {
+    delete imuPub;
     // Removes the initialized sensor
     manager->removeSensor(lpms);
     // Deletes LpmsSensorManager object 
@@ -68,12 +89,14 @@ ImuHandler::~ImuHandler()
 
 
 
-void ImuHandler::imu_data_cb(ImuData imu_data, const char* id ) {
+void ImuHandler::imu_data_cb(const ImuData &imu_data, const char* id ) {
     
     printf("Fps %f\t", lpms->getFps());
     printf("<ImuHandler method> [%s] Timestamp=%f, qW=%f, qX=%f, qY=%f, qZ=%f\n",
 	   id, imu_data.timeStamp, imu_data.q[0], imu_data.q[1], imu_data.q[2], imu_data.q[3]);
     
+    ImuDataExt zzz(imu_data);
+    imuPub->publish(zzz);
     
     int	nbytes;
     if ( xddp_sock > 0 ) {
@@ -97,6 +120,8 @@ void ImuHandler::setup(std::string pipe_name, bool use_cb) {
     // use first device
     lpms = manager->addSensor(DEVICE_LPMS_U, dev_list.getDeviceId(0));
 
+    /////////////////////////////////////////////////////////////////
+    // 
     std::string pipe(pipe_prefix + pipe_name);
     xddp_sock = open(pipe.c_str(), O_WRONLY);
 
@@ -106,6 +131,10 @@ void ImuHandler::setup(std::string pipe_name, bool use_cb) {
 	std::cout << "Using "<< pipe << std::endl;
     }
 
+    /////////////////////////////////////////////////////////////////
+    // 
+    imuPub = new ImuPub(std::string("tcp://*:10101"));
+    
     if ( use_cb ) { lpms->setCallback(cb_hook); }
     else { loop = true; }
     

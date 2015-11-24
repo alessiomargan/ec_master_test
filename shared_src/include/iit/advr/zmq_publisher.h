@@ -133,8 +133,6 @@ inline int Abs_Publisher::open_pipe(std::string pipe_name) {
         return 1;
     }
     
-    
-    
     return 0;
 }
 
@@ -207,13 +205,21 @@ public:
     Publisher(std::string uri) : Abs_Publisher(uri) { }
     virtual ~Publisher() { std::cout << "~" << typeid(this).name() << std::endl; }
     
-    virtual int publish(void) {
+    int publish(void) {
     
-	int msg_data_size;
-
+	pub_data_t pub_data;
+	
 	if ( read_pipe(pub_data) <= 0 ) {
 	    return -1;
 	}
+
+	return publish(pub_data);
+    }
+    
+    int publish(pub_data_t &pub_data) {
+    
+	int msg_data_size;
+
 	// prepare _msg_id just once
 	_msg_id.rebuild(pipe.length());
 	memcpy((void*)_msg_id.data(),pipe.data(), pipe.length());
@@ -224,10 +230,10 @@ public:
 	msg_data_size = pub_data.sprint(zbuffer,sizeof(zbuffer));
 	//////////////////////////////////////////////////////////
 	// -- binary format
+	
 	//////////////////////////////////////////////////////////
 	// -- json format
 	std::string json_string = json_serializer(pub_data);
-	
 	msg_data_size = json_string.length();
 	_msg.rebuild(msg_data_size);
 	memcpy((void*)_msg.data(), json_string.c_str(), msg_data_size);
@@ -238,9 +244,6 @@ public:
 	
     }
 
-protected:
-        
-    pub_data_t pub_data;
 
 };
 
