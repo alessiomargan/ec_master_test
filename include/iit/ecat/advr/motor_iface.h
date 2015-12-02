@@ -78,7 +78,7 @@ public:
 //         return EC_WRP_NOK;
 //     }
 
-    virtual int init(const YAML::Node &) = 0;
+    //virtual int init(const YAML::Node &) = 0;
     virtual int start(int controller_type) { return EC_BOARD_NOK; }
     virtual int start(int controller_type, float _p, float _i, float _d) = 0;
     virtual int stop(void) = 0;
@@ -100,12 +100,12 @@ public:
     //virtual int get_posGainI(float &i_gain) = 0;
     //virtual int get_posGainD(float &d_gain) = 0;
 
-    virtual void handle_fault(void) = 0;
+    //virtual void handle_fault(void) = 0;
 
-    virtual void set_off_sgn(float offset, int sgn) = 0;
-    virtual void start_log(bool start) = 0;
+    //virtual void set_off_sgn(float offset, int sgn) = 0;
+    //virtual void start_log(bool start) = 0;
 
-    void set_state(ec_state state) { _actual_state = state; }
+    //void set_state(ec_state state) { _actual_state = state; }
 
     virtual int16_t get_robot_id() = 0;
 
@@ -114,7 +114,7 @@ protected:
     virtual bool am_i_HpESC() = 0;
     virtual bool am_i_LpESC() = 0;
 
-    ec_state     _actual_state;
+    //ec_state     _actual_state;
 };
 
 typedef AbsMotor<McEscPdoTypes> Motor;

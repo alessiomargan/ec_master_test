@@ -118,7 +118,7 @@ public:
         Base(slave_descriptor),
         Log(std::string("/tmp/LpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
-	_actual_state = EC_STATE_PRE_OP;
+	//_actual_state = EC_STATE_PRE_OP;
     }
     
     virtual ~LpESC(void) { 
@@ -303,7 +303,6 @@ public:
     }
 
     virtual int start(int controller_type) {
-        
         // pid not used
         return start(controller_type, 0, 0, 0);        
     }

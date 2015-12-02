@@ -140,7 +140,7 @@ public:
         Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
         _start_log = false;
-        _actual_state = EC_STATE_PRE_OP;
+        //_actual_state = EC_STATE_PRE_OP;
     }
 
     virtual ~HpESC(void) {

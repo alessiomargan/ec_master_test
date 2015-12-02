@@ -179,10 +179,10 @@ public:
     int get_esc_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype);
 
     template <typename T>
-    int get_esc_map_byclass(std::map<int, T> &esc_bytype);
+    int get_esc_map_byclass(std::map<int, T> &esc_byclass);
 
     template <typename T>
-    int get_esc_map_byclass(std::map<int, T> &esc_bytype, std::vector<int> rId_vect);
+    int get_esc_map_byclass(std::map<int, T> &esc_byclass, std::vector<int> rId_vect);
 
     template <typename T>
     int get_zombie_map_bytype(uint16_t ESC_type, std::map<int, T> &esc_bytype);
@@ -243,38 +243,38 @@ inline int Ec_Boards_ctrl::get_esc_map_bytype(uint16_t ESC_type, std::map<int, T
 }
 
 template <typename T>
-inline int Ec_Boards_ctrl::get_esc_map_byclass(std::map<int, T> &esc_bytype) {
+inline int Ec_Boards_ctrl::get_esc_map_byclass(std::map<int, T> &esc_byclass) {
 
     EscWrapper * esc;
     T t;
-    esc_bytype.clear();
+    esc_byclass.clear();
     for ( auto const& item : slaves ) {
 	EscWrapper * esc = item.second.get();
 	t = dynamic_cast<T>(esc);
 	if ( t ) {
-	    esc_bytype[item.first] = t;
+	    esc_byclass[item.first] = t;
 	}
     }
-    return esc_bytype.size();
+    return esc_byclass.size();
 }
 
 template <typename T>
-inline int Ec_Boards_ctrl::get_esc_map_byclass(std::map<int, T> &esc_bytype, std::vector<int> rId_vect) {
+inline int Ec_Boards_ctrl::get_esc_map_byclass(std::map<int, T> &esc_byclass, std::vector<int> rId_vect) {
 
     EscWrapper * esc;
     T t;
     // N log N
     std::sort(rId_vect.begin(), rId_vect.end());
-    esc_bytype.clear();
+    esc_byclass.clear();
     for ( auto const& item : slaves ) {
 	EscWrapper * esc = item.second.get();
 	t = dynamic_cast<T>(esc);
 	// log N + O(1)
 	if ( t && std::binary_search(rId_vect.begin(), rId_vect.end(), pos2Rid(item.first)) ) {
-	    esc_bytype[item.first] = t;
+	    esc_byclass[item.first] = t;
 	}
     }
-    return esc_bytype.size();
+    return esc_byclass.size();
 }
 
 template <typename T>
