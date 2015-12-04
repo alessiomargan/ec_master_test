@@ -1,4 +1,4 @@
-#include <iit/ecat/advr/mc_lowpwr_esc.h>
+#include <iit/ecat/advr/mc_lowpwr_sphbrk_esc.h>
 #include <string>
 
 using namespace iit::ecat;
@@ -114,20 +114,26 @@ static char acName8001_8[] = "flash_params_cmd";
 static char acName8001_9[] = "flash_params_cmd_ack";
 
 
-//template<class EscPDOTypes, class EscSDOTypes>
-//typename BasicEscWrapper<EscPDOTypes, EscSDOTypes>::sdo_t    BasicEscWrapper<EscPDOTypes, EscSDOTypes>::sdo;
 
 static const iit::ecat::objd_t source_SDOs[] =
 {
 
     // SD0 0x6000
     { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "link_pos"                 ,0     },
-    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_pos"                 ,0     },
-    { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "pos_ref_fb"               ,0     },
-    { 0X6000, 0x4, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "temperature"              ,0     },
-    { 0X6000, 0x5, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
-    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
-    { 0X6000, 0x7, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
+    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_pos"                ,0     },
+    { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "link_vel"                 ,0     },
+    { 0X6000, 0x4, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_vel"                ,0     },
+    { 0X6000, 0x5, DTYPE_REAL32,        32,  ATYPE_RO,   "pos_ref_fb"               ,0     },
+    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "temperature"              ,0     },
+    { 0X6000, 0x7, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
+    { 0X6000, 0x8, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
+    { 0X6000, 0x9, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
+    { 0X6000, 0xa, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_pos_2"              ,0     },
+    { 0X6000, 0xb, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_vel_2"              ,0     },
+    { 0X6000, 0xc, DTYPE_INTEGER16,     16,  ATYPE_RO,   "analog_1"                 ,0     },
+    { 0X6000, 0xd, DTYPE_INTEGER16,     16,  ATYPE_RO,   "analog_2"                 ,0     },
+    { 0X6000, 0xe, DTYPE_REAL32,        32,  ATYPE_RO,   "aux"                      ,0     },
+
     // SD0 0x7000                                                                         
     { 0X7000, 0x1, DTYPE_REAL32,        32,  ATYPE_RW,   "pos_ref"                  ,0     },  
     { 0X7000, 0x2, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "fault_ack"                ,0     },  
@@ -170,7 +176,18 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x8000, 0x20, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_32        ,0   }, 
     {0x8000, 0x21, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_33        ,0   }, 
     {0x8000, 0x22, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_34        ,0   }, 
-    {0x8000, 0x23, DTYPE_REAL32,       32, ATYPE_RW, acName8000_35        ,0   }, 
+    {0x8000, 0x23, DTYPE_REAL32,       32, ATYPE_RW, "Target_velocity"    ,0   }, 
+    {0x8000, 0x24, DTYPE_REAL32,       32, ATYPE_RW, "vel_gain_P"         ,0   }, 
+    {0x8000, 0x25, DTYPE_REAL32,       32, ATYPE_RW, "vel_gain_I"         ,0   }, 
+    {0x8000, 0x26, DTYPE_REAL32,       32, ATYPE_RW, "vel_gain_D"         ,0   }, 
+    {0x8000, 0x27, DTYPE_REAL32,       32, ATYPE_RW, "vel_gain_Ilim"      ,0   }, 
+    {0x8000, 0x28, DTYPE_REAL32,       32, ATYPE_RW, "force_gain_P"       ,0   }, 
+    {0x8000, 0x29, DTYPE_REAL32,       32, ATYPE_RW, "force_gain_I"       ,0   }, 
+    {0x8000, 0x2a, DTYPE_REAL32,       32, ATYPE_RW, "force_gain_D"       ,0   }, 
+    {0x8000, 0x2b, DTYPE_REAL32,       32, ATYPE_RW, "analog_1_mult"      ,0   }, 
+    {0x8000, 0x2c, DTYPE_REAL32,       32, ATYPE_RW, "analog_2_mult"      ,0   }, 
+    {0x8000, 0x2d, DTYPE_REAL32,       32, ATYPE_RW, "analog_1_offset"    ,0   }, 
+    {0x8000, 0x2e, DTYPE_REAL32,       32, ATYPE_RW, "analog_1_offset"    ,0   }, 
                                                                         
     // SDO8001[] =                                                      
     {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "fw_ver"                ,0   }, 
@@ -190,7 +207,7 @@ static const iit::ecat::objd_t source_SDOs[] =
                                                                       
                                                                       
                                                                       
-void LpESC::init_SDOs(void) {                                         
+void LpSphBrkESC::init_SDOs(void) {                                         
                                                                       
     int objd_num, i = 0;                                              
                                                                       
@@ -200,65 +217,83 @@ void LpESC::init_SDOs(void) {
     memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));            
 
     // 0x6000 
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.link_pos;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.motor_pos;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.pos_ref_fb;       
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.temperature;       
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.torque;         
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.fault;          
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.rtt;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.link_pos;
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.motor_pos;
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.link_vel;
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.motor_vel;
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.pos_ref_fb;       
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.temperature;       
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.torque;         
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.fault;          
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.rtt;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.motor_pos_2;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.motor_vel_2;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.analog_1;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.analog_2;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::rx_pdo.aux;            
     // 0x7000                                
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.pos_ref;        
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.fault_ack;       
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gainP;       
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gainD;       
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.ts;             
+    SDOs[i++].data = (void*)&LpSphBrkESC::tx_pdo.pos_ref;        
+    SDOs[i++].data = (void*)&LpSphBrkESC::tx_pdo.fault_ack;       
+    SDOs[i++].data = (void*)&LpSphBrkESC::tx_pdo.gainP;       
+    SDOs[i++].data = (void*)&LpSphBrkESC::tx_pdo.gainD;       
+    SDOs[i++].data = (void*)&LpSphBrkESC::tx_pdo.ts;             
     // 0x8000
-    SDOs[i++].data = (void*)&LpESC::sdo.Block_control;      
-    SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset_low;  
-    SDOs[i++].data = (void*)&LpESC::sdo.PosGainP;           
-    SDOs[i++].data = (void*)&LpESC::sdo.PosGainI;           
-    SDOs[i++].data = (void*)&LpESC::sdo.PosGainD;           
-    SDOs[i++].data = (void*)&LpESC::sdo.TorGainP;           
-    SDOs[i++].data = (void*)&LpESC::sdo.TorGainI;           
-    SDOs[i++].data = (void*)&LpESC::sdo.TorGainD;           
-    SDOs[i++].data = (void*)&LpESC::sdo.Torque_Mult;        
-    SDOs[i++].data = (void*)&LpESC::sdo.Pos_I_lim;          
-    SDOs[i++].data = (void*)&LpESC::sdo.Tor_I_lim;          
-    SDOs[i++].data = (void*)&LpESC::sdo.Min_pos;            
-    SDOs[i++].data = (void*)&LpESC::sdo.Max_pos;            
-    SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset_high; 
-    SDOs[i++].data = (void*)&LpESC::sdo.Max_tor;            
-    SDOs[i++].data = (void*)&LpESC::sdo.Max_cur;            
-    SDOs[i++].data = (void*)&LpESC::sdo.Enc_offset_1;       
-    SDOs[i++].data = (void*)&LpESC::sdo.Enc_offset_2;       
-    SDOs[i++].data = (void*)&LpESC::sdo.Torque_Offset;      
-    SDOs[i++].data = (void*)&LpESC::sdo.ConfigFlags;        
-    SDOs[i++].data = (void*)&LpESC::sdo.ConfigFlags2;       
-    SDOs[i++].data = (void*)&LpESC::sdo.NumEncoderLines;    
-    SDOs[i++].data = (void*)&LpESC::sdo.ImpedancePosGainP;  
-    SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset2_low; 
-    SDOs[i++].data = (void*)&LpESC::sdo.ImpedancePosGainD;  
-    SDOs[i++].data = (void*)&LpESC::sdo.Num_Abs_counts_rev; 
-    SDOs[i++].data = (void*)&LpESC::sdo.MaxPWM;             
-    SDOs[i++].data = (void*)&LpESC::sdo.Gearbox_ratio;      
-    SDOs[i++].data = (void*)&LpESC::sdo.ulCalPosition;      
-    SDOs[i++].data = (void*)&LpESC::sdo.Cal_Abs_Position;   
-    SDOs[i++].data = (void*)&LpESC::sdo.Cal_Abs2_Position;  
-    SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset2_high;
-    SDOs[i++].data = (void*)&LpESC::sdo.Joint_number;
-    SDOs[i++].data = (void*)&LpESC::sdo.Joint_robot_id;
-    SDOs[i++].data = (void*)&LpESC::sdo.Target_velocity;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Block_control;      
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.nonius_offset_low;  
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.PosGainP;           
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.PosGainI;           
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.PosGainD;           
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.TorGainP;           
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.TorGainI;           
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.TorGainD;           
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Torque_Mult;        
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Pos_I_lim;          
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Tor_I_lim;          
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Min_pos;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Max_pos;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.nonius_offset_high; 
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Max_tor;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Max_cur;            
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Enc_offset_1;       
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Enc_offset_2;       
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Torque_Offset;      
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.ConfigFlags;        
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.ConfigFlags2;       
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.NumEncoderLines;    
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.ImpedancePosGainP;  
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.nonius_offset2_low; 
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.ImpedancePosGainD;  
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Num_Abs_counts_rev; 
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.MaxPWM;             
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Gearbox_ratio;      
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.ulCalPosition;      
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Cal_Abs_Position;   
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Cal_Abs2_Position;  
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.nonius_offset2_high;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Joint_number;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Joint_robot_id;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.Target_velocity;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.vel_gain_P;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.vel_gain_I;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.vel_gain_D;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.vel_gain_Ilim;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.force_gain_P;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.force_gain_I;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.force_gain_D;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.analog_1_mult;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.analog_2_mult;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.analog_1_offset;
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.analog_2_offset;
     // 0x8001
-    SDOs[i++].data = (void*)&LpESC::sdo.firmware_version;     
-    SDOs[i++].data = (void*)&LpESC::sdo.enable_pdo_gains;      
-    SDOs[i++].data = (void*)&LpESC::sdo.set_ctrl_status;      
-    SDOs[i++].data = (void*)&LpESC::sdo.get_ctrl_status;      
-    SDOs[i++].data = (void*)&LpESC::sdo.V_batt_filt_100ms;    
-    SDOs[i++].data = (void*)&LpESC::sdo.T_inv_filt_100ms;     
-    SDOs[i++].data = (void*)&LpESC::sdo.T_mot1_filt_100ms;    
-    SDOs[i++].data = (void*)&LpESC::sdo.flash_params_cmd;     
-    SDOs[i++].data = (void*)&LpESC::sdo.flash_params_cmd_ack; 
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.firmware_version;     
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.enable_pdo_gains;      
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.set_ctrl_status;      
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.get_ctrl_status;      
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.direct_ref;    
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.abs_pos;     
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.m_current;    
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.flash_params_cmd;     
+    SDOs[i++].data = (void*)&LpSphBrkESC::sdo.flash_params_cmd_ack; 
     // end marker
     SDOs[i++].data = 0;
 

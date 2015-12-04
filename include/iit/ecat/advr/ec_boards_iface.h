@@ -19,6 +19,8 @@
 #include <iit/ecat/advr/test_esc.h>
 #include <iit/ecat/advr/mc_hipwr_esc.h>
 #include <iit/ecat/advr/mc_lowpwr_esc.h>
+#include <iit/ecat/advr/mc_lowpwr_sph_esc.h>
+#include <iit/ecat/advr/mc_lowpwr_sphbrk_esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/hub_esc.h>
 #include <iit/ecat/advr/power_board.h>

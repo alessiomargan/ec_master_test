@@ -58,6 +58,8 @@ enum Board_type : uint16_t
     HI_PWR_AC_MC    = 0x10,
     HI_PWR_DC_MC    = 0x11,
     LO_PWR_DC_MC    = 0x12,
+    LO_PWR_SPH_MC   = 0x13,
+    LO_PWR_SPH_MCBRK= 0x14,
     FT6             = 0x20,
     POW_BOARD       = 0x30,
     POW_CMN_BOARD   = 0x31,

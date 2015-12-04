@@ -267,7 +267,7 @@ public :
             init_sdo_lookup();
             readSDO_byname("Joint_robot_id", Joint_robot_id);
 	    readSDO_byname("Joint_number");
-	    readSDO_byname("fw_ver");
+	    readSDO_byname("firmware_version");
 
         } catch (EscWrpError &e ) {
 
@@ -276,17 +276,15 @@ public :
         }
 
         if ( Joint_robot_id > 0 ) {
-            try {
+	    try {
                 std::string esc_conf_key = std::string("HpESC_"+std::to_string(Joint_robot_id));
-                if ( root_cfg[esc_conf_key] ) {
-                    node_cfg = root_cfg[esc_conf_key];
-                    _sgn = node_cfg["sign"].as<int>(); 
-                    _offset = node_cfg["pos_offset"].as<float>();
-                    _offset = DEG2RAD(_offset);
-                } else {
-                    DPRINTF("NO config for %s\n", esc_conf_key.c_str() );
-                    return EC_BOARD_KEY_NOT_FOUND;
-                }
+                if ( read_conf(esc_conf_key, root_cfg) != EC_WRP_OK ) {
+		    esc_conf_key = std::string("HpESC_X");
+		    if ( read_conf(esc_conf_key, root_cfg) != EC_WRP_OK ) {
+			DPRINTF("NO config for HpESC_%d in %s\n", Joint_robot_id, __PRETTY_FUNCTION__);
+			return EC_BOARD_KEY_NOT_FOUND;
+		    }
+		}
             } catch (YAML::KeyNotFound &e) {
                 DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
                 return EC_BOARD_KEY_NOT_FOUND;
@@ -298,7 +296,9 @@ public :
 	// redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate 
 	readSDO_byname("Min_pos");
 	readSDO_byname("Max_pos");
-	readSDO_byname("Target_velocity");
+	readSDO_byname("Max_vel");
+	readSDO_byname("Max_tor");
+	readSDO_byname("Max_cur");
 	readSDO_byname("link_pos");
 
 	// set filename with robot_id
@@ -480,6 +480,21 @@ public :
     
 
 private:
+
+    int read_conf(std::string conf_key, const YAML::Node & root_cfg) {
+	
+	if ( ! root_cfg[conf_key] ) {
+    	    return EC_BOARD_KEY_NOT_FOUND;
+	}
+	    
+	DPRINTF("Using config %s\n", conf_key.c_str());
+	    
+	_sgn = root_cfg[conf_key]["sign"].as<int>(); 
+	_offset = root_cfg[conf_key]["pos_offset"].as<float>();
+	_offset = DEG2RAD(_offset);
+	
+	return EC_WRP_OK;
+    }
 
     int16_t Joint_robot_id;
     
