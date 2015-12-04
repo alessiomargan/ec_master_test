@@ -2,6 +2,10 @@
 #include <iit/advr/coman_robot_id.h>
 
 #include <linux/joystick.h>
+#include <spnav_config.h>
+#ifdef USE_X11
+#undef USE_X11
+#endif
 #include <spnav.h>
 
 #define MID_POS(m,M)    (m+(M-m)/2)

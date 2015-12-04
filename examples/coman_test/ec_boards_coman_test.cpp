@@ -2,8 +2,16 @@
 #include <iit/advr/coman_robot_id.h>
 
 #include <linux/joystick.h>
+
+#include <spnav_config.h>
+#ifdef USE_X11
+#undef USE_X11
+#endif
 #include <spnav.h>
+
+#ifdef USE_LPMS_IMU
 #include <ImuData.h>
+#endif
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
@@ -185,7 +193,7 @@ int EC_boards_coman_test::user_loop(void) {
     
 	running_spline = q_spln.front();
 	if ( running_spline ) {
-	    if ( go_there(motors, *running_spline, 0.05, false) ) {
+	    if ( go_there(motors, *running_spline, 0.05, true) ) {
 		// running spline has finish !! 
 		last_run_spline = running_spline;
 		q_spln.pop();
@@ -222,22 +230,21 @@ int EC_boards_coman_test::xddp_input(C &user_cmd) {
     static int	bytes_cnt;
     int		bytes = 0;
     
-    spnav_input_t	nav_cmd;
-    js_input_t		js_cmd;
-    ImuData		lpms_data;
-    
+#ifdef USE_LPMS_IMU
     ///////////////////////////////////////////////////////
     //
+    ImuData		lpms_data;
     if ( (bytes = imuInXddp.xddp_read(lpms_data)) > 0 ) {
 	printf("Timestamp=%f, qW=%f, qX=%f, qY=%f, qZ=%f\n",
 	       lpms_data.timeStamp, lpms_data.q[0], lpms_data.q[1], lpms_data.q[2], lpms_data.q[3]);
 
     }
-    
     bytes_cnt += bytes;
+#endif
     
     ///////////////////////////////////////////////////////
     //
+    spnav_input_t	nav_cmd;
     if ( (bytes = navInXddp.xddp_read(nav_cmd)) > 0 ) {
 	//user_cmd = process_spnav_input(nav_cmd);
 	// [-1.0 .. 1.0] / 500 ==> 0.002 rad/ms
@@ -266,12 +273,12 @@ int EC_boards_coman_test::xddp_input(C &user_cmd) {
 	    }
 	}
     }
-    
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
 
     ///////////////////////////////////////////////////////
     //
+    js_input_t		js_cmd;
     if ( (bytes = jsInXddp.xddp_read(js_cmd)) > 0 ) {
 	
 	//user_cmd = process_js_input(js_cmd);
@@ -338,7 +345,6 @@ int EC_boards_coman_test::xddp_input(C &user_cmd) {
 		    
 	}
     }
-
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
 

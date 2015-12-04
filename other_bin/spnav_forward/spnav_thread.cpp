@@ -14,6 +14,10 @@
 #include <unistd.h>
 #include <termios.h>
 
+#include <spnav_config.h>
+#ifdef USE_X11
+#undef USE_X11
+#endif
 #include <spnav.h>
 
 #define DEFAULT_PIPE_NAME "EC_board_nav_input"

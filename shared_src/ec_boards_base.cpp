@@ -147,12 +147,14 @@ void Ec_Thread_Boards_base::xddps_init(void) {
 
 void Ec_Thread_Boards_base::xddps_loop(void) {
     
-    int slave_pos;
+    int 	slave_pos;
+    uint16_t	esc_type;
     
     for ( auto const& item : xddps ) {
 	    
 	slave_pos = item.first;
-	switch ( slaves[slave_pos]->get_ESC_type() ) {
+	esc_type = slaves[slave_pos]->get_ESC_type();
+	switch ( esc_type ) {
 	    case iit::ecat::advr::LO_PWR_DC_MC :
 	    case iit::ecat::advr::HI_PWR_AC_MC :
 	    case iit::ecat::advr::HI_PWR_DC_MC :
@@ -172,6 +174,7 @@ void Ec_Thread_Boards_base::xddps_loop(void) {
 		break;
 
 	    default:
+		DPRINTF("[WARN] ESC type %d NOT handled %s\n", esc_type, __PRETTY_FUNCTION__);
 		break;
 	}
     }
