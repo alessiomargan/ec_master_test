@@ -3,6 +3,7 @@ project(ec_master_test)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroOptionalBuild)
+include(MacroSetcap)
 
 set(CMAKE_CXX_FLAGS 	"${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 set(ENABLE_XENO  	CACHE BOOL "OFF")
@@ -30,6 +31,8 @@ set(COMMON_LIBS
 )
 
 add_subdirectory(${SHARED_SRC})
+
+optional_build(soem_test 	examples/soem_test	ON)
 
 optional_build(basic 		examples/basic		ON)
 optional_build(sine_joint 	examples/sine_joint	OFF)

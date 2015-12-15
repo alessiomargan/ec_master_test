@@ -15,9 +15,12 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} boost_system ${COMMON_LIBS})
 
-if( NOT Xenomai_FOUND)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND set_cap.sh ${PROJECT_NAME} COMMENT set_cap)
+if(NOT Xenomai_FOUND)
+    set_cap_build(${PROJECT_NAME})
 endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+if(NOT Xenomai_FOUND)
+    set_cap_install(${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME})
+endif()
 
