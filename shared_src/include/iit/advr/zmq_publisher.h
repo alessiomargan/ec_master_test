@@ -295,7 +295,7 @@ public:
 	
 	base_port++;
 	zpub = new PwCmnPub(uri+std::to_string(base_port));
-	if ( zpub->open_pipe("PowCmn_pos_4") == 0 ) { zmap[base_port] = zpub; }
+	if ( zpub->open_pipe("PowCmn_pos_6") == 0 ) { zmap[base_port] = zpub; }
 	else { delete zpub; }
 	base_port++;
 	zpub = new McPub(uri+std::to_string(base_port));
@@ -306,12 +306,12 @@ public:
 	if ( zpub->open_pipe("Motor_id_21") == 0 ) { zmap[base_port] = zpub; }
 	else { delete zpub; }
 
-#if 0
 	base_port++;
 	zpub = new TestPub(uri+std::to_string(base_port)); 
-	if ( zpub->open_pipe("ESC_test_pos1") == 0 ) { zmap[base_port] = zpub; }
+	if ( zpub->open_pipe("Test_pos_4") == 0 ) { zmap[base_port] = zpub; }
 	else { delete zpub; }
-	
+
+#if 0
 	base_port++;
 	zpub = new FtPub(uri+std::to_string(base_port));
 	if ( zpub->open_pipe("Ft6ESC_0") == 0 ) { zmap[base_port] = zpub; }

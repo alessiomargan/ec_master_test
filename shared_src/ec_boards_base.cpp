@@ -13,6 +13,7 @@
 
 #include <iit/advr/ec_boards_base.h>
 
+
 Ec_Thread_Boards_base::~Ec_Thread_Boards_base() {
  	
     set_pre_op();
@@ -80,7 +81,7 @@ void Ec_Thread_Boards_base::th_loop(void *) {
     
     try {
 	
-	if ( recv_from_slaves() != iit::ecat::advr::EC_BOARD_OK ) {
+	if ( recv_from_slaves(timing) != iit::ecat::advr::EC_BOARD_OK ) {
 	    // TODO
 	    DPRINTF("recv_from_slaves FAIL !\n");
 	    return;
@@ -159,18 +160,23 @@ void Ec_Thread_Boards_base::xddps_loop(void) {
 	    case iit::ecat::advr::HI_PWR_AC_MC :
 	    case iit::ecat::advr::HI_PWR_DC_MC :
 		item.second->xddp_write(motors[slave_pos]->getRxPDO());
+		//item.second->xddp_write(getRxPDO<iit::ecat::advr::Motor::motor_pdo_rx_t, iit::ecat::advr::Motor>(slave_pos));
 		break;
 	    case iit::ecat::advr::FT6 :
 		item.second->xddp_write(fts[slave_pos]->getRxPDO());
+		//item.second->xddp_write(getRxPDO<iit::ecat::advr::Ft6ESC::pdo_rx_t, iit::ecat::advr::Ft6ESC>(slave_pos));
 		break;
 	    case iit::ecat::advr::POW_BOARD :
 		item.second->xddp_write(pows[slave_pos]->getRxPDO());
+		//item.second->xddp_write(getRxPDO<iit::ecat::advr::PowESC::pdo_rx_t, iit::ecat::advr::PowESC>(slave_pos));
 		break;
 	    case iit::ecat::advr::POW_CMN_BOARD :
 		item.second->xddp_write(powCmns[slave_pos]->getRxPDO());
+		//item.second->xddp_write(getRxPDO<iit::ecat::advr::PowComanESC::pdo_rx_t, iit::ecat::advr::PowComanESC>(slave_pos));
 		break;
 	    case iit::ecat::advr::EC_TEST :
-		item.second->xddp_write(tests[slave_pos]->getRxPDO());
+		//item.second->xddp_write(tests[slave_pos]->getRxPDO());
+		item.second->xddp_write(getRxPDO<iit::ecat::advr::TestEscPdoTypes::pdo_rx,iit::ecat::advr::TestESC>(slave_pos));
 		break;
 
 	    default:
@@ -186,8 +192,8 @@ void Ec_Thread_Boards_base::xddps_loop(void) {
  * HiPowerMotor does NOT have it
  */
 bool Ec_Thread_Boards_base::go_there(const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-				            const std::map<int,float> &target_pos,
-				            float eps, bool debug) {
+				     const std::map<int,float> &target_pos,
+				     float eps, bool debug) {
 
     int cond, cond_cnt, cond_sum;
     float pos_ref, motor_err, link_err, motor_link_err;
@@ -207,6 +213,7 @@ bool Ec_Thread_Boards_base::go_there(const std::map<int, iit::ecat::advr::Motor*
 	catch ( const std::out_of_range& oor ) { continue; }
 	
 	motor_pdo_rx = moto->getRxPDO();
+	//getRxPDO(slave_pos, motor_pdo_rx);
 	moto->set_posRef(pos_ref);
 	
 	link_err = fabs(motor_pdo_rx.link_pos  - pos_ref);
@@ -240,9 +247,9 @@ bool Ec_Thread_Boards_base::go_there(const std::map<int, iit::ecat::advr::Motor*
 
 //template <typename T>
 bool Ec_Thread_Boards_base::go_there(const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-					    //const std::map<int,advr::trajectory<T>> &spline_map_trj,
-					    const advr::Spline_map &spline_map_trj,
-					    float eps, bool debug) {
+				     //const std::map<int,advr::trajectory<T>> &spline_map_trj,
+				     const advr::Spline_map &spline_map_trj,
+				     float eps, bool debug) {
 
     int cond, cond_cnt, cond_sum;
     float pos_ref, motor_err, link_err, motor_link_err;

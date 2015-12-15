@@ -60,7 +60,7 @@ public:
     }
     
     template<class XddpTxTypes>
-    int xddp_write(XddpTxTypes & tx)
+    int xddp_write(const XddpTxTypes & tx)
     {
         //char buff[pool_size];
         
@@ -71,7 +71,7 @@ public:
     }
 
     template<class XddpRxTypes>
-    int xddp_read(XddpRxTypes & rx)
+    int xddp_read(const XddpRxTypes & rx)
     {
          if ( fd <= 0) { return 0; }
         /////////////////////////////////////////////////////////

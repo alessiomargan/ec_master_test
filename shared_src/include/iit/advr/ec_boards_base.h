@@ -94,7 +94,7 @@ protected :
 private:
     
     bool init_done;
-    
+    iit::ecat::ec_timing_t timing;
 };
 
 
