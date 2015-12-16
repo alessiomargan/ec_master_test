@@ -66,7 +66,7 @@ struct PowCmnEscPdoTypes {
             return snprintf(buff, size, "%f\t%f\t0x%02X\t%d", temperature, v_batt, status.all, rtt);
         }
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t0x%02X\t%d", temperature, v_batt, status.all, rtt);
+            fprintf(fp, "%f\t%f\t0x%02X\t%d\n", temperature, v_batt, status.all, rtt);
         }
         void to_map(jmap_t & jpdo) {
             JPDO(temperature);

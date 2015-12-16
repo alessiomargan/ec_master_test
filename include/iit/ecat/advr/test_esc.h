@@ -48,14 +48,15 @@ struct TestEscPdoTypes {
         uint64_t    _ulint;
         float       _real;
         int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "%ld\t%lu", _lint,_ulint);
+            return snprintf(buff, size, "%ld\t%ld\t%f", _lint,_ulint,_real);
         }
         void fprint(FILE *fp) {
-            fprintf(fp, "%ld\t%lu\n", _lint,_ulint);
+            fprintf(fp, "%ld\t%ld\t%f\n", _lint,_ulint,_real);
         }
         void to_map(jmap_t & jpdo) {
             JPDO(_int);
             JPDO(_ulint);
+            JPDO(_real);
         }
     } __attribute__((__packed__));
 };
@@ -70,14 +71,29 @@ struct TestEscSdoTypes {
     //float		dummy;
 };
 
+struct TestEscLogTypes {
+
+    uint64_t    		ts;           // ns
+    TestEscPdoTypes::pdo_rx	rx_pdo;
+
+    void fprint(FILE *fp) {
+            fprintf(fp, "%lu\t", ts);
+	    rx_pdo.fprint(fp);
+        }
+    int sprint(char *buff, size_t size) {
+	int l = snprintf(buff, size, "%lu\t", ts); 
+	return l + rx_pdo.sprint(buff+l,size-l);
+    }
+};
+
 class TestESC :
     public BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>,
-    public PDO_log<TestEscPdoTypes::pdo_rx>
+    public PDO_log<TestEscLogTypes>
 {
 
 public:
     typedef BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>    Base;
-    typedef PDO_log<TestEscPdoTypes::pdo_rx>                    Log;
+    typedef PDO_log<TestEscLogTypes>                    	Log;
 
     TestESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
@@ -100,7 +116,10 @@ public:
         }
 
         if ( _start_log ) {
-            push_back(rx_pdo);
+	    Log::log_t log;
+            log.ts = get_time_ns() - _start_log_ts ;
+	    log.rx_pdo = rx_pdo;
+            push_back(log);
         }
 
     }

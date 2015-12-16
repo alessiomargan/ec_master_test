@@ -27,18 +27,20 @@ Ec_Boards_ctrl::Ec_Boards_ctrl(std::string config_file) {
     const YAML::Node& board_ctrl = root_cfg["ec_board_ctrl"];
 
     eth_if = board_ctrl["eth_iface"].as<std::string>();
-    sync_cycle_time_ns = board_ctrl["sync_cycle_time_ns"].as<uint64>();
-    sync_cycle_offset_ns = board_ctrl["sync_cycle_offset_ns"].as<uint64>();
+    sync_cycle_time_ns = board_ctrl["sync_cycle_time_ns"].as<uint32_t>();
+    sync_cycle_offset_ns = board_ctrl["sync_cycle_offset_ns"].as<uint32_t>();
 
 }
 
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 
+    bool do_power_off = false;
+    
     // std::shared_ptr slaves 
     if ( root_cfg["ec_board_ctrl"]["power_off_boards"].as<bool>() == true ) {
-        iit::ecat::power_off();
+        do_power_off = true;
     }
-    iit::ecat::finalize();
+    iit::ecat::finalize(do_power_off);
 
 }
 
@@ -315,7 +317,7 @@ void Ec_Boards_ctrl::check_DataLayer(void)
 
 int Ec_Boards_ctrl::set_operative(void) {
 
-    expected_wkc = iit::ecat::operational(&sync_cycle_time_ns, &sync_cycle_offset_ns);
+    expected_wkc = iit::ecat::operational(sync_cycle_time_ns, sync_cycle_offset_ns);
     return expected_wkc;
 }
 
@@ -324,6 +326,7 @@ int Ec_Boards_ctrl::set_pre_op(void) {
     return iit::ecat::pre_operational();
 }
 
+/*
 int Ec_Boards_ctrl::getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo)
 {
     Motor * m = slave_as_Motor(slave_index);
@@ -380,9 +383,10 @@ int Ec_Boards_ctrl::getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo)
     wr_UNLOCK();
     return EC_BOARD_OK;
 }
+*/
 
 
-int Ec_Boards_ctrl::recv_from_slaves() {
+int Ec_Boards_ctrl::recv_from_slaves(ec_timing_t &timing) {
 
     /////////////////////////////////////////////
     // wait for cond_signal 

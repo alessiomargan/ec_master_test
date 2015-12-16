@@ -112,10 +112,10 @@ struct HiPwrLogTypes {
                 ts,pos_ref,temperature,position,pos_ref_fb,torque,fault,rtt);
     }
     int sprint(char *buff, size_t size) {
-//         return snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
+//         return snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu",
 //                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
 //                 temperature,position,velocity,torque,fault,rtt);
-           return snprintf(buff, size, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d\n",
+           return snprintf(buff, size, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d",
                            ts,pos_ref,temperature,position,pos_ref_fb,torque,fault,rtt);
     }
 };

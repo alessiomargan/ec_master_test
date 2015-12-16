@@ -43,6 +43,38 @@ namespace advr {
 typedef std::map<int, int>  Rid2PosMap;
 typedef std::map<int, int>  Pos2RidMap;
 
+/* Possible error codes returned */
+enum ec_boards_err: int {
+    /* No error */
+    EC_WRP_OK         = 0,
+    /* erros */
+    EC_WRP_NOK,
+};
+
+#define STRFY(x)    #x
+
+static const char * ec_boards_err_msg[] = {
+    STRFY(EC_WRP_OK),
+    /* erros */
+    STRFY(EC_WRP_NOK),
+};
+
+
+
+class EcBoardsError : public EscWrpError {
+public:
+    EcBoardsError (int err_no, const std::string & what_arg) : EscWrpError(err_no, what_arg) {}
+    EcBoardsError (int err_no, const char * what_arg) : EscWrpError(err_no, what_arg) {}
+    
+private:
+    virtual std::string make_what(std::string what_arg, int err_no) {
+        std::ostringstream msg;
+        msg << "EC_Boards_Error " << err_no << ":" << ec_boards_err_msg[err_no] << " " << what_arg;
+        return msg.str();
+    }
+};
+
+
 
 /**
  * @class Ec_Boards_ctrl
@@ -84,11 +116,15 @@ public:
      * @note This will not receive anything, it will just return 
      *       copy of the last RxPDO received!
      * @param slave_index id of the slave
-     * @param iit::ecat::advr::McESCTypes::pdo_rx&
+     * @param pdo_rx&
      */
-    int getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo);
-    int getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo);
-
+    //int getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo);
+    //int getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo);
+    template<typename T, class C>
+    int getRxPDO(int slave_index, T &pdo);
+    template<typename T, class C>
+    const T & getRxPDO(int slave_index);
+    
     /**
      * @brief set TxPDO of the slave @p slave_index
      * @note This will not send anything, it will just copy the 
@@ -97,23 +133,29 @@ public:
      * @param iit::ecat::advr::McESCTypes::pdo_rx&
      * @return void
      */
-    int setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo);
-    int setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo);
+    //int setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo);
+    //int setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo);
+    template<typename T, class C>
+    int setTxPDO(int slave_index, const T &pdo);
     /**
      * @brief returns the TxPDO of the slave @p slave_index
      * @note Just return a copy of the last TxPDO sent!
      * @param slave_index id of the slave
      * @param iit::ecat::advr::McESCTypes::pdo_rx&
      */
-    int getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo);
-    int getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo);
-
+    //int getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo);
+    //int getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo);
+    template<typename T, class C>
+    int getTxPDO(int slave_index, T &pdo);
+    template<typename T, class C>
+    const T & getTxPDO(int slave_index);
+    
     /**
      * @brief This will receive a running train from all the slaves, and will fill the RxPDO_map returned from getRxPDO()
      * 
      * @return int the number of boards that returned a PDO
      */
-    int recv_from_slaves(void);
+    int recv_from_slaves(ec_timing_t &timing);
     /**
      * @brief This will send a running train to all the slaves, using the TxPDO_map set with setTxPDO()
      * 
@@ -210,12 +252,12 @@ private:
 
     int             slave_cnt;
     int             expected_wkc;
-    ec_timing_t     timing;
+    //ec_timing_t     timing;
 
     std::string     eth_if;
 
-    uint64_t    sync_cycle_time_ns;
-    uint64_t    sync_cycle_offset_ns;
+    uint32_t    sync_cycle_time_ns;
+    uint32_t    sync_cycle_offset_ns;
 
 
 #ifdef __XENO__
@@ -226,6 +268,70 @@ private:
 
 
 };
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Thread safe PDO get/set
+// !!! no need to use these if you call recv_from_slaves and send_to_slaves in the same thread 
+//
+///////////////////////////////////////////////////////////////////////////////
+template<typename T, class C>
+inline int Ec_Boards_ctrl::getRxPDO(int slave_index, T &pdo) {
+
+    C * obj = slave_as<C>(slave_index);
+    if ( ! obj ) { return EC_BOARD_NOK; }
+    rd_LOCK();
+    pdo = obj->getRxPDO();
+    rd_UNLOCK();
+    return EC_BOARD_OK;
+}
+template<typename T, class C>
+inline const T & Ec_Boards_ctrl::getRxPDO(int slave_index) {
+
+    C * obj = slave_as<C>(slave_index);
+    if ( ! obj ) { throw EcBoardsError(EC_BOARD_NOK, "wrong slave_index"); }
+    rd_LOCK();
+    T t = obj->getRxPDO();
+    rd_UNLOCK();
+    return t;
+}
+
+
+template<typename T, class C>
+int Ec_Boards_ctrl::setTxPDO(int slave_index, const T &pdo) {
+
+    C * obj = slave_as<C>(slave_index);
+    if ( ! obj ) { return EC_BOARD_NOK; }
+    rd_LOCK();
+    obj->setTxPDO(pdo);
+    rd_UNLOCK();
+    return EC_BOARD_OK;
+}
+
+
+template<typename T, class C>
+int Ec_Boards_ctrl::getTxPDO(int slave_index, T &pdo) {
+
+    C * obj = slave_as<C>(slave_index);
+    if ( ! obj ) { return EC_BOARD_NOK; }
+    rd_LOCK();
+    pdo = obj->getTxPDO();
+    rd_UNLOCK();
+    return EC_BOARD_OK;
+}
+template<typename T, class C>
+inline const T & Ec_Boards_ctrl::getTxPDO(int slave_index) {
+
+    C * obj = slave_as<C>(slave_index);
+    if ( ! obj ) { throw EcBoardsError(EC_BOARD_NOK, "wrong slave_index"); }
+    rd_LOCK();
+    T t = obj->getTxPDO();
+    rd_UNLOCK();
+    return t;
+}
+///////////////////////////////////////////////////////////////////////////////
+//
+///////////////////////////////////////////////////////////////////////////////
 
 
 
