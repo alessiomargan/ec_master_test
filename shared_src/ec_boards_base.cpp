@@ -16,7 +16,6 @@
 
 Ec_Thread_Boards_base::~Ec_Thread_Boards_base() {
  	
-    set_pre_op();
     stop_motors();
     iit::ecat::print_stat(s_loop);
 }
@@ -45,6 +44,7 @@ void Ec_Thread_Boards_base::th_init(void *) {
 	throw "something else wrong";
     }
 
+#if 0    
     DPRINTF("warm up\n");
     ////////////////////////////////////////////////////////////////
     std::chrono::time_point<std::chrono::system_clock> start, now;
@@ -52,7 +52,7 @@ void Ec_Thread_Boards_base::th_init(void *) {
     std::chrono::seconds loop_delay(3);
     while ( now - start <= loop_delay ) {
 	try {
-	    send_to_slaves();	
+	    send_to_slaves();
 	} catch (iit::ecat::EscWrpError &e) {
 		std::cout << e.what() << std::endl;
 	}
@@ -60,7 +60,8 @@ void Ec_Thread_Boards_base::th_init(void *) {
     }
     ////////////////////////////////////////////////////////////////
     DPRINTF("warm end\n");
-    
+#endif
+
     start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;
     
