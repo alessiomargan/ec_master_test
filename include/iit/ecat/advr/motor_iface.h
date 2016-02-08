@@ -88,10 +88,10 @@ public:
     virtual void setTxPDO(const motor_pdo_tx_t &) = 0;
 
     virtual int set_posRef(float joint_pos) = 0;
-    virtual int set_torOffs(float tor_offs) = 0;
-    virtual int set_posGainP(float p_gain)  = 0;
-    virtual int set_posGainI(float i_gain)  = 0;
-    virtual int set_posGainD(float d_gain)  = 0;
+//     virtual int set_torOffs(float tor_offs) = 0;
+//     virtual int set_posGainP(float p_gain)  = 0;
+//     virtual int set_posGainI(float i_gain)  = 0;
+//     virtual int set_posGainD(float d_gain)  = 0;
 
     virtual int move_to(float pos, float step) { return 0; }
 

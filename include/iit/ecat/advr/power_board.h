@@ -73,7 +73,7 @@ struct PowEscPdoTypes {
         int16_t     load_curr;          // A
         uint16_t    fault;
         uint16_t    rtt;                // us
-        int sprint(char *buff, size_t size) {
+        int sprint(char *buff, size_t size) const {
             return snprintf(buff, size, "0x%02X\t%d\t%d\t%d", status.all,board_temp,board_temp,rtt);
         }
         void fprint(FILE *fp) {

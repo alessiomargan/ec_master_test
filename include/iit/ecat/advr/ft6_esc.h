@@ -40,7 +40,7 @@ namespace iit {
         float       torque_Z;           // Nm
         uint16_t    fault;
         uint16_t    rtt;                // ns
-        int sprint(char *buff, size_t size) {
+        int sprint(char *buff, size_t size) const {
             return snprintf(buff, size, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt);
         }
         void fprint(FILE *fp) {

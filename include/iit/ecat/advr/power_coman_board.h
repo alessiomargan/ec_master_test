@@ -62,7 +62,7 @@ struct PowCmnEscPdoTypes {
 	float			v_batt;
         status_cmn_pow_t	status;
         uint16_t		rtt;  // us
-        int sprint(char *buff, size_t size) {
+        int sprint(char *buff, size_t size) const {
             return snprintf(buff, size, "%f\t%f\t0x%02X\t%d", temperature, v_batt, status.all, rtt);
         }
         void fprint(FILE *fp) {

@@ -91,33 +91,52 @@ struct HiPwrEscSdoTypes {
 
 
 struct HiPwrLogTypes {
-
-    uint64_t    ts;        		    // ns
-    float       pos_ref;   		// rad
-    uint16_t    PosGainP;
-    uint16_t    PosGainD;
-    //                            
-    float       position;   		// rad
-    float       pos_ref_fb;   		// rad/s
-    uint16_t    temperature;    // C
-    int16_t     torque;               // Nm
-    uint16_t    fault;
-    uint16_t    rtt;        		// ns
+    
+    // TX
+    float       pos_ref;    //link
+    int16_t     vel_ref;    //link
+    int16_t     tor_ref;    //link
+    uint16_t    gains[5];
+    uint16_t    fault_ack;
+    uint16_t    ts;
+    uint16_t    op_idx_aux; // op [get/set] , idx
+    float       aux_set;    // set value
+    
+    // RX
+    float        link_pos;           // rad
+    float        motor_pos;          // rad
+    float        link_vel;           // radTBD on the firmware 
+    int16_t      motor_vel;          // rad/s
+    int16_t      torque;             // Nm
+    uint16_t     max_temperature;    // C
+    uint16_t     fault;
+    uint16_t     rtt;                // us
+    uint16_t     op_idx_ack;         // op [ack/nack] , idx
+    float        aux_get;            // get value or nack erro code
+        
 
     void fprint(FILE *fp) {
-//         fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
-//                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
-//                 temperature,position,velocity,torque,fault,rtt);
-        fprintf(fp, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d\n"   ,
-                ts,pos_ref,temperature,position,pos_ref_fb,torque,fault,rtt);
+        fprintf(fp, "%f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\n%f\t%f\t%f\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\t\n", 
+                    // TX
+                    pos_ref,vel_ref,tor_ref,
+                    gains[0],gains[1],gains[2],gains[3],gains[4],
+                    fault_ack,ts,op_idx_aux,aux_set,
+                    // RX
+                    link_pos,motor_pos,link_vel,motor_vel,
+                    torque,max_temperature,fault,rtt, op_idx_ack,aux_get);
     }
     int sprint(char *buff, size_t size) {
-//         return snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu",
-//                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
-//                 temperature,position,velocity,torque,fault,rtt);
-           return snprintf(buff, size, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d",
-                           ts,pos_ref,temperature,position,pos_ref_fb,torque,fault,rtt);
+        return snprintf(buff, size, "%f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\n%f\t%f\t%f\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\t\n", 
+                                    // TX
+                                    pos_ref,vel_ref,tor_ref,
+                                    gains[0],gains[1],gains[2],gains[3],gains[4],
+                                    fault_ack,ts,op_idx_aux,aux_set,
+                                    // RX
+                                    link_pos,motor_pos,link_vel,motor_vel,
+                                    torque,max_temperature,fault,rtt, op_idx_ack,aux_get);
     }
+        
+       
 };
 
 /**
@@ -181,20 +200,55 @@ protected :
         // apply transformation from Motor to Joint 
         rx_pdo.link_pos = hipwr_esc::M2J(rx_pdo.link_pos,_sgn,_offset); 
         rx_pdo.motor_pos = hipwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset); 
-        rx_pdo.pos_ref_fb  = hipwr_esc::M2J(rx_pdo.pos_ref_fb,_sgn,_offset); 
+        
+        // TX
+        float       pos_ref;    //link
+        int16_t     vel_ref;    //link
+        int16_t     tor_ref;    //link
+        uint16_t    gains[5];
+        uint16_t    fault_ack;
+        uint16_t    ts;
+        uint16_t    op_idx_aux; // op [get/set] , idx
+        float       aux_set;    // set value
+        
+        // RX
+        float        link_pos;           // rad
+        float        motor_pos;          // rad
+        float        link_vel;           // radTBD on the firmware 
+        int16_t      motor_vel;          // rad/s
+        int16_t      torque;             // Nm
+        uint16_t     max_temperature;    // C
+        uint16_t     fault;
+        uint16_t     rtt;                // us
+        uint16_t     op_idx_ack;         // op [ack/nack] , idx
+        float        aux_get;            // get value or nack erro code
         
         if ( _start_log ) {
             Log::log_t log;
+            // TX
             log.ts = get_time_ns() - _start_log_ts ;
-            log.pos_ref     = hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset);
-            log.PosGainP    = tx_pdo.gainP;
-            log.PosGainD    = tx_pdo.gainD;
-            log.position    = rx_pdo.link_pos;
-            log.pos_ref_fb  = rx_pdo.pos_ref_fb;
-            log.temperature = rx_pdo.temperature;
-            log.torque      = rx_pdo.torque;  
-            log.fault       = rx_pdo.fault;   
-            log.rtt         = rx_pdo.rtt;     
+            log.pos_ref     =   hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset);
+            log.vel_ref     =   tx_pdo.vel_ref;
+            log.tor_ref     =   tx_pdo.tor_ref;
+            log.gains[0]    =   tx_pdo.gains[0];
+            log.gains[1]    =   tx_pdo.gains[1];
+            log.gains[2]    =   tx_pdo.gains[2];
+            log.gains[3]    =   tx_pdo.gains[3];
+            log.gains[4]    =   tx_pdo.gains[4];
+            log.fault_ack   =   tx_pdo.fault_ack;
+            log.ts          =   tx_pdo.ts;
+            log.op_idx_aux  =   tx_pdo.op_idx_aux;
+            log.aux_set     =   tx_pdo.aux;
+            // RX
+            log.link_pos        = rx_pdo.link_pos;
+            log.motor_pos       = rx_pdo.motor_pos;
+            log.link_vel        = rx_pdo.link_vel;
+            log.link_vel        = rx_pdo.link_vel;
+            log.max_temperature = rx_pdo.max_temperature;  
+            log.fault           = rx_pdo.fault;   
+            log.rtt             = rx_pdo.rtt;     
+            log.op_idx_aux      = rx_pdo.op_idx_ack;
+            log.aux_get         = rx_pdo.aux;
             push_back(log);
         }
 
@@ -412,10 +466,10 @@ public :
     /////////////////////////////////////////////
     // set pdo data
     virtual int set_posRef(float joint_pos) { tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset); }
-    virtual int set_torOffs(float tor_offs) { /*tx_pdo.tor_offs = tor_offs;*/ }
-    virtual int set_posGainP(float p_gain)  { tx_pdo.gainP = p_gain;   }
-    virtual int set_posGainI(float i_gain)  { /*tx_pdo.PosGainI = i_gain;*/   }
-    virtual int set_posGainD(float d_gain)  { tx_pdo.gainD = d_gain;   }
+//     virtual int set_torOffs(float tor_offs) { /*tx_pdo.tor_offs = tor_offs;*/ }
+//     virtual int set_posGainP(float p_gain)  { tx_pdo.gainP = p_gain;   }
+//     virtual int set_posGainI(float i_gain)  { /*tx_pdo.PosGainI = i_gain;*/   }
+//     virtual int set_posGainD(float d_gain)  { tx_pdo.gainD = d_gain;   }
 
     virtual int move_to(float pos_ref, float step) {
         

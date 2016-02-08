@@ -47,7 +47,7 @@ struct TestEscPdoTypes {
         int64_t     _lint;
         uint64_t    _ulint;
         float       _real;
-        int sprint(char *buff, size_t size) {
+        int sprint(char *buff, size_t size) const {
             return snprintf(buff, size, "%ld\t%ld\t%f", _lint,_ulint,_real);
         }
         void fprint(FILE *fp) {

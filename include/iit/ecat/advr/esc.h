@@ -117,49 +117,72 @@ typedef std::map<std::string, std::string> jmap_t;
 struct McEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
-        float       pos_ref;
+        float       pos_ref;    //link
+        int16_t     vel_ref;    //link
+        int16_t     tor_ref;    //link
+        uint16_t    gains[5];
         uint16_t    fault_ack;
-        uint16_t    gainP;
-        uint16_t    gainD;
         uint16_t    ts;
+        uint16_t    op_idx_aux; // op [get/set] , idx
+        float       aux;        // set value
+        
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
+            fprintf(fp, "%f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\n", 
+                        pos_ref,vel_ref,tor_ref,
+                        gains[0],gains[1],gains[2],gains[3],gains[4],
+                        fault_ack,ts,op_idx_aux,aux);
         }
-        int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "%f\t0x%X\t%d\t%d\t%d", pos_ref,fault_ack,gainP,gainD,ts);
+        int sprint(char *buff, size_t size) const {
+            return snprintf(buff, size, "%f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\n", 
+                                        pos_ref,vel_ref,tor_ref,
+                                        gains[0],gains[1],gains[2],gains[3],gains[4],
+                                        fault_ack,ts,op_idx_aux,aux);
         }
 
-    }  __attribute__((__packed__));  // 12 bytes
+    }  __attribute__((__packed__));  // 28 bytes
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        float       link_pos;     // rad
-        float       motor_pos;     // rad
-        float       pos_ref_fb;   // rad
-        uint16_t    temperature;  // C * 10
-        int16_t     torque;       // Nm * 100
-        uint16_t    fault;
-        uint16_t    rtt;          //
+        
+        float        link_pos;           // rad
+        float        motor_pos;          // rad
+        float        link_vel;           // rad TBD on the firmware 
+        int16_t      motor_vel;          // rad/s
+        int16_t      torque;             // Nm
+        uint16_t     max_temperature;    // C
+        uint16_t     fault;
+        uint16_t     rtt;                // us
+        uint16_t     op_idx_ack;         // op [ack/nack] , idx
+        float        aux;                // get value or nack erro code
+
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%f\t%d\t%d\t0x%X\t%d\n", link_pos,motor_pos,pos_ref_fb,temperature,torque,fault,rtt);
+            fprintf(fp, "%f\t%f\t%f\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\t\n", 
+                        link_pos,motor_pos,link_vel,motor_vel,
+                        torque,max_temperature,fault,rtt, op_idx_ack, aux);
         }
-        int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "%f\t%f\t%f\t%d\t%d\t0x%X\t%d", link_pos,motor_pos,pos_ref_fb,temperature,torque,fault,rtt);
+        int sprint(char *buff, size_t size) const {
+            return snprintf(buff, size, "%f\t%f\t%f\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\t\n", 
+                                        link_pos,motor_pos,link_vel,motor_vel,
+                                        torque,max_temperature,fault,rtt, op_idx_ack, aux);
         }
         void to_map(jmap_t & jpdo) {
             JPDO(link_pos);
             JPDO(motor_pos);
-            JPDO(pos_ref_fb); 
-            JPDO(temperature);
+            JPDO(link_vel); 
+            JPDO(motor_vel); 
             JPDO(torque);
+            JPDO(max_temperature);
             JPDO(fault);
-            JPDO(rtt);            
+            JPDO(rtt);     
+            JPDO(op_idx_ack);
+            JPDO(aux); 
         }
         
-    }  __attribute__((__packed__)); // 20 bytes
-};
+    }  __attribute__((__packed__)); // 28 bytes
+    
+}; // 56 bytes total
 
 
 inline int check_cmd_ack(int16_t cmd, int16_t ack)
