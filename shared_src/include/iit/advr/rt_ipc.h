@@ -23,12 +23,13 @@ extern "C" {
 #endif
 
 
-int xddp_bind(const char * label, size_t poolsz);
+int xddp_bind ( const char * label, size_t poolsz );
 
-int xddp_connect(const char * label);
+int xddp_connect ( const char * label );
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
 #endif
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

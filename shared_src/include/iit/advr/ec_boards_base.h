@@ -3,7 +3,7 @@
 
    Developer:
        Alessio Margan (2015-, alessio.margan@iit.it)
-   
+
 */
 
 /**
@@ -27,40 +27,41 @@
 /**
  */
 
-		  
+
 class Ec_Thread_Boards_base :
     public Thread_hook,
-    public iit::ecat::advr::Ec_Boards_ctrl
-{
+    public iit::ecat::advr::Ec_Boards_ctrl {
 public:
-    
-    Ec_Thread_Boards_base(const char * config_yaml) : Ec_Boards_ctrl(config_yaml) {}
+
+    Ec_Thread_Boards_base ( const char * config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {}
     virtual ~Ec_Thread_Boards_base();
 
-    bool init_OK() { return init_done; };
+    bool init_OK() {
+        return init_done;
+    };
 
-    virtual void th_init(void *);
-    virtual void th_loop(void *);
-    
-    virtual int user_loop(void) = 0;
+    virtual void th_init ( void * );
+    virtual void th_loop ( void * );
+
+    virtual int user_loop ( void ) = 0;
 
 protected :
-    
-    virtual void init_preOP(void) = 0;
-    virtual void init_OP(void) = 0;
-    
+
+    virtual void init_preOP ( void ) = 0;
+    virtual void init_OP ( void ) = 0;
+
     iit::ecat::stat_t  s_loop;
     uint64_t start_time, tNow, tPre;
-    
+
     std::map<int,float> home;
     std::map<int,float> start_pos;
 
     std::queue<advr::Spline_map *> q_spln;
     advr::Spline_map * running_spline;
     advr::Spline_map * last_run_spline;
-    
-    void xddps_init(void);
-    void xddps_loop(void);
+
+    void xddps_init ( void );
+    void xddps_loop ( void );
     std::map<int,XDDP_pipe*> xddps;
 
     std::map<int, iit::ecat::advr::Motor*> 	motors;
@@ -69,30 +70,30 @@ protected :
     std::map<int, iit::ecat::advr::PowComanESC*>powCmns;
     std::map<int, iit::ecat::advr::TestESC*> 	tests;
 
-    bool go_there(const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-		  const std::map<int,float> &target_pos,
-		  float eps, bool debug = false);
+    bool go_there ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+                    const std::map<int,float> &target_pos,
+                    float eps, bool debug = false );
 
     //template <typename T>
-    bool go_there(const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-		  //const std::map<int,advr::trajectory<T>> &spline_map_trj,
-		  const advr::Spline_map &spline_map_trj,
-		  float eps, bool debug = false);
+    bool go_there ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+                    //const std::map<int,advr::trajectory<T>> &spline_map_trj,
+                    const advr::Spline_map &spline_map_trj,
+                    float eps, bool debug = false );
 
 
-    void get_trj_for_end_points(advr::Spline_map &new_spline_trj,
-				std::map<int,float> &end_points,
-				float secs);
-    
-    void smooth_splines_trj(advr::Spline_map &new_spline_trj,
-			    const advr::Spline_map &old_spline_trj,
-			    double smooth_time=0.5);
+    void get_trj_for_end_points ( advr::Spline_map &new_spline_trj,
+                                  std::map<int,float> &end_points,
+                                  float secs );
 
-    void set_any2home(advr::Spline_map &new_spline_trj, advr::Spline_map &old_spline_trj);
+    void smooth_splines_trj ( advr::Spline_map &new_spline_trj,
+                              const advr::Spline_map &old_spline_trj,
+                              double smooth_time=0.5 );
 
-    
+    void set_any2home ( advr::Spline_map &new_spline_trj, advr::Spline_map &old_spline_trj );
+
+
 private:
-    
+
     bool init_done;
     iit::ecat::ec_timing_t timing;
 };
@@ -101,3 +102,4 @@ private:
 
 
 #endif
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

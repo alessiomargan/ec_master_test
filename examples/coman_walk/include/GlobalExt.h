@@ -162,11 +162,10 @@ extern double SuppotCenter;// for sagittal comx motion
 
 
 //-------- begin of flags, use in logic switcher
-typedef struct
-{
-	int enable;
-	int done;
-}_flags;
+typedef struct {
+    int enable;
+    int done;
+} _flags;
 extern _flags checkMoveToInitial;
 extern _flags checkEntry;
 extern _flags checkQ1;
@@ -185,12 +184,11 @@ extern int mark_velocity; // record the velocity direction for stopping robot
 //-------- end of flags, use in logic switcher
 //
 //-------- begin of foot vector
-typedef struct
-{
-	vector<double> x;// previous and current discret point
-	vector<double> y;
-	vector<double> z;
-}_3rowVector;
+typedef struct {
+    vector<double> x;// previous and current discret point
+    vector<double> y;
+    vector<double> z;
+} _3rowVector;
 
 extern _3rowVector HipP;
 extern _3rowVector LeftFootP;
@@ -200,37 +198,36 @@ extern _3rowVector RightFootStancePos;
 //-------- end of foot vector
 
 ////-------- begin of data storage vectors
-typedef struct
-{
-	vector<double> comx;
-	vector<double> comy;	// vector has double value, defualt is zero value
-	vector<double> comz;
+typedef struct {
+    vector<double> comx;
+    vector<double> comy;	// vector has double value, defualt is zero value
+    vector<double> comz;
 
-	vector<double> realcomx;
-	vector<double> realcomy;	// vector has double value, defualt is zero value
-	vector<double> realcomz;
+    vector<double> realcomx;
+    vector<double> realcomy;	// vector has double value, defualt is zero value
+    vector<double> realcomz;
 
-	vector<double> Hipx;
-	vector<double> Hipy;
-	vector<double> Hipz;
+    vector<double> Hipx;
+    vector<double> Hipy;
+    vector<double> Hipz;
 
-	vector<double> phase_no;
-	vector<double> Vy;
-	vector<double> desV;
-	vector<double> zmpx;
-	vector<double> zmpy;
-	vector<double> walking_phase;
-	vector<double> Vx;
+    vector<double> phase_no;
+    vector<double> Vy;
+    vector<double> desV;
+    vector<double> zmpx;
+    vector<double> zmpy;
+    vector<double> walking_phase;
+    vector<double> Vx;
 
-	vector<double> RightFootx;
-	vector<double> RightFooty;
-	vector<double> RightFootz;
+    vector<double> RightFootx;
+    vector<double> RightFooty;
+    vector<double> RightFootz;
 
-	vector<double> LeftFootx;
-	vector<double> LeftFooty;
-	vector<double> LeftFootz;
+    vector<double> LeftFootx;
+    vector<double> LeftFooty;
+    vector<double> LeftFootz;
 
-}_data;
+} _data;
 
 extern _data data;
 //-------- end of data storage vectors
@@ -261,3 +258,4 @@ extern double takesteptime;//the time when robot takes a step to balance
 extern vector<float> homePos;// degree
 
 #endif
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

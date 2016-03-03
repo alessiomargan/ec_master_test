@@ -3,7 +3,7 @@
 
    Developer:
        Alessio Margan (2015-, alessio.margan@iit.it)
-   
+
 */
 
 /**
@@ -21,26 +21,26 @@
 
 typedef struct js_event 		input_t;
 
-class Ec_Boards_basic : public Ec_Thread_Boards_base
-{
+class Ec_Boards_basic : public Ec_Thread_Boards_base {
 public:
-    
-    Ec_Boards_basic(const char * config_yaml);
+
+    Ec_Boards_basic ( const char * config_yaml );
     virtual ~Ec_Boards_basic();
 
     template<class C>
-    int user_input(C &user_cmd);
-    virtual int user_loop(void);
+    int user_input ( C &user_cmd );
+    virtual int user_loop ( void );
 
 private :
-    
-    virtual void init_preOP(void);
-    virtual void init_OP(void);
-    
-     XDDP_pipe inXddp;
+
+    virtual void init_preOP ( void );
+    virtual void init_OP ( void );
+
+    XDDP_pipe inXddp;
 };
 
 
 
 
 #endif
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

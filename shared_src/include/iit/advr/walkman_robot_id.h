@@ -4,12 +4,11 @@ namespace advr {
 namespace walkman {
 
 
-enum Robot_IDs 
-{ 
+enum Robot_IDs {
     // neck
     HEAD_R = 1,
     HEAD_P,
-    
+
     // right arm
     RA_SH_1 = 11,
     RA_SH_2,
@@ -31,12 +30,12 @@ enum Robot_IDs
     LA_WR_3,
     LA_FT,
     LA_HA,
-    
+
     // waist
     WAIST_Y = 31,
     WAIST_R,
     WAIST_P,
-    
+
     // right leg
     RL_H_R = 41,
     RL_H_Y,
@@ -45,7 +44,7 @@ enum Robot_IDs
     RL_A_P,
     RL_A_R,
     RL_FT,
-    
+
     // left leg
     LL_H_R = 51,
     LL_H_Y,
@@ -54,9 +53,10 @@ enum Robot_IDs
     LL_A_P,
     LL_A_R,
     LL_FT,
-}; 
+};
 
 }
 }
 }
 }
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

@@ -27,26 +27,30 @@ const double MassTot = MassUpperbody+2.0*MassUpperleg+2.0*MassUnderleg+2.0*MassF
 const double Mass[] = {MassFoot, MassUnderleg,MassUpperleg, MassFoot, MassUnderleg,MassUpperleg ,MassUpperbody};
 
 // xyz position of COM in local frame
-const double COG_UB[3]={0,0,0.2563};
-const double COG_UpperLeg[3]={0,0,-0.1007};
-const double COG_UnderLeg[3]={0,0,-0.1267};
-const double COG_foot[3]={ 0.018,0,-0.0559};
+const double COG_UB[3]= {0,0,0.2563};
+const double COG_UpperLeg[3]= {0,0,-0.1007};
+const double COG_UnderLeg[3]= {0,0,-0.1267};
+const double COG_foot[3]= { 0.018,0,-0.0559};
 
-const double IG_body_loc[3][3] ={{0.0253,0,0},
-						 {0,0.0085,0},
-						 {0,0,0.0216}};
+const double IG_body_loc[3][3] = {{0.0253,0,0},
+    {0,0.0085,0},
+    {0,0,0.0216}
+};
 
-const double IG_upperleg_loc[3][3] ={{0.0144,0,0},
-							 {0,0.0144,0},
-							 {0,0,0.0007}};
+const double IG_upperleg_loc[3][3] = {{0.0144,0,0},
+    {0,0.0144,0},
+    {0,0,0.0007}
+};
 
-const double IG_underleg_loc[3][3] ={{0.0154,0,0},
-							 {0,0.0148,0},
-							 {0,0,0.0012}};
+const double IG_underleg_loc[3][3] = {{0.0154,0,0},
+    {0,0.0148,0},
+    {0,0,0.0012}
+};
 
-const double IG_foot_loc[3][3] ={{0.0005,0,0},
-						 {0,0.0012,0},
-						 {0,0,0.0009}};
+const double IG_foot_loc[3][3] = {{0.0005,0,0},
+    {0,0.0012,0},
+    {0,0,0.0009}
+};
 
 //------------ end of physical parameters
 
@@ -97,7 +101,7 @@ double delta = 0.05; // step width 5 cm
 double ds=0.04;// max sway distance delta for half-body coman is 5cm
 double ds_des=ds;// desired max sway distance from user command
 
-double get_comp[3]={0,0,zc};
+double get_comp[3]= {0,0,zc};
 double rest_p = 0; // the position where the com finally rests
 double Vx_des;	// without setting any value
 double SL = 0.0;	// Step Length
@@ -128,16 +132,16 @@ const double offset = 0.0;  // the offset between the main support center (COP) 
 double comx_offset = 0.00; // this COM offset gives zero Hip position at the beginning
 
 int numberofsteps=0;
-double Footx[2]={0,0};
-double FootCenter[2]={Footx[2]+offset,Footx[2]+offset};// 2-element array, 1st is initial value, 2nd is latest value
+double Footx[2]= {0,0};
+double FootCenter[2]= {Footx[2]+offset,Footx[2]+offset}; // 2-element array, 1st is initial value, 2nd is latest value
 
 double SuppotCenter=FootCenter[1];// it should be vector
 
 double comx = comx_offset; // initial com position
 double comy = 0;
 double comz = zc;
-double COM_realpos[3]={0,0,0};
-vector<double> COM_new(3,0);// store the COM data for solving inverse kinematics
+double COM_realpos[3]= {0,0,0};
+vector<double> COM_new ( 3,0 ); // store the COM data for solving inverse kinematics
 
 double Vx = 0;
 double Vy = 0;
@@ -157,8 +161,8 @@ double desV;
 double pseudoZMPx;
 double pseudoZMPy;
 
-vector<int> walking_phase(2,0);//only store current and 1 past state
-vector<int> phase_no(2,0);
+vector<int> walking_phase ( 2,0 ); //only store current and 1 past state
+vector<int> phase_no ( 2,0 );
 
 
 //------- end of initial condition for the robot-------
@@ -195,23 +199,23 @@ _flags startTurnRight;//flags for generating yaw angles
 _data data;
 //-------- end of data storage vectors
 //double traj[15]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};// joint trajectory
-vector<double> dtraj(30,0);// reference joint angular trajectory
-vector<double> traj(30,0);// joint trajectory
-vector<double> traj_old(30,0);//to save previous data to get velocity
+vector<double> dtraj ( 30,0 ); // reference joint angular trajectory
+vector<double> traj ( 30,0 ); // joint trajectory
+vector<double> traj_old ( 30,0 ); //to save previous data to get velocity
 
 /*WARNING!: HipO LFtO RFtO are in radian!!!*/
-double HipO[4]={0,DEGTORAD(0),0,0};  // roll pitch yaw operation to global coordinate, last is local yaw. DEGTORAD(1.5) gives real zero orientation, due to joint calibration offset
-double LFtO[4]={0,0,0,0};
-double RFtO[4]={0,0,0,0};
+double HipO[4]= {0,DEGTORAD ( 0 ),0,0}; // roll pitch yaw operation to global coordinate, last is local yaw. DEGTORAD(1.5) gives real zero orientation, due to joint calibration offset
+double LFtO[4]= {0,0,0,0};
+double RFtO[4]= {0,0,0,0};
 /*roll pitch yaw ([0][1][2]) for global, last yaw ([3]) for local*/
 /*the global yaw is used to change the foot yaw with respect to waist
 the local yaw is to change the yaw with respect to terrain surface
 the local yaw Z axis is always perpendicular to terrain surface*/
 
 /*WARNING!: WaistO is in degree!!!*/
-double WaistO[3]={0,0,0};
+double WaistO[3]= {0,0,0};
 //	   	waist yaw pitch roll rotation operation respect to local fram, operation order is pith roll yaw
-double WaistO_des[3]={0,0,0};
+double WaistO_des[3]= {0,0,0};
 
 /*temprary data storage*/
 double temp1=0;
@@ -220,7 +224,7 @@ double temp3=0;
 
 
 /*here the variables for stabilizer*/
-double deltaHip[5]={0};//the modification of hip position
+double deltaHip[5]= {0}; //the modification of hip position
 
 
 /* for balancing: to take a step*/
@@ -233,6 +237,8 @@ vector<float> homePos = {
     0,  0,  0,  0,  0, -2,  0, -3,  0,  -2, -3.5, 0,-3,  0,  0,
 //  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,  11, 12, 13, 14, 15
     // upper body #10
-    -28, 70,  0, 90,  -28, 70,  0, 90,  0,  0};
+    -28, 70,  0, 90,  -28, 70,  0, 90,  0,  0
+};
 // 16, 17, 18, 19, 20, 21, 22, 23, 24, 25
 //--------above are the global varaibles declearation---------------
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

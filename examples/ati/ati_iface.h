@@ -12,7 +12,7 @@
 
 #include <iit/ecat/utils.h>
 
-#define LOG_SIZE   10000000 
+#define LOG_SIZE   10000000
 
 
 typedef struct {
@@ -32,19 +32,18 @@ typedef struct {
     uint32_t    rtd_seq;
     uint64_t    ts;
     float       ft[6];
-    void sprint(char *buff, size_t size) {
-        snprintf(buff, size, "%lu\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", ts, rtd_seq, ft[0],ft[1],ft[2],ft[3],ft[4],ft[5]);
+    void sprint ( char *buff, size_t size ) {
+        snprintf ( buff, size, "%lu\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", ts, rtd_seq, ft[0],ft[1],ft[2],ft[3],ft[4],ft[5] );
     }
-    void fprint(FILE *fp) {
-        fprintf(fp, "%lu\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", ts, rtd_seq, ft[0],ft[1],ft[2],ft[3],ft[4],ft[5]);
+    void fprint ( FILE *fp ) {
+        fprintf ( fp, "%lu\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", ts, rtd_seq, ft[0],ft[1],ft[2],ft[3],ft[4],ft[5] );
     }
 } ati_log_t ; // 36 bytes
 
 
 
 
-class Ati_Sens  
-{
+class Ati_Sens {
 
 
 private:
@@ -55,19 +54,19 @@ private:
     ati_log_t   last_sample;
 
     int recv_data();
-    int send_cmd(cmd_t &);
+    int send_cmd ( cmd_t & );
 
 public:
 
-    Ati_Sens(bool run = false);
-    virtual ~Ati_Sens(void);
+    Ati_Sens ( bool run = false );
+    virtual ~Ati_Sens ( void );
 
-    void get_last_sample(ati_log_t &sample);
+    void get_last_sample ( ati_log_t &sample );
 
 protected:
 
-    void start_thread(void);
-    static void * rx_thread(void *);
+    void start_thread ( void );
+    static void * rx_thread ( void * );
 
     int udp_sock;
     //struct sockaddr_in local_addr;
@@ -81,3 +80,4 @@ protected:
 
 
 #endif
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

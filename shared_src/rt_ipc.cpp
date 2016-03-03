@@ -10,15 +10,13 @@
 #include <errno.h>
 
 
-static void fail(const char *reason)
-{
-    perror(reason);
-    exit(EXIT_FAILURE);
+static void fail ( const char *reason ) {
+    perror ( reason );
+    exit ( EXIT_FAILURE );
 }
 
 
-int xddp_bind(const char * label, size_t local_poolsz)
-{
+int xddp_bind ( const char * label, size_t local_poolsz ) {
     struct rtipc_port_label plabel;
     struct sockaddr_ipc saddr;
     int s;
@@ -27,24 +25,24 @@ int xddp_bind(const char * label, size_t local_poolsz)
     /* Get a datagram socket to bind to the RT endpoint. Each
      * endpoint is represented by a port number within the XDDP
      * protocol namespace. */
-    if ( (s=socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP)) < 0 )
-        fail("socket");
+    if ( ( s=socket ( AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP ) ) < 0 )
+        fail ( "socket" );
 
 
     /* Set a port label. This name will be registered when
      * binding, in addition to the port number (if given). */
-    strcpy(plabel.label, label);
+    strcpy ( plabel.label, label );
     //strcpy(port_label, label);
-    if ( setsockopt(s, SOL_XDDP, XDDP_LABEL, &plabel, sizeof(plabel)) )
-        fail("setsockopt xddp_label");
+    if ( setsockopt ( s, SOL_XDDP, XDDP_LABEL, &plabel, sizeof ( plabel ) ) )
+        fail ( "setsockopt xddp_label" );
     /*
      * Set a local 16k pool for the RT endpoint. Memory needed to
      * convey datagrams will be pulled from this pool, instead of
      * Xenomai's system pool.
      */
     if ( local_poolsz > 0 ) {
-        if ( setsockopt(s, SOL_XDDP, XDDP_POOLSZ, &local_poolsz, sizeof(local_poolsz)) )
-            fail("setsockopt xddp_poolsz");
+        if ( setsockopt ( s, SOL_XDDP, XDDP_POOLSZ, &local_poolsz, sizeof ( local_poolsz ) ) )
+            fail ( "setsockopt xddp_poolsz" );
     }
 
     /*
@@ -59,17 +57,16 @@ int xddp_bind(const char * label, size_t local_poolsz)
      * saddr.sipc_port specifies the port number to use. If -1 is
      * passed, the XDDP driver will auto-select an idle port.
      */
-    memset(&saddr, 0, sizeof(saddr));
+    memset ( &saddr, 0, sizeof ( saddr ) );
     saddr.sipc_family = AF_RTIPC;
     saddr.sipc_port = -1;
-    if ( bind(s, (struct sockaddr *)&saddr, sizeof(saddr)) )
-        fail("bind");
+    if ( bind ( s, ( struct sockaddr * ) &saddr, sizeof ( saddr ) ) )
+        fail ( "bind" );
 
     return s;
 }
 
-int xddp_connect(const char * label)
-{
+int xddp_connect ( const char * label ) {
     struct rtipc_port_label plabel;
     //char port_label[XDDP_LABEL_LEN];
     struct sockaddr_ipc saddr;
@@ -77,8 +74,8 @@ int xddp_connect(const char * label)
     int s;
     socklen_t addrlen;
 
-    if ( (s=socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP)) < 0 )
-        fail("socket");
+    if ( ( s=socket ( AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP ) ) < 0 )
+        fail ( "socket" );
 
     /*
      * Set the socket timeout; it will apply when attempting to
@@ -89,35 +86,36 @@ int xddp_connect(const char * label)
      */
     tv.tv_sec = 1;
     tv.tv_usec = 0;
-    if ( setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) )
-        fail("setsockopt");
+    if ( setsockopt ( s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof ( tv ) ) )
+        fail ( "setsockopt" );
 
     /*
      * Set a port label. This name will be used to find the peer
      * when connecting, instead of the port number.
      */
-    strcpy(plabel.label, label);
+    strcpy ( plabel.label, label );
     //strcpy(port_label, label);
-    if ( setsockopt(s, SOL_XDDP, XDDP_LABEL, &plabel, sizeof(plabel)) )
+    if ( setsockopt ( s, SOL_XDDP, XDDP_LABEL, &plabel, sizeof ( plabel ) ) )
         //if (setsockopt(s, SOL_RTIPC, XDDP_SETLABEL, &port_label, sizeof(port_label)))
-        fail("setsockopt");
+        fail ( "setsockopt" );
 
-    memset(&saddr, 0, sizeof(saddr));
+    memset ( &saddr, 0, sizeof ( saddr ) );
     saddr.sipc_family = AF_RTIPC;
     saddr.sipc_port = -1;   /* Tell XDDP to search by label. */
-    if ( connect(s, (struct sockaddr *)&saddr, sizeof(saddr)) )
-        fail("connect");
+    if ( connect ( s, ( struct sockaddr * ) &saddr, sizeof ( saddr ) ) )
+        fail ( "connect" );
 
     /*
      * We succeeded in making the port our default destination
      * address by using its label, but we don't know its actual
      * port number yet. Use getpeername() to retrieve it.
      */
-    addrlen = sizeof(saddr);
-    if ( getpeername(s, (struct sockaddr *)&saddr, &addrlen) || addrlen != sizeof(saddr) )
-        fail("getpeername");
+    addrlen = sizeof ( saddr );
+    if ( getpeername ( s, ( struct sockaddr * ) &saddr, &addrlen ) || addrlen != sizeof ( saddr ) )
+        fail ( "getpeername" );
 
-    rt_printf("%s: NRT peer is reading from /dev/rtp%d\n", __FUNCTION__, saddr.sipc_port);
+    rt_printf ( "%s: NRT peer is reading from /dev/rtp%d\n", __FUNCTION__, saddr.sipc_port );
 
     return s;
 }
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
