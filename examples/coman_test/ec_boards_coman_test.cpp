@@ -46,6 +46,7 @@ EC_boards_coman_test::EC_boards_coman_test ( const char* config_yaml ) :
     jsInXddp.init ( "EC_board_js_input" );
     navInXddp.init ( "EC_board_nav_input" );
     imuInXddp.init ( "Lpms_imu" );
+    termInXddp.init ( "terminal" );
 }
 
 EC_boards_coman_test::~EC_boards_coman_test() {
@@ -84,23 +85,23 @@ void EC_boards_coman_test::init_preOP ( void ) {
         iit::ecat::advr::coman::LL_A_R,
         iit::ecat::advr::coman::LL_FT,
         // right arm
-        //iit::ecat::advr::coman::RA_SH_1,
-        //iit::ecat::advr::coman::RA_SH_2,
-        //iit::ecat::advr::coman::RA_SH_3,
-        //iit::ecat::advr::coman::RA_EL,
-        //iit::ecat::advr::coman::RA_WR_1,
-        //iit::ecat::advr::coman::RA_WR_2,
-        //iit::ecat::advr::coman::RA_WR_3,
+        iit::ecat::advr::coman::RA_SH_1,
+        iit::ecat::advr::coman::RA_SH_2,
+        iit::ecat::advr::coman::RA_SH_3,
+        iit::ecat::advr::coman::RA_EL,
+        iit::ecat::advr::coman::RA_WR_1,
+        iit::ecat::advr::coman::RA_WR_2,
+        iit::ecat::advr::coman::RA_WR_3,
         iit::ecat::advr::coman::RA_FT,
         iit::ecat::advr::coman::RA_HA,
         // left arm
-        //iit::ecat::advr::coman::LA_SH_1,
-        //iit::ecat::advr::coman::LA_SH_2,
-        //iit::ecat::advr::coman::LA_SH_3,
-        //iit::ecat::advr::coman::LA_EL,
-        //iit::ecat::advr::coman::LA_WR_1,
-        //iit::ecat::advr::coman::LA_WR_2,
-        //iit::ecat::advr::coman::LA_WR_3,
+        iit::ecat::advr::coman::LA_SH_1,
+        iit::ecat::advr::coman::LA_SH_2,
+        iit::ecat::advr::coman::LA_SH_3,
+        iit::ecat::advr::coman::LA_EL,
+        iit::ecat::advr::coman::LA_WR_1,
+        iit::ecat::advr::coman::LA_WR_2,
+        iit::ecat::advr::coman::LA_WR_3,
         iit::ecat::advr::coman::LA_FT,
         iit::ecat::advr::coman::LA_HA,
     };
@@ -135,11 +136,13 @@ void EC_boards_coman_test::init_preOP ( void ) {
         moto->readSDO ( "Max_pos", max_pos );
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
-        home[slave_pos] = DEG2RAD ( iit::ecat::advr::coman::robot_ids_home_pos_deg[pos2Rid ( slave_pos )] );
-        //home[slave_pos] = MID_POS(min_pos,max_pos);
+        home[slave_pos] = DEG2RAD ( iit::ecat::advr::coman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
         mid_pos[slave_pos] = MID_POS ( min_pos,max_pos ); //home[slave_pos] + 1.0;
         if ( mid_pos[slave_pos] == home[slave_pos] ) {
-            mid_pos[slave_pos] += 0.1;
+            mid_pos[slave_pos] += 0.2;
+        }
+        if ( pos2Rid(slave_pos) == iit::ecat::advr::coman::WAIST_P || pos2Rid(slave_pos) == iit::ecat::advr::coman::WAIST_R ) {
+            mid_pos[slave_pos] = home[slave_pos];
         }
         step_2[slave_pos] = start_pos[slave_pos]; //MID_POS(min_pos,max_pos) + 0.2;
         DPRINTF ( "Joint_id %d start %f home %f mid %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], mid_pos[slave_pos] );
@@ -148,17 +151,17 @@ void EC_boards_coman_test::init_preOP ( void ) {
         spline_start2home[slave_pos].set_points ( Xt_5s, Ys );
 
         Ys = std::initializer_list<double> { home[slave_pos], mid_pos[slave_pos] };
-        spline_home2mid[slave_pos].set_points ( Xt_5s, Ys );
+        spline_home2mid[slave_pos].set_points ( Xt_3s, Ys );
 
         Ys = std::initializer_list<double> { mid_pos[slave_pos], home[slave_pos] };
-        spline_mid2home[slave_pos].set_points ( Xt_5s, Ys );
+        spline_mid2home[slave_pos].set_points ( Xt_3s, Ys );
 
         /* If k does not match the key of any element in the container, the function inserts a new element with that key
             * and returns a reference to its mapped value. Notice that this always increases the container size by one,
             * even if no mapped value is assigned to the element (the element is constructed using its default constructor).
             */
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        spline_any2home[slave_pos].set_points ( Xt_5s, Ys );;
+        spline_any2home[slave_pos].set_points ( Xt_5s, Ys );
 
         //////////////////////////////////////////////////////////////////////////
         // start controller :
@@ -166,6 +169,9 @@ void EC_boards_coman_test::init_preOP ( void ) {
         moto->start ( CTRL_SET_POS_MODE );
     }
 
+    //DPRINTF ( ">>> wait xddp terminal ....\n" );
+    //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
+    
     //
     q_spln.push ( &spline_start2home );
     q_spln.push ( &spline_home2mid );
@@ -180,12 +186,17 @@ void EC_boards_coman_test::init_OP ( void ) {
     //user_state = IDLE;
     home_state = TEST_HOME;
 
+    //DPRINTF ( ">>> wait xddp terminal ....\n" );
+    //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
+
     if ( ! q_spln.empty() ) {
         running_spline = q_spln.front();
         last_run_spline = running_spline;
         advr::reset_spline_trj ( *running_spline );
     }
+    
     DPRINTF ( "End Init_OP\n" );
+    
 }
 
 int EC_boards_coman_test::user_loop ( void ) {
@@ -230,7 +241,7 @@ int EC_boards_coman_test::user_loop ( void ) {
         running_spline = q_spln.front();
         if ( running_spline ) {
             // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors, *running_spline, 0.07, true ) ) {
+            if ( go_there ( motors, *running_spline, 0.07, false) ) {
                 // running spline has finish !!
                 last_run_spline = running_spline;
                 q_spln.pop();
@@ -266,7 +277,7 @@ int EC_boards_coman_test::xddp_input ( C &user_cmd ) {
 #ifdef USE_LPMS_IMU
     ///////////////////////////////////////////////////////
     //
-    ImuData		lpms_data;
+    ImuData lpms_data;
     if ( ( bytes = imuInXddp.xddp_read ( lpms_data ) ) > 0 ) {
         DPRINTF ( "Timestamp=%f, qW=%f, qX=%f, qY=%f, qZ=%f\n",
                   lpms_data.timeStamp, lpms_data.q[0], lpms_data.q[1], lpms_data.q[2], lpms_data.q[3] );
