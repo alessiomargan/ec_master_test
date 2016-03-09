@@ -1,0 +1,44 @@
+!!python/object:__main__.Esc_c_gen
+
+#'b': 'char',
+#'h': 'short',
+#'i': 'int',
+#'l': 'long',
+#'q': 'long long',
+#'f': 'float',
+#'d': 'double',
+
+# class name
+name : LpESC
+sdos : 
+    0x6000 : [  
+        ["link_pos",f,RO],
+        ["motor_pos",f,RO],
+        ["pos_ref_fb",f,RO],
+        ["temperature",H,RO],
+        ["torque",h,RO],
+        ["fault",H,RO],
+        ["rtt",H,RO]
+    ]
+    
+    0x7000 : [  
+        ["pos_ref",f,RW],
+        ["fault_ack",H,RW],
+        ["gainP",H,RW],
+        ["gainD",H,RW],
+        ["ts",H,RW],
+    ]
+    
+    0x8001 : [
+        ["fw_ver",s64,RO],
+        ["ack_board_faults",I,RW],
+        ["ctrl_status_cmd",H,RW],
+        ["ctrl_status_cmd_ack",H,RO],
+        ["direct_ref",f,RW],
+        ["abs_pos",f,RO],
+        ["m_current",f,RO],
+        ["flash_params_cmd",H,RW],
+        ["flash_params_cmd_ack",H,RO]
+    ]
+
+            

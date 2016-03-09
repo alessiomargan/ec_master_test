@@ -1,5 +1,5 @@
 /*
- * mc_lopwr_esc.h
+ * mc_lopwr_sph_esc.h
  *
  *  LoPower Motor Controlleer
  *  based on TI TM4C123AH6PM - Tiva Microcontroller
@@ -7,16 +7,16 @@
  *
  *  http://www.ti.com/product/tm4c123ah6pm
  *
- *  Created on: Dec 2014
+ *  Created on: Dec 2015
  *      Author: alessio margan
  */
 
-#ifndef __IIT_ECAT_ADVR_MC_LOWPWR_ESC_H__
-#define __IIT_ECAT_ADVR_MC_LOWPWR_ESC_H__
+#ifndef __IIT_ECAT_ADVR_MC_LOWPWR_SPHBRK_ESC_H__
+#define __IIT_ECAT_ADVR_MC_LOWPWR_SPHBRK_ESC_H__
 
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
-#include <iit/ecat/advr/motor_iface.h>
+//#include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
 #include <map>
@@ -25,22 +25,10 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-namespace lopwr_esc {
-//static float J2M(float p, int s, float o) { return ((s*o) + (s*p)); }
-//static float M2J(float p, int s, float o) { return ((p + (s*o))/s); }
-static float J2M ( float p, int s, float o ) {
-    return p;
-}
-static float M2J ( float p, int s, float o ) {
-    return p;
-}
 
-}
-
-struct LoPwrEscSdoTypes {
+struct LoPwrSphBrkEscSdoTypes {
 
     // flash
-
     int     Block_control;
     int     nonius_offset_low;
     float   PosGainP;
@@ -76,24 +64,98 @@ struct LoPwrEscSdoTypes {
     int16_t Joint_number;
     int16_t Joint_robot_id;
     float   Target_velocity;
-    // ram
+    float   vel_gain_P;
+    float   vel_gain_I;
+    float   vel_gain_D;
+    float   vel_gain_Ilim;
+    float   force_gain_P;
+    float   force_gain_I;
+    float   force_gain_D;
+    float   analog_1_mult;
+    float   analog_2_mult;
+    float   analog_1_offset;
+    float   analog_2_offset;
 
+    // ram
     char        firmware_version[8];
     uint16_t    enable_pdo_gains;
     uint16_t    set_ctrl_status;
     uint16_t    get_ctrl_status;
-    float       V_batt_filt_100ms;
-    float       T_inv_filt_100ms;
-    float       T_mot1_filt_100ms;
+    float       direct_ref;
+    float       abs_pos;
+    float       m_current;
     uint16_t    flash_params_cmd;
     uint16_t    flash_params_cmd_ack;
 };
 
+struct McSphBrkEscPdoTypes {
+    // TX  slave_input -- master output
+    struct pdo_tx {
+        float       pos_ref;
+        uint16_t    fault_ack;
+        uint16_t    gainP;
+        uint16_t    gainD;
+        uint16_t    ts;
 
-struct LoPwrLogTypes {
+        void fprint ( FILE *fp ) {
+            fprintf ( fp, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts );
+        }
+        int sprint ( char *buff, size_t size ) {
+            return snprintf ( buff, size, "%f\t0x%X\t%d\t%d\t%d", pos_ref,fault_ack,gainP,gainD,ts );
+        }
+
+    }  __attribute__ ( ( __packed__ ) ); // 12 bytes
+
+    // RX  slave_output -- master input
+    struct pdo_rx {
+        float       link_pos;     // rad
+        float       motor_pos;     // rad
+        float       link_vel;     // rad/s
+        float       motor_vel;     // rad/s
+        float       pos_ref_fb;   // rad
+        uint16_t    temperature;  // C * 10
+        int16_t     torque;       // Nm * 100
+        uint16_t    fault;
+        uint16_t    rtt;          //
+        float       motor_pos_2;     // rad
+        float       motor_vel_2;     // rad/s
+        int16_t     analog_1;
+        int16_t     analog_2;
+        float       aux;
+
+        void fprint ( FILE *fp ) {
+            fprintf ( fp, "%f\t%f\t%f\t%f\t%f\t%d\t%d\t0x%X\t%d\t%f\t%f\t%d\t%d\t%f\n",
+                      link_pos,motor_pos,link_vel,motor_vel,pos_ref_fb,temperature,torque,fault,rtt,motor_pos_2,motor_vel_2,analog_1,analog_2,aux );
+        }
+        int sprint ( char *buff, size_t size ) {
+            return snprintf ( buff, size, "%f\t%f\t%f\t%f\t%f\t%d\t%d\t0x%X\t%d\t%f\t%f\t%d\t%d\t%f\n",
+                              link_pos,motor_pos,link_vel,motor_vel,pos_ref_fb,temperature,torque,fault,rtt,motor_pos_2,motor_vel_2,analog_1,analog_2,aux );
+        }
+        void to_map ( jmap_t & jpdo ) {
+            JPDO ( link_pos );
+            JPDO ( motor_pos );
+            JPDO ( link_vel );
+            JPDO ( motor_vel );
+            JPDO ( pos_ref_fb );
+            JPDO ( temperature );
+            JPDO ( torque );
+            JPDO ( fault );
+            JPDO ( rtt );
+            JPDO ( motor_pos_2 );
+            JPDO ( motor_vel_2 );
+            JPDO ( analog_1 );
+            JPDO ( analog_2 );
+
+        }
+
+    }  __attribute__ ( ( __packed__ ) ); // 28 bytes
+};
+
+
+struct LoPwrSphBrkLogTypes {
 
     uint64_t    		ts;           // ns
-    McEscPdoTypes::pdo_rx	rx_pdo;
+    McSphBrkEscPdoTypes::pdo_rx	rx_pdo;
 
     void fprint ( FILE *fp ) {
         fprintf ( fp, "%lu\t", ts );
@@ -109,21 +171,22 @@ struct LoPwrLogTypes {
  *
  **/
 
-class LpESC :
-    public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>,
-    public PDO_log<LoPwrLogTypes>,
-    public Motor {
+class LpSphBrkESC :
+    public BasicEscWrapper<McSphBrkEscPdoTypes,LoPwrSphBrkEscSdoTypes>,
+    public PDO_log<LoPwrSphBrkLogTypes>
+    //public MotorSph
+{
 public:
-    typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> 	Base;
-    typedef PDO_log<LoPwrLogTypes>                   		Log;
+    typedef BasicEscWrapper<McSphBrkEscPdoTypes,LoPwrSphBrkEscSdoTypes> 	Base;
+    typedef PDO_log<LoPwrSphBrkLogTypes>                   			Log;
 
-    LpESC ( const ec_slavet& slave_descriptor ) :
+    LpSphBrkESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/LpESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ) {
+        Log ( std::string ( "/tmp/LpSphBrkESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ) {
         //_actual_state = EC_STATE_PRE_OP;
     }
 
-    virtual ~LpESC ( void ) {
+    virtual ~LpSphBrkESC ( void ) {
         delete [] SDOs;
         DPRINTF ( "~%s %d\n", typeid ( this ).name(), position );
         print_stat ( s_rtt );
@@ -150,7 +213,7 @@ public:
 
         if ( rx_pdo.rtt ) {
             rx_pdo.rtt = ( uint16_t ) ( get_time_ns() /1000 ) - rx_pdo.rtt;
-            //DPRINTF(">> %s >> %d\n", __PRETTY_FUNCTION__, rx_pdo.rtt);
+            //DPRINTF(">>>> %d\n", rx_pdo.rtt);
             s_rtt ( rx_pdo.rtt );
         }
 
@@ -162,9 +225,9 @@ public:
         }
 
         // apply transformation from Motor to Joint
-        rx_pdo.link_pos = lopwr_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
-        rx_pdo.motor_pos = lopwr_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
-        rx_pdo.pos_ref_fb  = lopwr_esc::M2J ( rx_pdo.pos_ref_fb,_sgn,_offset );
+        //rx_pdo.link_pos = lopwr_esc::M2J(rx_pdo.link_pos,_sgn,_offset);
+        //rx_pdo.motor_pos = lopwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset);
+        //rx_pdo.pos_ref_fb  = lopwr_esc::M2J(rx_pdo.pos_ref_fb,_sgn,_offset);
 
         if ( _start_log ) {
             Log::log_t log;
@@ -177,24 +240,10 @@ public:
     virtual void on_writePDO ( void ) {
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
-
-        // apply transformation from Joint to Motor
-        //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
-
     }
 
     virtual int on_readSDO ( const objd_t * sdobj )  {
 
-        if ( ! strcmp ( sdobj->name, "link_pos" ) ) {
-            rx_pdo.link_pos = lopwr_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
-            //DPRINTF("on_getSDO M2J link_pos %f\n", rx_pdo.position);
-        } else if ( ! strcmp ( sdobj->name, "motor_pos" ) ) {
-            rx_pdo.motor_pos = lopwr_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
-        } else if ( ! strcmp ( sdobj->name, "Min_pos" ) ) {
-            sdo.Min_pos = lopwr_esc::M2J ( sdo.Min_pos,_sgn,_offset );
-        } else if ( ! strcmp ( sdobj->name, "Max_pos" ) ) {
-            sdo.Max_pos = lopwr_esc::M2J ( sdo.Max_pos,_sgn,_offset );
-        }
         return EC_BOARD_OK;
     }
 
@@ -204,10 +253,6 @@ public:
         //if ( _actual_state == EC_STATE_OPERATIONAL && sdo->index == 0x7000 ) {
         //    return EC_WRP_SDO_WRITE_CB_FAIL;
         //}
-        if ( ! strcmp ( sdo->name, "pos_ref" ) ) {
-            tx_pdo.pos_ref = lopwr_esc::J2M ( tx_pdo.pos_ref,_sgn,_offset );
-            //DPRINTF("on_setSDO J2M pos_ref %f\n", tx_pdo.pos_ref);
-        }
         return EC_BOARD_OK;
     }
 
@@ -223,7 +268,7 @@ public:
         return true;
     }
     virtual uint16_t get_ESC_type() {
-        return LO_PWR_DC_MC;
+        return LO_PWR_SPH_MCBRK;
     }
 
     virtual const pdo_rx_t& getRxPDO() const {
@@ -257,11 +302,11 @@ public:
 
         if ( Joint_robot_id > 0 ) {
             try {
-                esc_conf_key = std::string ( "LpESC_"+std::to_string ( Joint_robot_id ) );
+                esc_conf_key = std::string ( "LpSphBrkESC_"+std::to_string ( Joint_robot_id ) );
                 if ( read_conf ( esc_conf_key, root_cfg ) != EC_WRP_OK ) {
-                    esc_conf_key = std::string ( "LpESC_X" );
+                    esc_conf_key = std::string ( "LpSphBrkESC_X" );
                     if ( read_conf ( esc_conf_key, root_cfg ) != EC_WRP_OK ) {
-                        DPRINTF ( "NO config for LpESC_%d in %s\n", Joint_robot_id, __PRETTY_FUNCTION__ );
+                        DPRINTF ( "NO config for LpSphBrkESC_%d in %s\n", Joint_robot_id, __PRETTY_FUNCTION__ );
                         return EC_BOARD_KEY_NOT_FOUND;
                     }
                 }
@@ -279,7 +324,7 @@ public:
         readSDO_byname ( "Target_velocity" );
         readSDO_byname ( "link_pos" );
 
-        log_filename = std::string ( "/tmp/LpESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
+        log_filename = std::string ( "/tmp/LpSphBrkESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
 
         // we log when receive PDOs
         start_log ( true );
@@ -297,7 +342,7 @@ public:
             // set actual position as reference
             readSDO_byname ( "link_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
-            DPRINTF ( "start %f tx_pdo.pos_ref %f\n", act_position, tx_pdo.pos_ref );
+            DPRINTF ( "start %f\n", act_position );
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );

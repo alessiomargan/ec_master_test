@@ -69,8 +69,7 @@ static const char acName8001_10[] = "flash_params_cmd_ack";
 
 
 
-static const iit::ecat::objd_t source_SDOs[] =
-{
+static const iit::ecat::objd_t source_SDOs[] = {
 
     // SDO6000[] =
     {0x6000,    0x1, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force0     ,0     },
@@ -81,9 +80,9 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x6000,    0x6, DTYPE_REAL32,      32, ATYPE_RO, acName6000_force5     ,0     },
     {0x6000,    0x7, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_fault      ,0     },
     {0x6000,    0x8, DTYPE_UNSIGNED16,  16, ATYPE_RO, acName6000_rtt        ,0     },
-    // SDO7000[] =                                                           
+    // SDO7000[] =
     {0x7000,    0x1, DTYPE_UNSIGNED16,  16, ATYPE_RW, acName7000_4          ,0     },
-    // SDO8000[] =                                                           
+    // SDO8000[] =
     {0x8000,    0x1, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_1          ,0     },
     {0x8000,    0x2, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_2          ,0     },
     {0x8000,    0x3, DTYPE_INTEGER32,   32, ATYPE_RW, acName8000_3          ,0     },
@@ -100,7 +99,7 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x8000,    0xe, DTYPE_REAL32,      32, ATYPE_RW, acName8000_14         ,0     },
     {0x8000,    0xf, DTYPE_INTEGER16,   16, ATYPE_RW, acName8000_15         ,0     },
     {0x8000,    0x10, DTYPE_INTEGER16,  16, ATYPE_RW, acName8000_16         ,0     },
-    // SDO8001[] =                                                           
+    // SDO8001[] =
     {0x8001,    0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1     ,0     },
     {0x8001,    0x2, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_2     ,0     },
     {0x8001,    0x3, DTYPE_REAL32,           32, ATYPE_RW, acName8001_3     ,0     },
@@ -111,62 +110,63 @@ static const iit::ecat::objd_t source_SDOs[] =
     {0x8001,    0x8, DTYPE_REAL32,           32, ATYPE_RW, acName8001_8     ,0     },
     {0x8001,    0x9, DTYPE_UNSIGNED16,        16, ATYPE_RW, acName8001_9     ,0     },
     {0x8001,    0xa, DTYPE_UNSIGNED16,        16, ATYPE_RO, acName8001_10    ,0     },
-                                                                          
-    {0, 0, 0, 0, 0, 0, 0 }                                                    
-};                                                                        
-                                                                          
-                                                                          
-                                                                          
-void Ft6ESC::init_SDOs(void) {                                            
-                                                                          
-    int objd_num, i = 0;                                                  
-                                                                          
-    objd_num = sizeof(source_SDOs)/sizeof(objd_t);
+
+    {0, 0, 0, 0, 0, 0, 0 }
+};
+
+
+
+void Ft6ESC::init_SDOs ( void ) {
+
+    int objd_num, i = 0;
+
+    objd_num = sizeof ( source_SDOs ) /sizeof ( objd_t );
     SDOs = new objd_t [objd_num];
-                                                               
-    memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));                   
+
+    memcpy ( ( void* ) SDOs, source_SDOs, sizeof ( source_SDOs ) );
 
     // 0x6000
-    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.force_X;    
-    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.force_Y;    
-    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.force_Z;    
-    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.torque_X;   
-    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.torque_Y;   
-    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.torque_Z;   
-    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.fault;      
-    SDOs[i++].data = (void*)&Ft6ESC::rx_pdo.rtt;        
-    // 0x7000 
-    SDOs[i++].data = (void*)&Ft6ESC::tx_pdo.ts;         
+    SDOs[i++].data = ( void* ) &Ft6ESC::rx_pdo.force_X;
+    SDOs[i++].data = ( void* ) &Ft6ESC::rx_pdo.force_Y;
+    SDOs[i++].data = ( void* ) &Ft6ESC::rx_pdo.force_Z;
+    SDOs[i++].data = ( void* ) &Ft6ESC::rx_pdo.torque_X;
+    SDOs[i++].data = ( void* ) &Ft6ESC::rx_pdo.torque_Y;
+    SDOs[i++].data = ( void* ) &Ft6ESC::rx_pdo.torque_Z;
+    SDOs[i++].data = ( void* ) &Ft6ESC::rx_pdo.fault;
+    SDOs[i++].data = ( void* ) &Ft6ESC::rx_pdo.rtt;
+    // 0x7000
+    SDOs[i++].data = ( void* ) &Ft6ESC::tx_pdo.ts;
     // 0x8000
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.Block_control;      
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.NumAvSamples;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset0;
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset1;
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset2;
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset3;
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset4;
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.calibration_offset5;
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c1;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c2;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c3;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c4;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c5;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_r1_c6;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.sensor_number;       
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.sensor_robot_id;       
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.Block_control;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.NumAvSamples;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.calibration_offset0;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.calibration_offset1;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.calibration_offset2;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.calibration_offset3;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.calibration_offset4;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.calibration_offset5;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_r1_c1;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_r1_c2;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_r1_c3;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_r1_c4;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_r1_c5;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_r1_c6;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.sensor_number;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.sensor_robot_id;
     // 0x8001
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.firmware_version;    
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.ack_board_fault;     
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c1;        
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c2;        
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c3;        
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c4;        
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c5;        
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.matrix_rn_c6;        
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.flash_params_cmd;    
-    SDOs[i++].data = (void*)&Ft6ESC::sdo.flash_params_cmd_ack;
-         
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.firmware_version;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.ack_board_fault;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_rn_c1;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_rn_c2;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_rn_c3;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_rn_c4;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_rn_c5;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.matrix_rn_c6;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.flash_params_cmd;
+    SDOs[i++].data = ( void* ) &Ft6ESC::sdo.flash_params_cmd_ack;
+
     SDOs[i++].data = 0;
 
     assert ( objd_num == i );
 }
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
