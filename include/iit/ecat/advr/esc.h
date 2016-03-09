@@ -51,9 +51,40 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
+
+#if 0
+typedef struct {
+    float        pos_ref;  //link
+    int16_t        vel_ref;  //link
+    int16_t        tor_ref;  //link
+    uint16_t    gains[5];
+    uint16_t    fault_ack;
+    uint16_t    ts;
+    uint16_t    op_idx_aux;    // op [get/set] , idx
+    float        aux;        // set value
+} PACKED rx_pdo_t; // 28 bytes
+
+typedef struct {
+    float        link_pos;           // rad
+    float        motor_pos;           // rad
+    float        pos_ref_fb;            // rad
+    int16_t        motor_vel;             // rad/s
+    int16_t        torque;             // Nm
+    uint16_t    max_temperature;     // C
+    uint16_t    fault;
+    uint16_t    rtt;                // us
+    uint16_t    op_idx_ack;         // op [ack/nack] , idx
+    float        aux;                // get value or nack erro code
+} PACKED tx_pdo_t; // 28 bytes
+#endif
+
+
+
+
+
+
 // ecat slave product code see xml conf
-enum Board_type : uint16_t
-{ 
+enum Board_type : uint16_t {
     NO_TYPE         = 0,
     HI_PWR_AC_MC    = 0x10,
     HI_PWR_DC_MC    = 0x11,
@@ -66,7 +97,7 @@ enum Board_type : uint16_t
     HUB             = 0x100,
     HUB_IO          = 0x101,
     EC_TEST         = 1234,
-}; 
+};
 
 
 /* Possible error codes returned */
@@ -104,7 +135,7 @@ struct fault_bits {
     uint16_t  irq_alive:1;
 };
 
-typedef union{
+typedef union {
     uint16_t            all;
     struct fault_bits   bit;
 } fault_t;
@@ -123,14 +154,14 @@ struct McEscPdoTypes {
         uint16_t    gainD;
         uint16_t    ts;
 
-        void fprint(FILE *fp) {
-            fprintf(fp, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts);
+        void fprint ( FILE *fp ) {
+            fprintf ( fp, "%f\t0x%X\t%d\t%d\t%d\n", pos_ref,fault_ack,gainP,gainD,ts );
         }
-        int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "%f\t0x%X\t%d\t%d\t%d", pos_ref,fault_ack,gainP,gainD,ts);
+        int sprint ( char *buff, size_t size ) {
+            return snprintf ( buff, size, "%f\t0x%X\t%d\t%d\t%d", pos_ref,fault_ack,gainP,gainD,ts );
         }
 
-    }  __attribute__((__packed__));  // 12 bytes
+    }  __attribute__ ( ( __packed__ ) ); // 12 bytes
 
     // RX  slave_output -- master input
     struct pdo_rx {
@@ -142,83 +173,80 @@ struct McEscPdoTypes {
         uint16_t    fault;
         uint16_t    rtt;          //
 
-        void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%f\t%d\t%d\t0x%X\t%d\n", link_pos,motor_pos,pos_ref_fb,temperature,torque,fault,rtt);
+        void fprint ( FILE *fp ) {
+            fprintf ( fp, "%f\t%f\t%f\t%d\t%d\t0x%X\t%d\n", link_pos,motor_pos,pos_ref_fb,temperature,torque,fault,rtt );
         }
-        int sprint(char *buff, size_t size) {
-            return snprintf(buff, size, "%f\t%f\t%f\t%d\t%d\t0x%X\t%d", link_pos,motor_pos,pos_ref_fb,temperature,torque,fault,rtt);
+        int sprint ( char *buff, size_t size ) {
+            return snprintf ( buff, size, "%f\t%f\t%f\t%d\t%d\t0x%X\t%d", link_pos,motor_pos,pos_ref_fb,temperature,torque,fault,rtt );
         }
-        void to_map(jmap_t & jpdo) {
-            JPDO(link_pos);
-            JPDO(motor_pos);
-            JPDO(pos_ref_fb); 
-            JPDO(temperature);
-            JPDO(torque);
-            JPDO(fault);
-            JPDO(rtt);            
+        void to_map ( jmap_t & jpdo ) {
+            JPDO ( link_pos );
+            JPDO ( motor_pos );
+            JPDO ( pos_ref_fb );
+            JPDO ( temperature );
+            JPDO ( torque );
+            JPDO ( fault );
+            JPDO ( rtt );
         }
-        
-    }  __attribute__((__packed__)); // 20 bytes
+
+    }  __attribute__ ( ( __packed__ ) ); // 20 bytes
 };
 
 
-inline int check_cmd_ack(int16_t cmd, int16_t ack)
-{
-    if ( ack == ((cmd & 0x00FF) | CTRL_CMD_DONE) ) {
-        DPRINTF("DONE 0x%04X\n", cmd);
+inline int check_cmd_ack ( int16_t cmd, int16_t ack ) {
+    if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_DONE ) ) {
+        DPRINTF ( "DONE 0x%04X\n", cmd );
         return EC_BOARD_OK;
-    } else if ( ack == ((cmd & 0x00FF) | CTRL_CMD_ERROR) ) {
-        DPRINTF("FAIL 0x%04X\n", cmd);
+    } else if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_ERROR ) ) {
+        DPRINTF ( "FAIL 0x%04X\n", cmd );
         return EC_BOARD_CMD_ACK;
     } else {
-        DPRINTF("PROTOCOL FAILURE cmd 0x%04X ack 0x%04X !!!\n", cmd, ack);
+        DPRINTF ( "PROTOCOL FAILURE cmd 0x%04X ack 0x%04X !!!\n", cmd, ack );
         return EC_BOARD_NOK;
     }
 
 }
 
 template <class C>
-inline int ack_faults_X(C *c, int32_t faults)
-{
+inline int ack_faults_X ( C *c, int32_t faults ) {
     int32_t clear_faults = faults & 0x7FFF;
     //xor_faults ^= xor_faults;
-    return c->template writeSDO_byname("ack_board_fault_all", clear_faults);
+    return c->template writeSDO_byname ( "ack_board_fault_all", clear_faults );
 
 }
 
 
 template <class C>
-inline int set_ctrl_status_X(C *c, uint16_t cmd)
-{
+inline int set_ctrl_status_X ( C *c, uint16_t cmd ) {
     uint16_t ack;
 
     cmd = cmd & 0x00FF;
-    c->template writeSDO_byname("ctrl_status_cmd", cmd);
-    c->template readSDO_byname("ctrl_status_cmd_ack", ack);
-    
-    // check 
-    DPRINTF("set_ctrl_status ");
-    return check_cmd_ack(cmd, ack);
+    c->template writeSDO_byname ( "ctrl_status_cmd", cmd );
+    c->template readSDO_byname ( "ctrl_status_cmd_ack", ack );
+
+    // check
+    DPRINTF ( "set_ctrl_status " );
+    return check_cmd_ack ( cmd, ack );
 }
 
 template <class C>
-inline int set_flash_cmd_X(C *c, uint16_t cmd)
-{
+inline int set_flash_cmd_X ( C *c, uint16_t cmd ) {
     uint16_t ack;
 
     cmd = cmd & 0x00FF;
-    c->template writeSDO_byname("flash_params_cmd", cmd);
-    c->template readSDO_byname("flash_params_cmd_ack", ack);
+    c->template writeSDO_byname ( "flash_params_cmd", cmd );
+    c->template readSDO_byname ( "flash_params_cmd_ack", ack );
 
-    // check 
-    DPRINTF("flash_params_cmd ");
-    return check_cmd_ack(cmd, ack);
+    // check
+    DPRINTF ( "flash_params_cmd " );
+    return check_cmd_ack ( cmd, ack );
 
 }
 
 
-} 
+}
 }
 }
 
 #endif /* IIT_ECAT_ADVR_ESC_H_ */
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

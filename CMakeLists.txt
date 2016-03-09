@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(walkman-ecat)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_path(RTNET_INCLUDE_DIR NAMES rtnet.h PATH_SUFFIXES rtnet/include)
 set(ENABLE_XENO  ON)
@@ -20,9 +20,11 @@ else()
   set(ENABLE_RTNET  OFF)
 endif()
 
-set(SOEM_ROOT           $ENV{SOEM_ROOT}     CACHE PATH "Base path of the SOEM headers")
+set(SOEM_ROOT $ENV{SOEM_ROOT} CACHE PATH "Base path of the SOEM headers")
 
 add_definitions(-DKEEP_POWER_ON)
+
+#add_subdirectory(protobuf)
 
 ###########
 ## Build ##
