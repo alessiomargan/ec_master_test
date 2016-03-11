@@ -1,36 +1,47 @@
 #include <cmath>
 #include <iostream>
-#include <vector>
+
 #include <stdlib.h>
 #include "GlobalExt.h"
 #include "RTControl.h"
-using namespace std;
 
 extern void Stabilizer ( float FTdata[12], double dT, double *deltaHip );
+// void KeyBoardControl(char cmd);
 
 //RT control runs all controllers
-void RTControl ( double RTtime, float FTSensor[12], vector<float> homingPos, int size, int *pos ) {
-    for ( int i=0; i<size; i++ ) {
-        homePos[i]=homingPos[i];
-    }
+void RTControl ( double RTtime, float FTSensor[12], vector<float> homingPos, int size, float *pos ) {
+    // for ( int i=0;i<size;i++ ) {
+    //     homePos[i]=homingPos[i];
+    // }
+    double RTime2 = dloop * Tstep;
+    homePos = homingPos;
+//     cout<<"Tstep1: "<<Tstep<<"\t"<<RTime2<<endl;
     if ( checkMoveToInitial.enable==1&&checkMoveToInitial.done==0 ) {
-        moveToInitialPosition ( RTtime ); // only run once at the beginning
+      cout<<"Tstep2: "<<Tstep<<"\t"<<RTime2<<endl;
+        moveToInitialPosition(RTime2);// only run once at the beginning
     }
+//     cout<<"Tstep3: "<<Tstep<<"\t"<<RTime2<<endl;
     UpdateGaitParameter();
     GaitPattern();
     TurnRobot();
     if ( checkMoveToInitial.enable==0&& ( dtime*Tstep>0.5*Tcycle ) ) { //stabilization starts only when moveToInitial finishes;if walking, apply stabilization after Q1
         Stabilizer ( FTSensor, Tstep, deltaHip ); // pass out waist angles
+        // deltaHip[0]=0.0;
+        // deltaHip[1]=0.0;
+        // deltaHip[2]=0.0;
+        // deltaHip[3]=0.0;
+        // deltaHip[4]=0.0;
+
     }
-    InvKHIP ( deltaHip ); // it only generates the trajectories for leg 12 DOF
-    //cout<<deltaHip[0]<<"\t"<<deltaHip[1]<<"\t"<<deltaHip[2]<<endl;
+    InvKHIP(deltaHip); // it only generates the trajectories for leg 12 DOF
+//     cout<<deltaHip[0]<<"\t"<<deltaHip[1]<<"\t"<<deltaHip[2]<<endl;
 #ifdef EPFL
-    JointLimit();
+//     JointLimit();
 #endif
     WaistControl();
     ArmControl();
-    for ( int i=0; i<size; i++ ) {
-        pos[i]=int ( 1e5*traj[i] ); // assign the leg trajectory to pos in 10mRad unit
+    for ( int i=0; i<23; i++ ) {
+        pos[i]= ( traj[i] ); // assign the leg trajectory to pos in 10mRad unit
     }
     dloop++;
     dtime++;
@@ -66,7 +77,7 @@ void moveToInitialPosition ( double RTtime ) {
     RightFootP.y[2]=-hip_Comy;
     RightFootP.z[2]=ankle_height;
 
-    double timestartwalk=1.0;
+    double timestartwalk=2.0;
     double A=fullleg-HipP.z[0];
 
     HipP.z[2]=fullleg+A* ( cos ( pi/timestartwalk*RTtime )-1.0 ) /2.0;
@@ -925,6 +936,8 @@ void JointLimit() {
         -180,-25,-80,-120,-180,-100,-80,-120,  0,  0
     };
     //  16, 17,  18, 19, 20,  21,   22, 23,  24, 25
+    //
+    //
 
     for ( int i=0; i<25; i++ ) {
         if ( traj[i]> DEGTORAD ( joint_max[i] ) ) {
@@ -1143,6 +1156,18 @@ void InvKHIP ( double *deltaHip ) {
     InverseKinematics ( Hip_P,Hip_R,LeftFoot_Pos,LeftFoot_R,hip_Comy, jointanglesL );
     InverseKinematics ( Hip_P,Hip_R,RightFoot_Pos,RightFoot_R,-hip_Comy, jointanglesR );
 
+    std::cout << setprecision ( 5 );
+    for ( int i = 1; i <= 3; ++i ) {
+        std::cout << setw ( 5 ) <<Hip_P ( i,1 ) <<'\t';
+    }
+    for ( int i = 1; i <= 3; ++i ) {
+        std::cout << setw ( 5 ) <<RightFoot_Pos ( i,1 ) <<'\t';
+    }
+    for ( int i = 1; i <= 3; ++i ) {
+        std::cout << setw ( 5 ) <<LeftFoot_Pos ( i,1 ) <<'\t';
+    }
+    std::cout<<std::endl;
+
 #ifdef EPFL
 //    /*Joint angles in rad for EPFL COMAN*/
     traj[3]=jointanglesR[0];
@@ -1158,19 +1183,19 @@ void InvKHIP ( double *deltaHip ) {
     traj[13]=jointanglesL[5];// left ankle pitch
     traj[14]=jointanglesL[4];//left ankle roll;
 #else
-    // for old COMAN
-    traj[3]= ( -jointanglesR[0] );
-    traj[4]= ( -jointanglesL[0] ) +DEGTORAD ( homePos[4] );
-    traj[5]= ( jointanglesR[1] ) +DEGTORAD ( homePos[5] ); //right hip roll compensation
-    traj[6]= ( jointanglesR[2] );
-    traj[7]= ( -jointanglesR[3] );
-    traj[8]= ( -jointanglesR[5] ); //right ankle pitch;
-    traj[9]= ( jointanglesR[4] ) +DEGTORAD ( homePos[9] ); //right ankle roll;
-    traj[10]= ( -jointanglesL[1] ) +DEGTORAD ( homePos[10] ); //left hip roll
-    traj[11]= ( -jointanglesL[2] );
-    traj[12]= ( -jointanglesL[3] ); // left knee
-    traj[13]= ( -jointanglesL[5] ) +DEGTORAD ( homePos[13] ); //left ankle pitch
-    traj[14]= ( -jointanglesL[4] ) +0*DEGTORAD ( homePos[14] ); //left ankle roll;
+    // // for old COMAN
+    // traj[3]=(-jointanglesR[0]);
+    // traj[4]=(-jointanglesL[0])+DEGTORAD(homePos[4]);
+    // traj[5]=(jointanglesR[1])+DEGTORAD(homePos[5]); //right hip roll compensation
+    // traj[6]=(jointanglesR[2]);
+    // traj[7]=(-jointanglesR[3]);
+    // traj[8]=(-jointanglesR[5]);//right ankle pitch;
+    // traj[9]=(jointanglesR[4])+DEGTORAD(homePos[9]);//right ankle roll;
+    // traj[10]=(-jointanglesL[1])+DEGTORAD(homePos[10]);//left hip roll
+    // traj[11]=(-jointanglesL[2]);
+    // traj[12]=(-jointanglesL[3]);// left knee
+    // traj[13]=(-jointanglesL[5])+DEGTORAD(homePos[13]);//left ankle pitch
+    // traj[14]=(-jointanglesL[4])+0*DEGTORAD(homePos[14]);//left ankle roll;
 #endif
 }
 
@@ -1241,6 +1266,7 @@ int Sign ( double x ) {
 }
 
 void KeyBoardControl ( char cmd ) {
+    std::cout<<"Coman walk KeyBoardControl."<<std::endl;
     switch ( cmd ) {
     case 'a': {
         turnLeft.enable=1;

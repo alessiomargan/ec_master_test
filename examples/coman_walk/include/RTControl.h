@@ -2,8 +2,10 @@
 #define _RTCONTROL_H
 
 #include "Matrix.h"
-
-void RTControl ( double RTtime, float FTSensor[], std::vector<float> homingPos, int size, int *pos );
+#include <vector>
+#include <iomanip>
+using namespace std;
+void RTControl ( double RTtime, float FTSensor[], std::vector<float> homingPos, int size, float *pos );
 void WaistControl();
 void ArmControl();
 void moveToInitialPosition ( double RTtime );

@@ -4,7 +4,7 @@ project(${PRJ_DIR})
 
 include_directories(include)
 
-add_definitions(-DEPFL -DDEMO_TYPE=2)
+add_definitions(-DEPFL -DDEMO_TYPE=1)
 
 add_executable(coman_walk
     GlobalExt.cpp

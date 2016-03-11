@@ -11,18 +11,21 @@
  * @author Alessio Margan (2015-, alessio.margan@iit.it)
 */
 
-#ifndef __EC_BOARDS_BASIC_H__
-#define __EC_BOARDS_BASIC_H__
+#ifndef __EC_BOARDS_COMAN_WALK_H__
+#define __EC_BOARDS_COMAN_WALK_H__
 
 #include <linux/joystick.h>
 
 #include <iit/advr/ec_boards_base.h>
+#include <iit/advr/trajectory.h>
 
 
 /**
  */
 
 typedef struct js_event 		input_t;
+// typedef XDDP_pipe<input_t,input_t> 	InXddp;
+//typedef XDDP_pipe<char,char>  InXddp;
 
 class EC_boards_walk : public Ec_Thread_Boards_base {
 public:
@@ -50,9 +53,14 @@ private :
     std::map<int,float> start_pos;
 
     iit::ecat::advr::Ft6ESC * leftFoot, * rightFoot;
-    std::map<int, iit::ecat::advr::LpESC*> motors;
 
     XDDP_pipe jsInXddp;
+    XDDP_pipe keyInXddp;
+    XDDP_pipe imuInXddp;
+
+    double dt;
+
+    advr::Spline_map spline_start2home;
 };
 
 

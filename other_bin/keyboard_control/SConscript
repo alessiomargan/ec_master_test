@@ -1,0 +1,12 @@
+js = Environment()
+
+libs = Split("""
+m
+dl
+stdc++
+""")
+
+js.Append(CCFLAGS = ['-std=c++11','-g','-O3'])
+
+js.Program( target = 'key_console', source = ['key_thread.cpp'] )
+

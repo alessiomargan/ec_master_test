@@ -48,3 +48,5 @@ optional_build(spnav_forward 	other_bin/spnav_forward	OFF)
 optional_build(zmq_pub          other_bin/zmq_pub	OFF)
 optional_build(spline_test      other_bin/spline_test	OFF)
 optional_build(lpms_forward 	other_bin/lpms_forward	OFF)
+optional_build(keyboard_control other_bin/keyboard_control OFF)
+
