@@ -41,6 +41,7 @@ optional_build(sine_joint 	examples/sine_joint	OFF)
 optional_build(joint_joy 	examples/joint_joy	OFF)
 optional_build(coman_walk	examples/coman_walk	OFF)
 optional_build(coman_test	examples/coman_test	OFF)
+optional_build(coman_impedance   examples/coman_impedance OFF)
 
 optional_build(joy_forward 	other_bin/joy_forward	OFF)
 optional_build(spnav_forward 	other_bin/spnav_forward	OFF)
