@@ -34,7 +34,8 @@ vector<float> joint_max = {
     0,  45,  25,  40,  40, 5, 45,  105,  65, 30, 55, 45, 105, 65, 30,
 //  1,  2,   3,   4,   5,   6,  7,    8,   9, 10, 11, 12, 13, 14, 15
     // upper body #10 right arm to left arm, last 2 are right and left neck
-    90, 100,  70, -2,  90, 25, 70, -2, 0,  0, 90-5, 30-5, 45-5, 90-5, 30-5, 80-5};
+    90, 100,  70, -2,  90, 25, 70, -2, 0,  0, 90-5, 30-5, 45-5, 90-5, 30-5, 80-5
+};
 //  16, 17,  18,  19, 20, 21, 22, 23, 24, 25
 // maximum joint angle negative
 vector<float> joint_min = {
@@ -42,7 +43,8 @@ vector<float> joint_min = {
     0, -15,-25, -100,-100,-55, -45,  0, -45, -30, -5,-45,  0,-45, -30,
 //  1,  2,  3,   4,    5,  6,   7,   8,  9,  10,   11, 12, 13, 14, 15
     // upper body #10 right arm to left arm, last 2 are right and left neck
-   -180,-25,-70,-120,-180,-100,-70,-120,  0,  0, -90+5, -30+5, -80+5, -90+5, -30+5, -45+5};
+    -180,-25,-70,-120,-180,-100,-70,-120,  0,  0, -90+5, -30+5, -80+5, -90+5, -30+5, -45+5
+};
 //  16, 17,  18, 19, 20,  21,   22, 23,   24, 25
 
 //declare subfunctions
@@ -130,22 +132,22 @@ void joint_home ( vector<float> homePos, int size, float r_pos[] ) {
     r_pos [17] = DEGToRAD ( homePos[17] ); // right shoulder yaw
     r_pos [18] = DEGToRAD ( homePos[18] ); // right elbow
 
-    r_pos [19] = DEGToRAD(homePos[19]);// left shoulder pitch
-    r_pos [20] = DEGToRAD(homePos[20]);// left shoulder roll
-    r_pos [21] = DEGToRAD(homePos[21]);// left shoulder yaw
-    r_pos [22] = DEGToRAD(homePos[22]);// left elbow
+    r_pos [19] = DEGToRAD ( homePos[19] ); // left shoulder pitch
+    r_pos [20] = DEGToRAD ( homePos[20] ); // left shoulder roll
+    r_pos [21] = DEGToRAD ( homePos[21] ); // left shoulder yaw
+    r_pos [22] = DEGToRAD ( homePos[22] ); // left elbow
 
 
-    r_pos [23] = DEGToRAD(homePos[23]);// 
-    r_pos [24] = DEGToRAD(homePos[24]);// 
+    r_pos [23] = DEGToRAD ( homePos[23] ); //
+    r_pos [24] = DEGToRAD ( homePos[24] ); //
 
 
-    r_pos [25] = DEGToRAD(homePos[25]);// 
-    r_pos [26] = DEGToRAD(homePos[26]);// 
-    r_pos [27] = DEGToRAD(homePos[27]);// 
-    r_pos [28] = DEGToRAD(homePos[28]);// 
-    r_pos [29] = DEGToRAD(homePos[29]);// 
-    r_pos [30] = DEGToRAD(homePos[30]);// 
+    r_pos [25] = DEGToRAD ( homePos[25] ); //
+    r_pos [26] = DEGToRAD ( homePos[26] ); //
+    r_pos [27] = DEGToRAD ( homePos[27] ); //
+    r_pos [28] = DEGToRAD ( homePos[28] ); //
+    r_pos [29] = DEGToRAD ( homePos[29] ); //
+    r_pos [30] = DEGToRAD ( homePos[30] ); //
 }
 
 
@@ -159,10 +161,9 @@ void joint_range ( vector<float> homePos, int size, double freq, float r_pos[] )
     vector<float> A ( size,0 ); // magnitude of positive max range
     vector<float> B ( size,0 ); // magnitude of negative max range
 
-    for (int i=0;i<size;i++)
-    {
-        A[i]=0.9*(joint_max[i]-homePos[i]);
-        B[i]=0.9*(joint_min[i]-homePos[i]);
+    for ( int i=0; i<size; i++ ) {
+        A[i]=0.9* ( joint_max[i]-homePos[i] );
+        B[i]=0.9* ( joint_min[i]-homePos[i] );
     }
 
     if ( discreteTime<tau ) { // first half cycle
@@ -188,55 +189,53 @@ void joint_range ( vector<float> homePos, int size, double freq, float r_pos[] )
         r_pos [17] = DEGToRAD ( homePos[17] ) +DEGToRAD ( B[17] ) *coswave; // right shoulder yaw
         r_pos [18] = DEGToRAD ( homePos[18] ) +DEGToRAD ( B[18] ) *coswave; // right elbow
 
-           r_pos [19] = DEGToRAD(homePos[19])+DEGToRAD(B[19])*coswave;// left shoulder pitch
-           r_pos [20] = DEGToRAD(homePos[20])+DEGToRAD(B[20])*coswave;// left shoulder roll
-           r_pos [21] = DEGToRAD(homePos[21])+DEGToRAD(A[21])*coswave;// left shoulder yaw
-           r_pos [22] = DEGToRAD(homePos[22])+DEGToRAD(B[22])*coswave;// left elbow
+        r_pos [19] = DEGToRAD ( homePos[19] ) +DEGToRAD ( B[19] ) *coswave; // left shoulder pitch
+        r_pos [20] = DEGToRAD ( homePos[20] ) +DEGToRAD ( B[20] ) *coswave; // left shoulder roll
+        r_pos [21] = DEGToRAD ( homePos[21] ) +DEGToRAD ( A[21] ) *coswave; // left shoulder yaw
+        r_pos [22] = DEGToRAD ( homePos[22] ) +DEGToRAD ( B[22] ) *coswave; // left elbow
 
-            r_pos [25] = DEGToRAD(homePos[25])+DEGToRAD(B[25])*coswave;;// 
-		    r_pos [26] = DEGToRAD(homePos[26])+DEGToRAD(B[26])*coswave;;// 
-		    r_pos [27] = DEGToRAD(homePos[27])+DEGToRAD(B[27])*coswave;;// 
-		    r_pos [28] = DEGToRAD(homePos[28])+DEGToRAD(A[28])*coswave;;// 
-		    r_pos [29] = DEGToRAD(homePos[29])+DEGToRAD(B[29])*coswave;;// 
-		    r_pos [30] = DEGToRAD(homePos[30])+DEGToRAD(A[30])*coswave;;// 
+        r_pos [25] = DEGToRAD ( homePos[25] ) +DEGToRAD ( B[25] ) *coswave;; //
+        r_pos [26] = DEGToRAD ( homePos[26] ) +DEGToRAD ( B[26] ) *coswave;; //
+        r_pos [27] = DEGToRAD ( homePos[27] ) +DEGToRAD ( B[27] ) *coswave;; //
+        r_pos [28] = DEGToRAD ( homePos[28] ) +DEGToRAD ( A[28] ) *coswave;; //
+        r_pos [29] = DEGToRAD ( homePos[29] ) +DEGToRAD ( B[29] ) *coswave;; //
+        r_pos [30] = DEGToRAD ( homePos[30] ) +DEGToRAD ( A[30] ) *coswave;; //
 
-    }
-    else    // 2nd half cycle
-    {
-         
-            //lower body boards
-            r_pos [ 0] = DEGToRAD(homePos[ 3])+0*DEGToRAD(B[0])*coswave;  // waist yaw
-            r_pos [ 1] = DEGToRAD(homePos[ 4])+0*DEGToRAD(B[1])*coswave;  // waist pitch
-            r_pos [ 2] = DEGToRAD(homePos[ 5])+0*DEGToRAD(B[2])*coswave;  // waist roll
-            r_pos [ 3] = DEGToRAD(homePos[ 3])+DEGToRAD(B[3])*coswave;  //right hip pitch
-            r_pos [ 4] = DEGToRAD(homePos[ 4])+DEGToRAD(B[4])*coswave; //left hip pitch
-            r_pos [ 5] = DEGToRAD(homePos[ 5])+DEGToRAD(A[5])*coswave;  //right hip roll move inward
-            r_pos [ 6] = DEGToRAD(homePos[ 6])+DEGToRAD(A[6])*coswave;  //right hip yaw move inward
-            r_pos [ 7] = DEGToRAD(homePos[ 7])+DEGToRAD(A[7])*coswave; //right knee
-            r_pos [ 8] = DEGToRAD(homePos[ 8])+DEGToRAD(B[8])*coswave;  //right ankle pitch
-            r_pos [ 9] = DEGToRAD(homePos[ 9])+DEGToRAD(B[9])*coswave;  //right ankle roll
-            r_pos [10] = DEGToRAD(homePos[10])+DEGToRAD(B[10])*coswave;  //left hip roll move inward
-            r_pos [11] = DEGToRAD(homePos[11])+DEGToRAD(B[11])*coswave;  //left hip yaw move inward
-            r_pos [12] = DEGToRAD(homePos[12])+DEGToRAD(A[12])*coswave; //left knee
-            r_pos [13] = DEGToRAD(homePos[13])+DEGToRAD(B[13])*coswave;  //left ankle pitch
-            r_pos [14] = DEGToRAD(homePos[14])+DEGToRAD(A[14])*coswave;  //left ankle roll
-            // upper body boards
-            r_pos [15] = DEGToRAD(homePos[15])+DEGToRAD(A[15])*coswave;// right shoulder pitch
-            r_pos [16] = DEGToRAD(homePos[16])+DEGToRAD(B[16])*coswave;// right shoulder roll
-            r_pos [17] = DEGToRAD(homePos[17])+DEGToRAD(A[17])*coswave;// right shoulder yaw
-            r_pos [18] = DEGToRAD(homePos[18])+DEGToRAD(A[18])*coswave;// right elbow
+    } else { // 2nd half cycle
 
-            r_pos [19] = DEGToRAD(homePos[19])+DEGToRAD(A[19])*coswave;// left shoulder pitch
-            r_pos [20] = DEGToRAD(homePos[20])+DEGToRAD(A[20])*coswave;// left shoulder roll
-            r_pos [21] = DEGToRAD(homePos[21])+DEGToRAD(B[21])*coswave;// left shoulder yaw
-            r_pos [22] = DEGToRAD(homePos[22])+DEGToRAD(A[22])*coswave;// left elbow
+        //lower body boards
+        r_pos [ 0] = DEGToRAD ( homePos[ 3] ) +0*DEGToRAD ( B[0] ) *coswave; // waist yaw
+        r_pos [ 1] = DEGToRAD ( homePos[ 4] ) +0*DEGToRAD ( B[1] ) *coswave; // waist pitch
+        r_pos [ 2] = DEGToRAD ( homePos[ 5] ) +0*DEGToRAD ( B[2] ) *coswave; // waist roll
+        r_pos [ 3] = DEGToRAD ( homePos[ 3] ) +DEGToRAD ( B[3] ) *coswave; //right hip pitch
+        r_pos [ 4] = DEGToRAD ( homePos[ 4] ) +DEGToRAD ( B[4] ) *coswave; //left hip pitch
+        r_pos [ 5] = DEGToRAD ( homePos[ 5] ) +DEGToRAD ( A[5] ) *coswave; //right hip roll move inward
+        r_pos [ 6] = DEGToRAD ( homePos[ 6] ) +DEGToRAD ( A[6] ) *coswave; //right hip yaw move inward
+        r_pos [ 7] = DEGToRAD ( homePos[ 7] ) +DEGToRAD ( A[7] ) *coswave; //right knee
+        r_pos [ 8] = DEGToRAD ( homePos[ 8] ) +DEGToRAD ( B[8] ) *coswave; //right ankle pitch
+        r_pos [ 9] = DEGToRAD ( homePos[ 9] ) +DEGToRAD ( B[9] ) *coswave; //right ankle roll
+        r_pos [10] = DEGToRAD ( homePos[10] ) +DEGToRAD ( B[10] ) *coswave; //left hip roll move inward
+        r_pos [11] = DEGToRAD ( homePos[11] ) +DEGToRAD ( B[11] ) *coswave; //left hip yaw move inward
+        r_pos [12] = DEGToRAD ( homePos[12] ) +DEGToRAD ( A[12] ) *coswave; //left knee
+        r_pos [13] = DEGToRAD ( homePos[13] ) +DEGToRAD ( B[13] ) *coswave; //left ankle pitch
+        r_pos [14] = DEGToRAD ( homePos[14] ) +DEGToRAD ( A[14] ) *coswave; //left ankle roll
+        // upper body boards
+        r_pos [15] = DEGToRAD ( homePos[15] ) +DEGToRAD ( A[15] ) *coswave; // right shoulder pitch
+        r_pos [16] = DEGToRAD ( homePos[16] ) +DEGToRAD ( B[16] ) *coswave; // right shoulder roll
+        r_pos [17] = DEGToRAD ( homePos[17] ) +DEGToRAD ( A[17] ) *coswave; // right shoulder yaw
+        r_pos [18] = DEGToRAD ( homePos[18] ) +DEGToRAD ( A[18] ) *coswave; // right elbow
 
-            r_pos [25] = DEGToRAD(homePos[25])+DEGToRAD(A[25])*coswave;;// 
-		    r_pos [26] = DEGToRAD(homePos[26])+DEGToRAD(A[26])*coswave;;// 
-		    r_pos [27] = DEGToRAD(homePos[27])+DEGToRAD(A[27])*coswave;;// 
-		    r_pos [28] = DEGToRAD(homePos[28])+DEGToRAD(B[28])*coswave;;// 
-		    r_pos [29] = DEGToRAD(homePos[29])+DEGToRAD(A[29])*coswave;;// 
-		    r_pos [30] = DEGToRAD(homePos[30])+DEGToRAD(B[30])*coswave;;// 
+        r_pos [19] = DEGToRAD ( homePos[19] ) +DEGToRAD ( A[19] ) *coswave; // left shoulder pitch
+        r_pos [20] = DEGToRAD ( homePos[20] ) +DEGToRAD ( A[20] ) *coswave; // left shoulder roll
+        r_pos [21] = DEGToRAD ( homePos[21] ) +DEGToRAD ( B[21] ) *coswave; // left shoulder yaw
+        r_pos [22] = DEGToRAD ( homePos[22] ) +DEGToRAD ( A[22] ) *coswave; // left elbow
+
+        r_pos [25] = DEGToRAD ( homePos[25] ) +DEGToRAD ( A[25] ) *coswave;; //
+        r_pos [26] = DEGToRAD ( homePos[26] ) +DEGToRAD ( A[26] ) *coswave;; //
+        r_pos [27] = DEGToRAD ( homePos[27] ) +DEGToRAD ( A[27] ) *coswave;; //
+        r_pos [28] = DEGToRAD ( homePos[28] ) +DEGToRAD ( B[28] ) *coswave;; //
+        r_pos [29] = DEGToRAD ( homePos[29] ) +DEGToRAD ( A[29] ) *coswave;; //
+        r_pos [30] = DEGToRAD ( homePos[30] ) +DEGToRAD ( B[30] ) *coswave;; //
     }
 
     discreteTime +=0.001; // loop runs at 1ms

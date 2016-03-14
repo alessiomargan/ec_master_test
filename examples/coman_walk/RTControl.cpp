@@ -17,8 +17,8 @@ void RTControl ( double RTtime, float FTSensor[12], vector<float> homingPos, int
     homePos = homingPos;
 //     cout<<"Tstep1: "<<Tstep<<"\t"<<RTime2<<endl;
     if ( checkMoveToInitial.enable==1&&checkMoveToInitial.done==0 ) {
-      cout<<"Tstep2: "<<Tstep<<"\t"<<RTime2<<endl;
-        moveToInitialPosition(RTime2);// only run once at the beginning
+        cout<<"Tstep2: "<<Tstep<<"\t"<<RTime2<<endl;
+        moveToInitialPosition ( RTime2 ); // only run once at the beginning
     }
 //     cout<<"Tstep3: "<<Tstep<<"\t"<<RTime2<<endl;
     UpdateGaitParameter();
@@ -33,7 +33,7 @@ void RTControl ( double RTtime, float FTSensor[12], vector<float> homingPos, int
         // deltaHip[4]=0.0;
 
     }
-    InvKHIP(deltaHip); // it only generates the trajectories for leg 12 DOF
+    InvKHIP ( deltaHip ); // it only generates the trajectories for leg 12 DOF
 //     cout<<deltaHip[0]<<"\t"<<deltaHip[1]<<"\t"<<deltaHip[2]<<endl;
 #ifdef EPFL
 //     JointLimit();
