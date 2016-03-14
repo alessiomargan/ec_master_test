@@ -79,11 +79,9 @@ void EC_boards_walk::init_preOP ( void ) {
     float min_pos, max_pos, pos_ref_fb;
 
     // initialize members class
-    //leftFoot = slave_as_FT(rid2pos[iit::ecat::advr::coman::LL_FT]);
-    leftFoot = fts[rid2pos[iit::ecat::advr::coman::LL_FT]];
+    leftFoot = fts[rid2Pos(iit::ecat::advr::coman::LL_FT)];
     assert ( leftFoot );
-    //rightFoot = slave_as_FT(rid2pos[iit::ecat::advr::coman::RL_FT]);
-    rightFoot = fts[rid2pos[iit::ecat::advr::coman::RL_FT]];
+    rightFoot = fts[rid2Pos(iit::ecat::advr::coman::RL_FT)];
     assert ( rightFoot );
 
 
@@ -105,7 +103,7 @@ void EC_boards_walk::init_preOP ( void ) {
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
-        moto->start ( CTRL_SET_MIX_POS_MODE );
+        moto->start ( CTRL_SET_POS_MODE );
     }
 
     //
