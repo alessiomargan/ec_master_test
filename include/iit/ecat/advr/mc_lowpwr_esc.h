@@ -88,16 +88,22 @@ struct LoPwrEscSdoTypes {
 
 struct LoPwrLogTypes {
 
-    uint64_t    		ts;           // ns
-    McEscPdoTypes::pdo_rx	rx_pdo;
+    uint64_t                ts_rx;           // ns
+    uint64_t                ts_tx;           // ns
+    McEscPdoTypes::pdo_rx   rx_pdo;
+    McEscPdoTypes::pdo_tx   tx_pdo;
+
 
     void fprint(FILE *fp) {
-            fprintf(fp, "%lu\t", ts);
-	    rx_pdo.fprint(fp);
+            fprintf(fp, "%lu\t", ts_rx);
+            fprintf(fp, "%lu\t", ts_tx);
+            rx_pdo.fprint(fp);
+            tx_pdo.fprint(fp);
         }
     int sprint(char *buff, size_t size) {
-	int l = snprintf(buff, size, "%lu\t", ts); 
-	return l + rx_pdo.sprint(buff+l,size-l);
+	int l = snprintf(buff, size, "%lu\t%lu\t", ts_rx, ts_tx);
+        int l_rx = rx_pdo.sprint(buff+l,size-l); 
+	return l + l_rx + tx_pdo.sprint(buff+l+l_rx, size-l-l_rx);
     }
 };
 
@@ -163,10 +169,8 @@ public:
 //         rx_pdo.pos_ref_fb  = lopwr_esc::M2J(rx_pdo.pos_ref_fb,_sgn,_offset);
 
 	if ( _start_log ) {
-	    Log::log_t log;
-            log.ts = get_time_ns() - _start_log_ts ;
+            log.ts_rx = get_time_ns() - _start_log_ts ;
 	    log.rx_pdo = rx_pdo;
-            push_back(log);
         }
     }
 
@@ -176,6 +180,12 @@ public:
 
         // apply transformation from Joint to Motor 
         //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
+        
+        if ( _start_log ) {
+            log.ts_tx = get_time_ns() - _start_log_ts ;
+            log.tx_pdo = tx_pdo;
+            push_back(log);             // NOTE push the log on TX
+        }
     }
 
     virtual int on_readSDO(const objd_t * sdobj)  {
@@ -271,6 +281,7 @@ public:
         log_filename = std::string("/tmp/LpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
         
 	// we log when receive PDOs
+        memset(&log, 0, sizeof(log));
         start_log(true);
             
         return EC_WRP_OK;
@@ -383,7 +394,10 @@ private:
 	return EC_WRP_OK;
     }
     
+    Log::log_t log;
+    
     int16_t Joint_robot_id;
+    
     
     float   _offset;
     int     _sgn;

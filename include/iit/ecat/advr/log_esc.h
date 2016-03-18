@@ -10,6 +10,8 @@
 
 #include <boost/circular_buffer.hpp>
 
+#include <string.h>
+
 // at 1kHz ecat DC clock 3 mins
 #define DEFAULT_LOG_SIZE   (3 * 60 * 1e3L)
 
