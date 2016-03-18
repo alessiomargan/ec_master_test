@@ -131,6 +131,7 @@ static const iit::ecat::objd_t source_SDOs[] =
     { 0X6000, 0x8, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
     { 0X6000, 0x9, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "op_idx_ack"               ,0     },
     { 0X6000, 0xa, DTYPE_REAL32,        32,  ATYPE_RO,   "aux"                      ,0     },
+    
     // SD0 0x7000                                                                         
     { 0X7000, 0x1, DTYPE_REAL32,        32,  ATYPE_RW,   "pos_ref"                  ,0     },
     { 0X7000, 0x2, DTYPE_INTEGER16,     16,  ATYPE_RW,   "vel_ref"                  ,0     }, 
@@ -142,7 +143,8 @@ static const iit::ecat::objd_t source_SDOs[] =
     { 0X7000, 0x8, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gains5"                   ,0     },
     { 0X7000, 0x9, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "fault_ack"                ,0     },  
     { 0X7000, 0xa, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "ts"                       ,0     },  
-    { 0X7000, 0xb, DTYPE_REAL32,        32,  ATYPE_RW,   "rtt"                      ,0     },
+    { 0X7000, 0xb, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "op_idx_aux"               ,0     },
+    { 0X7000, 0xc, DTYPE_REAL32,        32,  ATYPE_RW,   "rtt"                      ,0     },
 
     // SDO8000[] =                                                          
     {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1         ,0   }, 
@@ -229,6 +231,7 @@ void LpESC::init_SDOs(void) {
     SDOs[i++].data = (void*)&LpESC::tx_pdo.gains[3];
     SDOs[i++].data = (void*)&LpESC::tx_pdo.gains[4];
     SDOs[i++].data = (void*)&LpESC::tx_pdo.fault_ack;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.ts;
     SDOs[i++].data = (void*)&LpESC::tx_pdo.op_idx_aux;
     SDOs[i++].data = (void*)&LpESC::tx_pdo.aux;                         
     // 0x8000

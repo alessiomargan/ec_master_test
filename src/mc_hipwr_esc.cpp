@@ -1,6 +1,8 @@
 #include <iit/ecat/advr/mc_hipwr_esc.h>
 #include <string>
 
+#include <iostream>
+
 using namespace iit::ecat::advr;
 using namespace iit::ecat;
 
@@ -9,7 +11,7 @@ static const iit::ecat::objd_t source_SDOs[] =
 {
     // SD0 0x6000
     { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "link_pos"                 ,0     },
-    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_pos"                ,0    },
+    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_pos"                ,0     },
     { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "link_vel"                 ,0     },
     { 0X6000, 0x4, DTYPE_INTEGER16,     16,  ATYPE_RO,   "motor_vel"                ,0     },
     { 0X6000, 0x5, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
@@ -29,7 +31,8 @@ static const iit::ecat::objd_t source_SDOs[] =
     { 0X7000, 0x8, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gains5"                   ,0     },
     { 0X7000, 0x9, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "fault_ack"                ,0     },  
     { 0X7000, 0xa, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "ts"                       ,0     },  
-    { 0X7000, 0xb, DTYPE_REAL32,        32,  ATYPE_RW,   "rtt"                      ,0     },  
+    { 0X7000, 0xb, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "op_idx_aux"               ,0     },
+    { 0X7000, 0xc, DTYPE_REAL32,        32,  ATYPE_RW,   "rtt"                      ,0     },  
     // SD0 0x8000                                                                         
     { 0x8000, 0x1, DTYPE_REAL32,        32, ATYPE_RW,    "Sensor_type"              ,0     },
     { 0x8000, 0x2, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainP"                 ,0     },
@@ -101,7 +104,8 @@ void HpESC::init_SDOs(void) {
     // 0x6000 
     SDOs[i++].data = (void*)&HpESC::rx_pdo.link_pos;
     SDOs[i++].data = (void*)&HpESC::rx_pdo.motor_pos;
-    SDOs[i++].data = (void*)&HpESC::rx_pdo.link_vel;       
+    SDOs[i++].data = (void*)&HpESC::rx_pdo.link_vel;      
+    SDOs[i++].data = (void*)&HpESC::rx_pdo.motor_vel; 
     SDOs[i++].data = (void*)&HpESC::rx_pdo.torque;       
     SDOs[i++].data = (void*)&HpESC::rx_pdo.max_temperature;         
     SDOs[i++].data = (void*)&HpESC::rx_pdo.fault;          
@@ -117,6 +121,8 @@ void HpESC::init_SDOs(void) {
     SDOs[i++].data = (void*)&HpESC::tx_pdo.gains[2];
     SDOs[i++].data = (void*)&HpESC::tx_pdo.gains[3];
     SDOs[i++].data = (void*)&HpESC::tx_pdo.gains[4];
+    SDOs[i++].data = (void*)&HpESC::tx_pdo.fault_ack;
+    SDOs[i++].data = (void*)&HpESC::tx_pdo.ts;
     SDOs[i++].data = (void*)&HpESC::tx_pdo.op_idx_aux;
     SDOs[i++].data = (void*)&HpESC::tx_pdo.aux;             
     // 0x8000
