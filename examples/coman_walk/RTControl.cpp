@@ -17,7 +17,7 @@ void RTControl ( double RTtime, float FTSensor[12], vector<float> homingPos, int
     homePos = homingPos;
 //     cout<<"Tstep1: "<<Tstep<<"\t"<<RTime2<<endl;
     if ( checkMoveToInitial.enable==1&&checkMoveToInitial.done==0 ) {
-        cout<<"Tstep2: "<<Tstep<<"\t"<<RTime2<<endl;
+        // cout<<"Tstep2: "<<Tstep<<"\t"<<RTime2<<endl;
         moveToInitialPosition ( RTime2 ); // only run once at the beginning
     }
 //     cout<<"Tstep3: "<<Tstep<<"\t"<<RTime2<<endl;
@@ -81,6 +81,12 @@ void moveToInitialPosition ( double RTtime ) {
     double A=fullleg-HipP.z[0];
 
     HipP.z[2]=fullleg+A* ( cos ( pi/timestartwalk*RTtime )-1.0 ) /2.0;
+
+    if(delta_Hipx<0.025){
+    	KeyBoardControl('l');
+    }
+
+
     InvKHIP ( deltaHip );
 
     if ( RTtime>timestartwalk ) {
@@ -177,7 +183,7 @@ int InitializeWalkState() {
     SL=0.00;
     SL_des = SL;
     ds=0.03;
-    K_sway=1.48;// hip to COM ratio without body
+    K_sway=0.97;
     dtime=0;
     t_ds=0;
     entry_point=0;
@@ -1138,12 +1144,62 @@ void InvKHIP ( double *deltaHip ) {
     RightFoot_R ( 3,2 ) =sin ( RFtO[1] ) *sin ( RFtO[3] ) +cos ( RFtO[1] ) *sin ( RFtO[0] ) *cos ( RFtO[3] );
     RightFoot_R ( 3,3 ) =cos ( RFtO[1] ) *cos ( RFtO[0] );
 
+
+    MatrixClass Hip_R_Left,Hip_R_Right;
+    float compR_right,compR_left, scalar;    // pelvis roll compensation
+    
+    compR_left=DEGTORAD(6.5);
+    compR_right=DEGTORAD(6);
+     
+    if (comy>entry_point&&numberofsteps>0)
+    {
+        scalar = (comy-entry_point)/ds;     // normal
+        compR_left *=-scalar; //<0
+    }
+    else
+    {
+        compR_left=0;    
+    }
+    if (comy<-entry_point&&numberofsteps>0)
+    {
+        scalar = (comy+entry_point)/ds; 
+        compR_right *=-scalar; //>0
+    }
+    else
+    {
+        compR_right=0;          
+    }
+    HipO[0]= compR_left;
+
+    /*body orientation, instantanous coordinate, no yaw orientation*/
+    Hip_R_Left ( 1,1 ) =cos ( HipO[2] ) *cos ( HipO[1] );
+    Hip_R_Left ( 1,2 ) =-sin ( HipO[2] ) *cos ( HipO[0] ) +cos ( HipO[2] ) *sin ( HipO[1] ) *sin ( HipO[0] );
+    Hip_R_Left ( 1,3 ) =sin ( HipO[2] ) *sin ( HipO[0] ) +cos ( HipO[2] ) *sin ( HipO[1] ) *cos ( HipO[0] );
+    Hip_R_Left ( 2,1 ) =sin ( HipO[2] ) *cos ( HipO[1] );
+    Hip_R_Left ( 2,2 ) =cos ( HipO[2] ) *cos ( HipO[0] ) +sin ( HipO[2] ) *sin ( HipO[1] ) *sin ( HipO[0] );
+    Hip_R_Left ( 2,3 ) =-cos ( HipO[2] ) *sin ( HipO[0] ) +sin ( HipO[2] ) *sin ( HipO[1] ) *cos ( HipO[0] );
+    Hip_R_Left ( 3,1 ) =-sin ( HipO[1] );
+    Hip_R_Left ( 3,2 ) =cos ( HipO[1] ) *sin ( HipO[0] );
+    Hip_R_Left ( 3,3 ) =cos ( HipO[1] ) *cos ( HipO[0] );
+
+    HipO[0]= compR_right;
+    /*body orientation, instantanous coordinate, no yaw orientation*/
+    Hip_R_Right ( 1,1 ) =cos ( HipO[2] ) *cos ( HipO[1] );
+    Hip_R_Right ( 1,2 ) =-sin ( HipO[2] ) *cos ( HipO[0] ) +cos ( HipO[2] ) *sin ( HipO[1] ) *sin ( HipO[0] );
+    Hip_R_Right ( 1,3 ) =sin ( HipO[2] ) *sin ( HipO[0] ) +cos ( HipO[2] ) *sin ( HipO[1] ) *cos ( HipO[0] );
+    Hip_R_Right ( 2,1 ) =sin ( HipO[2] ) *cos ( HipO[1] );
+    Hip_R_Right ( 2,2 ) =cos ( HipO[2] ) *cos ( HipO[0] ) +sin ( HipO[2] ) *sin ( HipO[1] ) *sin ( HipO[0] );
+    Hip_R_Right ( 2,3 ) =-cos ( HipO[2] ) *sin ( HipO[0] ) +sin ( HipO[2] ) *sin ( HipO[1] ) *cos ( HipO[0] );
+    Hip_R_Right ( 3,1 ) =-sin ( HipO[1] );
+    Hip_R_Right ( 3,2 ) =cos ( HipO[1] ) *sin ( HipO[0] );
+    Hip_R_Right ( 3,3 ) =cos ( HipO[1] ) *cos ( HipO[0] );
+
     /*----------Position -----------*/
     /*body position*/
     //each vector of HipP has 3 elements, but only the last one is updated, first 2 are not used here
     Hip_P ( 1,1 ) =comx+delta_Hipx+deltaHip[0];
     Hip_P ( 2,1 ) =K_sway*comy+deltaHip[1];
-    Hip_P ( 3,1 ) =HipP.z[2]+deltaHip[2];
+    Hip_P ( 3,1 ) =HipP.z[2]+0*deltaHip[2];
     /*left foot position*/
     LeftFoot_Pos ( 1,1 ) =LeftFootP.x[2];
     LeftFoot_Pos ( 2,1 ) =LeftFootP.y[2];
@@ -1153,20 +1209,20 @@ void InvKHIP ( double *deltaHip ) {
     RightFoot_Pos ( 2,1 ) =RightFootP.y[2];
     RightFoot_Pos ( 3,1 ) =RightFootP.z[2];
 
-    InverseKinematics ( Hip_P,Hip_R,LeftFoot_Pos,LeftFoot_R,hip_Comy, jointanglesL );
-    InverseKinematics ( Hip_P,Hip_R,RightFoot_Pos,RightFoot_R,-hip_Comy, jointanglesR );
+    InverseKinematics ( Hip_P,Hip_R_Left,LeftFoot_Pos,LeftFoot_R,hip_Comy, jointanglesL );
+    InverseKinematics ( Hip_P,Hip_R_Right,RightFoot_Pos,RightFoot_R,-hip_Comy, jointanglesR );
 
-    std::cout << setprecision ( 5 );
-    for ( int i = 1; i <= 3; ++i ) {
-        std::cout << setw ( 5 ) <<Hip_P ( i,1 ) <<'\t';
-    }
-    for ( int i = 1; i <= 3; ++i ) {
-        std::cout << setw ( 5 ) <<RightFoot_Pos ( i,1 ) <<'\t';
-    }
-    for ( int i = 1; i <= 3; ++i ) {
-        std::cout << setw ( 5 ) <<LeftFoot_Pos ( i,1 ) <<'\t';
-    }
-    std::cout<<std::endl;
+    // std::cout << setprecision ( 5 );
+    // for ( int i = 1; i <= 3; ++i ) {
+    //     std::cout << setw ( 5 ) <<Hip_P ( i,1 ) <<'\t';
+    // }
+    // for ( int i = 1; i <= 3; ++i ) {
+    //     std::cout << setw ( 5 ) <<RightFoot_Pos ( i,1 ) <<'\t';
+    // }
+    // for ( int i = 1; i <= 3; ++i ) {
+    //     std::cout << setw ( 5 ) <<LeftFoot_Pos ( i,1 ) <<'\t';
+    // }
+    // std::cout<<std::endl;
 
 #ifdef EPFL
 //    /*Joint angles in rad for EPFL COMAN*/
