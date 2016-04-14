@@ -128,13 +128,13 @@ struct McEscPdoTypes {
         
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f", // NOTE removed the last \n
+            fprintf(fp, "%f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%X\t%d\t%d\t%f", // NOTE removed the last \n
                         pos_ref,vel_ref,tor_ref,
                         gains[0],gains[1],gains[2],gains[3],gains[4],
                         fault_ack,ts,op_idx_aux,aux);
         }
         int sprint(char *buff, size_t size) const {
-            return snprintf(buff, size, "%f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f", // NOTE removed the last \n
+            return snprintf(buff, size, "%f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%X\t%d\t%d\t%f", // NOTE removed the last \n
                                         pos_ref,vel_ref,tor_ref,
                                         gains[0],gains[1],gains[2],gains[3],gains[4],
                                         fault_ack,ts,op_idx_aux,aux);
@@ -158,12 +158,12 @@ struct McEscPdoTypes {
 
 
         void fprint(FILE *fp) {
-            fprintf(fp, "%f\t%f\t%f\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\t\n", 
+            fprintf(fp, "%f\t%f\t%f\t%d\t%d\t%d\t%X\t%d\t%d\t%f\t", // NOTE removed the last \n
                         link_pos,motor_pos,link_vel,motor_vel,
                         torque,max_temperature,fault,rtt, op_idx_ack, aux);
         }
         int sprint(char *buff, size_t size) const {
-            return snprintf(buff, size, "%f\t%f\t%f\t%d\t%d\t%d\t0x%X\t%d\t%d\t%f\t\n", 
+            return snprintf(buff, size, "%f\t%f\t%f\t%d\t%d\t%d\t%X\t%d\t%d\t%f\t", // NOTE removed the last \n
                                         link_pos,motor_pos,link_vel,motor_vel,
                                         torque,max_temperature,fault,rtt, op_idx_ack, aux);
         }
