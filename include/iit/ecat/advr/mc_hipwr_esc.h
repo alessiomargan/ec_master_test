@@ -271,7 +271,7 @@ protected :
 //         }
         
         if ( _start_log ) {
-            log.ts_rx = get_time_ns() - _start_log_ts ;
+            log.ts_rx = (get_time_ns() - _start_log_ts)/1000000 ;
             log.rx_pdo = rx_pdo;
         }
 
@@ -284,7 +284,7 @@ protected :
         //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
         
         if ( _start_log ) {
-            log.ts_tx = get_time_ns() - _start_log_ts ;
+            log.ts_tx = (get_time_ns() - _start_log_ts)/1000000 ;
             log.tx_pdo = tx_pdo;
             push_back(log);             // NOTE push the log on TX
         }
