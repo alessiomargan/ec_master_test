@@ -140,7 +140,7 @@ struct McEscPdoTypes {
                                         fault_ack,ts,op_idx_aux,aux);
         }
 
-    }  __attribute__((__packed__));  // 28 bytes
+    } pdo_data_tx __attribute__((__packed__));  // 28 bytes
 
     // RX  slave_output -- master input
     struct pdo_rx {
@@ -180,7 +180,7 @@ struct McEscPdoTypes {
             JPDO(aux); 
         }
         
-    }  __attribute__((__packed__)); // 28 bytes
+    } pdo_data_rx __attribute__((__packed__)); // 28 bytes
     
 }; // 56 bytes total
 
