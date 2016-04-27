@@ -38,6 +38,8 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     DPRINTF ( "found %lu motors\n", motors.size() );
     get_esc_map_byclass ( fts );
     DPRINTF ( "found %lu fts\n", fts.size() );
+    get_esc_map_byclass ( foot_sensors );
+    DPRINTF ( "found %lu foot_sensors\n", foot_sensors.size() );
     get_esc_map_byclass ( pows );
     DPRINTF ( "found %lu pows\n", pows.size() );
     get_esc_map_byclass ( powCmns );
@@ -102,6 +104,7 @@ void Ec_Thread_Boards_base::xddps_init ( void ) {
     int slave_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Ft6ESC * ft;
+    iit::ecat::advr::FootSensorESC * fs;
     XDDP_pipe * xddp;
 
     for ( auto const& item : motors ) {
@@ -117,6 +120,14 @@ void Ec_Thread_Boards_base::xddps_init ( void ) {
         ft = item.second;
         xddp = new XDDP_pipe();
         xddp->init ( "Ft_id_"+std::to_string ( ft->get_robot_id() ) );
+        xddps[slave_pos] = xddp;
+    }
+    
+    for ( auto const& item : foot_sensors ) {
+        slave_pos = item.first;
+        fs = item.second;
+        xddp = new XDDP_pipe();
+        xddp->init ( "Foot_sensor_id_"+std::to_string ( fs->get_robot_id() ) );
         xddps[slave_pos] = xddp;
     }
 
@@ -161,6 +172,10 @@ void Ec_Thread_Boards_base::xddps_loop ( void ) {
             break;
         case iit::ecat::advr::FT6 :
             item.second->xddp_write ( fts[slave_pos]->getRxPDO() );
+            //item.second->xddp_write(getRxPDO<iit::ecat::advr::Ft6ESC::pdo_rx_t, iit::ecat::advr::Ft6ESC>(slave_pos));
+            break;
+        case iit::ecat::advr::FOOT_SENSOR :
+            item.second->xddp_write ( foot_sensors[slave_pos]->getRxPDO() );
             //item.second->xddp_write(getRxPDO<iit::ecat::advr::Ft6ESC::pdo_rx_t, iit::ecat::advr::Ft6ESC>(slave_pos));
             break;
         case iit::ecat::advr::POW_BOARD :

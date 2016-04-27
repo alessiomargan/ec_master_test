@@ -53,7 +53,10 @@ int Ec_Boards_basic::user_input ( C &user_cmd ) {
 
 int Ec_Boards_basic::user_loop ( void ) {
 
-    int what;
-    user_input ( what );
+    for(auto& f : foot_sensors) {
+//         DPRINTF("rtt : %d\n", f.second->getRxPDO().rtt);
+        DPRINTF("1A : %d\n", f.second->getRxPDO().forceXY[0]);
+        std::fflush(stdout);
+    }
+    
 }
-// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
