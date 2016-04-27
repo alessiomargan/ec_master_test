@@ -157,6 +157,25 @@ void Ec_Boards_ctrl::factory_board ( void ) {
                 pos2rid[i] = rid;
             }
         }
+        
+        ///////////////////////////////////////////////////
+        // Foot Sensor
+        else if ( ec_slave[i].eep_id == FOOT_SENSOR ) {
+
+            FootSensorESC * foot_sensor_slave = new FootSensorESC ( ec_slave[i] );
+            if ( foot_sensor_slave->init ( root_cfg ) != EC_BOARD_OK ) {
+                // skip this slave
+                zombies[i] = iit::ecat::ESCPtr ( foot_sensor_slave );
+                continue;
+            }
+            slaves[i] = iit::ecat::ESCPtr ( foot_sensor_slave );
+            rid = foot_sensor_slave->get_robot_id();
+            foot_sensor_slave->print_info();
+            if ( rid != -1 ) {
+                rid2pos[rid] = i;
+                pos2rid[i] = rid;
+            }
+        }
         ///////////////////////////////////////////////////
         // Pow board
         else if ( ec_slave[i].eep_id == POW_BOARD ) {

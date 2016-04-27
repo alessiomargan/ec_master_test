@@ -43,6 +43,7 @@ add_library(walkman_master${LIB_TYPE} SHARED
     src/power_board.cpp
     src/power_coman_board.cpp
     src/ft6_esc.cpp
+    src/foot_sensor_esc.cpp
     src/test_esc.cpp
 )
 

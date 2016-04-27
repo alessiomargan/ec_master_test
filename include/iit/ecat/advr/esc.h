@@ -93,6 +93,7 @@ enum Board_type : uint16_t {
     LO_PWR_SPH_MC   = 0x13,
     LO_PWR_SPH_MCBRK= 0x14,
     FT6             = 0x20,
+    FOOT_SENSOR     = 0x21,
     POW_BOARD       = 0x30,
     POW_CMN_BOARD   = 0x31,
     HUB             = 0x100,
