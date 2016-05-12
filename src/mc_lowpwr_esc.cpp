@@ -107,9 +107,9 @@ static char acName8001_1[] = "fw_ver";
 static char acName8001_2[] = "ack_board_faults";
 static char acName8001_3[] = "ctrl_status_cmd";
 static char acName8001_4[] = "ctrl_status_cmd_ack";
-static char acName8001_5[] = "V_batt";
-static char acName8001_6[] = "T_inv";
-static char acName8001_7[] = "T_mot";
+static char acName8001_5[] = "Direct_ref";
+static char acName8001_6[] = "Abs_Pos";
+static char acName8001_7[] = "M_Current";
 static char acName8001_8[] = "flash_params_cmd";
 static char acName8001_9[] = "flash_params_cmd_ack";
 

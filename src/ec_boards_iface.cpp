@@ -528,7 +528,8 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
                 DPRINTF ( "Ec_error : %s\n", ec_err_string );
                 go_ahead = false;
             } else {
-
+// to test
+#if 0
                 while ( tries -- ) {
                     sleep ( 1 );
                     // read flash_cmd_ack
@@ -547,6 +548,7 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
                         break;
                     }
                 }
+#endif
             }
         }
     }
