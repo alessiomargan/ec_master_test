@@ -137,6 +137,9 @@ public:
     void print_info ( void ) {
         DPRINTF ( "\tJoint id %d\tJoint robot id %d\n", sdo.Joint_number, sdo.Joint_robot_id );
         DPRINTF ( "\tmin pos %f\tmax pos %f\tmax vel %f\n", sdo.Min_pos, sdo.Max_pos, sdo.Target_velocity );
+        DPRINTF ( "\tPosGainP: %f PosGainI: %f PosGainD: %f I lim: %f\n", sdo.PosGainP, sdo.PosGainI, sdo.PosGainD, sdo.Pos_I_lim );
+        DPRINTF ( "\tImpPosGainP :%f ImpPosGainD:%f\n", sdo.ImpedancePosGainP, sdo.ImpedancePosGainD );
+        DPRINTF ( "\tTorGainP:%f TorGainI:%f Tor_I_lim:%f\n", sdo.TorGainP, sdo.TorGainI, sdo.Tor_I_lim );
         DPRINTF ( "\tfw_ver %s\n", sdo.firmware_version );
     }
 
@@ -278,6 +281,15 @@ public:
         readSDO_byname ( "Max_pos" );
         readSDO_byname ( "Target_velocity" );
         readSDO_byname ( "link_pos" );
+        readSDO_byname ( "pos_gain_P");
+        readSDO_byname ( "pos_gain_I");
+        readSDO_byname ( "pos_gain_D");
+        readSDO_byname ( "pos_integral_limit");
+        readSDO_byname ( "ImpedancePosGainP");
+        readSDO_byname ( "ImpedancePosGainD");
+        readSDO_byname ( "tor_gain_P");
+        readSDO_byname ( "tor_gain_I");
+        readSDO_byname ( "tor_integral_limit");
 
         log_filename = std::string ( "/tmp/LpESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
 
@@ -287,6 +299,7 @@ public:
         return EC_WRP_OK;
 
     }
+    
     virtual int start ( int controller_type, float _p, float _i, float _d ) {
 
         float act_position, test_ref;
@@ -298,11 +311,25 @@ public:
             readSDO_byname ( "link_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
             DPRINTF ( "start %f tx_pdo.pos_ref %f\n", act_position, tx_pdo.pos_ref );
+            if ( controller_type == CTRL_SET_IMPED_MODE ) {
+                /* porcata ... nel philmware in do_impedance_control()
+                 * ... 10000 e 10
+                 * if ((rx_pdo.PGain < MAX_STIFFNESS) && (rx_pdo.PGain > MIN_STIFFNESS))
+                 * {
+                 *      g_sParameters.ImpedancePosGainP = 100.0 * (float)rx_pdo.PGain;
+                 *      g_sParameters.ImpedancePosGainD = (float)rx_pdo.DGain;
+                 * }
+                 * ... else use parameters value
+                 * ... 
+                 */
+                writeSDO_byname( "gainP", (uint16_t)(_p/100.0));
+                writeSDO_byname( "gainD", (uint16_t)_d);
+            }
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
-            // set position mode
-            set_ctrl_status_X ( this, CTRL_SET_POS_MODE );
+            // set controller_type ...
+            set_ctrl_status_X ( this, controller_type );
 
         } catch ( EscWrpError &e ) {
 
@@ -315,8 +342,26 @@ public:
     }
 
     virtual int start ( int controller_type ) {
-        // pid not used
-        return start ( controller_type, 0, 0, 0 );
+        
+        std::vector<float> pid;
+        
+        if ( controller_type == CTRL_SET_IMPED_MODE ) {
+            // use default value read in init()
+            pid[0] = sdo.ImpedancePosGainP / 100.0 ;
+            pid[1] = 0,0; // not used
+            pid[2] = sdo.ImpedancePosGainD;
+
+            if ( node_cfg["pid"]["impedance"] ) {
+                try {
+                    pid = node_cfg["pid"]["impedance"].as<std::vector<float>>();
+                    assert ( pid.size() == 3 );
+                } catch ( std::exception &e ) {
+                    DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+                }
+            }
+        }
+
+        return start ( controller_type, pid[0], pid[1], pid[2] );
     }
 
     virtual int stop ( void ) {
@@ -396,15 +441,19 @@ private:
         }
 
         DPRINTF ( "Using config %s\n", conf_key.c_str() );
-
-        _sgn = root_cfg[conf_key]["sign"].as<int>();
-        _offset = root_cfg[conf_key]["pos_offset"].as<float>();
+        
+        node_cfg = root_cfg[conf_key];
+        
+        _sgn = node_cfg["sign"].as<int>();
+        _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
 
         return EC_WRP_OK;
     }
 
     int16_t Joint_robot_id;
+
+    YAML::Node node_cfg;
 
     float   _offset;
     int     _sgn;

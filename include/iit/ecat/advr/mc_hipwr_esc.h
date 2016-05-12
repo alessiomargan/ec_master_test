@@ -512,9 +512,11 @@ private:
         }
 
         DPRINTF ( "Using config %s\n", conf_key.c_str() );
-
-        _sgn = root_cfg[conf_key]["sign"].as<int>();
-        _offset = root_cfg[conf_key]["pos_offset"].as<float>();
+        
+        node_cfg = root_cfg[conf_key];
+        
+        _sgn = node_cfg["sign"].as<int>();
+        _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
 
         return EC_WRP_OK;
