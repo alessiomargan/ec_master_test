@@ -343,7 +343,7 @@ public:
 
     virtual int start ( int controller_type ) {
         
-        std::vector<float> pid;
+        std::vector<float> pid = {0.0, 0.0, 0.0};
         
         if ( controller_type == CTRL_SET_IMPED_MODE ) {
             // use default value read in init()
@@ -359,7 +359,12 @@ public:
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
                 }
             }
-        }
+        } else {
+            // CTRL_SET_POS_MODE gains are not USED !!! 
+            //pid[0] = sdo.PosGainP;
+            //pid[1] = sdo.PosGainI;
+            //pid[2] = sdo.PosGainD;
+        } 
 
         return start ( controller_type, pid[0], pid[1], pid[2] );
     }
