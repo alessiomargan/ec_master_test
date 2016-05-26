@@ -23,13 +23,13 @@ static const std::vector<float> homePos = {
 // //
 // //
 using namespace iit::ecat::advr::coman;
-std::map<int, float> robot_ids_home_pos = {
+std::map<int, float> walking_robot_home_pos_deg = {
 
     {WAIST_Y, homePos[0]}, {WAIST_P, homePos[1]}, {WAIST_R, homePos[2]},
 
-    {RL_H_R, 0.0}, {RL_H_Y, 0.0}, {RL_H_P, 0.0}, {RL_K, 0.0}, {RL_A_P, 0.0}, {RL_A_R, 0.0},
+    {RL_H_R, 0.0}, {RL_H_Y, 0.0}, {RL_H_P, -0.5}, {RL_K, 1.0}, {RL_A_P, -0.5}, {RL_A_R, 0.0},
 
-    {LL_H_R, 0.0}, {LL_H_Y, 0.0}, {LL_H_P, 0.0}, {LL_K, 0.0}, {LL_A_P, 0.0}, {LL_A_R, 0.0},
+    {LL_H_R, 0.0}, {LL_H_Y, 0.0}, {LL_H_P, -0.5}, {LL_K, 1.0}, {LL_A_P, -0.5}, {LL_A_R, 0.0},
 
     {RA_SH_1, homePos[15]}, {RA_SH_2, homePos[16]}, {RA_SH_3, 0.0}, {RA_EL, homePos[18]}, {RA_WR_1, 0.0}, {RA_WR_2, 0.0}, {RA_WR_3, 0.0}, {RA_HA, 0.0},
 
@@ -94,7 +94,7 @@ void EC_boards_walk::init_preOP ( void ) {
         moto->readSDO ( "Max_pos", max_pos );
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
-        home[slave_pos] = DEG2RAD ( robot_ids_home_pos[pos2Rid ( slave_pos )] );
+        home[slave_pos] = DEG2RAD ( walking_robot_home_pos_deg[pos2Rid ( slave_pos )] );
         DPRINTF ( "Joint_id %d start %f home %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos] );
 
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
@@ -301,18 +301,13 @@ int EC_boards_walk::user_loop_walk ( void ) {
 //     for ( auto const& item : motors ) {
     for ( auto it = motors.begin(); it != motors.end(); it++ ) {
         moto = it->second;
-// 	motor_pdo_rx = moto->getRxPDO();
-// 	// pos_ref_fb is the previous reference
-// 	moto->set_posRef(motor_pdo_rx.pos_ref_fb);
-// 	// !! FIXME use rtControl_pos value
-// 	// !! NOTE set_posRef use rad
-// 	//moto->set_posRef(rtControl_pos[]);
-
         rId = pos2rid[it->first]-1;
         if ( rId >= 3 &&  rId < 15 ) {
             moto->set_posRef ( float ( rtControl_pos[rId] ) );
+            //DPRINTF(" %f", float ( rtControl_pos[rId]) );
         }
     }
+    //DPRINTF("\n");
 
 
     return 0;

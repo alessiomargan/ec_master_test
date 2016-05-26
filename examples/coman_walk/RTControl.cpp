@@ -28,7 +28,7 @@ void RTControl ( double RTtime, float FTSensor[12], vector<float> homingPos, int
         Stabilizer ( FTSensor, Tstep, deltaHip ); // pass out waist angles
         // deltaHip[0]=0.0;
         // deltaHip[1]=0.0;
-        // deltaHip[2]=0.0;
+        deltaHip[2]=0.0;
         // deltaHip[3]=0.0;
         // deltaHip[4]=0.0;
 
@@ -1156,6 +1156,7 @@ void InvKHIP ( double *deltaHip ) {
     InverseKinematics ( Hip_P,Hip_R,LeftFoot_Pos,LeftFoot_R,hip_Comy, jointanglesL );
     InverseKinematics ( Hip_P,Hip_R,RightFoot_Pos,RightFoot_R,-hip_Comy, jointanglesR );
 
+#if 0
     std::cout << setprecision ( 5 );
     for ( int i = 1; i <= 3; ++i ) {
         std::cout << setw ( 5 ) <<Hip_P ( i,1 ) <<'\t';
@@ -1167,7 +1168,8 @@ void InvKHIP ( double *deltaHip ) {
         std::cout << setw ( 5 ) <<LeftFoot_Pos ( i,1 ) <<'\t';
     }
     std::cout<<std::endl;
-
+#endif
+    
 #ifdef EPFL
 //    /*Joint angles in rad for EPFL COMAN*/
     traj[3]=jointanglesR[0];
