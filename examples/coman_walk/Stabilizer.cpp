@@ -41,7 +41,7 @@ double Fz[2]= {0}; //Fz[0] left foot vertical force, Fz[1] right foot vertical f
 double anti_G=0;
 /*	robot parameter */
 double halfRobotMass = 15.5; // kg for lower body COMAN
-double fullRobotMass = 31.3; // kg for full body COMAN
+double fullRobotMass = 33.3; // kg for full body COMAN
 double G = fullRobotMass * 9.81; 
 double scale=0;
 #endif

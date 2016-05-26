@@ -13,7 +13,7 @@ extern void JointTestState ( char cmd );
 static const std::vector<float> homePos = {
     // lower body #15
 //    0, -1,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,   0,  0,  0,
-    0, 0,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,   0,  0,  0,
+    0,  15,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,   0,  0,  0,
 //  1,  2,  3,  4,  5,  6,  7,   8,  9, 10,  11, 12,  13, 14, 15
     // upper body #10 right arm to left arm, last 2 are right and left neck
     30, 70,  0,  -100,  30, -70,   0,  -100,  0,  0,  0,  0,  0,  0,  0,  0,  0

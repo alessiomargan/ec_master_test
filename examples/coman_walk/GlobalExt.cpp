@@ -16,7 +16,7 @@ const double footankletoback = 0.06;
 const double ankle_height = .0793;
 const double fullleg = lengthupperleg+lengthunderleg+ankle_height;
 
-const double extraMass = 12.0;// extra weight
+const double extraMass = 17.0;// extra weight
 const double electronic=0.08;
 const double MassUpperbody = 2.997+extraMass; //+1 is the mass of the metal stuff at the back
 const double MassUpperleg = 3.89;
@@ -96,7 +96,7 @@ double p_ds=0.2;// 20% of DS
 double t_ds;
 
 
-double zc = 0.4;  //0.4 is for half body COMAN, full body COMAN has 0.53
+double zc = 0.5;  //0.4 is for half body COMAN, full body COMAN has 0.53
 double delta = 0.05; // step width 5 cm
 double ds=0.04;// max sway distance delta for half-body coman is 5cm
 double ds_des=ds;// desired max sway distance from user command
