@@ -1,0 +1,35 @@
+package iit.advr;
+
+import "motor_pdo.proto";
+import "ft6_pdo.proto";
+import "coman_power_pdo.proto";
+import "header.proto";
+
+message Ec_slave_pdo {
+
+    enum Type { 
+        RX_MOTOR = 1;       TX_MOTOR = 2;
+        RX_FT6 = 3;         TX_FT6 = 4;
+        RX_POW_WLK = 5;     TX_POW_WLK = 6;
+        RX_POW_CMN = 7;     TX_POW_CMN = 8;
+        RX_XT_MOTOR = 9;    TX_XT_MOTOR = 10;
+        
+    }
+
+    // Identifies which field is filled in.
+    required Type   type = 1;
+    
+    optional gazebo.msgs.Header header = 2;
+    
+    // One of the following will be filled in.
+    optional Motor_tx_pdo       motor_tx_pdo = 3;
+    optional Motor_rx_pdo       motor_rx_pdo = 4;
+    optional Motor_xt_tx_pdo    motor_xt_tx_pdo = 5;
+    optional Motor_xt_rx_pdo    motor_xt_rx_pdo = 6;
+    optional FT6_tx_pdo         ft6_tx_pdo = 7;
+    optional FT6_rx_pdo         ft6_rx_pdo = 8;
+    optional PowComan_tx_pdo    powComan_tx_pdo = 9;
+    optional PowComan_rx_pdo    powComan_rx_pdo = 10;
+
+}
+

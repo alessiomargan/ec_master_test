@@ -1,0 +1,5 @@
+package iit.advr;
+
+message Dummy {
+    repeated uint32 dummy = 1;
+}
