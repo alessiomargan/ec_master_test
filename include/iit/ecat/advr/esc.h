@@ -9,6 +9,7 @@
 
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/utils.h>
+#include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 #include <fstream>
@@ -188,17 +189,33 @@ struct McEscPdoTypes {
             JPDO ( fault );
             JPDO ( rtt );
         }
-
+        void pb_toString( std::string * pb_str ) {
+            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            // Type
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_MOTOR);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
+            // Motor_rx_pdo
+            pb_rx_pdo.mutable_motor_rx_pdo()->set_link_pos(link_pos);
+            pb_rx_pdo.mutable_motor_rx_pdo()->set_motor_pos(motor_pos);
+            pb_rx_pdo.mutable_motor_rx_pdo()->set_pos_ref_fb(pos_ref_fb);
+            pb_rx_pdo.mutable_motor_rx_pdo()->set_temperature(temperature);
+            pb_rx_pdo.mutable_motor_rx_pdo()->set_torque(torque);
+            pb_rx_pdo.mutable_motor_rx_pdo()->set_fault(fault);
+            pb_rx_pdo.mutable_motor_rx_pdo()->set_rtt(rtt);
+            pb_rx_pdo.SerializeToString(pb_str);
+        }
     }  __attribute__ ( ( __packed__ ) ); // 20 bytes
 };
 
 
 inline int check_cmd_ack ( int16_t cmd, int16_t ack ) {
     if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_DONE ) ) {
-        DPRINTF ( "DONE 0x%04X\n", cmd );
+        //DPRINTF ( "DONE 0x%04X\n", cmd );
         return EC_BOARD_OK;
     } else if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_ERROR ) ) {
-        DPRINTF ( "FAIL 0x%04X\n", cmd );
+        //DPRINTF ( "FAIL 0x%04X\n", cmd );
         return EC_BOARD_CMD_ACK;
     } else {
         DPRINTF ( "PROTOCOL FAILURE cmd 0x%04X ack 0x%04X !!!\n", cmd, ack );
@@ -225,7 +242,7 @@ inline int set_ctrl_status_X ( C *c, uint16_t cmd ) {
     c->template readSDO_byname ( "ctrl_status_cmd_ack", ack );
 
     // check
-    DPRINTF ( "set_ctrl_status " );
+    //DPRINTF ( "set_ctrl_status " );
     return check_cmd_ack ( cmd, ack );
 }
 

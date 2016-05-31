@@ -35,7 +35,7 @@ Ec_Boards_ctrl::Ec_Boards_ctrl ( std::string config_file ) {
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 
     bool do_power_off = false;
-
+    std::cout << "~" << typeid ( this ).name() << std::endl;
     // std::shared_ptr slaves
     if ( root_cfg["ec_board_ctrl"]["power_off_boards"].as<bool>() == true ) {
         do_power_off = true;
@@ -85,7 +85,7 @@ void Ec_Boards_ctrl::factory_board ( void ) {
             }
         }
         ///////////////////////////////////////////////////
-        // LP Motor
+        // LP Motor Coman
         else if ( ec_slave[i].eep_id == LO_PWR_DC_MC ) {
 
             LpESC * mc_slave = new LpESC ( ec_slave[i] );

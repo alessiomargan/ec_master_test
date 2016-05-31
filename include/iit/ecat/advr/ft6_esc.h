@@ -13,11 +13,13 @@
 #ifndef __IIT_ECAT_ADVR_FT6_ESC_H__
 #define __IIT_ECAT_ADVR_FT6_ESC_H__
 
+#include <map>
+
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
-#include <map>
+#include <protobuf/ecat_pdo.pb.h>
 
 namespace iit {
 namespace ecat {
@@ -55,6 +57,24 @@ struct Ft6EscPdoTypes {
             JPDO ( torque_Z );
             JPDO ( fault );
             JPDO ( rtt );
+        }
+        void pb_toString( std::string * pb_str ) {
+            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            // Type
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_FT6);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
+            // Motor_rx_pdo
+            pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_x(force_X);
+            pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_y(force_Y);
+            pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_z(force_Z);
+            pb_rx_pdo.mutable_ft6_rx_pdo()->set_torque_x(torque_X);
+            pb_rx_pdo.mutable_ft6_rx_pdo()->set_torque_y(torque_Y);
+            pb_rx_pdo.mutable_ft6_rx_pdo()->set_torque_z(torque_Z);
+            pb_rx_pdo.mutable_ft6_rx_pdo()->set_fault(fault);
+            pb_rx_pdo.mutable_ft6_rx_pdo()->set_rtt(rtt);
+            pb_rx_pdo.SerializeToString(pb_str);
         }
 
     }  __attribute__ ( ( __packed__ ) );

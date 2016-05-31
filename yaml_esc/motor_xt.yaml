@@ -1,0 +1,84 @@
+!!python/object:__main__.Esc_c_gen
+
+#'b': 'char',
+#'h': 'short',
+#'i': 'int',
+#'l': 'long',
+#'q': 'long long',
+#'f': 'float',
+#'d': 'double',
+        
+#struct pdo_tx {
+    #float       pos_ref;  //link
+    #int16_t     vel_ref;  //link
+    #int16_t     tor_ref;  //link
+    #uint16_t    gains[5];
+    #uint16_t    fault_ack;
+    #uint16_t    ts;
+    #uint16_t    op_idx_aux;  // op [get/set] , idx
+    #float       aux;         // set value
+
+#}  __attribute__ ( ( __packed__ ) ); // 20 bytes
+
+#struct pdo_rx {
+    #float        link_pos;           // rad
+    #float        motor_pos;          // rad
+    #float        link_vel;           // rad TBD on the firmware 
+    #int16_t      motor_vel;          // rad/s
+    #int16_t      torque;             // Nm
+    #uint16_t     temperature;        // C
+    #uint16_t     fault;
+    #uint16_t     rtt;                // us
+    #uint16_t     op_idx_ack;         // op [ack/nack] , idx
+    #float        aux;                // get value or nack erro code
+
+#} __attribute__ ( ( __packed__ ) ); // 28 bytes
+
+# class name
+name : TestESC
+sdos : 
+    0x6000 : [  
+        ["link_pos",f,RO],
+        ["motor_pos",f,RO],
+        ["link_vel",f,RO],
+        ["motor_vel",h,RO],
+        ["torque",h,RO],
+        ["temperature",H,RO],
+        ["fault",H,RO],
+        ["rtt",H,RO],
+        ["op_idx_ack",H,RO],
+        ["aux",f,RO],
+
+    ]
+    
+    0x7000 : [  
+        ["pos_ref",f,RW],
+        ["vel_ref",h,RW],
+        ["tor_ref",h,RW],
+        ["gain_kp_m",H,RW],
+        ["gain_kp_l",H,RW],
+        ["gain_kd_m",H,RW],
+        ["gain_kd_l",H,RW],
+        ["gain_ki",H,RW],
+        ["fault_ack",H,RW],
+        ["ts",H,RW],
+        ["op_idx_aux",H,RW],
+        ["aux",f,RW],
+    ]
+    
+    0x8000 : [
+    ]
+    
+    0x8001 : [
+        ["fw_ver",s8,RO],
+        ["ack_board_faults",I,RW],
+        ["ctrl_status_cmd",H,RW],
+        ["ctrl_status_cmd_ack",H,RO],
+        ["direct_ref",f,RW],
+        ["abs_pos",f,RO],
+        ["m_current",f,RO],
+        ["flash_params_cmd",H,RW],
+        ["flash_params_cmd_ack",H,RO]
+    ]
+
+            

@@ -9,6 +9,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 #include <string>
@@ -74,6 +75,22 @@ struct PowCmnEscPdoTypes {
             JPDO ( status.all );
             JPDO ( rtt );
         }
+        void pb_toString( std::string * pb_str ) {
+            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            // Type
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_POW_CMN);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
+            // Motor_rx_pdo
+            pb_rx_pdo.mutable_powcoman_rx_pdo()->set_temperature(temperature);
+            pb_rx_pdo.mutable_powcoman_rx_pdo()->set_v_batt(v_batt);
+            pb_rx_pdo.mutable_powcoman_rx_pdo()->set_status(status.all);
+            pb_rx_pdo.mutable_powcoman_rx_pdo()->set_rtt(rtt);
+            pb_rx_pdo.SerializeToString(pb_str);
+        }
+
+        
     } __attribute__ ( ( __packed__ ) );
 };
 

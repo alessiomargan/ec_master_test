@@ -20,6 +20,8 @@ else ()
     set(LIB_TYPE _nrt)
 endif()
 
+add_subdirectory(protobuf)
+
 #######################
 ## libwalkman_master
 #######################
@@ -28,6 +30,7 @@ set(LIB_NAME walkman_master${LIB_TYPE})
 add_definitions(-DKEEP_POWER_ON)
 
 include_directories(include)
+include_directories(${CMAKE_BINARY_DIR})
 include_directories(${SOEM_ROOT}/include)
 link_directories(${SOEM_ROOT}/lib)
 
@@ -42,6 +45,8 @@ add_library(walkman_master${LIB_TYPE} SHARED
     src/ft6_esc.cpp
     src/test_esc.cpp
 )
+
+add_dependencies(walkman_master${LIB_TYPE} pdo_pb)
 
 if ( Xenomai_FOUND )
     set_xeno_flags(${LIB_NAME})

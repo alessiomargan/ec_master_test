@@ -9,7 +9,7 @@
 #'d': 'double',
 
 # class name
-name : LpESC
+name : LpESCgen
 sdos : 
     0x6000 : [  
         ["link_pos",f,RO],
@@ -29,8 +29,19 @@ sdos :
         ["ts",H,RW],
     ]
     
+    0x8000 : [
+        ["fw_ver",s8,RO],
+        ["ack_board_faults",I,RW],
+        ["ctrl_status_cmd",H,RW],
+        ["ctrl_status_cmd_ack",H,RO],
+        ["direct_ref",f,RW],
+        ["abs_pos",f,RO],
+        ["m_current",f,RO],
+        ["flash_params_cmd",H,RW],
+        ["flash_params_cmd_ack",H,RO]
+    ]
     0x8001 : [
-        ["fw_ver",s64,RO],
+        ["fw_ver",s8,RO],
         ["ack_board_faults",I,RW],
         ["ctrl_status_cmd",H,RW],
         ["ctrl_status_cmd_ack",H,RO],

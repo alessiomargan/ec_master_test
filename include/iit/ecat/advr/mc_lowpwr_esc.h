@@ -14,12 +14,13 @@
 #ifndef __IIT_ECAT_ADVR_MC_LOWPWR_ESC_H__
 #define __IIT_ECAT_ADVR_MC_LOWPWR_ESC_H__
 
+#include <map>
+
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
-#include <map>
 
 namespace iit {
 namespace ecat {
@@ -311,6 +312,14 @@ public:
             readSDO_byname ( "link_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
             DPRINTF ( "start %f tx_pdo.pos_ref %f\n", act_position, tx_pdo.pos_ref );
+            if ( controller_type == CTRL_SET_POS_MODE ) {
+            
+                writeSDO_byname( "pos_gain_P", _p );
+                writeSDO_byname( "pos_gain_I", _i );
+                writeSDO_byname( "pos_gain_D", _d );
+                DPRINTF ( "\t%f %f %f\n", _p,_i,_d );
+            
+            } 
             if ( controller_type == CTRL_SET_IMPED_MODE ) {
                 /* porcata ... nel philmware in do_impedance_control()
                  * ... 10000 e 10
@@ -324,6 +333,7 @@ public:
                  */
                 writeSDO_byname( "gainP", (uint16_t)(_p/100.0));
                 writeSDO_byname( "gainD", (uint16_t)_d);
+                
             }
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
@@ -333,7 +343,7 @@ public:
 
         } catch ( EscWrpError &e ) {
 
-            DPRINTF ( "Catch Exception %s ... %s\n", __FUNCTION__, e.what() );
+            DPRINTF ( "Catch Exception %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
             return EC_BOARD_NOK;
         }
 
@@ -345,6 +355,21 @@ public:
         
         std::vector<float> pid = {0.0, 0.0, 0.0};
         
+        if ( controller_type == CTRL_SET_POS_MODE ) {
+            // use default value read in init()
+            pid[0] = sdo.PosGainP;
+            pid[1] = sdo.PosGainI;
+            pid[2] = sdo.PosGainD;
+            
+            if ( node_cfg["pid"]["position"] ) {
+                try {
+                    pid = node_cfg["pid"]["position"].as<std::vector<float>>();
+                    assert ( pid.size() == 3 );
+                } catch ( std::exception &e ) {
+                    DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+                }
+            }
+        } 
         if ( controller_type == CTRL_SET_IMPED_MODE ) {
             // use default value read in init()
             pid[0] = sdo.ImpedancePosGainP / 100.0 ;
@@ -359,11 +384,6 @@ public:
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
                 }
             }
-        } else {
-            // CTRL_SET_POS_MODE gains are not USED !!! 
-            //pid[0] = sdo.PosGainP;
-            //pid[1] = sdo.PosGainI;
-            //pid[2] = sdo.PosGainD;
         } 
 
         return start ( controller_type, pid[0], pid[1], pid[2] );
