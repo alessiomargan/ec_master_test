@@ -13,6 +13,7 @@
 #include <LpmsSensorManagerI.h>
 
 #include <iit/advr/zmq_publisher.h>
+#include <protobuf/quaternion.pb.h>
 
 #ifdef __XENO_PIPE__
 static const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
@@ -65,6 +66,14 @@ class ImuHandler {
             JPDO ( qX );
             JPDO ( qY );
             JPDO ( qZ );
+        }
+        void pb_toString( std::string * pb_str ) {
+            gazebo::msgs::Quaternion quat;
+            quat.set_x(qX);
+            quat.set_y(qY);
+            quat.set_z(qZ);
+            quat.set_w(qW);
+            quat.SerializeToString(pb_str);
         }
     private :
         ImuData data;
@@ -177,7 +186,7 @@ void ImuHandler::operator() () const {
     }
 }
 
-} // anonymous namespace
+} // namespace
 
 ////////////////////////////////////////////////////
 // Main

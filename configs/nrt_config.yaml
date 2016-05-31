@@ -9,8 +9,8 @@ ec_board_ctrl:
   #sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 0
-  #sync_cycle_offset_ns: 3000000000
-  sync_cycle_offset_ns: 0
+  sync_cycle_offset_ns: 3000000000
+  #sync_cycle_offset_ns: 0
   power_off_boards: false
   
 

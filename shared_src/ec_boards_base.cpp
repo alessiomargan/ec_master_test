@@ -16,8 +16,10 @@
 
 Ec_Thread_Boards_base::~Ec_Thread_Boards_base() {
 
+    std::cout << "~" << typeid ( this ).name() << std::endl;
     stop_motors();
     iit::ecat::print_stat ( s_loop );
+    
 }
 
 
@@ -59,7 +61,7 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;
 
-    if ( config["ec_boards_base"]["create_pipes"] ) {
+    if ( config["ec_boards_base"]["create_pipes"].as<bool>() ) {
         xddps_init();
     }
 
@@ -83,7 +85,7 @@ void Ec_Thread_Boards_base::th_loop ( void * ) {
         }
 
         xddps_loop();
-
+        
         user_loop();
 
         send_to_slaves();
@@ -170,8 +172,8 @@ void Ec_Thread_Boards_base::xddps_loop ( void ) {
             //item.second->xddp_write(getRxPDO<iit::ecat::advr::PowComanESC::pdo_rx_t, iit::ecat::advr::PowComanESC>(slave_pos));
             break;
         case iit::ecat::advr::EC_TEST :
-            //item.second->xddp_write(tests[slave_pos]->getRxPDO());
-            item.second->xddp_write ( getRxPDO<iit::ecat::advr::TestEscPdoTypes::pdo_rx,iit::ecat::advr::TestESC> ( slave_pos ) );
+            item.second->xddp_write ( tests[slave_pos]->getRxPDO() );
+            //item.second->xddp_write ( getRxPDO<iit::ecat::advr::TestEscPdoTypes::pdo_rx,iit::ecat::advr::TestESC>(slave_pos) );
             break;
 
         default:
@@ -332,7 +334,7 @@ void Ec_Thread_Boards_base::smooth_splines_trj ( advr::Spline_map &new_spline_tr
         try {
             spln = new_spline_trj.at ( slave_pos );
         } catch ( const std::out_of_range& oor ) {
-            DPRINTF ( "new_spline error\n" );
+            DPRINTF ( "Error : new_spline_trj.at ( %d )\n", slave_pos );
             continue;
         }
         try {

@@ -30,8 +30,8 @@ int main ( int argc, char *argv[] ) try {
 
     main_common ( shutdown );
 
-    threads["boards_ctrl"] = new Ec_Boards_basic ( argv[1] );
-    threads["boards_ctrl"]->create ( true );
+    threads["boards_basic"] = new Ec_Boards_basic ( argv[1] );
+    threads["boards_basic"]->create ( true );
 
     while ( main_loop ) {
         sleep ( 1 );

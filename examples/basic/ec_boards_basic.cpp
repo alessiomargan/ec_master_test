@@ -22,7 +22,7 @@ Ec_Boards_basic::Ec_Boards_basic ( const char* config_yaml ) : Ec_Thread_Boards_
 }
 
 Ec_Boards_basic::~Ec_Boards_basic() {
-
+    std::cout << "~" << typeid ( this ).name() << std::endl;
 }
 
 void Ec_Boards_basic::init_preOP ( void ) {

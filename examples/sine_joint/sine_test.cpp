@@ -30,16 +30,16 @@ int main ( int argc, char *argv[] ) try {
     main_common ( shutdown );
 
     threads["boards_ctrl"] = new Ec_Boards_sine ( argv[1] );
-    threads["boards_ctrl"]->create ( false );
+    threads["boards_ctrl"]->create ( true );
 
     while ( main_loop ) {
         sleep ( 1 );
     }
 
-    for ( auto it = threads.begin(); it != threads.end(); it++ ) {
-        it->second->stop();
-        it->second->join();
-        delete it->second;
+    for ( auto const& item : threads ) {
+        item.second->stop();
+        item.second->join();
+        delete item.second;
     }
 
     std::cout << "Exit main" << std::endl;

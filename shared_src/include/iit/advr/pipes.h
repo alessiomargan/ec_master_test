@@ -18,7 +18,7 @@
 #endif
 
 
-#if __XENO__
+#ifdef __XENO__
 static const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
 #else
 static const std::string pipe_prefix ( "/tmp/" );
@@ -68,7 +68,7 @@ public:
         }
         //tx.sprint(buff,sizeof(buff));
         //printf("%s\n", buff);
-        return ::write ( fd, ( void* ) &tx, sizeof ( tx ) );
+        return write ( fd, ( void* ) &tx, sizeof ( tx ) );
     }
 
     template<class XddpRxTypes>

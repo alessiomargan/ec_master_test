@@ -109,6 +109,19 @@ int main ( int argc, char *argv[] ) try {
             for ( auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
                 slave_list.push_back ( it->first );
             }
+        } else if ( slave_list[0] == -3 ) {
+            // med motor
+            use_rId = false;
+            slave_list.clear();
+            std::map<int, LpESC*> lp_boards;
+            ec_boards_ctrl->get_esc_map_bytype ( LO_PWR_DC_MC, lp_boards );
+            for ( auto it = lp_boards.begin(); it != lp_boards.end(); it++ ) {
+                slave_list.push_back ( it->first );
+            }
+            ec_boards_ctrl->get_zombie_map_bytype ( LO_PWR_DC_MC, lp_boards );
+            for ( auto it = lp_boards.begin(); it != lp_boards.end(); it++ ) {
+                slave_list.push_back ( it->first );
+            }
         }
     }
 

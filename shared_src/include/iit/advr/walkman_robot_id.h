@@ -1,3 +1,6 @@
+#ifndef __WALKMAN_ROBOT_ID_H__
+#define __WALKMAN_ROBOT_ID_H__
+
 namespace iit {
 namespace ecat {
 namespace advr {
@@ -59,4 +62,7 @@ enum Robot_IDs {
 }
 }
 }
+
+#endif
+
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

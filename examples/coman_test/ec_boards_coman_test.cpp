@@ -30,7 +30,7 @@ static const std::vector<double> Xt_9s = std::initializer_list<double> { 0, 9 };
 EC_boards_coman_test::EC_boards_coman_test ( const char* config_yaml ) :
     Ec_Thread_Boards_base ( config_yaml ) {
 
-    name = "EC_boards_coman_test";
+    name = "Coman_test";
     // not periodic
     period.period = {0,1};
 
@@ -46,7 +46,6 @@ EC_boards_coman_test::EC_boards_coman_test ( const char* config_yaml ) :
     jsInXddp.init ( "EC_board_js_input" );
     navInXddp.init ( "EC_board_nav_input" );
     imuInXddp.init ( "Lpms_imu" );
-    termInXddp.init ( "terminal" );
 }
 
 EC_boards_coman_test::~EC_boards_coman_test() {
@@ -58,6 +57,7 @@ EC_boards_coman_test::~EC_boards_coman_test() {
  */
 void EC_boards_coman_test::init_preOP ( void ) {
 
+    std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
     iit::ecat::advr::Motor * moto;
     int slave_pos;
     float min_pos, max_pos, pos_ref_fb;
@@ -123,13 +123,13 @@ void EC_boards_coman_test::init_preOP ( void ) {
     DPRINTF ( "found %lu <Motor> waist\n", waist.size() );
 
     // !!!
-    get_esc_map_byclass ( motors,  test_rid );
+    get_esc_map_byclass ( motors_to_start,  test_rid );
 
     std::vector<double> Ys;
     std::vector<double> Xs;
 
-    for ( auto const& item : motors ) {
-
+    for ( auto const& item : motors_to_start ) {
+    
         slave_pos = item.first;
         moto = item.second;
         moto->readSDO ( "Min_pos", min_pos );
@@ -169,8 +169,8 @@ void EC_boards_coman_test::init_preOP ( void ) {
         moto->start ( CTRL_SET_POS_MODE );
     }
 
-    //DPRINTF ( ">>> wait xddp terminal ....\n" );
-    //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
+    DPRINTF ( ">>> wait xddp terminal ....\n" );
+    char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     //
     q_spln.push ( &spline_start2home );
@@ -202,10 +202,11 @@ void EC_boards_coman_test::init_OP ( void ) {
 int EC_boards_coman_test::user_loop ( void ) {
 
     static float ds;
-    static int count;
+    static uint64_t count;
+    float spline_error = 0.07;
 
-    if ( ( count++ ) %1000 == 0 ) {
-        DPRINTF ( "alive\n" );
+    if ( ( count++ ) % 1000 == 0 ) {
+        DPRINTF ( "alive %d\n", count/1000 );
         //DPRINTF("%ld\n", q_spln.size());
         //set_any2home(spline_any2home);
     }
@@ -241,7 +242,7 @@ int EC_boards_coman_test::user_loop ( void ) {
         running_spline = q_spln.front();
         if ( running_spline ) {
             // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors, *running_spline, 0.07, false) ) {
+            if ( go_there ( motors, *running_spline, spline_error, false) ) {
                 // running spline has finish !!
                 last_run_spline = running_spline;
                 q_spln.pop();

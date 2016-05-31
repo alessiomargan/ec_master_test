@@ -31,8 +31,8 @@ int main ( int argc, char *argv[] ) try {
 
     main_common ( shutdown );
 
-    threads["EC_boards_coman_test"] = new EC_boards_coman_test ( argv[1] );
-    threads["EC_boards_coman_test"]->create ( true,2 );
+    threads["Coman_test"] = new EC_boards_coman_test ( argv[1] );
+    threads["Coman_test"]->create ( true, 2 );
 
 #if 0
     // ZMQ_pub wait for pipe creation
@@ -47,11 +47,12 @@ int main ( int argc, char *argv[] ) try {
         sleep ( 1 );
     }
 
-    for ( auto it = threads.begin(); it != threads.end(); it++ ) {
-        it->second->stop();
-        it->second->join();
-        delete it->second;
+    for ( auto const &t : threads) {
+        t.second->stop();
+        t.second->join();
+        delete t.second;
     }
+
 
     std::cout << "Exit main" << std::endl;
 

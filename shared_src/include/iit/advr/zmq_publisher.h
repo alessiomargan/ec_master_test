@@ -45,6 +45,7 @@
 #include <iit/ecat/advr/test_esc.h>
 
 #include <iit/advr/thread_util.h>
+#include <protobuf/ecat_pdo.pb.h>
 
 namespace iit {
 
@@ -53,13 +54,13 @@ class Abs_Publisher;
 typedef std::map<int, Abs_Publisher*>  PubMap_t;
 typedef std::map<std::string, std::string> jmap_t;
 
-#if __XENO_PIPE__
+#ifdef __XENO_PIPE__
 const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
 #else
 const std::string pipe_prefix ( "/tmp/" );
 #endif
 
-zmq::context_t zmq_ctx ( 1 );
+//extern zmq::context_t zmq_ctx;
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -71,8 +72,6 @@ zmq::context_t zmq_ctx ( 1 );
 class Abs_Publisher {
 
 public:
-
-
     Abs_Publisher ( std::string uri );
     virtual ~Abs_Publisher();
 
@@ -83,8 +82,8 @@ protected:
 
     template<typename T>
     int read_pipe ( T &t );
-    int publish_msg();
-
+    int publish_msg( void );
+    
 protected:
 
     zmq::socket_t * _z;
@@ -96,45 +95,6 @@ protected:
 
     char zbuffer[8192];
 };
-
-
-inline Abs_Publisher::Abs_Publisher ( std::string uri ) {
-
-    int opt_linger = 1;
-#if ZMQ_VERSION_MAJOR == 2
-    uint64_t opt_hwm = 1;
-#else
-    int opt_hwm = 1;
-#endif
-
-    _z = new zmq::socket_t ( zmq_ctx, ZMQ_PUB );
-    _z->setsockopt ( ZMQ_LINGER, &opt_linger, sizeof ( opt_linger ) );
-    _z->setsockopt ( ZMQ_SNDHWM, &opt_hwm, sizeof ( opt_hwm ) );
-    _z->bind ( uri.c_str() );
-
-    printf ( "publisher bind to %s\n",uri.c_str() );
-
-}
-
-inline Abs_Publisher::~Abs_Publisher() {
-    delete _z;
-}
-
-inline int Abs_Publisher::open_pipe ( std::string pipe_name ) {
-
-    pipe = pipe_name;
-    std::string pipe_path = pipe_prefix + pipe_name;
-
-    printf ( "Opening xddp_socket %s\n", pipe_path.c_str() );
-    xddp_sock = open ( pipe_path.c_str(), O_RDONLY );
-
-    if ( xddp_sock < 0 ) {
-        printf ( "%s %s : %s\n", __FILE__, __FUNCTION__, strerror ( errno ) );
-        return 1;
-    }
-
-    return 0;
-}
 
 template<typename T>
 inline int Abs_Publisher::read_pipe ( T &t ) {
@@ -162,21 +122,6 @@ inline int Abs_Publisher::read_pipe ( T &t ) {
     }
 
     return nbytes;
-}
-
-inline int Abs_Publisher::publish_msg() {
-
-    try {
-        //printf("*** send %lu+%lu bytes\n", _msg_id.size() , _msg.size());
-        _z->send ( _msg_id, ZMQ_SNDMORE );
-        _z->send ( _msg );
-        //printf("***\n");
-    } catch ( zmq::error_t& e ) { // Interrupted system call
-        printf ( ">>> zsend ... catch %s\n", e.what() );
-        return -1;
-    }
-
-    return 0;
 }
 
 
@@ -212,48 +157,53 @@ public:
     int publish ( void ) {
 
         pub_data_t pub_data;
-
         if ( read_pipe ( pub_data ) <= 0 ) {
             return -1;
         }
-
         return publish ( pub_data );
     }
 
     int publish ( pub_data_t &pub_data ) {
 
         int msg_data_size;
-
+        std::string sz_string;
+        
         // prepare _msg_id just once
         _msg_id.rebuild ( pipe.length() );
         memcpy ( ( void* ) _msg_id.data(),pipe.data(), pipe.length() );
 
+        //////////////////////////////////////////////////////////
         // prepare _msg
+        
         //////////////////////////////////////////////////////////
         // -- text format
-        msg_data_size = pub_data.sprint ( zbuffer,sizeof ( zbuffer ) );
-        //////////////////////////////////////////////////////////
-        // -- binary format
+        //msg_data_size = pub_data.sprint ( zbuffer,sizeof ( zbuffer ) );
 
         //////////////////////////////////////////////////////////
         // -- json format
-        std::string json_string = json_serializer ( pub_data );
-        msg_data_size = json_string.length();
-        _msg.rebuild ( msg_data_size );
-        memcpy ( ( void* ) _msg.data(), json_string.c_str(), msg_data_size );
+        //sz_string = json_serializer ( pub_data );
+        //msg_data_size = sz_string.length();
+        //_msg.rebuild ( msg_data_size );
+        //memcpy ( ( void* ) _msg.data(), sz_string.c_str(), msg_data_size );
 
+        //////////////////////////////////////////////////////////
+        // -- protobuf
+        pub_data.pb_toString(&sz_string);
+        msg_data_size = sz_string.length();
+        _msg.rebuild ( msg_data_size );
+        memcpy ( ( void* ) _msg.data(), sz_string.c_str(), msg_data_size );
+        
         //printf("%s", (char*)_msg.data());
 
         return publish_msg();
 
     }
 
-
 };
 
 ///////////////////////////////////////////////////////////////////////
 ///
-/// Abs_Publisher
+/// ZMQ_Pub_thread
 ///
 ///////////////////////////////////////////////////////////////////////
 
@@ -292,83 +242,8 @@ public:
         ecat::print_stat ( loop_time );
     }
 
-    virtual void th_init ( void * ) {
-
-        Abs_Publisher * zpub;
-
-        int base_port = 9000;
-        std::string uri ( "tcp://*:" );
-
-        base_port++;
-        zpub = new PwCmnPub ( uri+std::to_string ( base_port ) );
-        if ( zpub->open_pipe ( "PowCmn_pos_6" ) == 0 ) {
-            zmap[base_port] = zpub;
-        } else {
-            delete zpub;
-        }
-        base_port++;
-        zpub = new McPub ( uri+std::to_string ( base_port ) );
-        if ( zpub->open_pipe ( "Motor_id_1" ) == 0 ) {
-            zmap[base_port] = zpub;
-        } else {
-            delete zpub;
-        }
-        base_port++;
-        zpub = new McPub ( uri+std::to_string ( base_port ) );
-        if ( zpub->open_pipe ( "Motor_id_21" ) == 0 ) {
-            zmap[base_port] = zpub;
-        } else {
-            delete zpub;
-        }
-
-        base_port++;
-        zpub = new TestPub ( uri+std::to_string ( base_port ) );
-        if ( zpub->open_pipe ( "Test_pos_4" ) == 0 ) {
-            zmap[base_port] = zpub;
-        } else {
-            delete zpub;
-        }
-
-#if 0
-        base_port++;
-        zpub = new FtPub ( uri+std::to_string ( base_port ) );
-        if ( zpub->open_pipe ( "Ft6ESC_0" ) == 0 ) {
-            zmap[base_port] = zpub;
-        } else {
-            delete zpub;
-        }
-
-        base_port++;
-        zpub = new McPub ( uri+std::to_string ( base_port ) );
-        if ( zpub->open_pipe ( "HpESC_1000" ) == 0 ) {
-            zmap[base_port] = zpub;
-        } else {
-            delete zpub;
-        }
-
-        base_port++;
-        zpub = new PwPub ( uri+std::to_string ( base_port ) );
-        if ( zpub->open_pipe ( "PowESC_pos2" ) == 0 ) {
-            zmap[base_port] = zpub;
-        } else {
-            delete zpub;
-        }
-#endif
-    }
-
-    virtual void th_loop ( void * ) {
-
-        tNow = iit::ecat::get_time_ns();
-
-        for ( auto const& item : zmap ) {
-            item.second->publish();
-        }
-
-        dt = iit::ecat::get_time_ns()-tNow;
-        loop_time ( dt );
-
-    }
-
+    virtual void th_init ( void * );
+    virtual void th_loop ( void * );
 };
 
 

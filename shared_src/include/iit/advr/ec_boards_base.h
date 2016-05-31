@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 Italian Institute of Technology
+   Copyright (C) Italian Institute of Technology
 
    Developer:
        Alessio Margan (2015-, alessio.margan@iit.it)
@@ -33,8 +33,10 @@ class Ec_Thread_Boards_base :
     public iit::ecat::advr::Ec_Boards_ctrl {
 public:
 
-    Ec_Thread_Boards_base ( const char * config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {}
     virtual ~Ec_Thread_Boards_base();
+    Ec_Thread_Boards_base ( const char * config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
+            termInXddp.init ( "terminal" );
+    }
 
     bool init_OK() {
         return init_done;
@@ -64,7 +66,9 @@ protected :
     void xddps_loop ( void );
     std::map<int,XDDP_pipe*> xddps;
 
-    std::map<int, iit::ecat::advr::Motor*> 	motors;
+    XDDP_pipe termInXddp;
+
+    std::map<int, iit::ecat::advr::Motor*> motors;
     std::map<int, iit::ecat::advr::Ft6ESC*> 	fts;
     std::map<int, iit::ecat::advr::PowESC*> 	pows;
     std::map<int, iit::ecat::advr::PowComanESC*>powCmns;
@@ -96,6 +100,7 @@ private:
 
     bool init_done;
     iit::ecat::ec_timing_t timing;
+    
 };
 
 

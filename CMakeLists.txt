@@ -5,26 +5,30 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroOptionalBuild)
 include(MacroSetcap)
 
-set(CMAKE_CXX_FLAGS 	"${CMAKE_CXX_FLAGS} -std=c++11 -O3")
-set(ENABLE_XENO  	CACHE BOOL "OFF")
-set(SHARED_SRC 		${CMAKE_CURRENT_SOURCE_DIR}/shared_src) 
+#set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11")
+set(ENABLE_XENO         CACHE BOOL "OFF")
+set(SHARED_SRC          ${CMAKE_CURRENT_SOURCE_DIR}/shared_src) 
 
 
-	
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
     find_package(RTnet)
 endif()
 
+if ( Xenomai_FOUND )
+    set(LIB_TYPE _rt)
+else ()
+    set(LIB_TYPE _nrt)
+endif()
 
 include_directories("${SHARED_SRC}/include")
-#link_directories("${SHARED_SRC}")
 
 set(COMMON_LIBS
-    shared_utils
-    walkman_master
-    iitecat_iface
-    soem
+    ecat_test_utils${LIB_TYPE}
+    walkman_master${LIB_TYPE}
+    iitecat_iface${LIB_TYPE}
+    soem${LIB_TYPE}
     pthread
     zmq
     jsoncpp

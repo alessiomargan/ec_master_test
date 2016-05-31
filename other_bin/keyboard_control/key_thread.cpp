@@ -28,7 +28,7 @@ static int main_loop = 1;
 
 static void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
     main_loop = 0;
-    printf ( "got signal .... Shutdown\n" );
+    printf ( "got signal .... Shutdown\n Press any key ..." );
 }
 
 static void set_signal_handler ( void ) {

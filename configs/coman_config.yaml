@@ -21,6 +21,55 @@ ec_board_ctrl:
 LpESC_X:
   sign: 1
   pos_offset: 0
-  pid :
-    position: [20.0 , 0.0 , 1.0]
 
+####################################
+# Right forearm
+####################################
+
+# wrist rotate
+LpESC_26:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [ 100000.0 , 0.0 , 0.0 ]
+
+# wrist up/down
+LpESC_27:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [ 30000.0 , 0.0 , 0.0 ]
+
+# wrist left/right
+LpESC_28:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [ 30000.0 , 0.0 , 0.0 ]
+
+####################################
+# Left forearm
+####################################
+
+# wrist rotate
+LpESC_29:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [ 100000.0 , 0.0 , 0.0 ]
+
+# wrist up/down
+LpESC_30:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [30000.0 , 0.0 , 0.0 ]
+
+# wrist left/right
+LpESC_31:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [30000.0 , 0.0 , 0.0, ]
+
+    

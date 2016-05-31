@@ -61,7 +61,7 @@ private :
     advr::Spline_map spline_mid2home;
     advr::Spline_map spline_any2home;
 
-    XDDP_pipe jsInXddp, navInXddp, imuInXddp, termInXddp;
+    XDDP_pipe jsInXddp, navInXddp, imuInXddp;
 
     user_state_t user_state;
     home_state_t home_state;

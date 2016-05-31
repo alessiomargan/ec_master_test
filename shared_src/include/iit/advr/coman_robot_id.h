@@ -1,3 +1,6 @@
+#ifndef __COMAN_ROBOT_ID_H__
+#define __COMAN_ROBOT_ID_H__
+
 #include <initializer_list>
 #include <algorithm>
 #include <map>
@@ -69,7 +72,6 @@ const std::vector<int> robot_right_leg_ids = std::initializer_list<int> {
     RL_K,
     RL_A_P,
     RL_A_R,
-    RL_FT,
 };
 
 const std::vector<int> robot_left_leg_ids = std::initializer_list<int> {
@@ -80,7 +82,6 @@ const std::vector<int> robot_left_leg_ids = std::initializer_list<int> {
     LL_K,
     LL_A_P,
     LL_A_R,
-    LL_FT,
 };
 
 const std::vector<int> robot_right_arm_ids = std::initializer_list<int> {
@@ -92,7 +93,6 @@ const std::vector<int> robot_right_arm_ids = std::initializer_list<int> {
     RA_WR_1,
     RA_WR_2,
     RA_WR_3,
-    RA_FT,
     RA_HA,
 };
 
@@ -105,21 +105,24 @@ const std::vector<int> robot_left_arm_ids = std::initializer_list<int> {
     LA_WR_1,
     LA_WR_2,
     LA_WR_3,
-    LA_FT,
     LA_HA,
 };
 
-const std::vector<int> robot_ids = std::initializer_list<int> {
+const std::vector<int> robot_fts_ids = std::initializer_list<int> {
+    RL_FT, LL_FT, RA_FT, LA_FT
+};
+
+const std::vector<int> robot_mcs_ids = std::initializer_list<int> {
     // waist
     WAIST_Y, WAIST_P, WAIST_R,
     // right leg
-    RL_H_R, RL_H_Y, RL_H_P, RL_K, RL_A_P, RL_A_R, RL_FT,
+    RL_H_R, RL_H_Y, RL_H_P, RL_K, RL_A_P, RL_A_R,
     // left leg
-    LL_H_R, LL_H_Y, LL_H_P, LL_K, LL_A_P, LL_A_R, LL_FT,
+    LL_H_R, LL_H_Y, LL_H_P, LL_K, LL_A_P, LL_A_R,
     // right arm
-    RA_SH_1, RA_SH_2, RA_SH_3, RA_EL, RA_WR_1, RA_WR_2, RA_WR_3, RA_FT, RA_HA,
+    RA_SH_1, RA_SH_2, RA_SH_3, RA_EL, RA_WR_1, RA_WR_2, RA_WR_3, RA_HA,
     // left arm
-    LA_SH_1, LA_SH_2, LA_SH_3, LA_EL, LA_WR_1, LA_WR_2, LA_WR_3, LA_FT, LA_HA,
+    LA_SH_1, LA_SH_2, LA_SH_3, LA_EL, LA_WR_1, LA_WR_2, LA_WR_3, LA_HA,
 
 };
 
@@ -127,9 +130,9 @@ std::map<int, float> robot_ids_home_pos_deg = {
 
     {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
 
-    {RL_H_R, 0.0}, {RL_H_Y, 0.0}, {RL_H_P, 0.0}, {RL_K, 10.0}, {RL_A_P, 0.0}, {RL_A_R, 0.0},
+    {RL_H_R, 0.0}, {RL_H_Y, 0.0}, {RL_H_P, -15.0}, {RL_K, 30.0}, {RL_A_P, -15.0}, {RL_A_R, 0.0},
 
-    {LL_H_R, 0.0}, {LL_H_Y, 0.0}, {LL_H_P, 0.0}, {LL_K, 10.0}, {LL_A_P, 0.0}, {LL_A_R, 0.0},
+    {LL_H_R, 0.0}, {LL_H_Y, 0.0}, {LL_H_P, -15.0}, {LL_K, 30.0}, {LL_A_P, -15.0}, {LL_A_R, 0.0},
 
     {RA_SH_1, 0.0}, {RA_SH_2, 70.0}, {RA_SH_3, 0.0}, {RA_EL, -30.0}, {RA_WR_1, 0.0}, {RA_WR_2, 0.0}, {RA_WR_3, 0.0}, {RA_HA, 0.0},
 
@@ -143,4 +146,6 @@ std::map<int, float> robot_ids_home_pos_deg = {
 }
 }
 }
+
+#endif
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

@@ -12,10 +12,11 @@ add_definitions("-std=gnu++11")
 
 add_executable(${PROJECT_NAME}
     ${SHARED_SRC}/test_common.cpp
+    ${SHARED_SRC}/zmq_publisher.cpp    
     lpms_forward.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp LpSensor)
+target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp LpSensor pdo_pb protobuf)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 

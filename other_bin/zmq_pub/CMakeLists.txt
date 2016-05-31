@@ -11,9 +11,10 @@ endif()
 add_executable(${PROJECT_NAME}
     ${SHARED_SRC}/test_common.cpp
     ${SHARED_SRC}/nrt_thread.cpp
+    ${SHARED_SRC}/zmq_publisher.cpp    
     zmq_pub_thread.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp)
+target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp pdo_pb protobuf)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
