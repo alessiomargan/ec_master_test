@@ -34,6 +34,28 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
         throw "something wrong";
     }
 
+    get_esc_map_byclass ( pows );
+    DPRINTF ( "found %lu pows\n", pows.size() );
+
+    // walkman power/battery board turn on all ESCs
+    if ( pows.size() == 1 && slaves.size() == 1 ) {
+        
+        while ( ! pows[1]->power_on_ok() ) {
+            osal_usleep(1000000);
+            pows[1]->readSDO_byname("status");
+            pows[1]->handle_status();
+        }
+        // power on
+        Ec_Boards_ctrl::shutdown(false);
+        // wait boards boot up
+        sleep(6);
+        // init Ec_Boards_ctrl
+        if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
+            throw "something wrong";
+        }
+
+    }
+
     get_esc_map_byclass ( motors );
     DPRINTF ( "found %lu motors\n", motors.size() );
     get_esc_map_byclass ( fts );
@@ -54,6 +76,8 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
         assert( item.first == rid2Pos(item.second->get_robot_id()) && item.second->get_robot_id() == pos2Rid(item.first) );
     }
 
+
+    
     init_preOP();
 
     if ( set_operative() <= 0 ) {
