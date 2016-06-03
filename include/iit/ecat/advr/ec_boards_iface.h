@@ -95,7 +95,7 @@ public:
      * @return 1 on success, 0 on failure
      */
     int init ( void );
-
+    int shutdown ( bool );
     /**
      * @brief reads and sets SDO, configure boards parameters
      *

@@ -40,19 +40,24 @@ Ec_Boards_ctrl::~Ec_Boards_ctrl() {
     if ( root_cfg["ec_board_ctrl"]["power_off_boards"].as<bool>() == true ) {
         do_power_off = true;
     }
-    iit::ecat::finalize ( do_power_off );
-
+    shutdown(do_power_off);
 }
 
 int Ec_Boards_ctrl::init ( void ) {
 
     if ( iit::ecat::initialize ( eth_if.c_str() ) > 0 ) {
-
         factory_board();
         return EC_BOARD_OK;
     }
-
     return EC_BOARD_NOK;
+
+}
+
+int Ec_Boards_ctrl::shutdown ( bool do_power_off ) {
+
+    // slave Dtor
+    slaves.clear();
+    iit::ecat::finalize ( do_power_off );
 
 }
 
