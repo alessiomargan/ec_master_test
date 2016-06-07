@@ -18,7 +18,7 @@
     #uint16_t    op_idx_aux;  // op [get/set] , idx
     #float       aux;         // set value
 
-#}  __attribute__ ( ( __packed__ ) ); // 20 bytes
+#}  __attribute__ ( ( __packed__ ) ); // 28 bytes
 
 #struct pdo_rx {
     #float        link_pos;           // rad
@@ -67,6 +67,20 @@ sdos :
     ]
     
     0x8000 : [
+        ["PosGainP",f,RW],
+        ["PosGainI",f,RW],
+        ["PosGainD",f,RW],
+        ["TorGainP",f,RW],
+        ["TorGainI",f,RW],
+        ["TorGainD",f,RW],
+        ["Pos_I_lim",f,RW],
+        ["Tor_I_lim",f,RW],
+        ["Min_pos",f,RW],
+        ["Max_pos",f,RW],
+        ["Max_tor",f,RW],
+        ["Max_cur",f,RW],
+        ["ImpPosGainP",f,RW],
+        ["ImpPosGainD",f,RW],
     ]
     
     0x8001 : [

@@ -30,15 +30,20 @@ sdos :
     ]
     
     0x8000 : [
-        ["fw_ver",s8,RO],
-        ["ack_board_faults",I,RW],
-        ["ctrl_status_cmd",H,RW],
-        ["ctrl_status_cmd_ack",H,RO],
-        ["direct_ref",f,RW],
-        ["abs_pos",f,RO],
-        ["m_current",f,RO],
-        ["flash_params_cmd",H,RW],
-        ["flash_params_cmd_ack",H,RO]
+        ["PosGainP",f,Rw],
+        ["PosGainI",f,Rw],
+        ["PosGainD",f,Rw],
+        ["TorGainP",f,Rw],
+        ["TorGainI",f,Rw],
+        ["TorGainD",f,Rw],
+        ["Pos_I_lim",f,Rw],
+        ["Tor_I_lim",f,Rw],
+        ["Min_pos",f,Rw],
+        ["Max_pos",f,Rw],
+        ["Max_tor",f,Rw],
+        ["Max_cur",f,Rw],
+        ["ImpPosGainP",f,RO]
+        ["ImpPosGainD",f,RO]
     ]
     0x8001 : [
         ["fw_ver",s8,RO],

@@ -43,7 +43,7 @@ struct TestEscPdoTypes {
             return snprintf ( buff, size, "%f\t%d\t%d\t%d\t%d\n", pos_ref,vel_ref,tor_ref,fault_ack,ts );
         }
 
-    }  __attribute__ ( ( __packed__ ) ); // 12 bytes
+    }  __attribute__ ( ( __packed__ ) ); // 28 bytes
 
     // RX  slave_output -- master input
     struct pdo_rx {
@@ -93,8 +93,9 @@ struct TestEscPdoTypes {
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_rtt(rtt);
             pb_rx_pdo.SerializeToString(pb_str);
         }
-    }  __attribute__ ( ( __packed__ ) ); // 20 bytes
-};
+    }  __attribute__ ( ( __packed__ ) ); // 28 bytes
+
+}; // 56 bytes
 
 inline std::ostream& operator<< (std::ostream& os, const TestEscPdoTypes::pdo_rx& rx_pdo ) {
     os << rx_pdo.link_pos << "\t";
@@ -110,6 +111,30 @@ inline std::ostream& operator<< (std::ostream& os, const TestEscPdoTypes::pdo_rx
 }
 
 struct TestEscSdoTypes {
+    
+    //
+    float   PosGainP;
+    float   PosGainI;
+    float   PosGainD;
+    float   TorGainP;
+    float   TorGainI;
+    float   TorGainD;
+    float   Pos_I_lim;
+    float   Tor_I_lim;
+    float   Min_pos;
+    float   Max_pos;
+    float   Max_tor;
+    float   Max_cur;
+    int16_t ConfigFlags;
+    int16_t ConfigFlags2;
+    float   ImpedancePosGainP;
+    float   ImpedancePosGainD;
+    int     MaxPWM;
+    int16_t Joint_number;
+    int16_t Joint_robot_id;
+    float   Target_velocity;
+
+    //
     char fw_ver[8];
     unsigned int ack_board_faults;
     unsigned short ctrl_status_cmd;
@@ -156,6 +181,15 @@ public:
         print_stat ( s_rtt );
     }
 
+    void print_info ( void ) {
+        DPRINTF ( "\tJoint id %d\tJoint robot id %d\n", sdo.Joint_number, sdo.Joint_robot_id );
+        DPRINTF ( "\tmin pos %f\tmax pos %f\tmax vel %f\n", sdo.Min_pos, sdo.Max_pos, sdo.Target_velocity );
+        DPRINTF ( "\tPosGainP: %f PosGainI: %f PosGainD: %f I lim: %f\n", sdo.PosGainP, sdo.PosGainI, sdo.PosGainD, sdo.Pos_I_lim );
+        DPRINTF ( "\tImpPosGainP :%f ImpPosGainD:%f\n", sdo.ImpedancePosGainP, sdo.ImpedancePosGainD );
+        DPRINTF ( "\tTorGainP:%f TorGainI:%f Tor_I_lim:%f\n", sdo.TorGainP, sdo.TorGainI, sdo.Tor_I_lim );
+        DPRINTF ( "\tfw_ver %s\n", sdo.fw_ver );
+    }
+
     virtual void on_readPDO ( void ) {
 
         if ( rx_pdo.rtt ) {
@@ -199,7 +233,6 @@ public:
             init_SDOs();
             init_sdo_lookup();
 
-
         } catch ( EscWrpError &e ) {
 
             DPRINTF ( "Catch Exception %s ... %s\n", __FUNCTION__, e.what() );
@@ -210,6 +243,20 @@ public:
             return EC_WRP_NOK;
         }
 
+        readSDO_byname ( "fw_ver" );
+        readSDO_byname ( "Min_pos" );
+        readSDO_byname ( "Max_pos" );
+        readSDO_byname ( "link_pos" );
+        readSDO_byname ( "PosGainP");
+        readSDO_byname ( "PosGainI");
+        readSDO_byname ( "PosGainD");
+        readSDO_byname ( "Pos_I_lim");
+        readSDO_byname ( "ImpPosGainP");
+        readSDO_byname ( "ImpPosGainD");
+        readSDO_byname ( "TorGainP");
+        readSDO_byname ( "TorGainI");
+        readSDO_byname ( "Tor_I_lim");
+        
         start_log ( true );
 
         return EC_WRP_OK;

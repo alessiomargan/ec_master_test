@@ -228,6 +228,7 @@ void Ec_Boards_ctrl::factory_board ( void ) {
                 continue;
             }
             slaves[i] = iit::ecat::ESCPtr ( test_slave );
+            test_slave->print_info();
         }
         ///////////////////////////////////////////////////
         else {
