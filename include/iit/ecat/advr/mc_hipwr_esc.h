@@ -183,16 +183,16 @@ protected :
         // apply transformation from Motor to Joint
         rx_pdo.link_pos = hipwr_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
         rx_pdo.motor_pos = hipwr_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
-        rx_pdo.pos_ref_fb  = hipwr_esc::M2J ( rx_pdo.pos_ref_fb,_sgn,_offset );
+        //rx_pdo.pos_ref_fb  = hipwr_esc::M2J ( rx_pdo.pos_ref_fb,_sgn,_offset );
 
         if ( _start_log ) {
             Log::log_t log;
             log.ts = get_time_ns() - _start_log_ts ;
             log.pos_ref     = hipwr_esc::M2J ( tx_pdo.pos_ref,_sgn,_offset );
-            log.PosGainP    = tx_pdo.gainP;
-            log.PosGainD    = tx_pdo.gainD;
+            //log.PosGainP    = tx_pdo.gainP;
+            //log.PosGainD    = tx_pdo.gainD;
             log.position    = rx_pdo.link_pos;
-            log.pos_ref_fb  = rx_pdo.pos_ref_fb;
+            //log.pos_ref_fb  = rx_pdo.pos_ref_fb;
             log.temperature = rx_pdo.temperature;
             log.torque      = rx_pdo.torque;
             log.fault       = rx_pdo.fault;
@@ -428,19 +428,20 @@ public :
     virtual int set_posRef ( float joint_pos ) {
         tx_pdo.pos_ref = hipwr_esc::J2M ( joint_pos,_sgn,_offset );
     }
+#if 0
     virtual int set_torOffs ( float tor_offs ) {
         /*tx_pdo.tor_offs = tor_offs;*/
     }
     virtual int set_posGainP ( float p_gain )  {
-        tx_pdo.gainP = p_gain;
+        tx_pdo.gain_kp_l = p_gain;
     }
     virtual int set_posGainI ( float i_gain )  {
-        /*tx_pdo.PosGainI = i_gain;*/
+        tx_pdo.gain_ki = i_gain;
     }
     virtual int set_posGainD ( float d_gain )  {
-        tx_pdo.gainD = d_gain;
+        tx_pdo.gain_kd_l = d_gain;
     }
-
+#endif
     virtual int move_to ( float pos_ref, float step ) {
 
         float pos, tx_pos_ref;

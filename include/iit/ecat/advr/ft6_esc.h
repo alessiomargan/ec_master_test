@@ -27,9 +27,17 @@ namespace advr {
 
 
 struct Ft6EscPdoTypes {
+    
     // TX  slave_input -- master output
     struct pdo_tx {
         uint16_t    ts;
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << ts << delim;
+            //os << std::endl;
+            return os;
+        }
+
     }  __attribute__ ( ( __packed__ ) );
 
     // RX  slave_output -- master input
@@ -42,11 +50,28 @@ struct Ft6EscPdoTypes {
         float       torque_Z;           // Nm
         uint16_t    fault;
         uint16_t    rtt;                // ns
-        int sprint ( char *buff, size_t size ) {
-            return snprintf ( buff, size, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt );
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << force_X << delim;
+            os << force_Y << delim;
+            os << force_Z << delim;
+            os << torque_X << delim;
+            os << torque_Y << delim;
+            os << torque_Z << delim;
+            os << fault << delim;
+            os << rtt << delim;
+            //os << std::endl;
+            return os;
         }
         void fprint ( FILE *fp ) {
-            fprintf ( fp, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            fprintf ( fp, "%s", oss.str().c_str() );
+        }
+        int sprint ( char *buff, size_t size ) {
+            std::ostringstream oss;
+            dump(oss,"\t");
+            return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
         void to_map ( jmap_t & jpdo ) {
             JPDO ( force_X );
@@ -80,6 +105,13 @@ struct Ft6EscPdoTypes {
     }  __attribute__ ( ( __packed__ ) );
 };
 
+inline std::ostream& operator<< (std::ostream& os, const Ft6EscPdoTypes::pdo_tx& tx_pdo ) {
+    return tx_pdo.dump(os,"\t");
+}
+
+inline std::ostream& operator<< (std::ostream& os, const Ft6EscPdoTypes::pdo_rx& rx_pdo ) {
+    return rx_pdo.dump(os,"\t");
+}
 
 struct Ft6EscSdoTypes {
 

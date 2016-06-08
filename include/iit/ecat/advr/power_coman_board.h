@@ -55,19 +55,40 @@ struct PowCmnEscPdoTypes {
     struct pdo_tx {
         uint16_t    master_command;
         uint16_t    ts;
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << master_command << delim;
+            os << ts << delim;
+            //os << std::endl;
+            return os;
+        }
+        
     } __attribute__ ( ( __packed__ ) );
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        float       		temperature;
-        float			v_batt;
-        status_cmn_pow_t	status;
-        uint16_t		rtt;  // us
-        int sprint ( char *buff, size_t size ) {
-            return snprintf ( buff, size, "%f\t%f\t0x%02X\t%d", temperature, v_batt, status.all, rtt );
+        float               temperature;
+        float               v_batt;
+        status_cmn_pow_t    status;
+        uint16_t            rtt;
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << temperature << delim;
+            os << v_batt << delim;
+            os << status.all << delim;
+            os << rtt << delim;
+            //os << std::endl;
+            return os;
         }
         void fprint ( FILE *fp ) {
-            fprintf ( fp, "%f\t%f\t0x%02X\t%d\n", temperature, v_batt, status.all, rtt );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            fprintf ( fp, "%s", oss.str().c_str() );
+        }
+        int sprint ( char *buff, size_t size ) {
+            std::ostringstream oss;
+            dump(oss,"\t");
+            return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
         void to_map ( jmap_t & jpdo ) {
             JPDO ( temperature );
@@ -89,10 +110,17 @@ struct PowCmnEscPdoTypes {
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_rtt(rtt);
             pb_rx_pdo.SerializeToString(pb_str);
         }
-
         
     } __attribute__ ( ( __packed__ ) );
 };
+
+inline std::ostream& operator<< (std::ostream& os, const PowCmnEscPdoTypes::pdo_tx& tx_pdo ) {
+    return tx_pdo.dump(os,"\t");
+}
+
+inline std::ostream& operator<< (std::ostream& os, const PowCmnEscPdoTypes::pdo_rx& rx_pdo ) {
+    return rx_pdo.dump(os,"\t");
+}
 
 
 struct PowCmnEscSdoTypes {
