@@ -281,7 +281,7 @@ protected :
 
         tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
         // apply transformation from Joint to Motor 
-        //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
+        tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
         
         if ( _start_log ) {
             log.ts_tx = (get_time_ns() - _start_log_ts)/1000000 ;
@@ -367,7 +367,9 @@ public :
 			DPRINTF("NO config for HpESC_%d in %s\n", Joint_robot_id, __PRETTY_FUNCTION__);
 			return EC_BOARD_KEY_NOT_FOUND;
 		    }
-		}
+                }
+                node_cfg = root_cfg[esc_conf_key];
+                    
             } catch (YAML::KeyNotFound &e) {
                 DPRINTF("Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what());
                 return EC_BOARD_KEY_NOT_FOUND;
@@ -422,11 +424,13 @@ public :
             writeSDO_byname("PosGainP", _p);
             writeSDO_byname("PosGainI", _i);
             writeSDO_byname("PosGainD", _d);
-            // this will SET tx_pdo.gainP
+            // this will SET tx_pdo.gains
             gain = (uint16_t)_p;
-            writeSDO_byname("gainP", gain);
+            writeSDO_byname("gains1", gain);
             gain = (uint16_t)_d;
-            writeSDO_byname("gainD", gain);
+            writeSDO_byname("gains2", gain);
+            gain = (uint16_t)_i;
+            writeSDO_byname("gains3", gain);
             // pdo gains will be used in OP
             writeSDO_byname("board_enable_mask", enable_mask);
             writeSDO_byname("Max_vel", max_vel);
