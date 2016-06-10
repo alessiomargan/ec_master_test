@@ -428,6 +428,13 @@ public :
     virtual int set_posRef ( float joint_pos ) {
         tx_pdo.pos_ref = hipwr_esc::J2M ( joint_pos,_sgn,_offset );
     }
+    virtual int set_velRef ( float joint_vel ) {
+        tx_pdo.vel_ref = joint_vel;
+    }
+    virtual int set_torRef ( float joint_tor ) {
+        tx_pdo.tor_ref = joint_tor;
+    }
+
 #if 0
     virtual int set_torOffs ( float tor_offs ) {
         /*tx_pdo.tor_offs = tor_offs;*/

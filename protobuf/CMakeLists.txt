@@ -30,7 +30,7 @@ set(msgs
 
 add_definitions(-fPIC)
 protobuf_generate_cpp(PROTO_SRC PROTO_HEADER ${msgs})
-protobuf_generate_python(PROTO_PY ${msgs})
+#protobuf_generate_python(PROTO_PY ${msgs})
 add_library (pdo_pb ${PROTO_HEADER} ${PROTO_SRC})
 
 install(TARGETS pdo_pb DESTINATION lib)

@@ -93,6 +93,9 @@ public:
     virtual void setTxPDO ( const motor_pdo_tx_t & ) = 0;
 
     virtual int set_posRef ( float joint_pos ) = 0;
+    virtual int set_velRef ( float joint_vel ) = 0;
+    virtual int set_torRef ( float joint_tor ) = 0;
+    
     //virtual int set_torOffs ( float tor_offs ) = 0;
     
     //virtual int set_posGainP ( float p_gain )  = 0;

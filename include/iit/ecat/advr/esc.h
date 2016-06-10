@@ -255,7 +255,7 @@ inline int check_cmd_ack ( int16_t cmd, int16_t ack ) {
         //DPRINTF ( "DONE 0x%04X\n", cmd );
         return EC_BOARD_OK;
     } else if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_ERROR ) ) {
-        //DPRINTF ( "FAIL 0x%04X\n", cmd );
+        DPRINTF ( "FAIL 0x%04X\n", cmd );
         return EC_BOARD_CMD_ACK;
     } else {
         DPRINTF ( "PROTOCOL FAILURE cmd 0x%04X ack 0x%04X !!!\n", cmd, ack );
@@ -295,7 +295,7 @@ inline int set_flash_cmd_X ( C *c, uint16_t cmd ) {
     c->template readSDO_byname ( "flash_params_cmd_ack", ack );
 
     // check
-    DPRINTF ( "flash_params_cmd " );
+    DPRINTF ( "flash_params_cmd 0x%04X\n", cmd );
     return check_cmd_ack ( cmd, ack );
 
 }

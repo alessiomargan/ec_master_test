@@ -93,8 +93,8 @@ struct LoPwrEscSdoTypes {
 
 struct LoPwrLogTypes {
 
-    uint64_t    		ts;           // ns
-    McEscPdoTypes::pdo_rx	rx_pdo;
+    uint64_t                ts;           // ns
+    McEscPdoTypes::pdo_rx   rx_pdo;
 
     void fprint ( FILE *fp ) {
         fprintf ( fp, "%lu\t", ts );
@@ -312,7 +312,8 @@ public:
             // set actual position as reference
             readSDO_byname ( "link_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
-            DPRINTF ( "%s\n\tlink_pos %f tx_pdo.pos_ref %f\n", __PRETTY_FUNCTION__, act_position, tx_pdo.pos_ref );
+            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__, act_position, tx_pdo.pos_ref );
+            
             if ( controller_type == CTRL_SET_POS_MODE ) {
             
                 writeSDO_byname( "pos_gain_P", _p );
@@ -321,6 +322,7 @@ public:
                 DPRINTF ( "\tPosGain %f %f %f\n", _p,_i,_d );
             
             } 
+            
             if ( controller_type == CTRL_SET_IMPED_MODE ) {
                 /* ... nel philmware in do_impedance_control()
                  * ... 10000 e 10
@@ -332,20 +334,22 @@ public:
                  * ... else use parameters value
                  * ... 
                  */
-                // ImpedancePosGainP
+                // Impedance gains : position PD torque PI 
+                // PosGainP
                 writeSDO_byname( "gain_0", (uint16_t)(_p/100.0));
-                // ImpedanceTorGainP
+                // TorGainP
                 writeSDO_byname( "gain_1", (uint16_t)(sdo.TorGainP*1000));
-                // ImpedancePosGainD
+                // PosGainD
                 writeSDO_byname( "gain_2", (uint16_t)_d);
-                // ImpedanceTorGainD
+                // TorGainD
                 //writeSDO_byname( "gain_3", (uint16_t)(sdo.TorGainP));
-                // ImpedanceTorGainI
+                // TorGainIs
                 writeSDO_byname( "gain_4", (uint16_t)(sdo.TorGainI*1000));
                 
                 oss << tx_pdo;
                 DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
             }
+            
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
@@ -391,6 +395,7 @@ public:
                 try {
                     pid = node_cfg["pid"]["impedance"].as<std::vector<float>>();
                     assert ( pid.size() == 3 );
+                    DPRINTF ( "using yaml values\n");  
                 } catch ( std::exception &e ) {
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
                 }
@@ -422,6 +427,12 @@ public:
     // set pdo data
     virtual int set_posRef ( float joint_pos ) {
         tx_pdo.pos_ref = joint_pos;
+    }
+    virtual int set_velRef ( float joint_vel ) {
+        tx_pdo.vel_ref = joint_vel;
+    }
+    virtual int set_torRef ( float joint_tor ) {
+        tx_pdo.tor_ref = joint_tor;
     }
 #if 0
     virtual int set_torOffs ( float tor_offs ) {

@@ -387,6 +387,12 @@ public:
     virtual int set_posRef ( float joint_pos ) {
         tx_pdo.pos_ref = joint_pos;
     }
+    virtual int set_velRef ( float joint_vel ) {
+        /*tx_pdo.vel_ref = joint_vel;*/
+    }
+    virtual int set_torRef ( float joint_tor ) {
+        /*tx_pdo.tor_ref = joint_tor;*/
+    }
 
     virtual int move_to ( float pos_ref, float step ) {
 
