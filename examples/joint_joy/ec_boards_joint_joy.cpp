@@ -183,7 +183,7 @@ int EC_boards_joint_joy::user_loop ( void ) {
             moto =  item.second;
             motor_pdo_rx = moto->getRxPDO();
             // pos_ref_fb is the previous reference
-            moto->set_posRef ( motor_pdo_rx.pos_ref_fb + ds );
+            moto->set_posRef ( motor_pdo_rx.link_pos + ds );
         }
         break;
 

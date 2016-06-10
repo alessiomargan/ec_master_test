@@ -60,7 +60,7 @@ void EC_boards_coman_test::init_preOP ( void ) {
     std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
     iit::ecat::advr::Motor * moto;
     int slave_pos;
-    float min_pos, max_pos, pos_ref_fb;
+    float min_pos, max_pos;
 
     std::vector<int> test_rid = std::initializer_list<int> {
 

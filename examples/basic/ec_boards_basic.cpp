@@ -36,9 +36,9 @@ void Ec_Boards_basic::init_OP ( void ) {
 template<class C>
 int Ec_Boards_basic::user_input ( C &user_cmd ) {
 
-    static int	bytes_cnt;
-    int		bytes;
-    input_t	cmd;
+    static int  bytes_cnt;
+    int         bytes;
+    input_t     cmd;
 
     if ( ( bytes = inXddp.xddp_read ( cmd ) ) <= 0 ) {
         return bytes;

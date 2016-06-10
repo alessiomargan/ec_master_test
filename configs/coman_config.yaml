@@ -1,7 +1,4 @@
 #
-ec_boards_base:
-  create_pipes: true
-
 ec_board_ctrl:
   eth_iface: rteth0
   #eth_iface: eth1
@@ -10,15 +7,68 @@ ec_board_ctrl:
   #sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_offset_ns: 0
-  sync_cycle_offset_ns: 500000000
+  sync_cycle_offset_ns: 1000000000
   power_off_boards: false
-  
+
+#
+ec_boards_base:
+  create_pipes: true
+  impedance_only_torque: true
+
 
 #############################
 # GENERIC LpESC config
 #############################
 
 LpESC_X:
+  sign: 1
+  pos_offset: 0
+    
+####################################
+# Right arm
+####################################
+
+# shoulder
+LpESC_16:
+  sign: 1
+  pos_offset: 0
+
+# shoulder flap
+LpESC_17:
+  sign: 1
+  pos_offset: 0
+
+# arm rotate
+LpESC_18:
+  sign: 1
+  pos_offset: 0
+
+# elbow
+LpESC_19:
+  sign: 1
+  pos_offset: 0
+
+####################################
+# Left arm
+####################################
+
+# shoulder
+LpESC_20:
+  sign: 1
+  pos_offset: 0
+
+# shoulder flap
+LpESC_21:
+  sign: 1
+  pos_offset: 0
+
+# arm rotate
+LpESC_22:
+  sign: 1
+  pos_offset: 0
+
+# elbow
+LpESC_23:
   sign: 1
   pos_offset: 0
 
@@ -57,7 +107,7 @@ LpESC_29:
   pos_offset: 0
   pid :
     position: [ 100000.0 , 0.0 , 0.0 ]
-
+    
 # wrist up/down
 LpESC_30:
   sign: 1

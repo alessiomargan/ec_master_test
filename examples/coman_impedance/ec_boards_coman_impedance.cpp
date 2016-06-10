@@ -28,13 +28,15 @@ Ec_Boards_coman_impedance::~Ec_Boards_coman_impedance() {
 
 void Ec_Boards_coman_impedance::init_preOP ( void ) {
 
-    std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_imp;
-    std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::LpESC * lp_moto;
+    
     int slave_pos;
-    float min_pos, max_pos, pos_ref_fb;
+    float min_pos, max_pos;
     int16_t torque;
+
+    const YAML::Node config = get_config_YAML_Node();
+   
 
     std::vector<int> pos_rid = std::initializer_list<int> {
 
@@ -108,10 +110,14 @@ void Ec_Boards_coman_impedance::init_preOP ( void ) {
         //DPRINTF ( ">>> after cmd torque %d\n", torque );
         ///////////////////////////////////////////////////
         // start controller :
-        // - read actual joint position and set as pos_ref
-        //moto->start ( CTRL_SET_IMPED_MODE, 10000, 0, 5000 );
-        // use default impedance gains P D
-        moto->start ( CTRL_SET_IMPED_MODE);
+        if ( config["ec_boards_base"]["impedance_only_torque"].as<bool>() ) {
+            // - impedance with position gains to zero --> torque
+            moto->start ( CTRL_SET_IMPED_MODE, 0.0, 0.0, 0.0 );
+        } else {
+            // - read actual joint position and set as pos_ref
+            // - use impedance gains defined in config_yaml file or default value stored in flash  
+            moto->start ( CTRL_SET_IMPED_MODE );
+        }
     }
 
     //DPRINTF ( ">>> wait xddp terminal ....\n" );
@@ -143,6 +149,32 @@ int Ec_Boards_coman_impedance::user_loop ( void ) {
 
     int what;
     user_input ( what );
+  
+    //////////////////////////////////////////////////////
+    // sine trajectory
+    //////////////////////////////////////////////////////
+    {
+        static uint64_t start_time_sine;
+        start_time_sine = start_time_sine ? start_time_sine : iit::ecat::get_time_ns();
+        uint64_t tNow = iit::ecat::get_time_ns();
+        float dt = ( tNow - start_time ) / 1e9;
+        // !!!!! if too fast adjust this
+        float freq = 0.25;
+        float mN;
+        iit::ecat::advr::Motor * moto;
+        int slave_pos;
+        for ( auto const& item : motors_ctrl_imp ) {
+            slave_pos = item.first;
+            if ( pos2Rid(slave_pos) == iit::ecat::advr::coman::RA_SH_2
+                 || pos2Rid(slave_pos) == iit::ecat::advr::coman::LA_SH_2 )
+            {
+                moto = item.second;
+                mN = 1000; 
+                moto->set_torRef ( mN * (1 + sinf ( 2*M_PI*freq*dt ) ) );
+            }
+        }
+    }
+
 }
 
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

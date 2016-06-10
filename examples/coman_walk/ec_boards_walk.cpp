@@ -76,7 +76,7 @@ void EC_boards_walk::init_preOP ( void ) {
 
     iit::ecat::advr::Motor * moto;
     int slave_pos;
-    float min_pos, max_pos, pos_ref_fb;
+    float min_pos, max_pos;
 
     // initialize members class
     leftFoot = fts[rid2Pos(iit::ecat::advr::coman::LL_FT)];

@@ -4,6 +4,15 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+
 #ifdef __XENO__
 #include <rtdk.h>
 #endif
@@ -14,7 +23,7 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
 
-#define FT_ECAT_POS 1
+#define FT_ECAT_POS 2
 
 
 using namespace iit::ecat::advr;
@@ -29,22 +38,22 @@ typedef struct {
     float       iit[6];
     float       dummy[6];
     void sprint ( char *buff, size_t size ) {
-        snprintf ( buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
+        snprintf ( buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0", ts,
 // big sensor
-                   iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                   -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
+//                   iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                   -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
 // small sensor
-//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
     }
     void fprint ( FILE *fp ) {
         fprintf ( fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
 // big sensor
-                  iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                  -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
+//                  iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                  -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
 // small sensor
-//                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
 
     }
 } sens_data_t ;
@@ -145,7 +154,7 @@ int main ( int argc, char **argv ) {
 #endif
 
     if ( argc != 2 ) {
-        printf ( "Usage: %s ifname\nifname = {eth0,rteth0} for example\n", argv[0] );
+        printf ( "Usage: %s config.yaml\n", argv[0] );
         return 0;
     }
 
@@ -156,14 +165,15 @@ int main ( int argc, char **argv ) {
     ///////////////////////////////////////////////////////////////////////
 
     std::vector<std::vector<float>> cal_matrix;
-    load_matrix ( "RightFootCalibMatrix.txt", cal_matrix );
+    //load_matrix ( "RightFootCalibMatrix.txt", cal_matrix );
     //load_matrix("LeftFootCalibMatrix.txt", cal_matrix);
     //load_matrix("RightWristCalibMatrix.txt", cal_matrix);
     //load_matrix("LeftWristCalibMatrix.txt", cal_matrix);
     //load_matrix("ExtraWristCalibMatrix.txt", cal_matrix);
     //load_matrix("ones.txt", cal_matrix);
 
-    std::vector<std::vector<float>>::const_iterator it = cal_matrix.begin();
+    //std::vector<std::vector<float>>::const_iterator it = cal_matrix.begin();
+    auto it = cal_matrix.begin();
     while ( it != cal_matrix.end() ) {
         std::vector<float> row ( *it );
         std::vector<float>::const_iterator rit = row.begin();
@@ -190,21 +200,24 @@ int main ( int argc, char **argv ) {
 
     ec_boards_ctrl->configure_boards();
 
-    Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
-
-    int cnt = 0;
-
-
     ec_boards_ctrl->set_flash_cmd ( FT_ECAT_POS, CTRL_REMOVE_TORQUE_OFFS );
 
-    ec_boards_ctrl->set_cal_matrix ( FT_ECAT_POS, cal_matrix );
-    ec_boards_ctrl->set_flash_cmd ( FT_ECAT_POS, 0x0012 );
+    //ec_boards_ctrl->set_cal_matrix ( FT_ECAT_POS, cal_matrix );
+    //ec_boards_ctrl->set_flash_cmd ( FT_ECAT_POS, 0x0012 );
 
-    Ft6EscPdoTypes::pdo_rx ft_pdo_rx;
-    Ft6EscPdoTypes::pdo_tx ft_pdo_tx;
-
+    Ft6ESC                  * ft; 
+    Ft6EscPdoTypes::pdo_rx  ft_pdo_rx;
+    Ft6EscPdoTypes::pdo_tx  ft_pdo_tx;
+    
     ati_log_t   sample;
     sens_data_t sens_data;
+
+    ft = ec_boards_ctrl->slave_as_FT(FT_ECAT_POS);
+    if ( ! ft ) {
+        std::cout << "No Ft6ESC at pos " << FT_ECAT_POS << std::endl;
+        delete ec_boards_ctrl;
+        return 0;
+    }
 
     if ( ec_boards_ctrl->set_operative() <= 0 ) {
         std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl;
@@ -215,20 +228,18 @@ int main ( int argc, char **argv ) {
     //sleep(3);
 
     uint64_t    start = get_time_ns();
-
+    ec_timing_t timing;
+    
     while ( run_loop ) {
 
-        ec_boards_ctrl->recv_from_slaves();
+        ec_boards_ctrl->recv_from_slaves(timing);
         ati->get_last_sample ( sample );
-
-        if ( ( cnt % 10 ) == 0 ) {
-            //ec_boards_ctrl->check_sanity();
-        }
-        cnt++;
-
+        for ( int i=0; i < 6; i++ ) sample.ft[i] = sample.ft[i] / 1000 ;
         ///////////////////////////////////////////////////////////////////////
 
-        ec_boards_ctrl->getRxPDO ( FT_ECAT_POS, ft_pdo_rx );
+        //ec_boards_ctrl->getRxPDO ( FT_ECAT_POS, ft_pdo_rx );
+        ft_pdo_rx = ft->getRxPDO();
+        
         //DPRINTF("IIT\n");
         //ft_pdo_rx.fprint(stderr);
         //DPRINTF("ATI\n");
@@ -236,11 +247,19 @@ int main ( int argc, char **argv ) {
         //DPRINTF("\n");
 
         sens_data.ts = get_time_ns() - start;
-        memcpy ( ( void* ) &sens_data.ati, &sample.ft, sizeof ( float ) *6 );
-        memcpy ( ( void* ) &sens_data.iit, &ft_pdo_rx.force_X, sizeof ( float ) *6 );
+        memcpy ( ( void* ) &sens_data.ati, &sample.ft, sizeof ( float ) * 6 );
+        memcpy ( ( void* ) &sens_data.iit, &ft_pdo_rx.force_X, sizeof ( float ) * 6 );
         sens_log.push_back ( sens_data );
+        
+        if ( fabs(sample.ft[0]) > 500 || 
+             fabs(sample.ft[1]) > 500 ||
+             fabs(sample.ft[2]) > 500 ||
+             fabs(sample.ft[3]) > 20 ||
+             fabs(sample.ft[4]) > 20 ||
+             fabs(sample.ft[5]) > 20 ) { printf(ANSI_COLOR_RED); }
         sens_data.fprint ( stderr );
-
+        printf(ANSI_COLOR_RESET);
+        
         ///////////////////////////////////////////////////////////////////////
 
         ec_boards_ctrl->send_to_slaves();
@@ -257,4 +276,5 @@ int main ( int argc, char **argv ) {
 
     return 0;
 }
+
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

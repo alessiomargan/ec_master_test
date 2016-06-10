@@ -28,10 +28,7 @@ class XDDP_pipe {
 
 public:
 
-    XDDP_pipe ( int _pool_size = 8192 ) :
-        pool_size ( _pool_size ) {
-        fd = 0;
-    }
+    XDDP_pipe ( int _pool_size = 8192 ) : pool_size ( _pool_size ) { fd = 0; }
 
     void init ( const std::string pipe_name ) {
 

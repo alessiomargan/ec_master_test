@@ -23,7 +23,7 @@ Ati_Sens::Ati_Sens ( bool run_thread ) : run ( run_thread ) {
 
     // create udp socket
     if ( ( udp_sock = socket ( AF_INET, SOCK_DGRAM, IPPROTO_UDP ) ) < 0 ) {
-        perror ( "socket cannot be created" );
+        perror ( "[Ati_Sens] socket cannot be created" );
         assert ( 0 );
     }
 
@@ -41,11 +41,11 @@ Ati_Sens::Ati_Sens ( bool run_thread ) : run ( run_thread ) {
     timeout.tv_usec = 250000;
     if ( setsockopt ( udp_sock, SOL_SOCKET, SO_RCVTIMEO, ( char * ) &timeout,
                       sizeof ( timeout ) ) < 0 )
-        DPRINTF ( "setsockopt SO_RCVTIMEO failed\n" );
+        DPRINTF ( "[Ati_Sens] setsockopt SO_RCVTIMEO failed\n" );
 
     if ( setsockopt ( udp_sock, SOL_SOCKET, SO_SNDTIMEO, ( char * ) &timeout,
                       sizeof ( timeout ) ) < 0 )
-        DPRINTF ( "setsockopt SO_SNDTIMEO failed\n" );
+        DPRINTF ( "[Ati_Sens] setsockopt SO_SNDTIMEO failed\n" );
 #endif
 
     //
@@ -73,18 +73,18 @@ Ati_Sens::~Ati_Sens ( void ) {
 
     if ( run ) {
 
-        cmd_t ati_cmd = { htons ( 0x1234 ), htons ( 0x0002 ), 1 };
+        cmd_t ati_cmd = { htons ( 0x1234 ), htons ( 0x0000 ), 1 };
         send_cmd ( ati_cmd );
         usleep ( 200000 );
         run = false;
         //pthread_cancel(thread_id);
         pthread_join ( thread_id, NULL );
-        DPRINTF ( "Join thread\n" );
+        DPRINTF ( "[Ati_Sens] Join thread\n" );
     }
 
     close ( udp_sock );
     iit::ecat::dump_buffer ( std::string ( "/tmp/ati_log.txt" ), ati_log );
-    DPRINTF ( "~%s\n", typeid ( this ).name() );
+    DPRINTF ( "[Ati_Sens] ~%s\n", typeid ( this ).name() );
 
 }
 
@@ -108,7 +108,7 @@ int Ati_Sens::recv_data() {
 
     size = recv ( udp_sock, &data, sizeof ( data ), 0 );
     if ( size < 0 ) {
-        DPRINTF ( "udp recv() %s\n", strerror ( errno ) );
+        DPRINTF ( "[Ati_Sens] udp recv() %s\n", strerror ( errno ) );
         return size;
     }
 
@@ -192,7 +192,7 @@ void Ati_Sens::start_thread ( void ) {
     pthread_attr_setdetachstate ( &attr, PTHREAD_CREATE_JOINABLE );
     pthread_attr_setaffinity_np ( &attr, sizeof ( cpu_set ), &cpu_set );
 
-    DPRINTF ( "[ECat_master] Start ati_rx_thread\n" );
+    DPRINTF ( "[Ati_Sens] Start ati_rx_thread\n" );
     run = true;
     pthread_create ( &thread_id, &attr, rx_thread, ( void* ) this );
 

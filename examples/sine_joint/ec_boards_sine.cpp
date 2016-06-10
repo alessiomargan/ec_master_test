@@ -31,7 +31,7 @@ void Ec_Boards_sine::init_preOP ( void ) {
     std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
     iit::ecat::advr::Motor * moto;
     int slave_pos;
-    float min_pos, max_pos, pos_ref_fb;
+    float min_pos, max_pos;
 
     std::vector<int> test_rid = std::initializer_list<int> {
 
@@ -140,20 +140,22 @@ int Ec_Boards_sine::user_loop ( void ) {
     //////////////////////////////////////////////////////
     // sine trajectory
     //////////////////////////////////////////////////////
-    static uint64_t start_time_sine;
-    start_time_sine = start_time_sine ? start_time_sine : iit::ecat::get_time_ns();
-    uint64_t tNow = iit::ecat::get_time_ns();
-    float dt = ( tNow - start_time ) / 1e9;
-    // !!!!! if too fast adjust this
-    float freq = 0.25;
-    float A;
-    iit::ecat::advr::Motor * moto;
-    int slave_pos;
-    for ( auto const& item : motors ) {
-        slave_pos = item.first;
-        moto = item.second;
-        A = home[slave_pos] - 0.2;
-        moto->set_posRef ( home[slave_pos] + A * sinf ( 2*M_PI*freq*dt ) );
+    {
+        static uint64_t start_time_sine;
+        start_time_sine = start_time_sine ? start_time_sine : iit::ecat::get_time_ns();
+        uint64_t tNow = iit::ecat::get_time_ns();
+        float dt = ( tNow - start_time ) / 1e9;
+        // !!!!! if too fast adjust this
+        float freq = 0.25;
+        float A;
+        iit::ecat::advr::Motor * moto;
+        int slave_pos;
+        for ( auto const& item : motors ) {
+            slave_pos = item.first;
+            moto = item.second;
+            A = home[slave_pos] - 0.2;
+            moto->set_posRef ( home[slave_pos] + A * sinf ( 2*M_PI*freq*dt ) );
+        }
     }
     //////////////////////////////////////////////////////
 

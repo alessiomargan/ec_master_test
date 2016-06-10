@@ -64,7 +64,7 @@ protected :
 
     void xddps_init ( void );
     void xddps_loop ( void );
-    std::map<int,XDDP_pipe*> xddps;
+    std::map<int,XDDP_pipe> xddps;
 
     XDDP_pipe termInXddp;
 

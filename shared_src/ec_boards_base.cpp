@@ -76,7 +76,6 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
         assert( item.first == rid2Pos(item.second->get_robot_id()) && item.second->get_robot_id() == pos2Rid(item.first) );
     }
 
-
     
     init_preOP();
 
@@ -129,51 +128,44 @@ void Ec_Thread_Boards_base::xddps_init ( void ) {
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Ft6ESC * ft;
     iit::ecat::advr::FootSensorESC * fs;
-    XDDP_pipe * xddp;
-
+ 
     for ( auto const& item : motors ) {
         slave_pos = item.first;
         moto = item.second;
-        xddp = new XDDP_pipe();
-        xddp->init ( "Motor_id_"+std::to_string ( moto->get_robot_id() ) );
-        xddps[slave_pos] = xddp;
+        xddps[slave_pos] = XDDP_pipe();
+        xddps[slave_pos].init ( "Motor_id_"+std::to_string ( moto->get_robot_id() ) );
     }
 
     for ( auto const& item : fts ) {
         slave_pos = item.first;
         ft = item.second;
-        xddp = new XDDP_pipe();
-        xddp->init ( "Ft_id_"+std::to_string ( ft->get_robot_id() ) );
-        xddps[slave_pos] = xddp;
+        xddps[slave_pos] = XDDP_pipe();
+        xddps[slave_pos].init ( "Ft_id_"+std::to_string ( ft->get_robot_id() ) );
     }
     
     for ( auto const& item : foot_sensors ) {
         slave_pos = item.first;
         fs = item.second;
-        xddp = new XDDP_pipe();
-        xddp->init ( "Foot_sensor_id_"+std::to_string ( fs->get_robot_id() ) );
-        xddps[slave_pos] = xddp;
+        xddps[slave_pos] = XDDP_pipe();
+        xddps[slave_pos].init ( "Foot_sensor_id_"+std::to_string ( fs->get_robot_id() ) );
     }
 
     for ( auto const& item : pows ) {
         slave_pos = item.first;
-        xddp = new XDDP_pipe();
-        xddp->init ( "Pow_pos_"+std::to_string ( slave_pos ) );
-        xddps[slave_pos] = xddp;
+        xddps[slave_pos] = XDDP_pipe();
+        xddps[slave_pos].init ( "Pow_pos_"+std::to_string ( slave_pos ) );
     }
 
     for ( auto const& item : powCmns ) {
         slave_pos = item.first;
-        xddp = new XDDP_pipe();
-        xddp->init ( "PowCmn_pos_"+std::to_string ( slave_pos ) );
-        xddps[slave_pos] = xddp;
+        xddps[slave_pos] = XDDP_pipe();
+        xddps[slave_pos].init ( "PowCmn_pos_"+std::to_string ( slave_pos ) );
     }
 
     for ( auto const& item : tests ) {
         slave_pos = item.first;
-        xddp = new XDDP_pipe();
-        xddp->init ( "Test_pos_"+std::to_string ( slave_pos ) );
-        xddps[slave_pos] = xddp;
+        xddps[slave_pos] = XDDP_pipe();
+        xddps[slave_pos].init ( "Test_pos_"+std::to_string ( slave_pos ) );
     }
 
 }
@@ -183,7 +175,7 @@ void Ec_Thread_Boards_base::xddps_loop ( void ) {
     int 	slave_pos;
     uint16_t	esc_type;
 
-    for ( auto const& item : xddps ) {
+    for ( auto & item : xddps ) {
 
         slave_pos = item.first;
         esc_type = slaves[slave_pos]->get_ESC_type();
@@ -191,28 +183,22 @@ void Ec_Thread_Boards_base::xddps_loop ( void ) {
         case iit::ecat::advr::LO_PWR_DC_MC :
         case iit::ecat::advr::HI_PWR_AC_MC :
         case iit::ecat::advr::HI_PWR_DC_MC :
-            item.second->xddp_write ( motors[slave_pos]->getRxPDO() );
-            //item.second->xddp_write(getRxPDO<iit::ecat::advr::Motor::motor_pdo_rx_t, iit::ecat::advr::Motor>(slave_pos));
+            item.second.xddp_write ( motors[slave_pos]->getRxPDO() );
             break;
         case iit::ecat::advr::FT6 :
-            item.second->xddp_write ( fts[slave_pos]->getRxPDO() );
-            //item.second->xddp_write(getRxPDO<iit::ecat::advr::Ft6ESC::pdo_rx_t, iit::ecat::advr::Ft6ESC>(slave_pos));
+            item.second.xddp_write ( fts[slave_pos]->getRxPDO() );
             break;
         case iit::ecat::advr::FOOT_SENSOR :
-            item.second->xddp_write ( foot_sensors[slave_pos]->getRxPDO() );
-            //item.second->xddp_write(getRxPDO<iit::ecat::advr::Ft6ESC::pdo_rx_t, iit::ecat::advr::Ft6ESC>(slave_pos));
+            item.second.xddp_write ( foot_sensors[slave_pos]->getRxPDO() );
             break;
         case iit::ecat::advr::POW_BOARD :
-            item.second->xddp_write ( pows[slave_pos]->getRxPDO() );
-            //item.second->xddp_write(getRxPDO<iit::ecat::advr::PowESC::pdo_rx_t, iit::ecat::advr::PowESC>(slave_pos));
+            item.second.xddp_write ( pows[slave_pos]->getRxPDO() );
             break;
         case iit::ecat::advr::POW_CMN_BOARD :
-            item.second->xddp_write ( powCmns[slave_pos]->getRxPDO() );
-            //item.second->xddp_write(getRxPDO<iit::ecat::advr::PowComanESC::pdo_rx_t, iit::ecat::advr::PowComanESC>(slave_pos));
+            item.second.xddp_write ( powCmns[slave_pos]->getRxPDO() );
             break;
         case iit::ecat::advr::EC_TEST :
-            item.second->xddp_write ( tests[slave_pos]->getRxPDO() );
-            //item.second->xddp_write ( getRxPDO<iit::ecat::advr::TestEscPdoTypes::pdo_rx,iit::ecat::advr::TestESC>(slave_pos) );
+            item.second.xddp_write ( tests[slave_pos]->getRxPDO() );
             break;
 
         default:
