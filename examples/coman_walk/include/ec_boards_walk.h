@@ -61,6 +61,9 @@ private :
     double dt;
 
     advr::Spline_map spline_start2home;
+    
+    std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_pos;
+
 };
 
 

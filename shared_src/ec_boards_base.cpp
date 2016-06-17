@@ -208,6 +208,19 @@ void Ec_Thread_Boards_base::xddps_loop ( void ) {
     }
 }
 
+
+void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_dest, std::vector<int> &to_remove) {
+
+    start_dest.erase(
+        std::remove_if(start_dest.begin(), start_dest.end(),
+            [to_remove](const int &rid) {
+                return ( std::find(to_remove.begin(),to_remove.end(),rid) != to_remove.end()); }), 
+        start_dest.end()
+    );
+    
+}
+
+
 /**
  * NOTE this is a step reference !!!
  * LoPowerMotor (i.e. Coman) has a trajectory generator with max speed 0.5 rad/s
@@ -337,9 +350,11 @@ bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Moto
 }
 
 
-void Ec_Thread_Boards_base::smooth_splines_trj ( advr::Spline_map &new_spline_trj,
-        const advr::Spline_map &old_spline_trj,
-        double smooth_time ) {
+void Ec_Thread_Boards_base::smooth_splines_trj ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+                                                 advr::Spline_map &new_spline_trj,
+                                                 const advr::Spline_map &old_spline_trj,
+                                                 double smooth_time )
+{
     int slave_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
@@ -351,7 +366,7 @@ void Ec_Thread_Boards_base::smooth_splines_trj ( advr::Spline_map &new_spline_tr
     std::chrono::time_point<std::chrono::steady_clock> old_spline_start_time;
     std::chrono::duration<double> old_spline_xtime;
 
-    for ( auto const& item : motors ) {
+    for ( auto const& item : motor_set ) {
         slave_pos = item.first;
         moto = item.second;
         motor_pdo_rx = moto->getRxPDO();
@@ -393,9 +408,11 @@ void Ec_Thread_Boards_base::smooth_splines_trj ( advr::Spline_map &new_spline_tr
 }
 
 
-void Ec_Thread_Boards_base::get_trj_for_end_points ( advr::Spline_map &new_spline_trj,
-        std::map<int,float> &end_points,
-        float secs ) {
+void Ec_Thread_Boards_base::get_trj_for_end_points ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+                                                     advr::Spline_map &new_spline_trj,
+                                                     std::map<int,float> &end_points,
+                                                     float secs )
+{
     int slave_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
@@ -403,7 +420,7 @@ void Ec_Thread_Boards_base::get_trj_for_end_points ( advr::Spline_map &new_splin
     std::vector<double> Ys;
     std::vector<double> Xs = std::initializer_list<double> { 0, secs };
 
-    for ( auto const& item : motors ) {
+    for ( auto const& item : motor_set ) {
         slave_pos = item.first;
         moto = item.second;
         motor_pdo_rx = moto->getRxPDO();
@@ -427,9 +444,12 @@ void Ec_Thread_Boards_base::get_trj_for_end_points ( advr::Spline_map &new_splin
 
 }
 
-void Ec_Thread_Boards_base::set_any2home ( advr::Spline_map &new_spline_trj, advr::Spline_map &old_spline_trj ) {
+void Ec_Thread_Boards_base::set_any2home ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+                                           advr::Spline_map &new_spline_trj,
+                                           advr::Spline_map &old_spline_trj )
+{
 
-    get_trj_for_end_points ( new_spline_trj, home, 5 );
+    get_trj_for_end_points ( motor_set, new_spline_trj, home, 5 );
 
     DPRINTF ( "Set_any2home\n" );
 

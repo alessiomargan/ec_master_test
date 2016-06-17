@@ -20,11 +20,11 @@
 
 typedef struct js_event 		input_t;
 
-class Ec_Boards_coman_impedance : public Ec_Thread_Boards_base {
+class Ec_Boards_V_loop : public Ec_Thread_Boards_base {
 public:
 
-    Ec_Boards_coman_impedance ( const char * config_yaml );
-    virtual ~Ec_Boards_coman_impedance();
+    Ec_Boards_V_loop ( const char * config_yaml );
+    virtual ~Ec_Boards_V_loop();
 
     template<class C>
     int user_input ( C &user_cmd );
@@ -37,11 +37,10 @@ private :
 
     XDDP_pipe inXddp;
 
+    std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_volt;
     std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_imp;
     std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_pos;
 
-    advr::Spline_map spline_start2home;
-    
 };
 
 

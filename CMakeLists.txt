@@ -46,6 +46,8 @@ optional_build(joint_joy    examples/joint_joy	OFF)
 optional_build(coman_walk   examples/coman_walk	OFF)
 optional_build(coman_test   examples/coman_test	OFF)
 optional_build(coman_impedance   examples/coman_impedance OFF)
+optional_build(coman_torque   examples/coman_torque OFF)
+optional_build(coman_V_loop examples/coman_V_loop OFF)
 optional_build(ati_ft6      examples/ati_ft6_calib OFF)
 
 optional_build(joy_forward 	other_bin/joy_forward	OFF)

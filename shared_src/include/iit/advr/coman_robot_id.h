@@ -128,15 +128,15 @@ const std::vector<int> robot_mcs_ids = std::initializer_list<int> {
 
 std::map<int, float> robot_ids_home_pos_deg = {
 
-    {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
+    {WAIST_Y, 0.0}, {WAIST_P, 10.0}, {WAIST_R, 0.0},
 
     {RL_H_R, 0.0}, {RL_H_Y, 0.0}, {RL_H_P, -15.0}, {RL_K, 30.0}, {RL_A_P, -15.0}, {RL_A_R, 0.0},
 
     {LL_H_R, 0.0}, {LL_H_Y, 0.0}, {LL_H_P, -15.0}, {LL_K, 30.0}, {LL_A_P, -15.0}, {LL_A_R, 0.0},
 
-    {RA_SH_1, 0.0}, {RA_SH_2, 70.0}, {RA_SH_3, 0.0}, {RA_EL, -30.0}, {RA_WR_1, 0.0}, {RA_WR_2, 0.0}, {RA_WR_3, 0.0}, {RA_HA, 0.0},
+    {RA_SH_1, 30.0}, {RA_SH_2, 70.0}, {RA_SH_3, 0.0}, {RA_EL, -90.0}, {RA_WR_1, 0.0}, {RA_WR_2, 0.0}, {RA_WR_3, 0.0}, {RA_HA, 0.0},
 
-    {LA_SH_1, 0.0}, {LA_SH_2,-70.0}, {LA_SH_3, 0.0}, {LA_EL, -30.0}, {LA_WR_1, 0.0}, {LA_WR_2, 0.0}, {LA_WR_3, 0.0}, {LA_HA, 0.0}
+    {LA_SH_1, 30.0}, {LA_SH_2,-70.0}, {LA_SH_3, 0.0}, {LA_EL, -90.0}, {LA_WR_1, 0.0}, {LA_WR_2, 0.0}, {LA_WR_3, 0.0}, {LA_HA, 0.0}
 
 };
 

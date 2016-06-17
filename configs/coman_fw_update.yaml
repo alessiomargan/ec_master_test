@@ -1,0 +1,31 @@
+#
+
+ec_board_ctrl:
+  eth_iface: rteth0
+  #eth_iface: eth1
+  sync_cycle_time_ns: 1000000
+  sync_cycle_offset_ns: 0
+  power_off_boards: false
+  
+firmware_update:
+  #
+  #fw_path: ../examples/fw_update/firmware/  
+  fw_path: ../examples/fw_update/fw_pdo56/  
+  # -3 --> all LowPower motor
+  slave_pos_list: [-3]
+  
+  small_motor:
+    bin_file: mc_tm4c.bin
+    passwd: 0xbeef
+  force_torque_6:
+    bin_file: FT6.bin
+    passwd: 0xbeef
+
+
+#############################
+# GENERIC LpESC config
+#############################
+
+LpESC_X:
+  sign: 1
+  pos_offset: 0

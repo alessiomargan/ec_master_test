@@ -1,11 +1,11 @@
-#include <ec_boards_coman_impedance.h>
+#include <ec_boards_coman_torque.h>
 #include <iit/advr/coman_robot_id.h>
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
-Ec_Boards_coman_impedance::Ec_Boards_coman_impedance ( const char* config_yaml ) : Ec_Thread_Boards_base ( config_yaml ) {
+Ec_Boards_coman_torque::Ec_Boards_coman_torque ( const char* config_yaml ) : Ec_Thread_Boards_base ( config_yaml ) {
 
-    name = "Ec_Boards_coman_impedance";
+    name = "Ec_Boards_coman_torque";
     // non periodic
     period.period = {0,1};
 
@@ -22,11 +22,11 @@ Ec_Boards_coman_impedance::Ec_Boards_coman_impedance ( const char* config_yaml )
 
 }
 
-Ec_Boards_coman_impedance::~Ec_Boards_coman_impedance() {
+Ec_Boards_coman_torque::~Ec_Boards_coman_torque() {
 
 }
 
-void Ec_Boards_coman_impedance::init_preOP ( void ) {
+void Ec_Boards_coman_torque::init_preOP ( void ) {
 
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::LpESC * lp_moto;
@@ -43,23 +43,38 @@ void Ec_Boards_coman_impedance::init_preOP ( void ) {
         iit::ecat::advr::coman::RA_HA,
         iit::ecat::advr::coman::LA_HA,
     };
-    std::vector<int> imp_rid = std::initializer_list<int> {
+    std::vector<int> tor_rid = std::initializer_list<int> {
         // right arm
         iit::ecat::advr::coman::RA_SH_1,
         iit::ecat::advr::coman::RA_SH_2,
-        iit::ecat::advr::coman::RA_SH_3,
-        iit::ecat::advr::coman::RA_EL,
-        iit::ecat::advr::coman::RA_WR_1,
+        //iit::ecat::advr::coman::RA_EL,
         // left arm
         iit::ecat::advr::coman::LA_SH_1,
         iit::ecat::advr::coman::LA_SH_2,
-        iit::ecat::advr::coman::LA_SH_3,
-        iit::ecat::advr::coman::LA_EL,
-        iit::ecat::advr::coman::LA_WR_1,
+        //iit::ecat::advr::coman::LA_EL,
     };
 
     remove_rids_intersection(pos_rid, no_control);
-    remove_rids_intersection(pos_rid, imp_rid);
+    remove_rids_intersection(pos_rid, tor_rid);
+
+    // start first torque controlled joints
+    // put manually this set of joint to a zero torque configuration 
+    get_esc_map_byclass ( motors_ctrl_tor,  tor_rid );
+    for ( auto const& item : motors_ctrl_tor ) {
+
+        slave_pos = item.first;
+        moto = item.second;
+        //moto->readSDO("torque", torque);    
+        //DPRINTF ( ">>> before cmd torque %d\n", torque );
+        // reset torque offset
+        set_flash_cmd(slave_pos, 0x00CD);
+        //moto->readSDO("torque", torque);    
+        //DPRINTF ( ">>> after cmd torque %d\n", torque );
+        ///////////////////////////////////////////////////
+        // start controller :
+        // - impedance with position gains to zero --> torque
+        moto->start ( CTRL_SET_IMPED_MODE, 0.0, 0.0, 0.0 );
+    }
 
     get_esc_map_byclass ( motors_ctrl_pos,  pos_rid );
     for ( auto const& item : motors_ctrl_pos ) {
@@ -76,31 +91,13 @@ void Ec_Boards_coman_impedance::init_preOP ( void ) {
         moto->start ( CTRL_SET_POS_MODE);
     }
 
-    get_esc_map_byclass ( motors_ctrl_imp,  imp_rid );
-    for ( auto const& item : motors_ctrl_imp ) {
-
-        slave_pos = item.first;
-        moto = item.second;
-        //moto->readSDO("torque", torque);    
-        //DPRINTF ( ">>> before cmd torque %d\n", torque );
-        // reset torque offset
-        //set_flash_cmd(slave_pos, 0x00CD);
-        //moto->readSDO("torque", torque);    
-        //DPRINTF ( ">>> after cmd torque %d\n", torque );
-        ///////////////////////////////////////////////////
-        // start controller :
-        // - read actual joint position and set as pos_ref
-        // - use impedance gains defined in config_yaml file or default value stored in flash  
-        moto->start ( CTRL_SET_IMPED_MODE );
-    }
-
     //DPRINTF ( ">>> wait xddp terminal ....\n" );
     //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }
     
     q_spln.push ( &spline_start2home );
 }
 
-void Ec_Boards_coman_impedance::init_OP ( void ) {
+void Ec_Boards_coman_torque::init_OP ( void ) {
 
     if ( ! q_spln.empty() ) {
         running_spline = q_spln.front();
@@ -112,7 +109,7 @@ void Ec_Boards_coman_impedance::init_OP ( void ) {
 
 }
 
-int Ec_Boards_coman_impedance::user_loop ( void ) {
+int Ec_Boards_coman_torque::user_loop ( void ) {
 
     static const float spline_error = 0.07;
 
@@ -120,6 +117,7 @@ int Ec_Boards_coman_impedance::user_loop ( void ) {
     user_input ( what );
   
     if ( ! q_spln.empty() ) {
+
         running_spline = q_spln.front();
         if ( running_spline ) {
             // !@#%@$#%^^# ... tune error
@@ -138,11 +136,53 @@ int Ec_Boards_coman_impedance::user_loop ( void ) {
             q_spln.pop();
         }
         
+    } else 
+    //////////////////////////////////////////////////////
+    // trajectory
+    //////////////////////////////////////////////////////
+    {
+        static uint64_t start_time_sine;
+        start_time_sine = start_time_sine ? start_time_sine : iit::ecat::get_time_ns();
+        uint64_t tNow = iit::ecat::get_time_ns();
+        float dt = ( tNow - start_time_sine ) / 1e9;
+        // !!!!! if too fast adjust this
+        float freq = 0.2;
+        float mN;
+        iit::ecat::advr::Motor * moto;
+        int slave_pos;
+        for ( auto const& item : motors_ctrl_tor ) {
+            slave_pos = item.first;
+            moto = item.second;
+            if ( pos2Rid(slave_pos) == iit::ecat::advr::coman::LA_SH_1 )
+            {
+                mN = -2000; 
+                moto->set_torRef ( mN * (1 + cosf ( 2*M_PI*freq*dt ) ) );
+            }
+            if ( pos2Rid(slave_pos) == iit::ecat::advr::coman::RA_SH_1 )
+            {
+                mN = -2000; 
+                moto->set_torRef ( mN * (1 + cosf ( 2*M_PI*freq*dt ) ) );
+            }
+            if ( pos2Rid(slave_pos) == iit::ecat::advr::coman::LA_SH_2 )
+            {
+                mN = 1500; 
+                moto->set_torRef ( mN * (1 + sinf ( 2*M_PI*freq*dt ) ) );
+            }
+            if ( pos2Rid(slave_pos) == iit::ecat::advr::coman::RA_SH_2 )
+            {
+                mN = -1500; 
+                moto->set_torRef ( mN * (1 + sinf ( 2*M_PI*freq*dt ) ) );
+            }
+            // elbows should 
+        }
     }
+    //////////////////////////////////////////////////////
+    // sine trajectory
+    //////////////////////////////////////////////////////
 }
 
 template<class C>
-int Ec_Boards_coman_impedance::user_input ( C &user_cmd ) {
+int Ec_Boards_coman_torque::user_input ( C &user_cmd ) {
 
     static int  bytes_cnt;
     int     bytes;

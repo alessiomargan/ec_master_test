@@ -72,7 +72,8 @@ private :
     std::map<int, iit::ecat::advr::Motor*> 	right_arm;
     std::map<int, iit::ecat::advr::Motor*> 	waist;
 
-
+    std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
+    
 };
 
 

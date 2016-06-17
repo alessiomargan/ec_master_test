@@ -144,7 +144,7 @@ int Ec_Boards_sine::user_loop ( void ) {
         static uint64_t start_time_sine;
         start_time_sine = start_time_sine ? start_time_sine : iit::ecat::get_time_ns();
         uint64_t tNow = iit::ecat::get_time_ns();
-        float dt = ( tNow - start_time ) / 1e9;
+        float dt = ( tNow - start_time_sine ) / 1e9;
         // !!!!! if too fast adjust this
         float freq = 0.25;
         float A;

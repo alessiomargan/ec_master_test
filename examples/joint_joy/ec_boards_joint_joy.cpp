@@ -166,7 +166,7 @@ int EC_boards_joint_joy::user_loop ( void ) {
             //user_state = IDLE;
             /////////////////////////////
             user_state = ANY2HOME;
-            set_any2home ( spline_any2home,spline2_trj );
+            set_any2home ( motors, spline_any2home,spline2_trj );
             DPRINTF ( "At trj_2 end ....\n" );
         }
         break;
@@ -214,7 +214,7 @@ int EC_boards_joint_joy::user_input ( C &user_cmd ) {
                 switch ( nav_cmd.button.bnum ) {
                 case 1 :
                     user_state = ANY2HOME;
-                    set_any2home ( spline_any2home, *running_spline );
+                    set_any2home ( motors, spline_any2home, *running_spline );
                     DPRINTF ( "ANY2HOME ....\n" );
                     break;
                 case 0 :

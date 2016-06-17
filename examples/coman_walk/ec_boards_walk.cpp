@@ -13,7 +13,7 @@ extern void JointTestState ( char cmd );
 static const std::vector<float> homePos = {
     // lower body #15
 //    0, -1,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,   0,  0,  0,
-    0,  15,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,   0,  0,  0,
+    0,  10,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,   0,  0,  0,
 //  1,  2,  3,  4,  5,  6,  7,   8,  9, 10,  11, 12,  13, 14, 15
     // upper body #10 right arm to left arm, last 2 are right and left neck
     30, 70,  0,  -100,  30, -70,   0,  -100,  0,  0,  0,  0,  0,  0,  0,  0,  0
@@ -84,10 +84,18 @@ void EC_boards_walk::init_preOP ( void ) {
     rightFoot = fts[rid2Pos(iit::ecat::advr::coman::RL_FT)];
     assert ( rightFoot );
 
-
     std::vector<double> Ys;
 
-    for ( auto const& item : motors ) {
+    std::vector<int> pos_rid = iit::ecat::advr::coman::robot_mcs_ids;
+    std::vector<int> no_control = std::initializer_list<int> {
+        iit::ecat::advr::coman::RA_HA,
+        iit::ecat::advr::coman::LA_HA,
+    };
+
+    remove_rids_intersection(pos_rid, no_control);
+
+    get_esc_map_byclass ( motors_ctrl_pos,  pos_rid );
+    for ( auto const& item : motors_ctrl_pos ) {
         slave_pos = item.first;
         moto = item.second;
         moto->readSDO ( "Min_pos", min_pos );
@@ -210,13 +218,13 @@ int EC_boards_walk::user_loop ( void ) {
         running_spline = q_spln.front();
         if ( running_spline ) {
             DPRINTF ( "Moving to home positions ..........................%d\n",idx++ );
-            if ( go_there ( motors, *running_spline, 0.05, false ) ) {
+            if ( go_there ( motors_ctrl_pos, *running_spline, 0.05, false ) ) {
                 // running spline has finish !!
                 last_run_spline = running_spline;
                 q_spln.pop();
                 if ( ! q_spln.empty() ) {
                     running_spline = q_spln.front();
-                    smooth_splines_trj ( *running_spline, *last_run_spline );
+                    smooth_splines_trj ( motors_ctrl_pos, *running_spline, *last_run_spline );
                     advr::reset_spline_trj ( *running_spline );
                 }
             }

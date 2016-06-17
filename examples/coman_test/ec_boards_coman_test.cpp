@@ -57,55 +57,17 @@ EC_boards_coman_test::~EC_boards_coman_test() {
  */
 void EC_boards_coman_test::init_preOP ( void ) {
 
-    std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
     iit::ecat::advr::Motor * moto;
     int slave_pos;
     float min_pos, max_pos;
 
-    std::vector<int> test_rid = std::initializer_list<int> {
-
-        // waist
-        iit::ecat::advr::coman::WAIST_Y,
-        iit::ecat::advr::coman::WAIST_P,
-        iit::ecat::advr::coman::WAIST_R,
-        // right leg
-        iit::ecat::advr::coman::RL_H_P,
-        iit::ecat::advr::coman::RL_H_R,
-        iit::ecat::advr::coman::RL_H_Y,
-        iit::ecat::advr::coman::RL_K,
-        iit::ecat::advr::coman::RL_A_P,
-        iit::ecat::advr::coman::RL_A_R,
-        iit::ecat::advr::coman::RL_FT,
-        // left leg
-        iit::ecat::advr::coman::LL_H_P,
-        iit::ecat::advr::coman::LL_H_R,
-        iit::ecat::advr::coman::LL_H_Y,
-        iit::ecat::advr::coman::LL_K,
-        iit::ecat::advr::coman::LL_A_P,
-        iit::ecat::advr::coman::LL_A_R,
-        iit::ecat::advr::coman::LL_FT,
-        // right arm
-        iit::ecat::advr::coman::RA_SH_1,
-        iit::ecat::advr::coman::RA_SH_2,
-        iit::ecat::advr::coman::RA_SH_3,
-        iit::ecat::advr::coman::RA_EL,
-        iit::ecat::advr::coman::RA_WR_1,
-        iit::ecat::advr::coman::RA_WR_2,
-        iit::ecat::advr::coman::RA_WR_3,
-        iit::ecat::advr::coman::RA_FT,
+    std::vector<int> pos_rid = iit::ecat::advr::coman::robot_mcs_ids;
+    std::vector<int> no_control = std::initializer_list<int> {
         iit::ecat::advr::coman::RA_HA,
-        // left arm
-        iit::ecat::advr::coman::LA_SH_1,
-        iit::ecat::advr::coman::LA_SH_2,
-        iit::ecat::advr::coman::LA_SH_3,
-        iit::ecat::advr::coman::LA_EL,
-        iit::ecat::advr::coman::LA_WR_1,
-        iit::ecat::advr::coman::LA_WR_2,
-        iit::ecat::advr::coman::LA_WR_3,
-        iit::ecat::advr::coman::LA_FT,
         iit::ecat::advr::coman::LA_HA,
     };
-
+        
+    remove_rids_intersection(pos_rid, no_control);
 
     get_esc_map_byclass ( left_leg,  iit::ecat::advr::coman::robot_left_leg_ids );
     DPRINTF ( "found %lu <Motor> left_leg\n", left_leg.size() );
@@ -123,7 +85,7 @@ void EC_boards_coman_test::init_preOP ( void ) {
     DPRINTF ( "found %lu <Motor> waist\n", waist.size() );
 
     // !!!
-    get_esc_map_byclass ( motors_to_start,  test_rid );
+    get_esc_map_byclass ( motors_to_start,  pos_rid );
 
     std::vector<double> Ys;
     std::vector<double> Xs;
@@ -206,7 +168,7 @@ int EC_boards_coman_test::user_loop ( void ) {
     float spline_error = 0.07;
 
     if ( ( count++ ) % 1000 == 0 ) {
-        DPRINTF ( "alive %d\n", count/1000 );
+        DPRINTF ( "alive %ld\n", count/1000 );
         //DPRINTF("%ld\n", q_spln.size());
         //set_any2home(spline_any2home);
     }
@@ -242,13 +204,13 @@ int EC_boards_coman_test::user_loop ( void ) {
         running_spline = q_spln.front();
         if ( running_spline ) {
             // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors, *running_spline, spline_error, false) ) {
+            if ( go_there ( motors_to_start, *running_spline, spline_error, false) ) {
                 // running spline has finish !!
                 last_run_spline = running_spline;
                 q_spln.pop();
                 if ( ! q_spln.empty() ) {
                     running_spline = q_spln.front();
-                    smooth_splines_trj ( *running_spline, *last_run_spline );
+                    smooth_splines_trj ( motors_to_start, *running_spline, *last_run_spline );
                     advr::reset_spline_trj ( *running_spline );
                 }
             }
@@ -302,9 +264,9 @@ int EC_boards_coman_test::xddp_input ( C &user_cmd ) {
                     while ( ! q_spln.empty() ) {
                         q_spln.pop();
                     }
-                    get_trj_for_end_points ( spline_any2home, home, 2.0 );
+                    get_trj_for_end_points ( motors_to_start, spline_any2home, home, 2.0 );
                     if ( running_spline ) {
-                        smooth_splines_trj ( spline_any2home, *running_spline, 1.0 );
+                        smooth_splines_trj ( motors_to_start, spline_any2home, *running_spline, 1.0 );
                     }
                     advr::reset_spline_trj ( spline_any2home );
                     q_spln.push ( &spline_any2home );
@@ -363,7 +325,7 @@ int EC_boards_coman_test::xddp_input ( C &user_cmd ) {
                 break;
             case 2 :
                 if ( js_cmd.value && user_state == IDLE ) {
-                    set_any2home ( spline_any2home, *running_spline );
+                    set_any2home ( motors_to_start, spline_any2home, *running_spline );
                     user_state = ANY2HOME;
                     advr::reset_spline_trj ( spline_any2home );
                 }
