@@ -50,6 +50,8 @@ optional_build(coman_torque   examples/coman_torque OFF)
 optional_build(coman_V_loop examples/coman_V_loop OFF)
 optional_build(ati_ft6      examples/ati_ft6_calib OFF)
 
+optional_build(walkman_test   examples/walkman_test OFF)
+
 optional_build(joy_forward 	other_bin/joy_forward	OFF)
 optional_build(spnav_forward 	other_bin/spnav_forward	OFF)
 optional_build(zmq_pub          other_bin/zmq_pub	OFF)

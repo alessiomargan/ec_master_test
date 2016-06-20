@@ -1,7 +1,7 @@
 #
 ec_boards_base:
-  create_pipes: true
-
+  create_pipes: false
+  
 ec_board_ctrl:
   eth_iface: rteth0
   #eth_iface: eth1
@@ -57,14 +57,14 @@ LpESC_1:
   sign: -1
   pos_offset: 0
   pid :
-    position: [20.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 #
 LpESC_2:
   sign: -1
   pos_offset: 0
   pid :
-    position: [20.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 #############################
 # RIGHT LEG
@@ -212,31 +212,28 @@ LpESC_15:
   sign: 1
   pos_offset: 0
   pid :
-    position: [40.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 # RA_WR_2 = 16
 LpESC_16:
   sign: 1
   pos_offset: 0
   pid :
-    position: [40.0 , 0.0 , 1.0]
-    mix_position: [800.0, 0.0, 5.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 # RA_WR_3 = 17
 LpESC_17:
   sign: 1
   pos_offset: 0
   pid :
-    position: [40.0 , 0.0 , 1.0]
-    mix_position: [800.0, 0.0, 5.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 # RA_HA = 19
 LpESC_19:
   sign: 1
   pos_offset: 0
   pid :
-    position: [40.0 , 0.0 , 1.0]
-    mix_position: [800.0, 0.0, 5.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 #############################
 # LEFT ARM
@@ -279,28 +276,28 @@ LpESC_25:
   sign: 1
   pos_offset: 0
   pid :
-    position: [40.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 # LA_WR_2 = 26
 LpESC_26:
   sign: 1
   pos_offset: 0
   pid :
-    position: [40.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 # LA_WR_3 = 27
 LpESC_27:
   sign: 1
   pos_offset: 0
   pid :
-    position: [40.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 # LA_HA = 29
 LpESC_29:
   sign: 1
   pos_offset: 0
   pid :
-    position: [40.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 0.0]
 
 #############################
 # WAIST
