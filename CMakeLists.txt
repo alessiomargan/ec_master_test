@@ -47,6 +47,8 @@ optional_build(coman_walk	examples/coman_walk	OFF)
 optional_build(coman_test	examples/coman_test	OFF)
 optional_build(coman_impedance   examples/coman_impedance OFF)
 
+optional_build(walkman_test   examples/walkman_test OFF)
+
 optional_build(joy_forward 	other_bin/joy_forward	OFF)
 optional_build(spnav_forward 	other_bin/spnav_forward	OFF)
 optional_build(zmq_pub          other_bin/zmq_pub	OFF)
