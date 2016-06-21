@@ -75,7 +75,7 @@ protected :
     std::map<int, iit::ecat::advr::PowComanESC*>powCmns;
     std::map<int, iit::ecat::advr::TestESC*> 	tests;
 
-    void remove_rids_intersection(std::vector<int> &, std::vector<int> &);
+    void remove_rids_intersection(std::vector<int> &, const std::vector<int> &);
     
     bool go_there ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
                     const std::map<int,float> &target_pos,

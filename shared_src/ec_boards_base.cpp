@@ -209,7 +209,7 @@ void Ec_Thread_Boards_base::xddps_loop ( void ) {
 }
 
 
-void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_dest, std::vector<int> &to_remove) {
+void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_dest, const std::vector<int> &to_remove) {
 
     start_dest.erase(
         std::remove_if(start_dest.begin(), start_dest.end(),

@@ -52,8 +52,11 @@ private :
 
     virtual void init_preOP ( void );
     virtual void init_OP ( void );
-
-    std::map<int,float> mid_pos;
+    
+    void move_head(float, float);
+    void move_hands(float, float);
+    
+    std::map<int,float> test_pos;
     std::map<int,float> step_2;
 
     advr::Spline_map spline_start2home;
@@ -66,11 +69,13 @@ private :
     user_state_t user_state;
     home_state_t home_state;
 
-    std::map<int, iit::ecat::advr::Motor*> 	left_leg;
-    std::map<int, iit::ecat::advr::Motor*> 	right_leg;
+    std::map<int, iit::ecat::advr::Motor*>  head;
     std::map<int, iit::ecat::advr::Motor*> 	left_arm;;
     std::map<int, iit::ecat::advr::Motor*> 	right_arm;
-    std::map<int, iit::ecat::advr::Motor*> 	waist;
+    std::map<int, iit::ecat::advr::Motor*> 	hands;
+    std::map<int, iit::ecat::advr::Motor*>  waist;
+    std::map<int, iit::ecat::advr::Motor*>  left_leg;
+    std::map<int, iit::ecat::advr::Motor*>  right_leg;
 
     std::map<int, iit::ecat::advr::Motor*>  motors2ctrl;
 };

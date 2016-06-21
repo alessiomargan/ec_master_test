@@ -9,6 +9,7 @@
 
 #include <iit/advr/zmq_publisher.h>
 #include <iit/advr/coman_robot_id.h>
+#include <iit/advr/walkman_robot_id.h>
 
 using namespace iit;
 
@@ -84,9 +85,13 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     int base_port = 9000;
     std::string uri ( "tcp://*:" );
 
+    std::string motor_prefix ( "Motor_id_" );
+    std::string ft_prefix ( "Ft_id_" );
+    
+    ///////////////////////////////////////////////////////////////////////
+    // COMAN
     ///////////////////////////////////////////////////////////////////////
     // iit::ecat::advr::coman::robot_mcs_ids
-    std::string motor_prefix ( "Motor_id_" );
     for ( auto const& rid : iit::ecat::advr::coman::robot_mcs_ids ) {
         zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
         if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
@@ -97,19 +102,44 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     }
     ///////////////////////////////////////////////////////////////////////
     // iit::ecat::advr::coman::robot_fts_ids
-    std::string fortor_prefix ( "Ft_id_" );
     for ( auto const& rid : iit::ecat::advr::coman::robot_fts_ids ) {
         zpub = new FtPub ( uri+std::to_string ( base_port+rid ) );
-        if ( zpub->open_pipe ( fortor_prefix+std::to_string ( rid ) ) == 0 ) {
+        if ( zpub->open_pipe ( ft_prefix+std::to_string ( rid ) ) == 0 ) {
             zmap[base_port+rid] = zpub;
         } else {
             delete zpub;
         }
     }
-            
-    base_port = 10000;
-    zpub = new PwCmnPub ( uri+std::to_string ( base_port ) );
+    zpub = new PwCmnPub ( uri+std::to_string ( 10000 ) );
     if ( zpub->open_pipe ( "PowCmn_pos_1" ) == 0 ) {
+        zmap[base_port] = zpub;
+    } else {
+        delete zpub;
+    }
+    ///////////////////////////////////////////////////////////////////////
+    // WALKMAN
+    ///////////////////////////////////////////////////////////////////////
+    // iit::ecat::advr::walkman::robot_mcs_ids
+    for ( auto const& rid : iit::ecat::advr::walkman::robot_mcs_ids ) {
+        zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
+        if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
+            zmap[base_port+rid] = zpub;
+        } else {
+            delete zpub;
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////
+    // iit::ecat::advr::walkman::robot_fts_ids
+    for ( auto const& rid : iit::ecat::advr::walkman::robot_fts_ids ) {
+        zpub = new FtPub ( uri+std::to_string ( base_port+rid ) );
+        if ( zpub->open_pipe ( ft_prefix+std::to_string ( rid ) ) == 0 ) {
+            zmap[base_port+rid] = zpub;
+        } else {
+            delete zpub;
+        }
+    }
+    zpub = new PwPub ( uri+std::to_string ( 10000 ) );
+    if ( zpub->open_pipe ( "PowWkm_pos_1" ) == 0 ) {
         zmap[base_port] = zpub;
     } else {
         delete zpub;
@@ -117,7 +147,6 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     ///////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////
-    
 #if 0
     base_port++;
     zpub = new McPub ( uri+std::to_string ( base_port ) );

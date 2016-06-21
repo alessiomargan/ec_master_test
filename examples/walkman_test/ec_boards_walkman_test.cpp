@@ -15,6 +15,7 @@
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
+using namespace iit::ecat::advr;
 
 typedef struct js_event	js_input_t;
 typedef spnav_event	spnav_input_t;
@@ -57,76 +58,37 @@ EC_boards_walkman_test:: ~EC_boards_walkman_test() {
  */
 void EC_boards_walkman_test::init_preOP ( void ) {
 
-    iit::ecat::advr::Motor * moto;
+    Motor * moto;
     int slave_pos;
     float min_pos, max_pos, pos_ref_fb;
 
-    std::vector<int> test_rid = std::initializer_list<int> {
-
-        // head
-        iit::ecat::advr::walkman::HEAD_P,
-        iit::ecat::advr::walkman::HEAD_R,
-        // waist
-        iit::ecat::advr::walkman::WAIST_Y,
-        iit::ecat::advr::walkman::WAIST_P,
-        iit::ecat::advr::walkman::WAIST_R,
-        // right leg
-        iit::ecat::advr::walkman::RL_H_P,
-        iit::ecat::advr::walkman::RL_H_R,
-        iit::ecat::advr::walkman::RL_H_Y,
-        iit::ecat::advr::walkman::RL_K,
-        iit::ecat::advr::walkman::RL_A_P,
-        iit::ecat::advr::walkman::RL_A_R,
-        //iit::ecat::advr::walkman::RL_FT,
-        // left leg
-        iit::ecat::advr::walkman::LL_H_P,
-        iit::ecat::advr::walkman::LL_H_R,
-        iit::ecat::advr::walkman::LL_H_Y,
-        iit::ecat::advr::walkman::LL_K,
-        iit::ecat::advr::walkman::LL_A_P,
-        iit::ecat::advr::walkman::LL_A_R,
-        //iit::ecat::advr::walkman::LL_FT,
-        // right arm
-        iit::ecat::advr::walkman::RA_SH_1,
-        iit::ecat::advr::walkman::RA_SH_2,
-        iit::ecat::advr::walkman::RA_SH_3,
-        iit::ecat::advr::walkman::RA_EL,
-        iit::ecat::advr::walkman::RA_WR_1,
-        iit::ecat::advr::walkman::RA_WR_2,
-        iit::ecat::advr::walkman::RA_WR_3,
-        //iit::ecat::advr::walkman::RA_FT,
-        //iit::ecat::advr::walkman::RA_HA,
-        // left arm
-        iit::ecat::advr::walkman::LA_SH_1,
-        iit::ecat::advr::walkman::LA_SH_2,
-        iit::ecat::advr::walkman::LA_SH_3,
-        iit::ecat::advr::walkman::LA_EL,
-        iit::ecat::advr::walkman::LA_WR_1,
-        iit::ecat::advr::walkman::LA_WR_2,
-        iit::ecat::advr::walkman::LA_WR_3,
-        //iit::ecat::advr::walkman::LA_FT,
-        //iit::ecat::advr::walkman::LA_HA,
-    
-    };
-
-
-    get_esc_map_byclass ( left_leg,  iit::ecat::advr::walkman::robot_left_leg_ids );
+    get_esc_map_byclass ( left_leg,  walkman::robot_left_leg_ids );
     DPRINTF ( "found %lu <Motor> left_leg\n", left_leg.size() );
 
-    get_esc_map_byclass ( left_arm,  iit::ecat::advr::walkman::robot_left_arm_ids );
+    get_esc_map_byclass ( left_arm,  walkman::robot_left_arm_ids );
     DPRINTF ( "found %lu <Motor> left_arm\n", left_arm.size() );
 
-    get_esc_map_byclass ( right_leg, iit::ecat::advr::walkman::robot_right_leg_ids );
+    get_esc_map_byclass ( right_leg, walkman::robot_right_leg_ids );
     DPRINTF ( "found %lu <Motor> right_leg\n", right_leg.size() );
 
-    get_esc_map_byclass ( right_arm, iit::ecat::advr::walkman::robot_right_arm_ids );
+    get_esc_map_byclass ( right_arm, walkman::robot_right_arm_ids );
     DPRINTF ( "found %lu <Motor> right_arm\n", right_arm.size() );
 
-    get_esc_map_byclass ( waist,	   iit::ecat::advr::walkman::robot_waist_ids );
+    get_esc_map_byclass ( waist,	   walkman::robot_waist_ids );
     DPRINTF ( "found %lu <Motor> waist\n", waist.size() );
 
-    // !!!
-    get_esc_map_byclass ( motors2ctrl,  test_rid );
+    get_esc_map_byclass ( head,       walkman::robot_head_ids );
+    DPRINTF ( "found %lu <Motor> head\n", head.size() );
+
+    get_esc_map_byclass ( hands,       walkman::robot_hands_ids );
+    DPRINTF ( "found %lu <Motor> hands\n", hands.size() );
+
+    std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
+    //std::vector<int> pos_ctrl_ids = std::initializer_list<int> {};
+    
+    remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
+    remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
+    get_esc_map_byclass ( motors2ctrl,  pos_ctrl_ids );
 
     std::vector<double> Ys;
     std::vector<double> Xs;
@@ -139,21 +101,20 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         moto->readSDO ( "Max_pos", max_pos );
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
-        home[slave_pos] = DEG2RAD ( iit::ecat::advr::walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
-        mid_pos[slave_pos] = home[slave_pos];
-        if ( pos2Rid(slave_pos) == iit::ecat::advr::walkman::RA_SH_2 ) { mid_pos[slave_pos] = DEG2RAD(-60); }
-        if ( pos2Rid(slave_pos) == iit::ecat::advr::walkman::LA_SH_2 ) { mid_pos[slave_pos] = DEG2RAD( 60); }
+        home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        test_pos[slave_pos] = DEG2RAD ( walkman::robot_ids_test_pos_deg[pos2Rid(slave_pos)] );
         
         step_2[slave_pos] = start_pos[slave_pos]; //MID_POS(min_pos,max_pos) + 0.2;
-        DPRINTF ( "Joint_id %d start %f home %f mid %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], mid_pos[slave_pos] );
+        
+        DPRINTF ( "Joint_id %d start %f home %f mid %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
 
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         spline_start2home[slave_pos].set_points ( Xt_5s, Ys );
 
-        Ys = std::initializer_list<double> { home[slave_pos], mid_pos[slave_pos] };
+        Ys = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos] };
         spline_home2mid[slave_pos].set_points ( Xt_3s, Ys );
 
-        Ys = std::initializer_list<double> { mid_pos[slave_pos], home[slave_pos] };
+        Ys = std::initializer_list<double> { test_pos[slave_pos], home[slave_pos] };
         spline_mid2home[slave_pos].set_points ( Xt_3s, Ys );
 
         /* If k does not match the key of any element in the container, the function inserts a new element with that key
@@ -177,14 +138,46 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         //while ( ! moto->move_to(home[slave_pos], 0.001) ) { osal_usleep(100);  }
     }
 
+    for ( auto const& item : head ) {
+    
+        slave_pos = item.first;
+        moto = item.second;
+        moto->readSDO ( "link_pos", start_pos[slave_pos] );
+        // home
+        home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        //////////////////////////////////////////////////////////////////////////
+        // start controller :
+        // - read actual joint position and set as pos_ref
+        if ( moto->am_i_LpESC() ) { moto->start ( CTRL_SET_POS_MODE ); }
+        else if ( moto->am_i_HpESC() ) { moto->start ( CTRL_SET_MIX_POS_MODE ); }
+        else {  }
+        //while ( ! moto->move_to(home[slave_pos], 0.005) ) { osal_usleep(100);  }
+    }
+
+    for ( auto const& item : hands ) {
+    
+        slave_pos = item.first;
+        moto = item.second;
+        moto->readSDO ( "link_pos", start_pos[slave_pos] );
+        // home
+        home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        //////////////////////////////////////////////////////////////////////////
+        // start controller :
+        // - read actual joint position and set as pos_ref
+        if ( moto->am_i_LpESC() ) { moto->start ( CTRL_SET_POS_MODE ); }
+        else if ( moto->am_i_HpESC() ) { moto->start ( CTRL_SET_MIX_POS_MODE ); }
+        else {  }
+        //while ( ! moto->move_to(home[slave_pos], 0.005) ) { osal_usleep(100);  }
+    }
+
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
-    //
-    q_spln.push ( &spline_start2home );
-    //q_spln.push ( &spline_home2mid );
-    //q_spln.push ( &spline_mid2home );
-
+    if ( motors2ctrl.size() > 0 ) {
+        q_spln.push ( &spline_start2home );
+        q_spln.push ( &spline_home2mid );
+        q_spln.push ( &spline_mid2home );
+    }
 }
 
 
@@ -215,8 +208,6 @@ int EC_boards_walkman_test::user_loop ( void ) {
 
     if ( ( count++ ) % 1000 == 0 ) {
         DPRINTF ( "alive %d\n", count/1000 );
-        //DPRINTF("%ld\n", q_spln.size());
-        //set_any2home(spline_any2home);
     }
 
     ///////////////////////////////////////////////////////
@@ -231,13 +222,13 @@ int EC_boards_walkman_test::user_loop ( void ) {
         running_spline = q_spln.front();
         if ( running_spline ) {
             // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors2ctrl, *running_spline, spline_error, true) ) {
+            if ( go_there ( motors2ctrl, *running_spline, spline_error, false) ) {
                 // running spline has finish !!
                 last_run_spline = running_spline;
                 q_spln.pop();
                 if ( ! q_spln.empty() ) {
                     running_spline = q_spln.front();
-                    smooth_splines_trj ( *running_spline, *last_run_spline );
+                    smooth_splines_trj ( motors2ctrl, *running_spline, *last_run_spline );
                     advr::reset_spline_trj ( *running_spline );
                 }
             }
@@ -245,8 +236,68 @@ int EC_boards_walkman_test::user_loop ( void ) {
             DPRINTF ( "Error NULL running spline ... pop it\n" );
             q_spln.pop();
         }
+    } else { // q_spln is empty
+
+        if ( motors2ctrl.size() > 0 ) {
+            
+            running_spline = last_run_spline = 0;
+            // add splines ....
+            q_spln.push ( &spline_home2mid );
+            q_spln.push ( &spline_mid2home );
+            // !!! since queue was empty reset the first spline
+            running_spline = q_spln.front();
+            last_run_spline = running_spline;
+            advr::reset_spline_trj ( *running_spline );
+        }
+    
     }
 
+}
+
+void EC_boards_walkman_test::move_head( float pitch_pos, float roll_pos ) {
+    
+    float pitchRef, rollRef;
+    Motor::motor_pdo_rx_t motor_pdo_rx;
+    Motor::motor_pdo_tx_t motor_pdo_tx;
+    
+    Motor * head_pitch = slave_as_Motor( rid2Pos(walkman::HEAD_P) );
+    if ( head_pitch ) {
+        motor_pdo_rx = head_pitch->getRxPDO();
+        motor_pdo_tx = head_pitch->getTxPDO();
+        pitchRef = motor_pdo_tx.pos_ref + pitch_pos;
+        head_pitch->set_posRef( pitchRef );
+    }
+    Motor * head_roll = slave_as_Motor( rid2Pos(walkman::HEAD_R) );
+    if ( head_roll ) {
+        motor_pdo_rx = head_roll->getRxPDO();
+        motor_pdo_tx = head_roll->getTxPDO();
+        rollRef = motor_pdo_tx.pos_ref + roll_pos;
+        head_roll->set_posRef( rollRef );
+    }
+    //DPRINTF ( "Head pitch %f\troll %f\n", pitchRef, rollRef );
+}
+
+void EC_boards_walkman_test::move_hands( float left_pos, float right_pos ) {
+
+    float leftRef, rightRef;
+    Motor::motor_pdo_rx_t motor_pdo_rx;
+    Motor::motor_pdo_tx_t motor_pdo_tx;
+    
+    Motor * left_hand = slave_as_Motor( rid2Pos(walkman::LA_HA) );
+    if ( left_hand ) {
+        motor_pdo_rx = left_hand->getRxPDO();
+        motor_pdo_tx = left_hand->getTxPDO();
+        leftRef = left_pos;
+        left_hand->set_posRef( leftRef );
+    }
+    Motor * right_hand = slave_as_Motor( rid2Pos(walkman::RA_HA) );
+    if ( right_hand ) {
+        motor_pdo_rx = right_hand->getRxPDO();
+        motor_pdo_tx = right_hand->getTxPDO();
+        rightRef = right_pos;
+        right_hand->set_posRef( rightRef );
+    }
+    //DPRINTF ( "Head pitch %f\troll %f\n", pitchRef, rollRef );
 }
 
 template<class C>
@@ -277,40 +328,40 @@ int EC_boards_walkman_test::xddp_input ( C &user_cmd ) {
 #ifdef USE_LPMS_IMU
     ///////////////////////////////////////////////////////
     //
-    ImuData lpms_data;
-    if ( ( bytes = imuInXddp.xddp_read ( lpms_data ) ) > 0 ) {
-        DPRINTF ( "Timestamp=%f, qW=%f, qX=%f, qY=%f, qZ=%f\n",
-                  lpms_data.timeStamp, lpms_data.q[0], lpms_data.q[1], lpms_data.q[2], lpms_data.q[3] );
-
-    }
+    {
+        ImuData lpms_data;
+        if ( ( bytes = imuInXddp.xddp_read ( lpms_data ) ) > 0 ) {
+            DPRINTF ( "Timestamp=%f, qW=%f, qX=%f, qY=%f, qZ=%f\n",
+                    lpms_data.timeStamp, lpms_data.q[0], lpms_data.q[1], lpms_data.q[2], lpms_data.q[3] );
+        }
     bytes_cnt += bytes;
+    }
 #endif
     ///////////////////////////////////////////////////////
     //
+    {
     spnav_input_t	nav_cmd;
+    float pitch_ry, roll_rx;
+    
     if ( ( bytes = navInXddp.xddp_read ( nav_cmd ) ) > 0 ) {
         //user_cmd = process_spnav_input(nav_cmd);
         // [-1.0 .. 1.0] / 500 ==> 0.002 rad/ms
         if ( nav_cmd.type == SPNAV_EVENT_MOTION ) {
-            user_cmd = ( ( float ) nav_cmd.motion.ry / ( 350.0 ) ) / 500 ;
+            
+            roll_rx = ( ( float ) nav_cmd.motion.rx / ( 350.0 ) ) / 500 ;
+            pitch_ry  = ( ( float ) nav_cmd.motion.ry / ( 350.0 ) ) / 500 ;
+            move_head( pitch_ry, roll_rx );
+
         } else if ( nav_cmd.type == SPNAV_EVENT_BUTTON ) {
             if ( nav_cmd.button.press ) {
                 switch ( nav_cmd.button.bnum ) {
                 case 1 :
-                    while ( ! q_spln.empty() ) {
-                        q_spln.pop();
-                    }
-                    get_trj_for_end_points ( spline_any2home, home, 2.0 );
-                    if ( running_spline ) {
-                        smooth_splines_trj ( spline_any2home, *running_spline, 1.0 );
-                    }
-                    advr::reset_spline_trj ( spline_any2home );
-                    q_spln.push ( &spline_any2home );
-                    DPRINTF ( "ANY2HOME ....\n" );
+                    // open hands
+                    move_hands( 0, 0 );
                     break;
                 case 0 :
-                    user_state = MOVING;
-                    DPRINTF ( "Moving ....\n" );
+                    // close hands
+                    move_hands( 6, 6 );
                     break;
                 default :
                     break;
@@ -322,7 +373,7 @@ int EC_boards_walkman_test::xddp_input ( C &user_cmd ) {
     }
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
-
+    }
     ///////////////////////////////////////////////////////
     //
     js_input_t		js_cmd;
@@ -361,7 +412,7 @@ int EC_boards_walkman_test::xddp_input ( C &user_cmd ) {
                 break;
             case 2 :
                 if ( js_cmd.value && user_state == IDLE ) {
-                    set_any2home ( spline_any2home, *running_spline );
+                    set_any2home ( motors2ctrl, spline_any2home, *running_spline );
                     user_state = ANY2HOME;
                     advr::reset_spline_trj ( spline_any2home );
                 }
