@@ -9,6 +9,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 #include <string>
@@ -82,6 +83,23 @@ struct PowEscPdoTypes {
         void to_map ( jmap_t & jpdo ) {
             JPDO ( status.all );
             JPDO ( rtt );
+        }
+        void pb_toString( std::string * pb_str ) {
+            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            // Type
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_POW_WLK);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
+            // Motor_rx_pdo
+            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_status(status.all);
+            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_temperature(board_temp);
+            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_temp(battery_temp);
+            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_volt(battery_volt);
+            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_curr(battery_curr);
+            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_fault(fault);
+            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_rtt(rtt);
+            pb_rx_pdo.SerializeToString(pb_str);
         }
     } __attribute__ ( ( __packed__ ) );
 };

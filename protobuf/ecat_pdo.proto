@@ -2,7 +2,7 @@ package iit.advr;
 
 import "motor_pdo.proto";
 import "ft6_pdo.proto";
-import "coman_power_pdo.proto";
+import "power_pack_pdo.proto";
 import "header.proto";
 
 message Ec_slave_pdo {
@@ -30,6 +30,8 @@ message Ec_slave_pdo {
     optional FT6_rx_pdo         ft6_rx_pdo = 8;
     optional PowComan_tx_pdo    powComan_tx_pdo = 9;
     optional PowComan_rx_pdo    powComan_rx_pdo = 10;
+    optional PowWalkman_tx_pdo  powWalkman_tx_pdo = 11;
+    optional PowWalkman_rx_pdo  powWalkman_rx_pdo = 12;
 
 }
 

@@ -1,0 +1,32 @@
+package iit.advr;
+
+message PowComan_tx_pdo {
+    required uint32 master_command  = 1;
+    required uint32 ts              = 2;
+}
+
+message PowComan_rx_pdo {
+    required float  temperature = 1;
+    required float  v_batt      = 2;
+    required uint32 status      = 3;
+    required uint32 rtt         = 4;
+}
+
+message PowWalkman_tx_pdo {
+    required uint32 master_command  = 1;
+    required uint32 fault_ack       = 2;
+    required uint32 ts              = 3;
+}
+
+message PowWalkman_rx_pdo {
+    required uint32 status      = 1;
+    required uint32 temperature = 2;
+    required uint32 batt_temp   = 3;
+    required uint32 batt_volt   = 4;
+    required int32  batt_curr   = 5;
+    required int32  load_curr   = 6;
+    required uint32 fault       = 7;
+    required uint32 rtt         = 8;
+}
+
+
