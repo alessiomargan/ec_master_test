@@ -116,10 +116,10 @@ public:
 
     virtual int16_t get_robot_id() = 0;
 
-protected:
-
     virtual bool am_i_HpESC() = 0;
     virtual bool am_i_LpESC() = 0;
+
+protected:
 
     //ec_state     _actual_state;
 };
