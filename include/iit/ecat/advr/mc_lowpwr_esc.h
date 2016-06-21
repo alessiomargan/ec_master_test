@@ -321,19 +321,8 @@ public:
                 writeSDO_byname( "pos_gain_D", _d );
                 DPRINTF ( "\tPosGain %f %f %f\n", _p,_i,_d );
             
-            } 
-            
-            if ( controller_type == CTRL_SET_IMPED_MODE ) {
-                /* ... nel philmware in do_impedance_control()
-                 * ... 10000 e 10
-                 * if ((rx_pdo.PGain < MAX_STIFFNESS) && (rx_pdo.PGain > MIN_STIFFNESS))
-                 * {
-                 *      g_sParameters.ImpedancePosGainP = 100.0 * (float)rx_pdo.PGain;
-                 *      g_sParameters.ImpedancePosGainD = (float)rx_pdo.DGain;
-                 * }
-                 * ... else use parameters value
-                 * ... 
-                 */
+            } else if ( controller_type == CTRL_SET_IMPED_MODE ) {
+
                 // Impedance gains : position PD torque PI 
                 // PosGainP
                 writeSDO_byname( "gain_0", (uint16_t)(_p/100.0));
@@ -348,8 +337,17 @@ public:
                 
                 oss << tx_pdo;
                 DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
-            }
             
+            }
+#if 0
+            else if ( controller_type == CTRL_SET_VOLT_MODE ) {
+            
+                int16_t configFlags;
+                readSDO_byname("ConfigFlags", configFlags);
+                // #define CONFIGFLAG_USE_VOLTAGE_MODE_LIMITS_BIT    8
+                writeSDO_byname("ConfigFlags", configFlags|(0x1<<8));
+            }
+#endif
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
