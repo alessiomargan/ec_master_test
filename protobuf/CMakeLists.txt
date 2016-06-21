@@ -20,7 +20,7 @@ set(msgs
   dummy.proto
   motor_pdo.proto
   ft6_pdo.proto
-  coman_power_pdo.proto
+  power_pack_pdo.proto
   ecat_pdo.proto
   ${PROTOBUF_IMPORT_DIRS}/quaternion.proto
   ${PROTOBUF_IMPORT_DIRS}/vector2d.proto

@@ -127,6 +127,7 @@ struct fault_bits {
     uint16_t  fault_encoder_1:1;
     uint16_t  fault_encoder_2:1;
     uint16_t  fault_hardware:1;
+    //
     uint16_t  params_out_of_range:1;
     uint16_t  Max_cur_limited_for_temp:1;
     uint16_t  flag_10:1;

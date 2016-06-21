@@ -206,7 +206,7 @@ protected :
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
         // apply transformation from Joint to Motor
-        //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
+        //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
 
     virtual int on_readSDO ( const objd_t * sdobj )  {
@@ -358,7 +358,7 @@ public :
             gain = ( uint16_t ) _d;
             writeSDO_byname ( "gainD", gain );
             // pdo gains will be used in OP
-            writeSDO_byname ( "board_enable_mask", enable_mask );
+            //writeSDO_byname ( "board_enable_mask", enable_mask );
             writeSDO_byname ( "Max_vel", max_vel );
 
             // set actual position as reference
@@ -419,6 +419,7 @@ public :
 
         fault_t fault;
         fault.all = rx_pdo.fault;
+        //DPRINTF("[%d]fault 0x%04X\n", Joint_robot_id, fault.all );
         //fault.bit.
         tx_pdo.fault_ack = fault.all & 0x7FFF;
     }
@@ -443,9 +444,12 @@ public :
 
     virtual int move_to ( float pos_ref, float step ) {
 
-        float pos, tx_pos_ref;
+        float       pos, tx_pos_ref;
+        uint16_t    fault;
 
         try {
+            readSDO_byname ( "fault", fault );
+            handle_fault();
             readSDO_byname ( "link_pos", pos );
             readSDO_byname ( "pos_ref_fb", tx_pos_ref );
             tx_pos_ref = hipwr_esc::M2J ( tx_pos_ref,_sgn,_offset );
@@ -458,7 +462,7 @@ public :
                 }
 
                 writeSDO_byname ( "pos_ref", tx_pos_ref );
-                //DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+                DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
                 return 0;
 
             } else {
