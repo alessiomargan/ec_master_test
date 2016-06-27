@@ -109,7 +109,7 @@ public:
 
     virtual int16_t get_robot_id() = 0;
 
-protected:
+public:
     
     virtual bool am_i_HpESC() = 0;
     virtual bool am_i_LpESC() = 0;
