@@ -505,7 +505,7 @@ int Ec_Boards_ctrl::update_board_firmware(uint16_t slave_pos, std::string firmwa
             flash_cmd_ack = 0x0;
             tries = 30;
 
-            memset((void*)firm_ver, sizeof(firm_ver), 0);
+            memset((void*)firm_ver, 0, sizeof(firm_ver));
             wc = ec_SDOread(slave_pos, 0x8000, 0x4, false, &size, &firm_ver, EC_TIMEOUTRXM * 30);
             DPRINTF("Slave %d bl fw %s\n", slave_pos, firm_ver);
 
