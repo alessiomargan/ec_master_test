@@ -424,7 +424,7 @@ public :
             writeSDO_byname("PosGainP", _p);
             writeSDO_byname("PosGainI", _i);
             writeSDO_byname("PosGainD", _d);
-            // this will SET tx_pdo.gains
+            // this will SET tx_pdo.gains TBD check the firmware
             gain = (uint16_t)_p;
             writeSDO_byname("gains1", gain);
             gain = (uint16_t)_d;
@@ -432,7 +432,6 @@ public :
             gain = (uint16_t)_i;
             writeSDO_byname("gains3", gain);
             // pdo gains will be used in OP
-            writeSDO_byname("board_enable_mask", enable_mask);
             writeSDO_byname("Max_vel", max_vel);
             
             // set actual position as reference
