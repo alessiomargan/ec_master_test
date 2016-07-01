@@ -19,7 +19,6 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
-#include <protobuf/ecat_pdo.pb.h>
 
 namespace iit {
 namespace ecat {
@@ -84,13 +83,17 @@ struct Ft6EscPdoTypes {
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
+            using namespace std::chrono;
             iit::advr::Ec_slave_pdo pb_rx_pdo;
+            auto tNow = steady_clock::now();
+            auto tSecs = tNow.time_since_epoch().count();
+            auto tNSecs = duration_cast<nanoseconds>(tNow.time_since_epoch()).count();
             // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_FT6);
             // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
-            // Motor_rx_pdo
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(tSecs);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(tNSecs);
+            // FT6_rx_pdo
             pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_x(force_X);
             pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_y(force_Y);
             pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_z(force_Z);
@@ -114,7 +117,7 @@ inline std::ostream& operator<< (std::ostream& os, const Ft6EscPdoTypes::pdo_rx&
 }
 
 struct Ft6EscSdoTypes {
-
+        
     // flash
 
     unsigned long Block_control;

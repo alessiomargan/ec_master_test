@@ -9,7 +9,6 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 #include <string>

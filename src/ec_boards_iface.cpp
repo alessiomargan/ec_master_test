@@ -438,20 +438,20 @@ int Ec_Boards_ctrl::recv_from_slaves ( ec_timing_t &timing ) {
 
 int Ec_Boards_ctrl::send_to_slaves() {
 
-    int wkc, retry = 3;
+    int ret, retry = 3;
 
     wr_LOCK();
-    wkc = iit::ecat::send_to_slaves();
+    ret = iit::ecat::send_to_slaves();
     wr_UNLOCK();
-    while ( wkc <= 0  && retry ) {
-        DPRINTF ( "iit::ecat::send_to_slaves wkc %d retry %d\n", wkc, retry );
+    while ( ret <= 0  && retry ) {
+        DPRINTF ( "iit::ecat::send_to_slaves fails ... retry %d\n", retry );
         wr_LOCK();
-        wkc = iit::ecat::send_to_slaves();
+        ret = iit::ecat::send_to_slaves();
         wr_UNLOCK();
         retry--;
     }
 
-    return wkc;
+    return ret;
 }
 
 

@@ -9,7 +9,6 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 #include <string>
@@ -51,6 +50,7 @@ typedef union {
 
 
 struct PowCmnEscPdoTypes {
+    
     // TX  slave_input -- master output
     struct pdo_tx {
         uint16_t    master_command;
@@ -97,13 +97,17 @@ struct PowCmnEscPdoTypes {
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
+            using namespace std::chrono;
             iit::advr::Ec_slave_pdo pb_rx_pdo;
+            auto tNow = steady_clock::now();
+            auto tSecs = tNow.time_since_epoch().count();
+            auto tNSecs = duration_cast<nanoseconds>(tNow.time_since_epoch()).count();
             // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_POW_CMN);
             // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
-            // Motor_rx_pdo
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(tSecs);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(tNSecs);
+            // PowComan_rx_pdo
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_temperature(temperature);
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_v_batt(v_batt);
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_status(status.all);

@@ -339,15 +339,14 @@ public:
                 DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
             
             }
-#if 0
             else if ( controller_type == CTRL_SET_VOLT_MODE ) {
             
                 int16_t configFlags;
                 readSDO_byname("ConfigFlags", configFlags);
                 // #define CONFIGFLAG_USE_VOLTAGE_MODE_LIMITS_BIT    8
-                writeSDO_byname("ConfigFlags", configFlags|(0x1<<8));
+                configFlags |= (0x1 << 8); 
+                writeSDO_byname("ConfigFlags", configFlags);
             }
-#endif
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
