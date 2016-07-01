@@ -47,18 +47,12 @@
 #include <iit/advr/thread_util.h>
 #include <protobuf/ecat_pdo.pb.h>
 
-namespace iit {
 
 
 class Abs_Publisher;
 typedef std::map<int, Abs_Publisher*>  PubMap_t;
 typedef std::map<std::string, std::string> jmap_t;
 
-#ifdef __XENO_PIPE__
-const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
-#else
-const std::string pipe_prefix ( "/tmp/" );
-#endif
 
 //extern zmq::context_t zmq_ctx;
 
@@ -90,6 +84,7 @@ protected:
     zmq::message_t  _msg_id;
     zmq::message_t  _msg;
 
+    std::string uri;
     std::string pipe;
     int xddp_sock;
 
@@ -145,9 +140,12 @@ std::string json_serializer ( T &t ) {
 template<typename PubDataTypes>
 class Publisher : public Abs_Publisher {
 
-public:
+private:
 
     typedef PubDataTypes    pub_data_t;
+    pub_data_t              pub_data;
+    
+public:    
 
     Publisher ( std::string uri ) : Abs_Publisher ( uri ) { }
     virtual ~Publisher() {
@@ -155,8 +153,7 @@ public:
     }
 
     int publish ( void ) {
-
-        pub_data_t pub_data;
+        
         if ( read_pipe ( pub_data ) <= 0 ) {
             return -1;
         }
@@ -209,11 +206,11 @@ public:
 
 class ZMQ_Pub_thread : public Thread_hook {
 
-    typedef Publisher<ecat::advr::TestEscPdoTypes::pdo_rx> TestPub;
-    typedef Publisher<ecat::advr::Ft6EscPdoTypes::pdo_rx> FtPub;
-    typedef Publisher<ecat::advr::McEscPdoTypes::pdo_rx> McPub;
-    typedef Publisher<ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
-    typedef Publisher<ecat::advr::PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
+    typedef Publisher<iit::ecat::advr::TestEscPdoTypes::pdo_rx> TestPub;
+    typedef Publisher<iit::ecat::advr::Ft6EscPdoTypes::pdo_rx> FtPub;
+    typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx> McPub;
+    typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
+    typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
 
     iit::ecat::stat_t loop_time;
     uint64_t	tNow, dt;
@@ -239,7 +236,7 @@ public:
             delete item.second;
         }
 
-        ecat::print_stat ( loop_time );
+        iit::ecat::print_stat ( loop_time );
     }
 
     virtual void th_init ( void * );
@@ -247,7 +244,6 @@ public:
 };
 
 
-}
 
 #endif
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

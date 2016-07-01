@@ -11,16 +11,21 @@
 #include <iit/advr/coman_robot_id.h>
 #include <iit/advr/walkman_robot_id.h>
 
-using namespace iit;
+using namespace iit::ecat::advr;
 
 zmq::context_t zmq_ctx ( 1 );
 
+#ifdef __XENO_PIPE__
+const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
+#else
+const std::string pipe_prefix ( "/tmp/" );
+#endif
 
 ///////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////
 
-Abs_Publisher::Abs_Publisher ( std::string uri ) {
+Abs_Publisher::Abs_Publisher ( std::string _uri ) : uri(_uri) {
 
     int opt_linger = 1;
 #if ZMQ_VERSION_MAJOR == 2
@@ -34,11 +39,12 @@ Abs_Publisher::Abs_Publisher ( std::string uri ) {
     _z->setsockopt ( ZMQ_SNDHWM, &opt_hwm, sizeof ( opt_hwm ) );
     _z->bind ( uri.c_str() );
 
-    printf ( "publisher bind to %s\n",uri.c_str() );
+    std::cout << "publisher bind to " << uri << std::endl;
 
 }
 
 Abs_Publisher::~Abs_Publisher() {
+    _z->unbind(uri.c_str());
     delete _z;
 }
 
@@ -47,7 +53,7 @@ int Abs_Publisher::open_pipe ( std::string pipe_name ) {
     pipe = pipe_name;
     std::string pipe_path = pipe_prefix + pipe_name;
 
-    printf ( "Opening xddp_socket %s\n", pipe_path.c_str() );
+    std::cout << "Opening xddp_socket " << pipe_path << std::endl;
     xddp_sock = open ( pipe_path.c_str(), O_RDONLY );
 
     if ( xddp_sock < 0 ) {
@@ -91,8 +97,8 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     ///////////////////////////////////////////////////////////////////////
     // COMAN
     ///////////////////////////////////////////////////////////////////////
-    // iit::ecat::advr::coman::robot_mcs_ids
-    for ( auto const& rid : iit::ecat::advr::coman::robot_mcs_ids ) {
+    // coman::robot_mcs_ids
+    for ( auto const& rid : coman::robot_mcs_ids ) {
         zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
         if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
             zmap[base_port+rid] = zpub;
@@ -101,8 +107,8 @@ void ZMQ_Pub_thread::th_init ( void* ) {
         }
     }
     ///////////////////////////////////////////////////////////////////////
-    // iit::ecat::advr::coman::robot_fts_ids
-    for ( auto const& rid : iit::ecat::advr::coman::robot_fts_ids ) {
+    // coman::robot_fts_ids
+    for ( auto const& rid : coman::robot_fts_ids ) {
         zpub = new FtPub ( uri+std::to_string ( base_port+rid ) );
         if ( zpub->open_pipe ( ft_prefix+std::to_string ( rid ) ) == 0 ) {
             zmap[base_port+rid] = zpub;
@@ -112,15 +118,16 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     }
     zpub = new PwCmnPub ( uri+std::to_string ( 10000 ) );
     if ( zpub->open_pipe ( "PowCmn_pos_1" ) == 0 ) {
-        zmap[base_port] = zpub;
+        zmap[10000] = zpub;
     } else {
         delete zpub;
     }
+#if 1
     ///////////////////////////////////////////////////////////////////////
     // WALKMAN
     ///////////////////////////////////////////////////////////////////////
-    // iit::ecat::advr::walkman::robot_mcs_ids
-    for ( auto const& rid : iit::ecat::advr::walkman::robot_mcs_ids ) {
+    // walkman::robot_mcs_ids
+    for ( auto const& rid : walkman::robot_mcs_ids ) {
         zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
         if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
             zmap[base_port+rid] = zpub;
@@ -129,8 +136,8 @@ void ZMQ_Pub_thread::th_init ( void* ) {
         }
     }
     ///////////////////////////////////////////////////////////////////////
-    // iit::ecat::advr::walkman::robot_fts_ids
-    for ( auto const& rid : iit::ecat::advr::walkman::robot_fts_ids ) {
+    // walkman::robot_fts_ids
+    for ( auto const& rid : walkman::robot_fts_ids ) {
         zpub = new FtPub ( uri+std::to_string ( base_port+rid ) );
         if ( zpub->open_pipe ( ft_prefix+std::to_string ( rid ) ) == 0 ) {
             zmap[base_port+rid] = zpub;
@@ -138,12 +145,14 @@ void ZMQ_Pub_thread::th_init ( void* ) {
             delete zpub;
         }
     }
-    zpub = new PwPub ( uri+std::to_string ( 10000 ) );
+#endif
+    zpub = new PwPub ( uri+std::to_string ( 10001 ) );
     if ( zpub->open_pipe ( "PowWkm_pos_1" ) == 0 ) {
-        zmap[base_port] = zpub;
+        zmap[10001] = zpub;
     } else {
         delete zpub;
     }
+
     ///////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////

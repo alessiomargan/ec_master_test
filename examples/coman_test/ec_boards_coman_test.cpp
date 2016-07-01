@@ -26,6 +26,7 @@ static const std::vector<double> Xt_4s = std::initializer_list<double> { 0, 4 };
 static const std::vector<double> Xt_5s = std::initializer_list<double> { 0, 5 };
 static const std::vector<double> Xt_9s = std::initializer_list<double> { 0, 9 };
 
+using namespace iit::ecat::advr;
 
 EC_boards_coman_test::EC_boards_coman_test ( const char* config_yaml ) :
     Ec_Thread_Boards_base ( config_yaml ) {
@@ -57,31 +58,35 @@ EC_boards_coman_test::~EC_boards_coman_test() {
  */
 void EC_boards_coman_test::init_preOP ( void ) {
 
-    iit::ecat::advr::Motor * moto;
+    Motor * moto;
     int slave_pos;
     float min_pos, max_pos;
 
-    std::vector<int> pos_rid = iit::ecat::advr::coman::robot_mcs_ids;
+    std::vector<int> pos_rid = coman::robot_mcs_ids;
     std::vector<int> no_control = std::initializer_list<int> {
-        iit::ecat::advr::coman::RA_HA,
-        iit::ecat::advr::coman::LA_HA,
+        coman::RA_HA,
+        coman::LA_HA,
+        
+        coman::RL_A_R,
+        coman::LL_K,
+
     };
         
     remove_rids_intersection(pos_rid, no_control);
 
-    get_esc_map_byclass ( left_leg,  iit::ecat::advr::coman::robot_left_leg_ids );
+    get_esc_map_byclass ( left_leg,  coman::robot_left_leg_ids );
     DPRINTF ( "found %lu <Motor> left_leg\n", left_leg.size() );
 
-    get_esc_map_byclass ( left_arm,  iit::ecat::advr::coman::robot_left_arm_ids );
+    get_esc_map_byclass ( left_arm,  coman::robot_left_arm_ids );
     DPRINTF ( "found %lu <Motor> left_arm\n", left_arm.size() );
 
-    get_esc_map_byclass ( right_leg, iit::ecat::advr::coman::robot_right_leg_ids );
+    get_esc_map_byclass ( right_leg, coman::robot_right_leg_ids );
     DPRINTF ( "found %lu <Motor> right_leg\n", right_leg.size() );
 
-    get_esc_map_byclass ( right_arm, iit::ecat::advr::coman::robot_right_arm_ids );
+    get_esc_map_byclass ( right_arm, coman::robot_right_arm_ids );
     DPRINTF ( "found %lu <Motor> right_arm\n", right_arm.size() );
 
-    get_esc_map_byclass ( waist,	   iit::ecat::advr::coman::robot_waist_ids );
+    get_esc_map_byclass ( waist,	   coman::robot_waist_ids );
     DPRINTF ( "found %lu <Motor> waist\n", waist.size() );
 
     // !!!
@@ -98,12 +103,12 @@ void EC_boards_coman_test::init_preOP ( void ) {
         moto->readSDO ( "Max_pos", max_pos );
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
-        home[slave_pos] = DEG2RAD ( iit::ecat::advr::coman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        home[slave_pos] = DEG2RAD ( coman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
         mid_pos[slave_pos] = MID_POS ( min_pos,max_pos ); //home[slave_pos] + 1.0;
         if ( mid_pos[slave_pos] == home[slave_pos] ) {
             mid_pos[slave_pos] += 0.2;
         }
-        if ( pos2Rid(slave_pos) == iit::ecat::advr::coman::WAIST_P || pos2Rid(slave_pos) == iit::ecat::advr::coman::WAIST_R ) {
+        if ( pos2Rid(slave_pos) == coman::WAIST_P || pos2Rid(slave_pos) == coman::WAIST_R ) {
             mid_pos[slave_pos] = home[slave_pos];
         }
         step_2[slave_pos] = start_pos[slave_pos]; //MID_POS(min_pos,max_pos) + 0.2;
@@ -131,6 +136,7 @@ void EC_boards_coman_test::init_preOP ( void ) {
         moto->start ( CTRL_SET_POS_MODE );
     }
 
+    // ec_master_test/scripts/xddp_term.py
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
@@ -182,8 +188,8 @@ int EC_boards_coman_test::user_loop ( void ) {
 #if 0
     {
         int slave_pos;
-        iit::ecat::advr::Motor * moto;
-        iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+        Motor * moto;
+        Motor::motor_pdo_rx_t motor_pdo_rx;
 
         if ( user_state == MOVING ) {
             for ( auto const& item : motors ) {

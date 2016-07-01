@@ -25,7 +25,7 @@ int main ( int argc, char *argv[] ) try {
 
     main_common ( shutdown );
 
-    threads["ZMQ_pub"] = new iit::ZMQ_Pub_thread();
+    threads["ZMQ_pub"] = new ZMQ_Pub_thread();
     threads["ZMQ_pub"]->create ( false,3 );
 
     while ( main_loop ) {

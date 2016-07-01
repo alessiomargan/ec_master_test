@@ -34,13 +34,7 @@ class Ec_Thread_Boards_base :
 public:
 
     virtual ~Ec_Thread_Boards_base();
-    Ec_Thread_Boards_base ( const char * config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
-            termInXddp.init ( "terminal" );
-    }
-
-    bool init_OK() {
-        return init_done;
-    };
+    Ec_Thread_Boards_base ( const char * config_yaml );
 
     virtual void th_init ( void * );
     virtual void th_loop ( void * );
@@ -67,7 +61,8 @@ protected :
     std::map<int,XDDP_pipe> xddps;
 
     XDDP_pipe termInXddp;
-
+    XDDP_pipe debugOutXddp;
+    
     std::map<int, iit::ecat::advr::Motor*> motors;
     std::map<int, iit::ecat::advr::Ft6ESC*> 	fts;
     std::map<int, iit::ecat::advr::FootSensorESC*> foot_sensors;
@@ -105,7 +100,6 @@ protected :
 
 private:
 
-    bool init_done;
     iit::ecat::ec_timing_t timing;
     
 };

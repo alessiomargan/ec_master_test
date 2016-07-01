@@ -12,7 +12,27 @@ ec_board_ctrl:
   sync_cycle_offset_ns: 3000000000
   #sync_cycle_offset_ns: 0
   power_off_boards: false
+ 
+firmware_update:
+  #fw_path: ../firmware/
+  fw_path: ../examples/fw_update/fw_pdo56/
+  slave_pos_list: [1]
   
+  big_motor:
+    bin_file: BigMotor.bin
+    passwd: 0xb001
+  medium_motor:
+    bin_file: MedMotor.bin
+    passwd: 0xb002
+  power_hub:
+    bin_file: Pow_Hub.bin
+    passwd: 0xb003
+  small_motor:
+    bin_file: mc_tm4c.bin
+    passwd: 0xbeef
+  force_torque_6:
+    bin_file: FT6.bin
+    passwd: 0xbeef
 
 #############################
 # GENERIC LpESC config

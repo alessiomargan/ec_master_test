@@ -16,9 +16,10 @@
 //#include "iit/advr/pos_spline.h"
 #include "iit/advr/spline.h"
 #include "iit/ecat/utils.h"
-#include "iit/ecat/advr/motor_iface.h"
+//#include "iit/ecat/advr/motor_iface.h"
 
 #include <chrono>
+#include <map>
 
 
 namespace advr {

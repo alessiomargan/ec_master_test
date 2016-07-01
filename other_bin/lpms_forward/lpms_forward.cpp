@@ -79,7 +79,7 @@ class ImuHandler {
         ImuData data;
         float qW,qX,qY,qZ;
     } ImuDataExt;
-    typedef iit::Publisher<ImuDataExt> ImuPub;
+    typedef Publisher<ImuDataExt> ImuPub;
 
 public:
     ~ImuHandler();

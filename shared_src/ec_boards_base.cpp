@@ -13,6 +13,12 @@
 
 #include <iit/advr/ec_boards_base.h>
 
+Ec_Thread_Boards_base::Ec_Thread_Boards_base ( const char * config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
+    
+    termInXddp.init ( "terminal" );
+    debugOutXddp.init ( "debugOut" );
+
+}
 
 Ec_Thread_Boards_base::~Ec_Thread_Boards_base() {
 
@@ -22,12 +28,9 @@ Ec_Thread_Boards_base::~Ec_Thread_Boards_base() {
     
 }
 
-
 void Ec_Thread_Boards_base::th_init ( void * ) {
 
     const YAML::Node config = get_config_YAML_Node();
-
-    init_done = false;
 
     // init Ec_Boards_ctrl
     if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
@@ -36,7 +39,9 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
 
     get_esc_map_byclass ( pows );
     DPRINTF ( "found %lu pows\n", pows.size() );
-
+    get_esc_map_byclass ( powCmns );
+    DPRINTF ( "found %lu powCmns\n", powCmns.size() );
+    
     // walkman power/battery board turn on all ESCs
     if ( pows.size() == 1 && slaves.size() == 1 ) {
         
@@ -62,10 +67,6 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     DPRINTF ( "found %lu fts\n", fts.size() );
     get_esc_map_byclass ( foot_sensors );
     DPRINTF ( "found %lu foot_sensors\n", foot_sensors.size() );
-    get_esc_map_byclass ( pows );
-    DPRINTF ( "found %lu pows\n", pows.size() );
-    get_esc_map_byclass ( powCmns );
-    DPRINTF ( "found %lu powCmns\n", powCmns.size() );
     get_esc_map_byclass ( tests );
     DPRINTF ( "found %lu tests\n", tests.size() );
 
@@ -92,7 +93,6 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
 
     init_OP();
 
-    init_done = true;
 }
 
 void Ec_Thread_Boards_base::th_loop ( void * ) {
@@ -153,7 +153,7 @@ void Ec_Thread_Boards_base::xddps_init ( void ) {
     for ( auto const& item : pows ) {
         slave_pos = item.first;
         xddps[slave_pos] = XDDP_pipe();
-        xddps[slave_pos].init ( "Pow_pos_"+std::to_string ( slave_pos ) );
+        xddps[slave_pos].init ( "PowWkm_pos_"+std::to_string ( slave_pos ) );
     }
 
     for ( auto const& item : powCmns ) {
