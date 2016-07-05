@@ -134,6 +134,7 @@ public:
 
         if ( rx_pdo.rtt ) {
             rx_pdo.rtt =  (uint16_t)(get_time_ns()/1000 - rx_pdo.rtt);
+//             rx_pdo.rtt = 0;
             s_rtt(rx_pdo.rtt);
         }
 

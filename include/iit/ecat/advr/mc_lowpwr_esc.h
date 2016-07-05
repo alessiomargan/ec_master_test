@@ -28,8 +28,8 @@ namespace advr {
 namespace lopwr_esc {
 //static float J2M(float p, int s, float o) { return ((s*o) + (s*p)); } 
 //static float M2J(float p, int s, float o) { return ((p + (s*o))/s); }
-static float J2M(float p, int s, float o) { return p; } 
-static float M2J(float p, int s, float o) { return p; } 
+static float J2M(float p, int s, float o) { return s*p; } 
+static float M2J(float p, int s, float o) { return s*p; } 
 
 }
 
@@ -179,7 +179,7 @@ public:
         tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
 
         // apply transformation from Joint to Motor 
-        //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
+        tx_pdo.pos_ref = lopwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
         
         if ( _start_log ) {
             log.ts_tx = (get_time_ns() - _start_log_ts)/1000000 ;
