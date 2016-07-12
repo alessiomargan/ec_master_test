@@ -21,26 +21,45 @@ namespace advr {
 
 
 struct TestEscPdoTypes {
-    // TX  slave_input -- master output
+    
+        // TX  slave_input -- master output
     struct pdo_tx {
-        float       pos_ref;  //link
-        int16_t     vel_ref;  //link
-        int16_t     tor_ref;  //link
-        uint16_t    gain_kp_m;
-        uint16_t    gain_kp_l;
-        uint16_t    gain_kd_m;
-        uint16_t    gain_kd_l;
-        uint16_t    gain_ki;
+        float       pos_ref;    //link
+        int16_t     vel_ref;    //link
+        int16_t     tor_ref;    //link
+        uint16_t    gain_0;     //kp_m  ImpPosP 
+        uint16_t    gain_1;     //kp_l  ImpTorP
+        uint16_t    gain_2;     //kd_m  ImpPosD
+        uint16_t    gain_3;     //kd_l  ImpTorD
+        uint16_t    gain_4;     //ki    ImpTorI
         uint16_t    fault_ack;
         uint16_t    ts;
         uint16_t    op_idx_aux;  // op [get/set] , idx
         float       aux;         // set value
 
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << pos_ref << delim;
+            os << vel_ref << delim;
+            os << tor_ref << delim;
+            os << gain_0 << delim;
+            os << gain_1 << delim;
+            os << gain_2 << delim;
+            os << gain_3 << delim;
+            os << gain_4 << delim;
+            os << fault_ack << delim;
+            os << ts << delim;
+            //os << std::endl;
+            return os;
+        }
         void fprint ( FILE *fp ) {
-            fprintf ( fp, "%f\t%d\t%d\t%d\t%d\n", pos_ref,vel_ref,tor_ref,fault_ack,ts );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            fprintf ( fp, "%s", oss.str().c_str() );
         }
         int sprint ( char *buff, size_t size ) {
-            return snprintf ( buff, size, "%f\t%d\t%d\t%d\t%d\n", pos_ref,vel_ref,tor_ref,fault_ack,ts );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
 
     }  __attribute__ ( ( __packed__ ) ); // 28 bytes
@@ -58,12 +77,27 @@ struct TestEscPdoTypes {
         uint16_t     op_idx_ack;         // op [ack/nack] , idx
         float        aux;                // get value or nack erro code
 
-
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << link_pos << delim;
+            os << motor_pos << delim;
+            os << link_vel << delim;
+            os << motor_vel << delim;
+            os << torque << delim;
+            os << temperature << delim;
+            os << fault << delim;
+            os << rtt << delim;
+            //os << std::endl;
+            return os;
+        }
         void fprint ( FILE *fp ) {
-            fprintf ( fp, "%f\t%f\t%f\t%d\t%d\t%d\t%d\t%d\n", link_pos,motor_pos,link_vel,motor_vel,torque,temperature,fault,rtt );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            fprintf ( fp, "%s", oss.str().c_str() );
         }
         int sprint ( char *buff, size_t size ) {
-            return snprintf ( buff, size, "%f\t%f\t%f\t%d\t%d\t%d\t%d\t%d\n", link_pos,motor_pos,link_vel,motor_vel,torque,temperature,fault,rtt );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
         void to_map ( jmap_t & jpdo ) {
             JPDO ( link_pos );
@@ -76,13 +110,15 @@ struct TestEscPdoTypes {
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
-            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_MOTOR);
-            // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
-            // Motor_rx_pdo
+            // Motor_xt_tx_pdo
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(link_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(motor_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_vel(link_vel);
@@ -97,18 +133,21 @@ struct TestEscPdoTypes {
 
 }; // 56 bytes
 
-inline std::ostream& operator<< (std::ostream& os, const TestEscPdoTypes::pdo_rx& rx_pdo ) {
-    os << rx_pdo.link_pos << "\t";
-    os << rx_pdo.motor_pos << "\t";
-    os << rx_pdo.link_vel << "\t";
-    os << rx_pdo.motor_vel << "\t";
-    os << rx_pdo.torque << "\t";
-    os << rx_pdo.temperature << "\t";
-    os << rx_pdo.fault << "\t";
-    os << rx_pdo.rtt << "\t";
-    os << std::endl;
-    return os;
+/*
+template <typename T>
+inline std::ostream& operator<< (std::ostream& os, const T& obj ) {
+    return obj.dump(os,"\t");
 }
+*/
+
+inline std::ostream& operator<< (std::ostream& os, const TestEscPdoTypes::pdo_tx& tx_pdo ) {
+    return tx_pdo.dump(os,"\t");
+}
+
+inline std::ostream& operator<< (std::ostream& os, const TestEscPdoTypes::pdo_rx& rx_pdo ) {
+    return rx_pdo.dump(os,"\t");
+}
+
 
 struct TestEscSdoTypes {
     
@@ -187,7 +226,7 @@ public:
         DPRINTF ( "\tPosGainP: %f PosGainI: %f PosGainD: %f I lim: %f\n", sdo.PosGainP, sdo.PosGainI, sdo.PosGainD, sdo.Pos_I_lim );
         DPRINTF ( "\tImpPosGainP :%f ImpPosGainD:%f\n", sdo.ImpedancePosGainP, sdo.ImpedancePosGainD );
         DPRINTF ( "\tTorGainP:%f TorGainI:%f Tor_I_lim:%f\n", sdo.TorGainP, sdo.TorGainI, sdo.Tor_I_lim );
-        DPRINTF ( "\tfw_ver %s\n", sdo.fw_ver );
+        DPRINTF ( "\tfw_ver %s\n", std::string((const char *)sdo.fw_ver,8).c_str() );
     }
 
     virtual void on_readPDO ( void ) {
@@ -244,19 +283,22 @@ public:
         }
 
         readSDO_byname ( "fw_ver" );
-        readSDO_byname ( "Min_pos" );
-        readSDO_byname ( "Max_pos" );
-        readSDO_byname ( "link_pos" );
+        
         readSDO_byname ( "PosGainP");
         readSDO_byname ( "PosGainI");
         readSDO_byname ( "PosGainD");
+        
+#if 0
+        readSDO_byname ( "Min_pos" );
+        readSDO_byname ( "Max_pos" );
+        readSDO_byname ( "link_pos" );
         readSDO_byname ( "Pos_I_lim");
         readSDO_byname ( "ImpPosGainP");
         readSDO_byname ( "ImpPosGainD");
         readSDO_byname ( "TorGainP");
         readSDO_byname ( "TorGainI");
         readSDO_byname ( "Tor_I_lim");
-        
+#endif
         start_log ( true );
 
         return EC_WRP_OK;

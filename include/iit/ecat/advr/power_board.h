@@ -84,13 +84,15 @@ struct PowEscPdoTypes {
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
-            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_POW_WLK);
-            // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
-            // Motor_rx_pdo
+            // PowWalkman_tx_pdo
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_status(status.all);
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_temperature(board_temp);
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_temp(battery_temp);

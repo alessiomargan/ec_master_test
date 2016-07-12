@@ -14,8 +14,6 @@
 #include <map>
 #include <fstream>
 #include <exception>
-#include <chrono>
-#include <ctime>
 
 #include <yaml-cpp/yaml.h>
 
@@ -126,7 +124,6 @@ typedef std::map<std::string, std::string> jmap_t;
 
 
 struct McEscPdoTypes {
-    
                     
     // TX  slave_input -- master output
     struct pdo_tx {
@@ -216,16 +213,14 @@ struct McEscPdoTypes {
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
-            using namespace std::chrono;
-            iit::advr::Ec_slave_pdo pb_rx_pdo;
-            auto tNow = steady_clock::now();
-            auto tSecs = tNow.time_since_epoch().count();
-            auto tNSecs = duration_cast<nanoseconds>(tNow.time_since_epoch()).count();
+            static iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_MOTOR);
-            // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(tSecs);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(tNSecs);
             // Motor_xt_tx_pdo
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(link_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(motor_pos);

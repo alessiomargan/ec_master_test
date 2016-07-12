@@ -97,17 +97,15 @@ struct PowCmnEscPdoTypes {
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
-            using namespace std::chrono;
-            iit::advr::Ec_slave_pdo pb_rx_pdo;
-            auto tNow = steady_clock::now();
-            auto tSecs = tNow.time_since_epoch().count();
-            auto tNSecs = duration_cast<nanoseconds>(tNow.time_since_epoch()).count();
+            static iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_POW_CMN);
-            // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(tSecs);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(tNSecs);
-            // PowComan_rx_pdo
+            // PowWalkman_rx_pdo
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_temperature(temperature);
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_v_batt(v_batt);
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_status(status.all);
