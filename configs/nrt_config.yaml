@@ -15,8 +15,9 @@ ec_board_ctrl:
  
 firmware_update:
   #fw_path: ../firmware/
-  fw_path: ../examples/fw_update/fw_pdo56/
-  slave_pos_list: [1]
+  #fw_path: ../examples/fw_update/fw_pdo56/
+  fw_path: ../examples/fw_update/fw_test/
+  slave_pos_list: [3]
   
   big_motor:
     bin_file: BigMotor.bin

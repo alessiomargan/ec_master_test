@@ -122,10 +122,11 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     } else {
         delete zpub;
     }
-#if 1
+    
     ///////////////////////////////////////////////////////////////////////
     // WALKMAN
     ///////////////////////////////////////////////////////////////////////
+    base_port = 9500;
     // walkman::robot_mcs_ids
     for ( auto const& rid : walkman::robot_mcs_ids ) {
         zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
@@ -145,7 +146,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
             delete zpub;
         }
     }
-#endif
+
     zpub = new PwPub ( uri+std::to_string ( 10001 ) );
     if ( zpub->open_pipe ( "PowWkm_pos_1" ) == 0 ) {
         zmap[10001] = zpub;

@@ -66,10 +66,6 @@ void EC_boards_coman_test::init_preOP ( void ) {
     std::vector<int> no_control = std::initializer_list<int> {
         coman::RA_HA,
         coman::LA_HA,
-        
-        coman::RL_A_R,
-        coman::LL_K,
-
     };
         
     remove_rids_intersection(pos_rid, no_control);
@@ -104,24 +100,18 @@ void EC_boards_coman_test::init_preOP ( void ) {
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
         home[slave_pos] = DEG2RAD ( coman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
-        mid_pos[slave_pos] = MID_POS ( min_pos,max_pos ); //home[slave_pos] + 1.0;
-        if ( mid_pos[slave_pos] == home[slave_pos] ) {
-            mid_pos[slave_pos] += 0.2;
-        }
-        if ( pos2Rid(slave_pos) == coman::WAIST_P || pos2Rid(slave_pos) == coman::WAIST_R ) {
-            mid_pos[slave_pos] = home[slave_pos];
-        }
-        step_2[slave_pos] = start_pos[slave_pos]; //MID_POS(min_pos,max_pos) + 0.2;
-        DPRINTF ( "Joint_id %d start %f home %f mid %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], mid_pos[slave_pos] );
+        test_pos[slave_pos] = DEG2RAD ( coman::robot_ids_test_pos_deg[pos2Rid(slave_pos)] );
+
+        DPRINTF ( "Joint_id %d start %f home %f mid %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
 
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         spline_start2home[slave_pos].set_points ( Xt_5s, Ys );
 
-        Ys = std::initializer_list<double> { home[slave_pos], mid_pos[slave_pos] };
-        spline_home2mid[slave_pos].set_points ( Xt_3s, Ys );
+        Ys = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos] };
+        spline_home2test[slave_pos].set_points ( Xt_5s, Ys );
 
-        Ys = std::initializer_list<double> { mid_pos[slave_pos], home[slave_pos] };
-        spline_mid2home[slave_pos].set_points ( Xt_3s, Ys );
+        Ys = std::initializer_list<double> { test_pos[slave_pos], home[slave_pos] };
+        spline_test2home[slave_pos].set_points ( Xt_5s, Ys );
 
         /* If k does not match the key of any element in the container, the function inserts a new element with that key
             * and returns a reference to its mapped value. Notice that this always increases the container size by one,
@@ -140,11 +130,12 @@ void EC_boards_coman_test::init_preOP ( void ) {
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
-    //
-    q_spln.push ( &spline_start2home );
-    q_spln.push ( &spline_home2mid );
-    q_spln.push ( &spline_mid2home );
-
+    if ( motors_to_start.size() > 0 ) {
+        //
+        q_spln.push ( &spline_start2home );
+        q_spln.push ( &spline_home2test );
+        q_spln.push ( &spline_test2home );
+    }
 }
 
 
@@ -185,32 +176,12 @@ int EC_boards_coman_test::user_loop ( void ) {
         DPRINTF ( ">> %f\n", ds );
     }
 
-#if 0
-    {
-        int slave_pos;
-        Motor * moto;
-        Motor::motor_pdo_rx_t motor_pdo_rx;
-
-        if ( user_state == MOVING ) {
-            for ( auto const& item : motors ) {
-                moto =  item.second;
-                motor_pdo_rx = moto->getRxPDO();
-                // pos_ref_fb is the previous reference
-                moto->set_posRef ( motor_pdo_rx.pos_ref_fb + ds );
-            }
-
-        } else {
-            ds = 0;
-        }
-    }
-#endif
-
     if ( ! q_spln.empty() ) {
 
         running_spline = q_spln.front();
         if ( running_spline ) {
             // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors_to_start, *running_spline, spline_error, false) ) {
+            if ( go_there ( motors_to_start, *running_spline, spline_error, true) ) {
                 // running spline has finish !!
                 last_run_spline = running_spline;
                 q_spln.pop();
@@ -225,14 +196,18 @@ int EC_boards_coman_test::user_loop ( void ) {
             q_spln.pop();
         }
     } else { // q_spln is empty
+        
         running_spline = last_run_spline = 0;
-        // add splines ....
-        q_spln.push ( &spline_home2mid );
-        q_spln.push ( &spline_mid2home );
-        // !!! since queue was empty reset the first spline
-        running_spline = q_spln.front();
-        last_run_spline = running_spline;
-        advr::reset_spline_trj ( *running_spline );
+
+        if ( motors_to_start.size() > 0 ) {
+            // add splines ....
+            q_spln.push ( &spline_home2test );
+            q_spln.push ( &spline_test2home );
+            // !!! since queue was empty reset the first spline
+            running_spline = q_spln.front();
+            last_run_spline = running_spline;
+            advr::reset_spline_trj ( *running_spline );
+        }
     }
 
 }
@@ -320,13 +295,13 @@ int EC_boards_coman_test::xddp_input ( C &user_cmd ) {
             case 0 :
                 if ( js_cmd.value && user_state == IDLE ) {
                     user_state = HOME2MID;
-                    advr::reset_spline_trj ( spline_home2mid );
+                    advr::reset_spline_trj ( spline_home2test );
                 }
                 break;
             case 1 :
                 if ( js_cmd.value && user_state == IDLE ) {
                     user_state = MID2HOME;
-                    advr::reset_spline_trj ( spline_mid2home );
+                    advr::reset_spline_trj ( spline_test2home );
                 }
                 break;
             case 2 :

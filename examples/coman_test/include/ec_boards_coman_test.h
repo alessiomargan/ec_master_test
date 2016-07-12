@@ -53,12 +53,13 @@ private :
     virtual void init_preOP ( void );
     virtual void init_OP ( void );
 
-    std::map<int,float> mid_pos;
     std::map<int,float> step_2;
+    std::map<int,float> test_pos;
+    
 
     advr::Spline_map spline_start2home;
-    advr::Spline_map spline_home2mid;
-    advr::Spline_map spline_mid2home;
+    advr::Spline_map spline_home2test;
+    advr::Spline_map spline_test2home;
     advr::Spline_map spline_any2home;
 
     XDDP_pipe jsInXddp, navInXddp, imuInXddp;
