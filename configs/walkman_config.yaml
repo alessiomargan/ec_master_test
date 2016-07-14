@@ -1,10 +1,11 @@
 #
 ec_boards_base:
-  create_pipes: false
+  create_pipes: true
   
 ec_board_ctrl:
   eth_iface: rteth0
   #eth_iface: eth1
+  #eth_iface: eth0
   #sync_cycle_time_ns: 500000
   sync_cycle_time_ns: 1000000
   #sync_cycle_time_ns: 2000000
@@ -15,7 +16,9 @@ ec_board_ctrl:
   
 firmware_update:
   #
-  fw_path: ../firmware/  
+  #fw_path: ../firmware/  
+  fw_path: ../examples/fw_update/fw_pdo56/  
+  #fw_path: ../examples/fw_update/fw_pdo56/NO_walkman_upgrade/  
   # slave robot id
   # legs motors
   #slave_rId_list: [41,41,42,43,44,45,46,51,52,53,54,55,56]
@@ -23,13 +26,20 @@ firmware_update:
   #slave_rId_list: [31,31,32,33,11,12,13,14,21,22,23,24]
   # upper body arms
   #slave_rId_list: [11,12,13,14,21,22,23,24]
-  #slave_pos_list: [12,19,29,38]
   # small motors
   #slave_rId_list: [15,16,17,19,25,26,27,29,1,2]
   #slave_pos_list: [5]
   #slave_pos_list: [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40]
-  slave_rId_list: [1,1,2,15,16,17,19,25,26,27,29]
+  #slave_rId_list: [1,1,2,15,16,17,19,25,26,27,29]
+  #slave_rId_list: [32,33]
+  # all esc
   #slave_pos_list: [0]
+  # all BigMotor
+  #slave_pos_list: [-1]
+  # all MedMotor
+  #slave_pos_list: [-2]
+  # all LowPower motor
+  #slave_pos_list: [-3]
   
   big_motor:
     bin_file: BigMotor.bin
@@ -209,14 +219,14 @@ HpESC_14:
 
 # RA_WR_1 = 15
 LpESC_15:
-  sign: 1
+  sign: -1
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]
 
 # RA_WR_2 = 16
 LpESC_16:
-  sign: 1
+  sign: -1
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]
@@ -273,7 +283,7 @@ HpESC_24:
 
 # LA_WR_1 = 25
 LpESC_25:
-  sign: 1
+  sign: -1
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]

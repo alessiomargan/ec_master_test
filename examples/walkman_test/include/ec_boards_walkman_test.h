@@ -57,11 +57,10 @@ private :
     void move_hands(float, float);
     
     std::map<int,float> test_pos;
-    std::map<int,float> step_2;
 
     advr::Spline_map spline_start2home;
-    advr::Spline_map spline_home2mid;
-    advr::Spline_map spline_mid2home;
+    advr::Spline_map spline_home2test_pos;
+    advr::Spline_map spline_test_pos2home;
     advr::Spline_map spline_any2home;
 
     XDDP_pipe jsInXddp, navInXddp, imuInXddp;

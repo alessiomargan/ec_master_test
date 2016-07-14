@@ -83,17 +83,12 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     get_esc_map_byclass ( hands,       walkman::robot_hands_ids );
     DPRINTF ( "found %lu <Motor> hands\n", hands.size() );
 
-    std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
-    //std::vector<int> pos_ctrl_ids = std::initializer_list<int> {};
-    
-    remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
-    remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
-    get_esc_map_byclass ( motors2ctrl,  pos_ctrl_ids );
-
     std::vector<double> Ys;
     std::vector<double> Xs;
 
-    for ( auto const& item : motors2ctrl ) {
+    ///////////////////////////////////////////////////////////////////////
+    // prepare splines for ALL motors
+    for ( auto const& item : motors ) {
     
         slave_pos = item.first;
         moto = item.second;
@@ -104,18 +99,16 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
         test_pos[slave_pos] = DEG2RAD ( walkman::robot_ids_test_pos_deg[pos2Rid(slave_pos)] );
         
-        step_2[slave_pos] = start_pos[slave_pos]; //MID_POS(min_pos,max_pos) + 0.2;
-        
-        DPRINTF ( "Joint_id %d start %f home %f mid %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
+        DPRINTF ( "Joint_id %d start %f home %f test_pos %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
 
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         spline_start2home[slave_pos].set_points ( Xt_5s, Ys );
 
         Ys = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos] };
-        spline_home2mid[slave_pos].set_points ( Xt_3s, Ys );
+        spline_home2test_pos[slave_pos].set_points ( Xt_3s, Ys );
 
         Ys = std::initializer_list<double> { test_pos[slave_pos], home[slave_pos] };
-        spline_mid2home[slave_pos].set_points ( Xt_3s, Ys );
+        spline_test_pos2home[slave_pos].set_points ( Xt_3s, Ys );
 
         /* If k does not match the key of any element in the container, the function inserts a new element with that key
             * and returns a reference to its mapped value. Notice that this always increases the container size by one,
@@ -124,59 +117,70 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         spline_any2home[slave_pos].set_points ( Xt_5s, Ys );
 
-        //////////////////////////////////////////////////////////////////////////
-        // start controller :
-        // - read actual joint position and set as pos_ref
-        if ( moto->am_i_LpESC() ) {
-            moto->start ( CTRL_SET_POS_MODE );
-        } else if ( moto->am_i_HpESC() ) {
-            moto->start ( CTRL_SET_MIX_POS_MODE );
-        } else {
-            
-        }
+    }
+    
+    
+    std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
+    //std::vector<int> pos_ctrl_ids = walkman::robot_left_arm_ids;
+    //std::vector<int> pos_ctrl_ids = walkman::robot_right_leg_ids;
+    //std::vector<int> pos_ctrl_ids = walkman::robot_left_leg_ids;
+//     std::vector<int> pos_ctrl_ids = std::initializer_list<int> {
+//         walkman::RL_H_P,
+//         walkman::RL_K,
+//         walkman::RL_A_P,
+//         walkman::RL_A_R,
+// 
+//         walkman::LL_A_P,
+//         walkman::LL_A_R,
+//     };
+    
+    std::vector<int> no_control = std::initializer_list<int> {
+//         walkman::RL_H_R,
+//         walkman::LL_H_R,
         
-        //while ( ! moto->move_to(home[slave_pos], 0.001) ) { osal_usleep(100);  }
-    }
-
-    for ( auto const& item : head ) {
+//         walkman::RL_H_Y,
+//         walkman::RL_A_R,
+//         
+//         walkman::LL_H_Y,
+//         walkman::LL_A_R,
+// 
+//         walkman::WAIST_Y,
+//         walkman::WAIST_P,
+//         walkman::WAIST_R,
+    };
     
+    remove_rids_intersection(pos_ctrl_ids, no_control);
+//    remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_arm_ids);
+//    remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_arm_ids);
+//    remove_rids_intersection(pos_ctrl_ids, walkman::robot_waist_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_leg_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_leg_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
+    get_esc_map_byclass ( motors2ctrl,  pos_ctrl_ids );
+
+    for ( auto const& item : motors2ctrl ) {
         slave_pos = item.first;
         moto = item.second;
-        moto->readSDO ( "link_pos", start_pos[slave_pos] );
-        // home
-        home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
+        //DPRINTF ( ">>> START %d wait xddp terminal ....\n", moto->get_robot_id() );
+        //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }
         if ( moto->am_i_LpESC() ) { moto->start ( CTRL_SET_POS_MODE ); }
         else if ( moto->am_i_HpESC() ) { moto->start ( CTRL_SET_MIX_POS_MODE ); }
         else {  }
         //while ( ! moto->move_to(home[slave_pos], 0.005) ) { osal_usleep(100);  }
     }
 
-    for ( auto const& item : hands ) {
-    
-        slave_pos = item.first;
-        moto = item.second;
-        moto->readSDO ( "link_pos", start_pos[slave_pos] );
-        // home
-        home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
-        //////////////////////////////////////////////////////////////////////////
-        // start controller :
-        // - read actual joint position and set as pos_ref
-        if ( moto->am_i_LpESC() ) { moto->start ( CTRL_SET_POS_MODE ); }
-        else if ( moto->am_i_HpESC() ) { moto->start ( CTRL_SET_MIX_POS_MODE ); }
-        else {  }
-        //while ( ! moto->move_to(home[slave_pos], 0.005) ) { osal_usleep(100);  }
-    }
 
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     if ( motors2ctrl.size() > 0 ) {
         q_spln.push ( &spline_start2home );
-        q_spln.push ( &spline_home2mid );
-        q_spln.push ( &spline_mid2home );
+        q_spln.push ( &spline_home2test_pos );
+        q_spln.push ( &spline_test_pos2home );
     }
 }
 
@@ -204,7 +208,7 @@ int EC_boards_walkman_test::user_loop ( void ) {
 
     static float ds;
     static uint64_t count;
-    float spline_error = 0.07;
+    const float spline_error = 0.07;
 
     if ( ( count++ ) % 1000 == 0 ) {
         DPRINTF ( "alive %d\n", count/1000 );
@@ -238,12 +242,12 @@ int EC_boards_walkman_test::user_loop ( void ) {
         }
     } else { // q_spln is empty
 
-        if ( motors2ctrl.size() > 0 ) {
+        running_spline = last_run_spline = 0;
             
-            running_spline = last_run_spline = 0;
+        if ( motors2ctrl.size() > 0 ) {
             // add splines ....
-            q_spln.push ( &spline_home2mid );
-            q_spln.push ( &spline_mid2home );
+            q_spln.push ( &spline_home2test_pos );
+            q_spln.push ( &spline_test_pos2home );
             // !!! since queue was empty reset the first spline
             running_spline = q_spln.front();
             last_run_spline = running_spline;
@@ -401,13 +405,13 @@ int EC_boards_walkman_test::xddp_input ( C &user_cmd ) {
             case 0 :
                 if ( js_cmd.value && user_state == IDLE ) {
                     user_state = HOME2MID;
-                    advr::reset_spline_trj ( spline_home2mid );
+                    advr::reset_spline_trj ( spline_home2test_pos );
                 }
                 break;
             case 1 :
                 if ( js_cmd.value && user_state == IDLE ) {
                     user_state = MID2HOME;
-                    advr::reset_spline_trj ( spline_mid2home );
+                    advr::reset_spline_trj ( spline_test_pos2home );
                 }
                 break;
             case 2 :

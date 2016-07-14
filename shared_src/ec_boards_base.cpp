@@ -209,8 +209,8 @@ void Ec_Thread_Boards_base::xddps_loop ( void ) {
 }
 
 
-void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_dest, const std::vector<int> &to_remove) {
-
+void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_dest, const std::vector<int> &to_remove)
+{
     start_dest.erase(
         std::remove_if(start_dest.begin(), start_dest.end(),
             [to_remove](const int &rid) {
@@ -228,8 +228,8 @@ void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_des
  */
 bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
                                        const std::map<int,float> &target_pos,
-                                       float eps, bool debug ) {
-
+                                       float eps, bool debug )
+{
     int cond, cond_cnt, cond_sum;
     float pos_ref, motor_err, link_err, motor_link_err;
     int slave_pos;
@@ -285,12 +285,18 @@ bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Moto
     return ( cond_cnt == cond_sum );
 }
 
+bool Ec_Thread_Boards_base::go_there ( const std::map<int,float> &target_pos,
+                                       float eps, bool debug )
+{
+    return go_there(motors, target_pos, eps, debug);
+}
+
 //template <typename T>
 bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
                                        //const std::map<int,advr::trajectory<T>> &spline_map_trj,
                                        const advr::Spline_map &spline_map_trj,
-                                       float eps, bool debug ) {
-
+                                       float eps, bool debug )
+{
     int cond, cond_cnt, cond_sum;
     float pos_ref, motor_err, link_err, motor_link_err;
     int slave_pos;
@@ -349,6 +355,11 @@ bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Moto
     return ( cond_cnt == cond_sum );
 }
 
+bool Ec_Thread_Boards_base::go_there ( const advr::Spline_map &spline_map_trj,
+                                       float eps, bool debug )
+{
+    return go_there(motors, spline_map_trj, eps, debug);
+}
 
 void Ec_Thread_Boards_base::smooth_splines_trj ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
                                                  advr::Spline_map &new_spline_trj,
@@ -407,6 +418,12 @@ void Ec_Thread_Boards_base::smooth_splines_trj ( const std::map<int, iit::ecat::
 
 }
 
+void Ec_Thread_Boards_base::smooth_splines_trj ( advr::Spline_map &new_spline_trj,
+                                                 const advr::Spline_map &old_spline_trj,
+                                                 double smooth_time )
+{
+    smooth_splines_trj(motors, new_spline_trj, old_spline_trj, smooth_time);
+}
 
 void Ec_Thread_Boards_base::get_trj_for_end_points ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
                                                      advr::Spline_map &new_spline_trj,
@@ -444,15 +461,25 @@ void Ec_Thread_Boards_base::get_trj_for_end_points ( const std::map<int, iit::ec
 
 }
 
+void Ec_Thread_Boards_base::get_trj_for_end_points ( advr::Spline_map &new_spline_trj,
+                                                     std::map<int,float> &end_points,
+                                                     float secs )
+{
+    get_trj_for_end_points(motors, new_spline_trj, end_points, secs);   
+}
+
 void Ec_Thread_Boards_base::set_any2home ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
                                            advr::Spline_map &new_spline_trj,
                                            advr::Spline_map &old_spline_trj )
 {
-
     get_trj_for_end_points ( motor_set, new_spline_trj, home, 5 );
-
     DPRINTF ( "Set_any2home\n" );
+}
 
+void Ec_Thread_Boards_base::set_any2home ( advr::Spline_map &new_spline_trj,
+                                           advr::Spline_map &old_spline_trj )
+{
+    set_any2home(motors, new_spline_trj, old_spline_trj);
 }
 
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
