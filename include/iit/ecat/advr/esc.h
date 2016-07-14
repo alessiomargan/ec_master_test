@@ -149,7 +149,7 @@ struct McEscPdoTypes {
             os << gain_2 << delim;
             os << gain_3 << delim;
             os << gain_4 << delim;
-            os << fault_ack << delim;
+            os << std::hex << fault_ack << std::dec << delim;
             os << ts << delim;
             //os << std::endl;
             return os;
@@ -187,7 +187,7 @@ struct McEscPdoTypes {
             os << motor_vel << delim;
             os << torque << delim;
             os << temperature << delim;
-            os << fault << delim;
+            os << std::hex << fault << std::dec << delim;
             os << rtt << delim;
             //os << std::endl;
             return os;

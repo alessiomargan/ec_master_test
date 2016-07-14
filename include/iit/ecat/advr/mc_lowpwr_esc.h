@@ -27,15 +27,10 @@ namespace ecat {
 namespace advr {
 
 namespace lopwr_esc {
-//static float J2M(float p, int s, float o) { return ((s*o) + (s*p)); }
-//static float M2J(float p, int s, float o) { return ((p + (s*o))/s); }
-static float J2M ( float p, int s, float o ) {
-    return p;
-}
-static float M2J ( float p, int s, float o ) {
-    return p;
-}
-
+static float J2M(float p, int s, float o) { return ((s*o) + (s*p)); }
+static float M2J(float p, int s, float o) { return ((p + (s*o))/s); }
+//static float J2M ( float p, int s, float o ) { return p; }
+//static float M2J ( float p, int s, float o ) { return p; }
 }
 
 struct LoPwrEscSdoTypes {
@@ -93,15 +88,16 @@ struct LoPwrEscSdoTypes {
 
 struct LoPwrLogTypes {
 
-    uint64_t                ts;           // ns
+    uint64_t                ts;     // ns
+    float                   pos_ref;
     McEscPdoTypes::pdo_rx   rx_pdo;
 
     void fprint ( FILE *fp ) {
-        fprintf ( fp, "%lu\t", ts );
+        fprintf ( fp, "%lu\t%f\t", ts, pos_ref );
         rx_pdo.fprint ( fp );
     }
     int sprint ( char *buff, size_t size ) {
-        int l = snprintf ( buff, size, "%lu\t", ts );
+        int l = snprintf ( buff, size, "%lu\t%f\t", ts, pos_ref );
         return l + rx_pdo.sprint ( buff+l,size-l );
     }
 };
@@ -150,6 +146,8 @@ public:
 
     virtual void init_SDOs ( void );
 
+protected :
+    
     virtual void on_readPDO ( void ) {
 
         if ( rx_pdo.rtt ) {
@@ -173,6 +171,7 @@ public:
         if ( _start_log ) {
             Log::log_t log;
             log.ts = get_time_ns() - _start_log_ts ;
+            log.pos_ref = lopwr_esc::M2J ( tx_pdo.pos_ref,_sgn,_offset );
             log.rx_pdo = rx_pdo;
             push_back ( log );
         }
@@ -181,9 +180,8 @@ public:
     virtual void on_writePDO ( void ) {
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
-
         // apply transformation from Joint to Motor
-        //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
+        tx_pdo.pos_ref = lopwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
 
     }
 
@@ -215,6 +213,7 @@ public:
         return EC_BOARD_OK;
     }
 
+public:        
     ///////////////////////////////////////////////////////
     ///
     /// Motor method implementation
@@ -475,7 +474,6 @@ public:
 
     }
 
-    virtual void set_off_sgn ( float offset, int sgn ) {}
 
 private:
 

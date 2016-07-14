@@ -1,5 +1,5 @@
-#cmake_minimum_required(VERSION 2.8.3)
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 2.8.3)
+#cmake_minimum_required(VERSION 3.2)
 project(protos)
 
 find_package(Protobuf REQUIRED)
