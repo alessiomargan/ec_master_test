@@ -174,7 +174,7 @@ public:
     
     HpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
+        Log(std::string("/home/PDO_log/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
         _start_log = false;
         //_actual_state = EC_STATE_PRE_OP;
@@ -218,57 +218,6 @@ protected :
         // apply transformation from Motor to Joint 
         rx_pdo.link_pos = hipwr_esc::M2J(rx_pdo.link_pos,_sgn,_offset); 
         rx_pdo.motor_pos = hipwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset); 
-        
-//         // TX
-//         float       pos_ref;    //link
-//         int16_t     vel_ref;    //link
-//         int16_t     tor_ref;    //link
-//         uint16_t    gains[5];
-//         uint16_t    fault_ack;
-//         uint16_t    ts;
-//         uint16_t    op_idx_aux; // op [get/set] , idx
-//         float       aux_set;    // set value
-//         
-//         // RX
-//         float        link_pos;           // rad
-//         float        motor_pos;          // rad
-//         float        link_vel;           // radTBD on the firmware 
-//         int16_t      motor_vel;          // rad/s
-//         int16_t      torque;             // Nm
-//         uint16_t     max_temperature;    // C
-//         uint16_t     fault;
-//         uint16_t     rtt;                // us
-//         uint16_t     op_idx_ack;         // op [ack/nack] , idx
-//         float        aux_get;            // get value or nack erro code
-//         
-//         if ( _start_log ) {
-//             Log::log_t log;
-//             // TX
-//             log.ts = get_time_ns() - _start_log_ts ;
-//             log.pos_ref     =   hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset);
-//             log.vel_ref     =   tx_pdo.vel_ref;
-//             log.tor_ref     =   tx_pdo.tor_ref;
-//             log.gains[0]    =   tx_pdo.gains[0];
-//             log.gains[1]    =   tx_pdo.gains[1];
-//             log.gains[2]    =   tx_pdo.gains[2];
-//             log.gains[3]    =   tx_pdo.gains[3];
-//             log.gains[4]    =   tx_pdo.gains[4];
-//             log.fault_ack   =   tx_pdo.fault_ack;
-//             log.ts          =   tx_pdo.ts;
-//             log.op_idx_aux  =   tx_pdo.op_idx_aux;
-//             log.aux_set     =   tx_pdo.aux;
-//             // RX
-//             log.link_pos        = rx_pdo.link_pos;
-//             log.motor_pos       = rx_pdo.motor_pos;
-//             log.link_vel        = rx_pdo.link_vel;
-//             log.link_vel        = rx_pdo.link_vel;
-//             log.max_temperature = rx_pdo.max_temperature;  
-//             log.fault           = rx_pdo.fault;   
-//             log.rtt             = rx_pdo.rtt;     
-//             log.op_idx_aux      = rx_pdo.op_idx_ack;
-//             log.aux_get         = rx_pdo.aux;
-//             push_back(log);
-//         }
         
         if ( _start_log ) {
             log.ts_rx = (get_time_ns() - _start_log_ts)/1000000 ;
@@ -387,7 +336,7 @@ public :
 	readSDO_byname("link_pos");
 
 	// set filename with robot_id
-        log_filename = std::string("/tmp/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+        log_filename = std::string("/home/PDO_log/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
     
         // Paranoid Direct_ref
         float direct_ref = 0.0;

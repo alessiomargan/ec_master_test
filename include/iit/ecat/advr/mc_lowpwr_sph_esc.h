@@ -163,7 +163,7 @@ public:
 
     LpSphESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/LpSphESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
+        Log(std::string("/home/PDO_log/LpSphESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
 	//_actual_state = EC_STATE_PRE_OP;
     }

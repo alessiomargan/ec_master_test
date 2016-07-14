@@ -182,7 +182,7 @@ public:
 
     LpSphBrkESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/LpSphBrkESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
+        Log(std::string("/home/PDO_log/LpSphBrkESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
 	//_actual_state = EC_STATE_PRE_OP;
     }
@@ -317,7 +317,7 @@ public:
 	readSDO_byname("Target_velocity");
 	readSDO_byname("link_pos");
 
-        log_filename = std::string("/tmp/LpSphBrkESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+        log_filename = std::string("/home/PDO_log/LpSphBrkESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
         
 	// we log when receive PDOs
         start_log(true);

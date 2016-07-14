@@ -114,7 +114,7 @@ public:
 public:
     Ft6ESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/Ft6ESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
+        Log(std::string("/home/PDO_log/Ft6ESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     { }
 
     virtual ~Ft6ESC(void) {
@@ -204,7 +204,7 @@ public:
         }
 #endif
         // set filename with robot_id
-        log_filename = std::string("/tmp/Ft6ESC_"+std::to_string(sdo.sensor_robot_id)+"_log.txt");
+        log_filename = std::string("/home/PDO_log/Ft6ESC_"+std::to_string(sdo.sensor_robot_id)+"_log.txt");
     
         // we log when receive PDOs
         start_log(true);

@@ -97,7 +97,7 @@ public:
 
     TestESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/tmp/ESC_test_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
+        Log(std::string("/home/PDO_log/ESC_test_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
 
     }
