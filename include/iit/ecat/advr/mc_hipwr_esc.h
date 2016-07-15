@@ -174,7 +174,7 @@ public:
     
     HpESC(const ec_slavet& slave_descriptor) :
         Base(slave_descriptor),
-        Log(std::string("/home/PDO_log/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
+        Log(std::string("/home/embedded/PDO_log/HpESC_pos"+std::to_string(position)+"_log.txt"),DEFAULT_LOG_SIZE)
     {
         _start_log = false;
         //_actual_state = EC_STATE_PRE_OP;
@@ -336,7 +336,7 @@ public :
 	readSDO_byname("link_pos");
 
 	// set filename with robot_id
-        log_filename = std::string("/home/PDO_log/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
+        log_filename = std::string("/home/embedded/PDO_log/HpESC_"+std::to_string(sdo.Joint_robot_id)+"_log.txt");
     
         // Paranoid Direct_ref
         float direct_ref = 0.0;
