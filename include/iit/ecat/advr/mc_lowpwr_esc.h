@@ -166,7 +166,10 @@ public:
         // apply transformation from Motor to Joint 
         rx_pdo.link_pos = lopwr_esc::M2J(rx_pdo.link_pos,_sgn,_offset); 
         rx_pdo.motor_pos = lopwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset); 
-//         rx_pdo.pos_ref_fb  = lopwr_esc::M2J(rx_pdo.pos_ref_fb,_sgn,_offset);
+        // NOTE no transformations  for LOW POWER joints
+        
+        // apply scale factor
+        rx_pdo.torque /= 100.0;
 
 	if ( _start_log ) {
             log.ts_rx = (get_time_ns() - _start_log_ts)/1000000 ;

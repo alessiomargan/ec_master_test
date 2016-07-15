@@ -218,6 +218,8 @@ protected :
         // apply transformation from Motor to Joint 
         rx_pdo.link_pos = hipwr_esc::M2J(rx_pdo.link_pos,_sgn,_offset); 
         rx_pdo.motor_pos = hipwr_esc::M2J(rx_pdo.motor_pos,_sgn,_offset); 
+        // apply scale factor
+        rx_pdo.torque /= 100.0;
         
         if ( _start_log ) {
             log.ts_rx = (get_time_ns() - _start_log_ts)/1000000 ;
