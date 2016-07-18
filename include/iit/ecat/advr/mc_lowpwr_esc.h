@@ -180,8 +180,9 @@ protected :
     virtual void on_writePDO ( void ) {
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
-        // apply transformation from Joint to Motor
-        tx_pdo.pos_ref = lopwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
+        // NOOOOOOOOOOOO
+        // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
+        //tx_pdo.pos_ref = lopwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
 
     }
 
@@ -311,7 +312,9 @@ public:
             // set actual position as reference
             readSDO_byname ( "link_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
-            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__, act_position, tx_pdo.pos_ref );
+            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
+                      act_position,
+                      lopwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
             
             if ( controller_type == CTRL_SET_POS_MODE ) {
             
@@ -422,7 +425,7 @@ public:
     /////////////////////////////////////////////
     // set pdo data
     virtual int set_posRef ( float joint_pos ) {
-        tx_pdo.pos_ref = joint_pos;
+        tx_pdo.pos_ref = lopwr_esc::J2M(joint_pos,_sgn,-_offset);
     }
     virtual int set_velRef ( float joint_vel ) {
         tx_pdo.vel_ref = joint_vel;

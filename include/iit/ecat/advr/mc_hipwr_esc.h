@@ -191,8 +191,9 @@ protected :
     virtual void on_writePDO ( void ) {
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
-        // apply transformation from Joint to Motor
-        tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
+        // NOOOOOOOOOOOO
+        // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
+        //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
 
     virtual int on_readSDO ( const objd_t * sdobj )  {
@@ -325,7 +326,8 @@ public :
         uint16_t gain;
         float max_vel = 3.0;
 
-        DPRINTF ( "Start motor[%d] 0x%02X %.2f %.2f %.2f\n", Joint_robot_id, controller_type, _p, _i, _d );
+        DPRINTF ( "Start motor[%d] 0x%02X %.2f %.2f %.2f\n",
+                  Joint_robot_id, controller_type, _p, _i, _d );
 
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
@@ -345,6 +347,10 @@ public :
             // set actual position as reference
             readSDO_byname ( "link_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
+            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
+                      act_position,
+                      hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
+            
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
@@ -403,7 +409,7 @@ public :
     /////////////////////////////////////////////
     // set pdo data
     virtual int set_posRef ( float joint_pos ) {
-        tx_pdo.pos_ref = joint_pos,_sgn,_offset;
+        tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset);
     }
     virtual int set_velRef ( float joint_vel ) {
         tx_pdo.vel_ref = joint_vel;
