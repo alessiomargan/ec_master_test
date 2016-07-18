@@ -137,10 +137,12 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     std::vector<int> no_control = std::initializer_list<int> {
 //         walkman::RL_H_R,
 //         walkman::LL_H_R,
-        
+//       
 //         walkman::RL_H_Y,
 //         walkman::RL_A_R,
-//         
+
+//        walkman::LL_K,
+
 //         walkman::LL_H_Y,
 //         walkman::LL_A_R,
 // 
@@ -174,10 +176,11 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     }
 
 
+    DPRINTF ( ">>> motors2ctrl %d motors2move %d\n", motors2ctrl.size(), motors2move.size() );
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
-    if ( motors2ctrl.size() > 0 ) {
+    if ( motors2move.size() > 0 ) {
         q_spln.push ( &spline_start2home );
         q_spln.push ( &spline_home2test_pos );
         q_spln.push ( &spline_test_pos2home );
@@ -226,13 +229,13 @@ int EC_boards_walkman_test::user_loop ( void ) {
         running_spline = q_spln.front();
         if ( running_spline ) {
             // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors2ctrl, *running_spline, spline_error, false) ) {
+            if ( go_there ( motors2move, *running_spline, spline_error, false) ) {
                 // running spline has finish !!
                 last_run_spline = running_spline;
                 q_spln.pop();
                 if ( ! q_spln.empty() ) {
                     running_spline = q_spln.front();
-                    smooth_splines_trj ( motors2ctrl, *running_spline, *last_run_spline );
+                    smooth_splines_trj ( motors2move, *running_spline, *last_run_spline );
                     advr::reset_spline_trj ( *running_spline );
                 }
             }
@@ -244,7 +247,7 @@ int EC_boards_walkman_test::user_loop ( void ) {
 
         running_spline = last_run_spline = 0;
             
-        if ( motors2ctrl.size() > 0 ) {
+        if ( motors2move.size() > 0 ) {
             // add splines ....
             q_spln.push ( &spline_home2test_pos );
             q_spln.push ( &spline_test_pos2home );
@@ -267,15 +270,15 @@ void EC_boards_walkman_test::move_head( float pitch_pos, float roll_pos ) {
     Motor * head_pitch = slave_as_Motor( rid2Pos(walkman::HEAD_P) );
     if ( head_pitch ) {
         motor_pdo_rx = head_pitch->getRxPDO();
-        motor_pdo_tx = head_pitch->getTxPDO();
-        pitchRef = motor_pdo_tx.pos_ref + pitch_pos;
+        //motor_pdo_tx = head_pitch->getTxPDO();
+        pitchRef = motor_pdo_rx.link_pos + pitch_pos;
         head_pitch->set_posRef( pitchRef );
     }
     Motor * head_roll = slave_as_Motor( rid2Pos(walkman::HEAD_R) );
     if ( head_roll ) {
         motor_pdo_rx = head_roll->getRxPDO();
-        motor_pdo_tx = head_roll->getTxPDO();
-        rollRef = motor_pdo_tx.pos_ref + roll_pos;
+        //motor_pdo_tx = head_roll->getTxPDO();
+        rollRef = motor_pdo_rx.link_pos + roll_pos;
         head_roll->set_posRef( rollRef );
     }
     //DPRINTF ( "Head pitch %f\troll %f\n", pitchRef, rollRef );
@@ -284,20 +287,20 @@ void EC_boards_walkman_test::move_head( float pitch_pos, float roll_pos ) {
 void EC_boards_walkman_test::move_hands( float left_pos, float right_pos ) {
 
     float leftRef, rightRef;
-    Motor::motor_pdo_rx_t motor_pdo_rx;
-    Motor::motor_pdo_tx_t motor_pdo_tx;
+    //Motor::motor_pdo_rx_t motor_pdo_rx;
+    //Motor::motor_pdo_tx_t motor_pdo_tx;
     
     Motor * left_hand = slave_as_Motor( rid2Pos(walkman::LA_HA) );
     if ( left_hand ) {
-        motor_pdo_rx = left_hand->getRxPDO();
-        motor_pdo_tx = left_hand->getTxPDO();
+        //motor_pdo_rx = left_hand->getRxPDO();
+        //motor_pdo_tx = left_hand->getTxPDO();
         leftRef = left_pos;
         left_hand->set_posRef( leftRef );
     }
     Motor * right_hand = slave_as_Motor( rid2Pos(walkman::RA_HA) );
     if ( right_hand ) {
-        motor_pdo_rx = right_hand->getRxPDO();
-        motor_pdo_tx = right_hand->getTxPDO();
+        //motor_pdo_rx = right_hand->getRxPDO();
+        //motor_pdo_tx = right_hand->getTxPDO();
         rightRef = right_pos;
         right_hand->set_posRef( rightRef );
     }
