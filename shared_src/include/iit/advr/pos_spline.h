@@ -1,6 +1,7 @@
 #ifndef __POS_SPLINE_H__
 #define __POS_SPLINE_H__
 
+#include <vector>
 //#include <chrono>
 #include <Eigen/Splines>
 

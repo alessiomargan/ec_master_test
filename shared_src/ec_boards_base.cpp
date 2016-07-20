@@ -374,8 +374,8 @@ void Ec_Thread_Boards_base::smooth_splines_trj ( const std::map<int, iit::ecat::
     std::vector<double> Xs;
     double t1 = smooth_time;
     double t0_point, t1_point;
-    std::chrono::time_point<std::chrono::steady_clock> old_spline_start_time;
-    std::chrono::duration<double> old_spline_xtime;
+    uint64_t old_spline_start_time;
+    double old_spline_xtime;
 
     for ( auto const& item : motor_set ) {
         slave_pos = item.first;
@@ -402,8 +402,8 @@ void Ec_Thread_Boards_base::smooth_splines_trj ( const std::map<int, iit::ecat::
             //t0_point =  motor_pdo_rx.link_pos;
             t0_point =  old_spln();
             old_spln.get_start_time ( old_spline_start_time );
-            old_spline_xtime = std::chrono::steady_clock::now() - old_spline_start_time;
-            t1_point = old_spln.get_value ( old_spline_xtime.count() + ( smooth_time/5 ), false );
+            old_spline_xtime = (double)(iit::ecat::get_time_ns() - old_spline_start_time) / 1000000000;
+            t1_point = old_spln.get_value ( old_spline_xtime + ( smooth_time/5 ), false );
         }
 
         //

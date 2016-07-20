@@ -16,9 +16,7 @@
 //#include "iit/advr/pos_spline.h"
 #include "iit/advr/spline.h"
 #include "iit/ecat/utils.h"
-//#include "iit/ecat/advr/motor_iface.h"
 
-#include <chrono>
 #include <map>
 
 
@@ -58,7 +56,7 @@ public :
         //    std::cout << ' ' << _x[i] << ' ' << _y[i] << '\n';
 
         t.set_points ( _x,_y,cubic_spline );
-        sT = std::chrono::steady_clock::now();
+        sT = iit::ecat::get_time_ns();
     };
 
     double get_value ( double x, bool limits=true ) const {
@@ -79,16 +77,16 @@ public :
 
     double operator() ( void ) const {
 
-        std::chrono::duration<double> x = std::chrono::steady_clock::now() - sT;
-        //DPRINTF("%f\n", x.count());
-        return get_value ( x.count() );
+        double x = (double)(iit::ecat::get_time_ns() - sT) / 1000000000 ;
+        return get_value ( x );
 
     };
 
     void start_time() {
-        sT = std::chrono::steady_clock::now();
+        sT = iit::ecat::get_time_ns();
     }
-    void get_start_time ( std::chrono::time_point<std::chrono::steady_clock> &start ) {
+    
+    void get_start_time ( uint64_t &start ) {
         start = sT;
     }
 
@@ -101,14 +99,14 @@ public :
 
     bool finish ( void ) {
 
-        std::chrono::duration<double> x = std::chrono::steady_clock::now() - sT;
-        return ( x.count() > _x.back() );
+        double x = (double)(iit::ecat::get_time_ns() - sT) / 1000000000 ;
+        return ( x > _x.back() );
 
     }
 
 protected:
 
-    std::chrono::time_point<std::chrono::steady_clock> sT;
+    uint64_t sT;
     std::vector<double> _x, _y;
     T t;
 
@@ -116,7 +114,7 @@ protected:
 
 template<typename T> using Trj = trajectory<T>;
 typedef Trj<tk::spline> Spline_Trj;
-typedef std::map<int,Spline_Trj*> Spline_ptr_map;
+//typedef std::map<int,Spline_Trj*> Spline_ptr_map;
 typedef std::map<int,Spline_Trj> Spline_map;
 
 inline void reset_spline_trj ( Spline_map  &spls ) {
