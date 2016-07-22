@@ -152,16 +152,32 @@ struct Ft6EscSdoTypes {
     uint16_t    flash_params_cmd_ack;
 };
 
+struct Ft6LogTypes {
+
+    uint64_t                ts;     // ns
+    Ft6EscPdoTypes::pdo_rx  rx_pdo;
+
+    void fprint ( FILE *fp ) {
+        fprintf ( fp, "%lu\t", ts );
+        rx_pdo.fprint ( fp );
+    }
+    int sprint ( char *buff, size_t size ) {
+        int l = snprintf ( buff, size, "%lu\t", ts );
+        return l + rx_pdo.sprint ( buff+l,size-l );
+    }
+};
+
+
 /**
 *
 **/
 
 class Ft6ESC :
     public BasicEscWrapper<Ft6EscPdoTypes, Ft6EscSdoTypes>,
-    public PDO_log<Ft6EscPdoTypes::pdo_rx> {
+    public PDO_log<Ft6LogTypes> {
 public:
-    typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes>              Base;
-    typedef PDO_log<Ft6EscPdoTypes::pdo_rx>                             Log;
+    typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes>   Base;
+    typedef PDO_log<Ft6LogTypes>                             Log;
 
 public:
     Ft6ESC ( const ec_slavet& slave_descriptor ) :
@@ -206,15 +222,8 @@ public:
 
         if ( _start_log ) {
             Log::log_t log;
-            //log.ts = get_time_ns() -_start_log_ts ;
-            log.force_X     = rx_pdo.force_X;
-            log.force_Y     = rx_pdo.force_Y;
-            log.force_Z     = rx_pdo.force_Z;
-            log.torque_X    = rx_pdo.torque_X;
-            log.torque_Y    = rx_pdo.torque_Y;
-            log.torque_Z    = rx_pdo.torque_Z;
-            log.fault       = rx_pdo.fault;
-            log.rtt         = rx_pdo.rtt;
+            log.ts      = get_time_ns() - _start_log_ts ;
+            log.rx_pdo  = rx_pdo;
             push_back ( log );
         }
 
