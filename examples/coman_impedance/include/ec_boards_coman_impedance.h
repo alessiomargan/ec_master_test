@@ -39,8 +39,13 @@ private :
 
     std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_imp;
     std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_pos;
+    std::map<int, iit::ecat::advr::Motor*>  motors_moving;
 
+    std::map<int,float> test_pos;
+    
     advr::Spline_map spline_start2home;
+    advr::Spline_map spline_home2test_pos;
+    advr::Spline_map spline_test_pos2home;
     
 };
 

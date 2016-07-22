@@ -30,6 +30,8 @@ public:
 
     XDDP_pipe ( int _pool_size = 8192 ) : pool_size ( _pool_size ) { fd = 0; }
 
+    int get_fd() { return fd; }
+    
     void init ( const std::string pipe_name ) {
 
         std::string pipe = pipe_prefix + pipe_name;

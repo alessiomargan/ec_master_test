@@ -130,11 +130,11 @@ std::map<int, float> robot_ids_home_pos_deg = {
 
     {WAIST_Y, 0.0}, {WAIST_P, 10.0}, {WAIST_R, 0.0},
 
-    {RL_H_R, 0.0}, {RL_H_Y, 0.0}, {RL_H_P, -15.0},
-    {RL_K, 30.0}, {RL_A_P, -15.0}, {RL_A_R, 0.0},
+    {RL_H_R, 0.0}, {RL_H_Y, 0.0},   {RL_H_P, -15.0},
+    {RL_K, 30.0},  {RL_A_P, -15.0}, {RL_A_R, 0.0},
 
-    {LL_H_R, 0.0}, {LL_H_Y, 0.0}, {LL_H_P, -15.0},
-    {LL_K, 30.0}, {LL_A_P, -15.0}, {LL_A_R, 0.0},
+    {LL_H_R, 0.0}, {LL_H_Y, 0.0},   {LL_H_P, -15.0},
+    {LL_K, 30.0},  {LL_A_P, -15.0}, {LL_A_R, 0.0},
 
     {RA_SH_1, 30.0}, {RA_SH_2, 70.0}, {RA_SH_3, 0.0}, {RA_EL, -90.0},
     {RA_WR_1, 0.0}, {RA_WR_2, 0.0}, {RA_WR_3, 0.0}, {RA_HA, 0.0},
@@ -148,11 +148,11 @@ std::map<int, float> robot_ids_test_pos_deg = {
 
     {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
 
-    {RL_H_R, -40}, {RL_H_Y, -30},   {RL_H_P, -70.0},
-    {RL_K,  70.0}, {RL_A_P, -10.0}, {RL_A_R,  20.0},
+    {RL_H_R,-40.0}, {RL_H_Y, -30.0}, {RL_H_P, -70.0},
+    {RL_K,   70.0}, {RL_A_P,  10.0}, {RL_A_R,  20.0},
 
-    {LL_H_R,  40}, {LL_H_Y,  30},   {LL_H_P, -70.0},
-    {LL_K,  70.0}, {LL_A_P,  10.0}, {LL_A_R, -20.0},
+    {LL_H_R, 40},   {LL_H_Y,  30.0}, {LL_H_P, -70.0},
+    {LL_K,   70.0}, {LL_A_P,  10.0}, {LL_A_R, -20.0},
 
     {RA_SH_1,-40.0}, {RA_SH_2, -10.0}, {RA_SH_3, -20.0}, {RA_EL, -40.0},
     {RA_WR_1,-30.0}, {RA_WR_2,  15.0}, {RA_WR_3, -30.0}, {RA_HA,   0.0},

@@ -52,6 +52,10 @@ void Ec_Boards_coman_torque::init_preOP ( void ) {
         iit::ecat::advr::coman::LA_SH_1,
         iit::ecat::advr::coman::LA_SH_2,
         //iit::ecat::advr::coman::LA_EL,
+        
+        //iit::ecat::advr::coman::RL_H_P,
+        //iit::ecat::advr::coman::LL_H_P,
+        
     };
 
     remove_rids_intersection(pos_rid, no_control);
@@ -173,7 +177,13 @@ int Ec_Boards_coman_torque::user_loop ( void ) {
                 mN = -1500; 
                 moto->set_torRef ( mN * (1 + sinf ( 2*M_PI*freq*dt ) ) );
             }
-            // elbows should 
+//             if ( pos2Rid(slave_pos) == iit::ecat::advr::coman::RL_H_P ||
+//                  pos2Rid(slave_pos) == iit::ecat::advr::coman::LL_H_P)
+//             {
+//                 mN = 0; 
+//                 moto->set_torRef ( mN );
+//             }
+             
         }
     }
     //////////////////////////////////////////////////////

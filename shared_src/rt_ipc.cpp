@@ -60,8 +60,10 @@ int xddp_bind ( const char * label, size_t local_poolsz ) {
     memset ( &saddr, 0, sizeof ( saddr ) );
     saddr.sipc_family = AF_RTIPC;
     saddr.sipc_port = -1;
-    if ( bind ( s, ( struct sockaddr * ) &saddr, sizeof ( saddr ) ) )
+    if ( bind ( s, ( struct sockaddr * ) &saddr, sizeof ( saddr ) ) ) {
+        printf("Error %s %s\n", __FUNCTION__, label);
         fail ( "bind" );
+    }
 
     return s;
 }

@@ -31,7 +31,7 @@ using namespace iit::ecat::advr;
 EC_boards_coman_test::EC_boards_coman_test ( const char* config_yaml ) :
     Ec_Thread_Boards_base ( config_yaml ) {
 
-    name = "Coman_test";
+    name = "coman_test";
     // not periodic
     period.period = {0,1};
 
@@ -126,15 +126,13 @@ void EC_boards_coman_test::init_preOP ( void ) {
         moto->start ( CTRL_SET_POS_MODE );
     }
 
-    // ec_master_test/scripts/xddp_term.py
     DPRINTF ( ">>> wait xddp terminal ....\n" );
+    DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     if ( motors_to_start.size() > 0 ) {
         //
         q_spln.push ( &spline_start2home );
-        q_spln.push ( &spline_home2test );
-        q_spln.push ( &spline_test2home );
     }
 }
 
@@ -144,9 +142,6 @@ void EC_boards_coman_test::init_OP ( void ) {
     user_state = HOMING;
     //user_state = IDLE;
     home_state = TEST_HOME;
-
-    //DPRINTF ( ">>> wait xddp terminal ....\n" );
-    //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
 
     if ( ! q_spln.empty() ) {
         running_spline = q_spln.front();
@@ -184,6 +179,7 @@ int EC_boards_coman_test::user_loop ( void ) {
             if ( go_there ( motors_to_start, *running_spline, spline_error, true) ) {
                 // running spline has finish !!
                 last_run_spline = running_spline;
+                // pop running_spline
                 q_spln.pop();
                 if ( ! q_spln.empty() ) {
                     running_spline = q_spln.front();
@@ -198,7 +194,7 @@ int EC_boards_coman_test::user_loop ( void ) {
     } else { // q_spln is empty
         
         running_spline = last_run_spline = 0;
-
+#if 1
         if ( motors_to_start.size() > 0 ) {
             // add splines ....
             q_spln.push ( &spline_home2test );
@@ -208,6 +204,7 @@ int EC_boards_coman_test::user_loop ( void ) {
             last_run_spline = running_spline;
             advr::reset_spline_trj ( *running_spline );
         }
+#endif
     }
 
 }

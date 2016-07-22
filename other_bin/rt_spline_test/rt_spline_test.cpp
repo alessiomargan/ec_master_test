@@ -13,8 +13,9 @@
 #include <iit/ecat/utils.h>
 #include <iit/advr/pipes.h>
 #include <iit/advr/thread_util.h>
-#include "iit/advr/spline.h"
-#include "iit/advr/trajectory.h"
+#include <iit/advr/spline.h>
+#include <iit/advr/trajectory.h>
+#include <protobuf/vector2d.pb.h>
 
 extern void main_common ( __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );
@@ -42,6 +43,8 @@ class RT_thread : public Thread_hook {
     XDDP_pipe               OutXddp;
     std::string             pipe_name;
     advr::Spline_map        spline_map;
+    gazebo::msgs::Vector2d  vector;
+    std::string             pbStr;    
     
 public:
 
@@ -91,9 +94,24 @@ public:
             
         }
         
-        auto v = spline_map[0]();
+        auto trj = spline_map[0];
+        auto v = trj();
+        uint64_t sT;
+        trj.get_start_time(sT);
         //DPRINTF(">> %f\n", v);
-        OutXddp.xddp_write( v );
+        //OutXddp.xddp_write( v );
+        
+        vector.set_x( (double)(iit::ecat::get_time_ns() - sT)/1000000000 );
+        vector.set_y(v);
+        
+        ////////////////////////////////////////////////////////////////////
+        // https://developers.google.com/protocol-buffers/docs/techniques
+        
+        vector.SerializeToString( &pbStr );
+        uint32_t msg_size = pbStr.length();
+        int nbytes = write ( OutXddp.get_fd(), ( void* ) &msg_size, sizeof( msg_size ) );
+        nbytes = write ( OutXddp.get_fd(), ( void* ) pbStr.c_str() , pbStr.length() );
+        
     }
 };
 
@@ -102,10 +120,14 @@ public:
 ////////////////////////////////////////////////////
 class UI_thread : public Thread_hook {
 
-    iit::ecat::stat_t   loop_time;
-    uint64_t            tNow, dt;
-    int                 xddp_fd;
-    std::string         pipe_name;
+    iit::ecat::stat_t       loop_time;
+    uint64_t                tNow, dt;
+    int                     xddp_fd;
+    std::string             pipe_name;
+    
+    gazebo::msgs::Vector2d  vector;
+    uint8_t  msg_buff[1024];
+    
 public:
 
     UI_thread(std::string _pipe_name):pipe_name(_pipe_name) {
@@ -132,13 +154,15 @@ public:
     }
     virtual void th_loop ( void * ) {
         
-        double spline_value;
-        int nbytes = read ( xddp_fd, ( void* ) &spline_value, sizeof ( spline_value ) );
+        uint32_t msg_size;
+        
+        int nbytes = read ( xddp_fd, ( void* ) &msg_size, sizeof ( msg_size ) );
         if ( nbytes > 0 ) {
-            std::cout << std::fixed << spline_value << std::endl;
-        } else {
-            //
+            nbytes = read ( xddp_fd, ( void* ) msg_buff, msg_size );
+            vector.ParseFromArray(msg_buff, msg_size);
+            std::cout << vector.x() << " " << vector.y() << std::endl;
         }
+
         
     }
 };

@@ -87,7 +87,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     std::vector<double> Xs;
 
     ///////////////////////////////////////////////////////////////////////
-    // prepare splines for ALL motors
+    // prepare trajectory splines for ALL motors
     for ( auto const& item : motors ) {
     
         slave_pos = item.first;
