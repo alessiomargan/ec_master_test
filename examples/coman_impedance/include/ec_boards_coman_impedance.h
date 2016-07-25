@@ -39,7 +39,6 @@ private :
 
     std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_imp;
     std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_pos;
-    std::map<int, iit::ecat::advr::Motor*>  motors_moving;
 
     std::map<int,float> test_pos;
     

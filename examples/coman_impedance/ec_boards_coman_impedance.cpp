@@ -68,30 +68,6 @@ void Ec_Boards_coman_impedance::init_preOP ( void ) {
     float min_pos, max_pos;
     int16_t torque;
 
-    ///////////////////////////////////////////////////////////////////////
-    // prepare trajectory splines for ALL motors
-    for ( auto const& item : motors ) {
-    
-        slave_pos = item.first;
-        moto = item.second;
-        moto->readSDO ( "link_pos", start_pos[slave_pos] );
-        // home
-        home[slave_pos] = DEG2RAD ( coman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
-        test_pos[slave_pos] = DEG2RAD ( coman::robot_ids_imp_pos_deg[pos2Rid(slave_pos)] );
-        
-        DPRINTF ( "Joint_id %d start %f home %f test_pos %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
-
-        Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        spline_start2home[slave_pos].set_points ( Xt_5s, Ys );
-
-        Ys = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos] };
-        spline_home2test_pos[slave_pos].set_points ( Xt_3s, Ys );
-
-        Ys = std::initializer_list<double> { test_pos[slave_pos], home[slave_pos] };
-        spline_test_pos2home[slave_pos].set_points ( Xt_3s, Ys );
-    }
-
-    
     std::vector<int> pos_rid = coman::robot_mcs_ids;
     std::vector<int> no_control = std::initializer_list<int> {
         coman::RA_HA,
@@ -113,7 +89,6 @@ void Ec_Boards_coman_impedance::init_preOP ( void ) {
     };
 
     remove_rids_intersection(pos_rid, no_control);
-    get_esc_map_byclass ( motors_moving,  pos_rid );
     
     remove_rids_intersection(pos_rid, imp_rid);
 
@@ -123,11 +98,24 @@ void Ec_Boards_coman_impedance::init_preOP ( void ) {
         slave_pos = item.first;
         moto = item.second;
         //////////////////////////////////////////////////
+        moto->readSDO ( "link_pos", start_pos[slave_pos] );
+        // home
+        home[slave_pos] = DEG2RAD ( coman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        test_pos[slave_pos] = DEG2RAD ( coman::robot_ids_imp_pos_deg[pos2Rid(slave_pos)] );
+        DPRINTF ( "Joint_id %d start %f home %f test_pos %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
+        Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+        spline_start2home[slave_pos].set_points ( Xt_5s, Ys );
+        Ys = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos] };
+        spline_home2test_pos[slave_pos].set_points ( Xt_5s, Ys );
+        Ys = std::initializer_list<double> { test_pos[slave_pos], home[slave_pos] };
+        spline_test_pos2home[slave_pos].set_points ( Xt_5s, Ys );
+
+        //////////////////////////////////////////////////
         // start controller :
         moto->start ( CTRL_SET_POS_MODE);
     }
 
-    get_esc_map_byclass ( motors_ctrl_imp,  imp_rid );
+   get_esc_map_byclass ( motors_ctrl_imp,  imp_rid );
     for ( auto const& item : motors_ctrl_imp ) {
 
         slave_pos = item.first;
@@ -148,7 +136,7 @@ void Ec_Boards_coman_impedance::init_preOP ( void ) {
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }
     
-    if ( motors_moving.size() > 0 ) {
+    if ( motors_ctrl_pos.size() > 0 ) {
         q_spln.push ( &spline_start2home );
     }
 }
@@ -177,8 +165,7 @@ int Ec_Boards_coman_impedance::user_loop ( void ) {
         running_spline = q_spln.front();
         if ( running_spline ) {
             // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors_ctrl_pos, *running_spline, spline_error, true)
-               ) 
+            if ( go_there ( motors_ctrl_pos, *running_spline, spline_error, true) ) 
             {
                 // running spline has finish !!
                 last_run_spline = running_spline;
@@ -197,8 +184,8 @@ int Ec_Boards_coman_impedance::user_loop ( void ) {
     } else {
         
         running_spline = last_run_spline = 0;
-#if 0            
-        if ( motors_moving  .size() > 0 ) {
+#if 1            
+        if ( motors_ctrl_pos.size() > 0 ) {
             // add splines ....
             q_spln.push ( &spline_home2test_pos );
             q_spln.push ( &spline_test_pos2home );
