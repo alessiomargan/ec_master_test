@@ -1,39 +1,37 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(walkman-ecat)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+include(MacroOptionalBuild)
+include(MacroSetcap)
 
-find_path(RTNET_INCLUDE_DIR NAMES rtnet.h PATH_SUFFIXES rtnet/include)
-set(ENABLE_XENO  ON)
+set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+set(ENABLE_XENO         CACHE BOOL "OFF")
+set(SOEM_ROOT           $ENV{SOEM_ROOT} CACHE PATH "Base path of the SOEM headers")
 
-if(ENABLE_XENO AND RTNET_INCLUDE_DIR)
-  message("Found RTNET: ${RTNET_INCLUDE_DIR}")
-  include_directories(${RTNET_INCLUDE_DIR})
-  # try Xenomai
-  execute_process(COMMAND xeno-config --skin=posix --cflags OUTPUT_VARIABLE XENO_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND xeno-config --skin=posix --ldflags OUTPUT_VARIABLE XENO_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${XENO_CFLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${XENO_CFLAGS}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS} -lnative")
-else()
-  set(ENABLE_RTNET  OFF)
+if ( ${ENABLE_XENO} )
+    find_package(Xenomai)
+    find_package(RTnet)
 endif()
 
-set(SOEM_ROOT           $ENV{SOEM_ROOT}     CACHE PATH "Base path of the SOEM headers")
+if ( Xenomai_FOUND )
+    set(LIB_TYPE _rt)
+else ()
+    set(LIB_TYPE _nrt)
+endif()
 
+#######################
+## libwalkman_master
+#######################
+
+set(LIB_NAME walkman_master${LIB_TYPE})
 add_definitions(-DKEEP_POWER_ON)
 
-###########
-## Build ##
-###########
-
 include_directories(include)
-
 include_directories(${SOEM_ROOT}/include)
 link_directories(${SOEM_ROOT}/lib)
 
-add_library(walkman_master SHARED
+add_library(walkman_master${LIB_TYPE} SHARED
     src/ec_boards_iface.cpp
     src/mc_hipwr_esc.cpp
     src/mc_lowpwr_esc.cpp
@@ -45,10 +43,13 @@ add_library(walkman_master SHARED
     src/test_esc.cpp
 )
 
-target_link_libraries(walkman_master iitecat_iface soem pthread yaml-cpp)
+if ( Xenomai_FOUND )
+    set_xeno_flags(${LIB_NAME})
+endif()
 
+target_link_libraries(${LIB_NAME} iitecat_iface${LIB_TYPE} soem${LIB_TYPE} pthread yaml-cpp)
 
 # Install
 install(DIRECTORY include/  DESTINATION include)
-install(TARGETS walkman_master  DESTINATION lib)
+install(TARGETS ${LIB_NAME}  DESTINATION lib)
 
