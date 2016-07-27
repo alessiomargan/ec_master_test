@@ -231,8 +231,7 @@ protected :
     virtual void on_writePDO(void) {
 
         tx_pdo.ts = (uint16_t)(get_time_ns()/1000);
-        // apply transformation from Joint to Motor 
-        tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
+        // NOTE do not transform pos_ref: it will be called every loop
         
         if ( _start_log ) {
             log.ts_tx = (get_time_ns() - _start_log_ts)/1000000 ;
@@ -449,7 +448,11 @@ public :
 
     /////////////////////////////////////////////
     // set pdo data
-    virtual int set_posRef(float joint_pos) { tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset); }
+    virtual int set_posRef(float joint_pos)  { 
+        tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset);
+//         DPRINTF("joint: %d - joint_pos: %f - set_posRef : %f\n", get_robot_id(), joint_pos, tx_pdo.pos_ref); 
+    }
+    virtual int get_posRef(float& joint_pos) { joint_pos = hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset); }
 //     virtual int set_torOffs(float tor_offs) { /*tx_pdo.tor_offs = tor_offs;*/ }
 //     virtual int set_posGainP(float p_gain)  { tx_pdo.gainP = p_gain;   }
 //     virtual int set_posGainI(float i_gain)  { /*tx_pdo.PosGainI = i_gain;*/   }
