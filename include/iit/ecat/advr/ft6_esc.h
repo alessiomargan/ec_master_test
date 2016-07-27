@@ -28,7 +28,7 @@ namespace iit {
     // TX  slave_input -- master output
     struct pdo_tx {
         uint16_t    ts;
-    }  __attribute__((__packed__));
+    } pdo_data_tx __attribute__((__packed__));
 
     // RX  slave_output -- master input
     struct pdo_rx {
@@ -57,7 +57,7 @@ namespace iit {
             JPDO(rtt);        
         }
 
-    }  __attribute__((__packed__));
+    }  pdo_data_rx __attribute__((__packed__));
 };
 
 
