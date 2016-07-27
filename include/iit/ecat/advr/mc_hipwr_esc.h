@@ -281,6 +281,7 @@ public :
     ///////////////////////////////////////////////////////
     virtual bool am_i_HpESC() { return true; }
     virtual bool am_i_LpESC() { return false;}
+    virtual std::string get_control_mode() {return _control_mode;}
     virtual uint16_t get_ESC_type() {
         if ( product_code == HI_PWR_AC_MC ) return HI_PWR_AC_MC;
         if ( product_code == HI_PWR_DC_MC ) return HI_PWR_DC_MC;
@@ -534,6 +535,7 @@ private:
 	_sgn = root_cfg[conf_key]["sign"].as<int>(); 
 	_offset = root_cfg[conf_key]["pos_offset"].as<float>();
 	_offset = DEG2RAD(_offset);
+        _control_mode = root_cfg[conf_key]["control_mode"].as<std::string>();
 	
 	return EC_WRP_OK;
     }
@@ -546,6 +548,7 @@ private:
     
     float   _offset;
     int     _sgn;
+    std::string _control_mode;
 
     stat_t  s_rtt;
 

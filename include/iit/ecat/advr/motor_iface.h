@@ -114,6 +114,8 @@ public:
     
     virtual bool am_i_HpESC() = 0;
     virtual bool am_i_LpESC() = 0;
+    
+    virtual std::string get_control_mode() = 0;
 
     //ec_state     _actual_state;
 };

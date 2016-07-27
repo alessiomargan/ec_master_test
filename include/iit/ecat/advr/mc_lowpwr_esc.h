@@ -225,6 +225,7 @@ public:
     ///////////////////////////////////////////////////////
     virtual bool am_i_HpESC() { return false; }
     virtual bool am_i_LpESC() { return true; }
+    virtual std::string get_control_mode() {return _control_mode;}
     virtual uint16_t get_ESC_type() { return LO_PWR_DC_MC; }
 
     virtual const pdo_rx_t& getRxPDO() const {
@@ -393,6 +394,7 @@ private:
 	_sgn = root_cfg[conf_key]["sign"].as<int>(); 
 	_offset = root_cfg[conf_key]["pos_offset"].as<float>();
 	_offset = DEG2RAD(_offset);
+        _control_mode = root_cfg[conf_key]["control_mode"].as<std::string>();
 
 	return EC_WRP_OK;
     }
@@ -404,6 +406,7 @@ private:
     
     float   _offset;
     int     _sgn;
+    std::string _control_mode;
 
     stat_t  s_rtt;
 
