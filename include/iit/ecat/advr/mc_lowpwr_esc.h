@@ -170,6 +170,7 @@ public:
         
         // apply scale factor
         rx_pdo.torque /= 100.0;
+        rx_pdo.max_temperature /= 10.0;
 
 	if ( _start_log ) {
             log.ts_rx = (get_time_ns() - _start_log_ts)/1000000 ;

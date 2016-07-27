@@ -150,7 +150,7 @@ struct McEscPdoTypes {
         float        link_vel;           // rad TBD on the firmware 
         int16_t      motor_vel;          // rad/s
         int16_t      torque;             // Nm
-        uint16_t     max_temperature;    // C
+        uint16_t     max_temperature;    // C / 10
         uint16_t     fault;
         uint16_t     rtt;                // us
         uint16_t     op_idx_ack;         // op [ack/nack] , idx
