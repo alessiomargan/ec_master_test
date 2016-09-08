@@ -44,6 +44,6 @@ message Motor_xt_rx_pdo {
     required uint32 temperature = 6;
     required uint32 fault       = 7;
     required uint32 rtt         = 8;
-    optional uint32 op_idx_aux  = 9;
+    optional uint32 op_idx_ack  = 9;
     optional float  aux         = 10;
 }

@@ -9,7 +9,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <protobuf/dummy.pb.h>
+#include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 #include <string>
@@ -25,13 +25,13 @@ struct TestEscPdoTypes {
         // TX  slave_input -- master output
     struct pdo_tx {
         float       pos_ref;    //link
-        int16_t     vel_ref;    //link
-        int16_t     tor_ref;    //link
-        uint16_t    gain_0;     //kp_m  ImpPosP 
-        uint16_t    gain_1;     //kp_l  ImpTorP
-        uint16_t    gain_2;     //kd_m  ImpPosD
-        uint16_t    gain_3;     //kd_l  ImpTorD
-        uint16_t    gain_4;     //ki    ImpTorI
+        float       vel_ref;    //link
+        float       tor_ref;    //link
+        float       gain_0;     //kp_m  ImpPosP 
+        float       gain_1;     //kp_l  ImpTorP
+        float       gain_2;     //kd_m  ImpPosD
+        float       gain_3;     //kd_l  ImpTorD
+        float       gain_4;     //ki    ImpTorI
         uint16_t    fault_ack;
         uint16_t    ts;
         uint16_t    op_idx_aux;  // op [get/set] , idx
@@ -62,20 +62,20 @@ struct TestEscPdoTypes {
             return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
 
-    }  __attribute__ ( ( __packed__ ) ); // 28 bytes
+    }  __attribute__ ( ( __packed__ ) ); // 42 bytes
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        float        link_pos;           // rad
-        float        motor_pos;          // rad
-        float        link_vel;           // rad TBD on the firmware 
-        int16_t      motor_vel;          // rad/s
-        int16_t      torque;             // Nm
-        uint16_t     temperature;        // C
-        uint16_t     fault;
-        uint16_t     rtt;                // us
-        uint16_t     op_idx_ack;         // op [ack/nack] , idx
-        float        aux;                // get value or nack erro code
+        float       link_pos;           // rad
+        float       motor_pos;          // rad
+        float       link_vel;           // rad TBD on the firmware 
+        float       motor_vel;          // rad/s
+        float       torque;             // Nm
+        uint16_t    temperature;        // C
+        uint16_t    fault;
+        uint16_t    rtt;                // us
+        uint16_t    op_idx_ack;         // op [ack/nack] , idx
+        float       aux;                // get value or nack erro code
 
         std::ostream& dump ( std::ostream& os, const std::string delim ) const {
             os << link_pos << delim;
@@ -86,6 +86,8 @@ struct TestEscPdoTypes {
             os << temperature << delim;
             os << fault << delim;
             os << rtt << delim;
+            os << op_idx_ack << delim;
+            os << aux << delim;
             //os << std::endl;
             return os;
         }
@@ -108,6 +110,9 @@ struct TestEscPdoTypes {
             JPDO ( temperature );
             JPDO ( fault );
             JPDO ( rtt );
+            JPDO ( op_idx_ack );
+            JPDO ( aux );
+            
         }
         void pb_toString( std::string * pb_str ) {
             static iit::advr::Ec_slave_pdo pb_rx_pdo;
@@ -117,7 +122,7 @@ struct TestEscPdoTypes {
             pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
             pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
-            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_MOTOR);
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_XT_MOTOR);
             // Motor_xt_tx_pdo
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(link_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(motor_pos);
@@ -127,9 +132,11 @@ struct TestEscPdoTypes {
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(temperature);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(fault);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_rtt(rtt);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_op_idx_ack(op_idx_ack);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_aux(aux);
             pb_rx_pdo.SerializeToString(pb_str);
         }
-    }  __attribute__ ( ( __packed__ ) ); // 28 bytes
+    }  __attribute__ ( ( __packed__ ) ); // 32 bytes
 
 }; // 56 bytes
 
@@ -151,7 +158,7 @@ inline std::ostream& operator<< (std::ostream& os, const TestEscPdoTypes::pdo_rx
 
 struct TestEscSdoTypes {
     
-    //
+    // 0x8001 flash param
     float   PosGainP;
     float   PosGainI;
     float   PosGainD;
@@ -172,8 +179,7 @@ struct TestEscSdoTypes {
     int16_t Joint_number;
     int16_t Joint_robot_id;
     float   Target_velocity;
-
-    //
+    // 0x8002 ram param
     char fw_ver[8];
     unsigned int ack_board_faults;
     unsigned short ctrl_status_cmd;
@@ -183,12 +189,18 @@ struct TestEscSdoTypes {
     float m_current;
     unsigned short flash_params_cmd;
     unsigned short flash_params_cmd_ack;
+    // 0x8002 aux param
+    float volt_ref;
+    float current;
+    float vout;
+    float pos_ref_fb;
+    
 };
 
 struct TestEscLogTypes {
 
-    uint64_t    		ts;           // ns
-    TestEscPdoTypes::pdo_rx	rx_pdo;
+    uint64_t                ts;           // ns
+    TestEscPdoTypes::pdo_rx rx_pdo;
 
     void fprint ( FILE *fp ) {
         fprintf ( fp, "%lu\t", ts );
@@ -200,13 +212,14 @@ struct TestEscLogTypes {
     }
 };
 
+
 class TestESC :
     public BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>,
     public PDO_log<TestEscLogTypes> {
 
 public:
     typedef BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>    Base;
-    typedef PDO_log<TestEscLogTypes>                    	Log;
+    typedef PDO_log<TestEscLogTypes>                            Log;
 
     TestESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
@@ -250,10 +263,15 @@ public:
             push_back ( log );
         }
 
+        PDO_aux(getSDObjd("pos_ref_fb")).on_rx(rx_pdo);
+        //PDO_aux(getSDObjd("volt_ref")).on_rx(rx_pdo);
+
     }
 
     virtual void on_writePDO ( void ) {
         tx_pdo.ts = get_time_ns() / 1000;
+        //
+        PDO_aux(getSDObjd("pos_ref_fb")).on_tx(tx_pdo);
     }
 
     virtual const objd_t * get_SDOs() {
@@ -283,7 +301,6 @@ public:
         }
 
         readSDO_byname ( "fw_ver" );
-        
         readSDO_byname ( "PosGainP");
         readSDO_byname ( "PosGainI");
         readSDO_byname ( "PosGainD");
@@ -299,6 +316,7 @@ public:
         readSDO_byname ( "TorGainI");
         readSDO_byname ( "Tor_I_lim");
 #endif
+        // Should be better to start logging when enter OP ....
         start_log ( true );
 
         return EC_WRP_OK;

@@ -148,7 +148,7 @@ public:
 
         DPRINTF ( "\tJoint id %c%d\tJoint robot id %d\n", ( char ) ( sdo.Joint_number>>8 ), sdo.Joint_number&0x0F, sdo.Joint_robot_id );
         DPRINTF ( "\tmin pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos );
-        DPRINTF ( "\tfw_ver %s\n", sdo.firmware_version );
+        DPRINTF ( "\tfw_ver %s\n", std::string((const char *)sdo.firmware_version,8).c_str() );
     }
 
     virtual const objd_t * get_SDOs() {

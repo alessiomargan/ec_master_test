@@ -252,6 +252,48 @@ inline std::ostream& operator<< (std::ostream& os, const McEscPdoTypes::pdo_rx& 
 }
 
 
+class PDO_aux {
+public:
+    PDO_aux( const objd_t * sdo_obj_data ): sdo_objd( sdo_obj_data ) {}
+    //
+    // following template methods expect [rx/tx]_pdo struct with op_idx_aux/op_idx_ack and aux fields
+    // 
+    template<class T>
+    int on_tx( T& tx_pdo ) {
+        if ( sdo_objd == 0 ) return -1;
+        if ( sdo_objd->access == ATYPE_RW ) { 
+            // set op
+            tx_pdo.op_idx_aux = 0xFB << 8 | sdo_objd->subindex & 0xFF;
+            tx_pdo.aux = *(float*)sdo_objd->data;
+        } else {
+            // get op
+            tx_pdo.op_idx_aux = 0xBF << 8 | sdo_objd->subindex & 0xFF;
+        }
+        //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
+        return 0;
+    };
+    
+    template<class T>
+    int on_rx( T& rx_pdo) {
+        if ( sdo_objd == 0 ) return -1;
+        // check nack
+        if ( (rx_pdo.op_idx_ack >> 8) == 0xEE ) {
+            DPRINTF("Fail PDO_aux reason 0x%02X\n", (uint32_t)rx_pdo.aux);
+            return -1;
+        }
+        // check idx
+        if ( (rx_pdo.op_idx_ack & 0xFF) != sdo_objd->subindex ) {
+            DPRINTF("Fail PDO_aux idx %d != %d\n", sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF);
+            return -1;
+        }
+        
+        *(float*)sdo_objd->data = rx_pdo.aux;
+        return 0;
+    }
+private:
+    const objd_t *  sdo_objd; 
+};
+
 
 
 inline int check_cmd_ack ( int16_t cmd, int16_t ack ) {
