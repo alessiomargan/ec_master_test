@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(protobuf)
+#cmake_minimum_required(VERSION 3.2)
+project(protos)
 
-include(FindProtobuf)
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 include(FindPkgConfig)
+
 if (PKG_CONFIG_FOUND)
   pkg_check_modules(GAZEBO gazebo)
 endif()
@@ -30,8 +32,8 @@ set(msgs
 
 add_definitions(-fPIC)
 protobuf_generate_cpp(PROTO_SRC PROTO_HEADER ${msgs})
-#protobuf_generate_python(PROTO_PY ${msgs})
-add_library (pdo_pb ${PROTO_HEADER} ${PROTO_SRC})
+protobuf_generate_python(PROTO_PY ${msgs})
+add_library (pdo_pb ${PROTO_HEADER} ${PROTO_SRC} ${PROTO_PY})
 
 install(TARGETS pdo_pb DESTINATION lib)
 install(FILES ${PROTO_HEADER}  DESTINATION include/protobuf)

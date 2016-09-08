@@ -368,17 +368,11 @@ public:
     virtual int set_posRef ( float joint_pos ) {
         tx_pdo.pos_ref = joint_pos;
     }
-    virtual int set_torOffs ( float tor_offs ) {
-        /*tx_pdo.tor_offs = tor_offs;*/
+    virtual int set_velRef ( float joint_vel ) {
+        /*tx_pdo.vel_ref = joint_vel;*/
     }
-    virtual int set_posGainP ( float p_gain )  {
-        /*tx_pdo.PosGainP = p_gain;*/
-    }
-    virtual int set_posGainI ( float i_gain )  {
-        /*tx_pdo.PosGainI = i_gain;*/
-    }
-    virtual int set_posGainD ( float d_gain )  {
-        /*tx_pdo.PosGainD = d_gain;*/
+    virtual int set_torRef ( float joint_tor ) {
+        /*tx_pdo.tor_ref = joint_tor;*/
     }
 
     virtual int move_to ( float pos_ref, float step ) {

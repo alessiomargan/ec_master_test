@@ -19,7 +19,6 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
-#include <protobuf/ecat_pdo.pb.h>
 
 namespace iit {
 namespace ecat {
@@ -27,9 +26,17 @@ namespace advr {
 
 
 struct Ft6EscPdoTypes {
+    
     // TX  slave_input -- master output
     struct pdo_tx {
         uint16_t    ts;
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << ts << delim;
+            //os << std::endl;
+            return os;
+        }
+
     }  __attribute__ ( ( __packed__ ) );
 
     // RX  slave_output -- master input
@@ -42,11 +49,28 @@ struct Ft6EscPdoTypes {
         float       torque_Z;           // Nm
         uint16_t    fault;
         uint16_t    rtt;                // ns
-        int sprint ( char *buff, size_t size ) {
-            return snprintf ( buff, size, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt );
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << force_X << delim;
+            os << force_Y << delim;
+            os << force_Z << delim;
+            os << torque_X << delim;
+            os << torque_Y << delim;
+            os << torque_Z << delim;
+            os << fault << delim;
+            os << rtt << delim;
+            //os << std::endl;
+            return os;
         }
         void fprint ( FILE *fp ) {
-            fprintf ( fp, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            fprintf ( fp, "%s", oss.str().c_str() );
+        }
+        int sprint ( char *buff, size_t size ) {
+            std::ostringstream oss;
+            dump(oss,"\t");
+            return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
         void to_map ( jmap_t & jpdo ) {
             JPDO ( force_X );
@@ -59,13 +83,15 @@ struct Ft6EscPdoTypes {
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
-            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_FT6);
-            // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
-            // Motor_rx_pdo
+            // FT6_rx_pdo
             pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_x(force_X);
             pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_y(force_Y);
             pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_z(force_Z);
@@ -80,9 +106,16 @@ struct Ft6EscPdoTypes {
     }  __attribute__ ( ( __packed__ ) );
 };
 
+inline std::ostream& operator<< (std::ostream& os, const Ft6EscPdoTypes::pdo_tx& tx_pdo ) {
+    return tx_pdo.dump(os,"\t");
+}
+
+inline std::ostream& operator<< (std::ostream& os, const Ft6EscPdoTypes::pdo_rx& rx_pdo ) {
+    return rx_pdo.dump(os,"\t");
+}
 
 struct Ft6EscSdoTypes {
-
+        
     // flash
 
     unsigned long Block_control;
@@ -119,16 +152,32 @@ struct Ft6EscSdoTypes {
     uint16_t    flash_params_cmd_ack;
 };
 
+struct Ft6LogTypes {
+
+    uint64_t                ts;     // ns
+    Ft6EscPdoTypes::pdo_rx  rx_pdo;
+
+    void fprint ( FILE *fp ) {
+        fprintf ( fp, "%lu\t", ts );
+        rx_pdo.fprint ( fp );
+    }
+    int sprint ( char *buff, size_t size ) {
+        int l = snprintf ( buff, size, "%lu\t", ts );
+        return l + rx_pdo.sprint ( buff+l,size-l );
+    }
+};
+
+
 /**
 *
 **/
 
 class Ft6ESC :
     public BasicEscWrapper<Ft6EscPdoTypes, Ft6EscSdoTypes>,
-    public PDO_log<Ft6EscPdoTypes::pdo_rx> {
+    public PDO_log<Ft6LogTypes> {
 public:
-    typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes>              Base;
-    typedef PDO_log<Ft6EscPdoTypes::pdo_rx>                             Log;
+    typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes>   Base;
+    typedef PDO_log<Ft6LogTypes>                             Log;
 
 public:
     Ft6ESC ( const ec_slavet& slave_descriptor ) :
@@ -173,15 +222,8 @@ public:
 
         if ( _start_log ) {
             Log::log_t log;
-            //log.ts = get_time_ns() -_start_log_ts ;
-            log.force_X     = rx_pdo.force_X;
-            log.force_Y     = rx_pdo.force_Y;
-            log.force_Z     = rx_pdo.force_Z;
-            log.torque_X    = rx_pdo.torque_X;
-            log.torque_Y    = rx_pdo.torque_Y;
-            log.torque_Z    = rx_pdo.torque_Z;
-            log.fault       = rx_pdo.fault;
-            log.rtt         = rx_pdo.rtt;
+            log.ts      = get_time_ns() - _start_log_ts ;
+            log.rx_pdo  = rx_pdo;
             push_back ( log );
         }
 

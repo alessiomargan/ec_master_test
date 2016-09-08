@@ -9,7 +9,6 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
-#include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 #include <string>
@@ -51,23 +50,45 @@ typedef union {
 
 
 struct PowCmnEscPdoTypes {
+    
     // TX  slave_input -- master output
     struct pdo_tx {
         uint16_t    master_command;
         uint16_t    ts;
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << master_command << delim;
+            os << ts << delim;
+            //os << std::endl;
+            return os;
+        }
+        
     } __attribute__ ( ( __packed__ ) );
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        float       		temperature;
-        float			v_batt;
-        status_cmn_pow_t	status;
-        uint16_t		rtt;  // us
-        int sprint ( char *buff, size_t size ) {
-            return snprintf ( buff, size, "%f\t%f\t0x%02X\t%d", temperature, v_batt, status.all, rtt );
+        float               temperature;
+        float               v_batt;
+        status_cmn_pow_t    status;
+        uint16_t            rtt;
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            os << temperature << delim;
+            os << v_batt << delim;
+            os << status.all << delim;
+            os << rtt << delim;
+            //os << std::endl;
+            return os;
         }
         void fprint ( FILE *fp ) {
-            fprintf ( fp, "%f\t%f\t0x%02X\t%d\n", temperature, v_batt, status.all, rtt );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            fprintf ( fp, "%s", oss.str().c_str() );
+        }
+        int sprint ( char *buff, size_t size ) {
+            std::ostringstream oss;
+            dump(oss,"\t");
+            return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
         void to_map ( jmap_t & jpdo ) {
             JPDO ( temperature );
@@ -76,23 +97,32 @@ struct PowCmnEscPdoTypes {
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
-            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_POW_CMN);
-            // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(0);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(999);
-            // Motor_rx_pdo
+            // PowWalkman_rx_pdo
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_temperature(temperature);
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_v_batt(v_batt);
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_status(status.all);
             pb_rx_pdo.mutable_powcoman_rx_pdo()->set_rtt(rtt);
             pb_rx_pdo.SerializeToString(pb_str);
         }
-
         
     } __attribute__ ( ( __packed__ ) );
 };
+
+inline std::ostream& operator<< (std::ostream& os, const PowCmnEscPdoTypes::pdo_tx& tx_pdo ) {
+    return tx_pdo.dump(os,"\t");
+}
+
+inline std::ostream& operator<< (std::ostream& os, const PowCmnEscPdoTypes::pdo_rx& rx_pdo ) {
+    return rx_pdo.dump(os,"\t");
+}
 
 
 struct PowCmnEscSdoTypes {

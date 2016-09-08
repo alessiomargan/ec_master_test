@@ -23,11 +23,11 @@ message Motor_xt_tx_pdo {
     required float  pos_ref     = 1;
     required int32  vel_ref     = 2;
     required int32  tor_ref     = 3;
-    required uint32 gain_kp_m   = 4;
-    required uint32 gain_kp_l   = 5;
-    required uint32 gain_kd_m   = 6;
-    required uint32 gain_kd_l   = 7;
-    required uint32 gain_ki     = 8;
+    required uint32 gain_0      = 4;
+    required uint32 gain_1      = 5;
+    required uint32 gain_2      = 6;
+    required uint32 gain_3      = 7;
+    required uint32 gain_4      = 8;
     required uint32 fault_ack   = 9;
     required uint32 ts          = 10;
     optional uint32 op_idx_aux  = 11;
@@ -44,6 +44,6 @@ message Motor_xt_rx_pdo {
     required uint32 temperature = 6;
     required uint32 fault       = 7;
     required uint32 rtt         = 8;
-    optional uint32 op_idx_aux  = 9;
+    optional uint32 op_idx_ack  = 9;
     optional float  aux         = 10;
 }

@@ -86,7 +86,7 @@ struct HiPwrEscSdoTypes {
     uint16_t    flash_params_cmd_ack;
     int32_t    abs_enc_mot;
     int32_t    abs_enc_load;
-    float       angle_enc_mot;
+    float       angle_enc_mot;  
     float       angle_enc_load;
     float       angle_enc_diff;
     float       iq_ref;
@@ -96,33 +96,20 @@ struct HiPwrEscSdoTypes {
 
 struct HiPwrLogTypes {
 
-    uint64_t    ts;        		    // ns
-    float       pos_ref;   		// rad
-    uint16_t    PosGainP;
-    uint16_t    PosGainD;
-    //
-    float       position;   		// rad
-    float       pos_ref_fb;   		// rad/s
-    uint16_t    temperature;    // C
-    int16_t     torque;               // Nm
-    uint16_t    fault;
-    uint16_t    rtt;        		// ns
+    uint64_t                ts;     // ns
+    float                   pos_ref;
+    McEscPdoTypes::pdo_rx   rx_pdo;
 
     void fprint ( FILE *fp ) {
-//         fprintf(fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu\n",
-//                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
-//                 temperature,position,velocity,torque,fault,rtt);
-        fprintf ( fp, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d\n"   ,
-                  ts,pos_ref,temperature,position,pos_ref_fb,torque,fault,rtt );
+        fprintf ( fp, "%lu\t%f\t", ts, pos_ref );
+        rx_pdo.fprint ( fp );
     }
     int sprint ( char *buff, size_t size ) {
-//         return snprintf(buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0x%X\t%lu",
-//                 ts,pos_ref,tor_offs,PosGainP,PosGainI,PosGainD,
-//                 temperature,position,velocity,torque,fault,rtt);
-        return snprintf ( buff, size, "%lu\t%f\t%d\t%f\t%f\t%d\t0x%X\t%d",
-                          ts,pos_ref,temperature,position,pos_ref_fb,torque,fault,rtt );
+        int l = snprintf ( buff, size, "%lu\t%f\t", ts, pos_ref );
+        return l + rx_pdo.sprint ( buff+l,size-l );
     }
 };
+
 
 /**
 *
@@ -161,8 +148,14 @@ public:
 
         DPRINTF ( "\tJoint id %c%d\tJoint robot id %d\n", ( char ) ( sdo.Joint_number>>8 ), sdo.Joint_number&0x0F, sdo.Joint_robot_id );
         DPRINTF ( "\tmin pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos );
-        DPRINTF ( "\tfw_ver %s\n", sdo.firmware_version );
+        DPRINTF ( "\tfw_ver %s\n", std::string((const char *)sdo.firmware_version,8).c_str() );
     }
+
+    virtual const objd_t * get_SDOs() {
+        return SDOs;
+    }
+
+    void init_SDOs ( void );
 
 protected :
 
@@ -183,20 +176,13 @@ protected :
         // apply transformation from Motor to Joint
         rx_pdo.link_pos = hipwr_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
         rx_pdo.motor_pos = hipwr_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
-        rx_pdo.pos_ref_fb  = hipwr_esc::M2J ( rx_pdo.pos_ref_fb,_sgn,_offset );
+        //rx_pdo.pos_ref_fb  = hipwr_esc::M2J ( rx_pdo.pos_ref_fb,_sgn,_offset );
 
         if ( _start_log ) {
             Log::log_t log;
-            log.ts = get_time_ns() - _start_log_ts ;
-            log.pos_ref     = hipwr_esc::M2J ( tx_pdo.pos_ref,_sgn,_offset );
-            log.PosGainP    = tx_pdo.gainP;
-            log.PosGainD    = tx_pdo.gainD;
-            log.position    = rx_pdo.link_pos;
-            log.pos_ref_fb  = rx_pdo.pos_ref_fb;
-            log.temperature = rx_pdo.temperature;
-            log.torque      = rx_pdo.torque;
-            log.fault       = rx_pdo.fault;
-            log.rtt         = rx_pdo.rtt;
+            log.ts      = get_time_ns() - _start_log_ts ;
+            log.pos_ref = hipwr_esc::M2J ( tx_pdo.pos_ref,_sgn,_offset );
+            log.rx_pdo  = rx_pdo;
             push_back ( log );
         }
 
@@ -205,7 +191,8 @@ protected :
     virtual void on_writePDO ( void ) {
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
-        // apply transformation from Joint to Motor
+        // NOOOOOOOOOOOO
+        // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
         //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
     }
 
@@ -237,11 +224,6 @@ protected :
         return EC_BOARD_OK;
     }
 
-    virtual const objd_t * get_SDOs() {
-        return SDOs;
-    }
-
-    void init_SDOs ( void );
 
 public :
     ///////////////////////////////////////////////////////
@@ -344,7 +326,8 @@ public :
         uint16_t gain;
         float max_vel = 3.0;
 
-        DPRINTF ( "Start motor[%d] 0x%02X %.2f %.2f %.2f\n", Joint_robot_id, controller_type, _p, _i, _d );
+        DPRINTF ( "Start motor[%d] 0x%02X %.2f %.2f %.2f\n",
+                  Joint_robot_id, controller_type, _p, _i, _d );
 
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
@@ -354,9 +337,9 @@ public :
             writeSDO_byname ( "PosGainD", _d );
             // this will SET tx_pdo.gainP
             gain = ( uint16_t ) _p;
-            writeSDO_byname ( "gainP", gain );
+            writeSDO_byname ( "gain_0", gain );
             gain = ( uint16_t ) _d;
-            writeSDO_byname ( "gainD", gain );
+            writeSDO_byname ( "gain_1", gain );
             // pdo gains will be used in OP
             //writeSDO_byname ( "board_enable_mask", enable_mask );
             writeSDO_byname ( "Max_vel", max_vel );
@@ -364,6 +347,10 @@ public :
             // set actual position as reference
             readSDO_byname ( "link_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
+            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
+                      act_position,
+                      hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
+            
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
@@ -406,11 +393,6 @@ public :
         return set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
     }
 
-    virtual void set_off_sgn ( float offset, int sgn ) {
-        _offset = offset;
-        _sgn = sgn;
-    }
-
     virtual void start_log ( bool start ) {
         Log::start_log ( start );
     }
@@ -427,21 +409,29 @@ public :
     /////////////////////////////////////////////
     // set pdo data
     virtual int set_posRef ( float joint_pos ) {
-        tx_pdo.pos_ref = hipwr_esc::J2M ( joint_pos,_sgn,_offset );
+        tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset);
     }
+    virtual int set_velRef ( float joint_vel ) {
+        tx_pdo.vel_ref = joint_vel;
+    }
+    virtual int set_torRef ( float joint_tor ) {
+        tx_pdo.tor_ref = joint_tor;
+    }
+
+#if 0
     virtual int set_torOffs ( float tor_offs ) {
         /*tx_pdo.tor_offs = tor_offs;*/
     }
     virtual int set_posGainP ( float p_gain )  {
-        tx_pdo.gainP = p_gain;
+        tx_pdo.gain_kp_l = p_gain;
     }
     virtual int set_posGainI ( float i_gain )  {
-        /*tx_pdo.PosGainI = i_gain;*/
+        tx_pdo.gain_ki = i_gain;
     }
     virtual int set_posGainD ( float d_gain )  {
-        tx_pdo.gainD = d_gain;
+        tx_pdo.gain_kd_l = d_gain;
     }
-
+#endif
     virtual int move_to ( float pos_ref, float step ) {
 
         float       pos, tx_pos_ref;
@@ -451,7 +441,7 @@ public :
             readSDO_byname ( "fault", fault );
             handle_fault();
             readSDO_byname ( "link_pos", pos );
-            readSDO_byname ( "pos_ref_fb", tx_pos_ref );
+            readSDO_byname ( "pos_ref", tx_pos_ref );
             tx_pos_ref = hipwr_esc::M2J ( tx_pos_ref,_sgn,_offset );
 
             if ( fabs ( pos - pos_ref ) > step ) {

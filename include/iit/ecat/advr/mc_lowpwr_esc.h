@@ -27,15 +27,10 @@ namespace ecat {
 namespace advr {
 
 namespace lopwr_esc {
-//static float J2M(float p, int s, float o) { return ((s*o) + (s*p)); }
-//static float M2J(float p, int s, float o) { return ((p + (s*o))/s); }
-static float J2M ( float p, int s, float o ) {
-    return p;
-}
-static float M2J ( float p, int s, float o ) {
-    return p;
-}
-
+static float J2M(float p, int s, float o) { return ((s*o) + (s*p)); }
+static float M2J(float p, int s, float o) { return ((p + (s*o))/s); }
+//static float J2M ( float p, int s, float o ) { return p; }
+//static float M2J ( float p, int s, float o ) { return p; }
 }
 
 struct LoPwrEscSdoTypes {
@@ -93,15 +88,16 @@ struct LoPwrEscSdoTypes {
 
 struct LoPwrLogTypes {
 
-    uint64_t    		ts;           // ns
-    McEscPdoTypes::pdo_rx	rx_pdo;
+    uint64_t                ts;     // ns
+    float                   pos_ref;
+    McEscPdoTypes::pdo_rx   rx_pdo;
 
     void fprint ( FILE *fp ) {
-        fprintf ( fp, "%lu\t", ts );
+        fprintf ( fp, "%lu\t%f\t", ts, pos_ref );
         rx_pdo.fprint ( fp );
     }
     int sprint ( char *buff, size_t size ) {
-        int l = snprintf ( buff, size, "%lu\t", ts );
+        int l = snprintf ( buff, size, "%lu\t%f\t", ts, pos_ref );
         return l + rx_pdo.sprint ( buff+l,size-l );
     }
 };
@@ -141,7 +137,7 @@ public:
         DPRINTF ( "\tPosGainP: %f PosGainI: %f PosGainD: %f I lim: %f\n", sdo.PosGainP, sdo.PosGainI, sdo.PosGainD, sdo.Pos_I_lim );
         DPRINTF ( "\tImpPosGainP :%f ImpPosGainD:%f\n", sdo.ImpedancePosGainP, sdo.ImpedancePosGainD );
         DPRINTF ( "\tTorGainP:%f TorGainI:%f Tor_I_lim:%f\n", sdo.TorGainP, sdo.TorGainI, sdo.Tor_I_lim );
-        DPRINTF ( "\tfw_ver %s\n", sdo.firmware_version );
+        DPRINTF ( "\tfw_ver %s\n", std::string((const char *)sdo.firmware_version,8).c_str() );
     }
 
     virtual const objd_t * get_SDOs() {
@@ -150,6 +146,8 @@ public:
 
     virtual void init_SDOs ( void );
 
+protected :
+    
     virtual void on_readPDO ( void ) {
 
         if ( rx_pdo.rtt ) {
@@ -168,11 +166,12 @@ public:
         // apply transformation from Motor to Joint
         rx_pdo.link_pos = lopwr_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
         rx_pdo.motor_pos = lopwr_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
-        rx_pdo.pos_ref_fb  = lopwr_esc::M2J ( rx_pdo.pos_ref_fb,_sgn,_offset );
+        //rx_pdo.pos_ref_fb  = lopwr_esc::M2J ( rx_pdo.pos_ref_fb,_sgn,_offset );
 
         if ( _start_log ) {
             Log::log_t log;
             log.ts = get_time_ns() - _start_log_ts ;
+            log.pos_ref = lopwr_esc::M2J ( tx_pdo.pos_ref,_sgn,_offset );
             log.rx_pdo = rx_pdo;
             push_back ( log );
         }
@@ -181,9 +180,9 @@ public:
     virtual void on_writePDO ( void ) {
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
-
-        // apply transformation from Joint to Motor
-        //tx_pdo.pos_ref = J2M(tx_pdo.pos_ref,_sgn,_offset);
+        // NOOOOOOOOOOOO
+        // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
+        //tx_pdo.pos_ref = lopwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
 
     }
 
@@ -215,6 +214,7 @@ public:
         return EC_BOARD_OK;
     }
 
+public:        
     ///////////////////////////////////////////////////////
     ///
     /// Motor method implementation
@@ -252,7 +252,7 @@ public:
             readSDO_byname ( "Joint_robot_id", Joint_robot_id );
             readSDO_byname ( "Joint_number" );
             readSDO_byname ( "fw_ver" );
-
+            
         } catch ( EscWrpError &e ) {
 
             DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
@@ -305,35 +305,49 @@ public:
 
         float act_position, test_ref;
         int32_t fault;
-
+        std::ostringstream oss;
+        
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
             // set actual position as reference
             readSDO_byname ( "link_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
-            DPRINTF ( "start %f tx_pdo.pos_ref %f\n", act_position, tx_pdo.pos_ref );
+            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
+                      act_position,
+                      lopwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
+            
             if ( controller_type == CTRL_SET_POS_MODE ) {
             
                 writeSDO_byname( "pos_gain_P", _p );
                 writeSDO_byname( "pos_gain_I", _i );
                 writeSDO_byname( "pos_gain_D", _d );
-                DPRINTF ( "\t%f %f %f\n", _p,_i,_d );
+                DPRINTF ( "\tPosGain %f %f %f\n", _p,_i,_d );
             
-            } 
-            if ( controller_type == CTRL_SET_IMPED_MODE ) {
-                /* porcata ... nel philmware in do_impedance_control()
-                 * ... 10000 e 10
-                 * if ((rx_pdo.PGain < MAX_STIFFNESS) && (rx_pdo.PGain > MIN_STIFFNESS))
-                 * {
-                 *      g_sParameters.ImpedancePosGainP = 100.0 * (float)rx_pdo.PGain;
-                 *      g_sParameters.ImpedancePosGainD = (float)rx_pdo.DGain;
-                 * }
-                 * ... else use parameters value
-                 * ... 
-                 */
-                writeSDO_byname( "gainP", (uint16_t)(_p/100.0));
-                writeSDO_byname( "gainD", (uint16_t)_d);
+            } else if ( controller_type == CTRL_SET_IMPED_MODE ) {
+
+                // Impedance gains : position PD torque PI 
+                // PosGainP
+                writeSDO_byname( "gain_0", (uint16_t)(_p/100.0));
+                // TorGainP
+                writeSDO_byname( "gain_1", (uint16_t)(sdo.TorGainP*1000));
+                // PosGainD
+                writeSDO_byname( "gain_2", (uint16_t)_d);
+                // TorGainD
+                //writeSDO_byname( "gain_3", (uint16_t)(sdo.TorGainP));
+                // TorGainIs
+                writeSDO_byname( "gain_4", (uint16_t)(sdo.TorGainI*1000));
                 
+                oss << tx_pdo;
+                DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
+            
+            }
+            else if ( controller_type == CTRL_SET_VOLT_MODE ) {
+            
+                int16_t configFlags;
+                readSDO_byname("ConfigFlags", configFlags);
+                // #define CONFIGFLAG_USE_VOLTAGE_MODE_LIMITS_BIT    8
+                configFlags |= (0x1 << 8); 
+                writeSDO_byname("ConfigFlags", configFlags);
             }
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
@@ -372,7 +386,7 @@ public:
         } 
         if ( controller_type == CTRL_SET_IMPED_MODE ) {
             // use default value read in init()
-            pid[0] = sdo.ImpedancePosGainP / 100.0 ;
+            pid[0] = sdo.ImpedancePosGainP;
             pid[1] = 0,0; // not used
             pid[2] = sdo.ImpedancePosGainD;
 
@@ -380,6 +394,7 @@ public:
                 try {
                     pid = node_cfg["pid"]["impedance"].as<std::vector<float>>();
                     assert ( pid.size() == 3 );
+                    DPRINTF ( "using yaml values\n");  
                 } catch ( std::exception &e ) {
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
                 }
@@ -410,28 +425,35 @@ public:
     /////////////////////////////////////////////
     // set pdo data
     virtual int set_posRef ( float joint_pos ) {
-        tx_pdo.pos_ref = joint_pos;
+        tx_pdo.pos_ref = lopwr_esc::J2M(joint_pos,_sgn,-_offset);
     }
+    virtual int set_velRef ( float joint_vel ) {
+        tx_pdo.vel_ref = joint_vel;
+    }
+    virtual int set_torRef ( float joint_tor ) {
+        tx_pdo.tor_ref = joint_tor;
+    }
+#if 0
     virtual int set_torOffs ( float tor_offs ) {
         /*tx_pdo.tor_offs = tor_offs;*/
     }
     virtual int set_posGainP ( float p_gain )  {
-        /*tx_pdo.PosGainP = p_gain;*/
+        tx_pdo.gain_0 = p_gain;
     }
     virtual int set_posGainI ( float i_gain )  {
-        /*tx_pdo.PosGainI = i_gain;*/
+        tx_pdo.gain_2 = i_gain;
     }
     virtual int set_posGainD ( float d_gain )  {
-        /*tx_pdo.PosGainD = d_gain;*/
+        tx_pdo.gain_1 = d_gain;
     }
-
+#endif
     virtual int move_to ( float pos_ref, float step ) {
 
         float pos, tx_pos_ref;
 
         try {
             readSDO_byname ( "link_pos", pos );
-            readSDO_byname ( "pos_ref_fb", tx_pos_ref );
+            readSDO_byname ( "pos_ref", tx_pos_ref );
             //tx_pos_ref = pos_ref;
             if ( fabs ( pos - pos_ref ) > step ) {
                 if ( pos > pos_ref ) {
@@ -455,7 +477,6 @@ public:
 
     }
 
-    virtual void set_off_sgn ( float offset, int sgn ) {}
 
 private:
 
