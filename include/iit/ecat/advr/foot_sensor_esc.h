@@ -15,7 +15,10 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/utils.h>
+#include <protobuf/ecat_pdo.pb.h>
+
 #include <map>
+#include <iostream>
 
 #define SENSOR_NUMBER 128
 
@@ -35,20 +38,52 @@ struct FootSensorEscPdoTypes {
         uint8_t    forceXY[SENSOR_NUMBER];
         uint16_t   fault;
         uint16_t   rtt;                
-        int sprint ( char *buff, size_t size ) {
-            // TBD
-//             return snprintf ( buff, size, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt );
+        
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+            for (int i=0; i<SENSOR_NUMBER; i++) {
+                os << (unsigned)forceXY[i] << delim;
+            }
+            os << std::hex << fault << std::dec << delim;
+            os << rtt << delim;
+            //os << std::endl;
+            return os;
         }
         void fprint ( FILE *fp ) {
-            // TBD
-//             fprintf ( fp, "%f\t%f\t%f\t%f\t%f\t%f\t%d\t%d\n", force_X,force_Y,force_Z,torque_X,torque_Y,torque_Z,fault,rtt );
+            std::ostringstream oss;
+            dump(oss,"\t");
+            fprintf ( fp, "%s", oss.str().c_str() );
         }
+        int sprint ( char *buff, size_t size ) {
+            std::ostringstream oss;
+            dump(oss,"\t");
+            return snprintf ( buff, size, "%s", oss.str().c_str() );
+        }
+
         void to_map ( jmap_t & jpdo ) {
             for(int i = 0; i < SENSOR_NUMBER; i++) {
-                JPDO ( forceXY[i] );
+                jpdo["forceXY_"+std::to_string(i)] = std::to_string( forceXY[i] );
             }
             JPDO ( fault );
             JPDO ( rtt );
+        }
+        void pb_toString( std::string * pb_str ) {
+            // !!! NO static declaration
+            iit::advr::Ec_slave_pdo pb_rx_pdo;
+            static struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
+            // Type
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_FOOT_SENS);
+            // footWalkman_rx_pdo
+            pb_rx_pdo.mutable_footwalkman_rx_pdo()->set_fault(fault);
+            pb_rx_pdo.mutable_footwalkman_rx_pdo()->set_rtt(rtt);
+            //for (int i=0; i<SENSOR_NUMBER; i++) { pb_rx_pdo.mutable_footwalkman_rx_pdo()->set_forcexy(i,(unsigned)forceXY[i]); }
+            //pb_rx_pdo.mutable_footwalkman_rx_pdo()->clear_forcexy();
+            for (int i=0; i<SENSOR_NUMBER; i++) { pb_rx_pdo.mutable_footwalkman_rx_pdo()->add_forcexy((unsigned)forceXY[i]); }
+            //std::cout << "FootXY " << pb_rx_pdo.mutable_footwalkman_rx_pdo()->forcexy_size() << std::endl;
+            pb_rx_pdo.SerializeToString(pb_str);
         }
 
     }  __attribute__ ( ( __packed__ ) );
