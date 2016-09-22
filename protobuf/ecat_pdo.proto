@@ -3,6 +3,7 @@ package iit.advr;
 import "motor_pdo.proto";
 import "ft6_pdo.proto";
 import "power_pack_pdo.proto";
+import "foot_sens_pdo.proto";
 import "header.proto";
 
 message Ec_slave_pdo {
@@ -13,6 +14,7 @@ message Ec_slave_pdo {
         RX_POW_WLK = 5;     TX_POW_WLK = 6;
         RX_POW_CMN = 7;     TX_POW_CMN = 8;
         RX_XT_MOTOR = 9;    TX_XT_MOTOR = 10;
+        RX_FOOT_SENS = 11;  TX_FOOT_SENS = 12;
         
     }
 
@@ -32,6 +34,7 @@ message Ec_slave_pdo {
     optional PowComan_rx_pdo    powComan_rx_pdo = 10;
     optional PowWalkman_tx_pdo  powWalkman_tx_pdo = 11;
     optional PowWalkman_rx_pdo  powWalkman_rx_pdo = 12;
+    optional FootWalkman_rx_pdo footWalkman_rx_pdo = 13;
 
 }
 
