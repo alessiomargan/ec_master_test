@@ -44,7 +44,8 @@ Abs_Publisher::Abs_Publisher ( std::string _uri ) : uri(_uri) {
 }
 
 Abs_Publisher::~Abs_Publisher() {
-    _z->unbind(uri.c_str());
+    //if ( xddp_sock > 0) { _z->unbind(uri.c_str()); }
+    //_z->unbind(uri.c_str());
     delete _z;
 }
 
@@ -57,7 +58,7 @@ int Abs_Publisher::open_pipe ( std::string pipe_name ) {
     xddp_sock = open ( pipe_path.c_str(), O_RDONLY );
 
     if ( xddp_sock < 0 ) {
-        printf ( "%s %s : %s\n", __FILE__, __FUNCTION__, strerror ( errno ) );
+        printf ( "xddp_sock %d - %s %s : %s\n", xddp_sock, __FILE__, __FUNCTION__, strerror ( errno ) );
         return 1;
     }
 
@@ -93,7 +94,8 @@ void ZMQ_Pub_thread::th_init ( void* ) {
 
     std::string motor_prefix ( "Motor_id_" );
     std::string ft_prefix ( "Ft_id_" );
-    
+    std::string foot_prefix ( "Foot_id_" );
+
     ///////////////////////////////////////////////////////////////////////
     // COMAN
     ///////////////////////////////////////////////////////////////////////
@@ -122,7 +124,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     } else {
         delete zpub;
     }
-    
+
     ///////////////////////////////////////////////////////////////////////
     // WALKMAN
     ///////////////////////////////////////////////////////////////////////
@@ -146,6 +148,16 @@ void ZMQ_Pub_thread::th_init ( void* ) {
             delete zpub;
         }
     }
+    ///////////////////////////////////////////////////////////////////////
+    // walkman::robot_footsens_ids
+    for ( auto const& rid : walkman::robot_foot_ids ) {
+        zpub = new FootPub ( uri+std::to_string ( base_port+rid ) );
+        if ( zpub->open_pipe ( foot_prefix+std::to_string ( rid ) ) == 0 ) {
+            zmap[base_port+rid] = zpub;
+        } else {
+            delete zpub;
+        }
+    }
 
     zpub = new PwPub ( uri+std::to_string ( 10001 ) );
     if ( zpub->open_pipe ( "PowWkm_pos_1" ) == 0 ) {
@@ -157,6 +169,14 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     ///////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////
+
+    zpub = new TestPub ( uri+std::to_string ( 12345 ) );
+    if ( zpub->open_pipe ( "Test_pos_2" ) == 0 ) {
+        zmap[base_port] = zpub;
+    } else {
+        delete zpub;
+    }
+
 #if 0
     base_port++;
     zpub = new McPub ( uri+std::to_string ( base_port ) );
@@ -168,14 +188,6 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     base_port++;
     zpub = new McPub ( uri+std::to_string ( base_port ) );
     if ( zpub->open_pipe ( "Motor_id_21" ) == 0 ) {
-        zmap[base_port] = zpub;
-    } else {
-        delete zpub;
-    }
-
-    base_port++;
-    zpub = new TestPub ( uri+std::to_string ( base_port ) );
-    if ( zpub->open_pipe ( "Test_pos_4" ) == 0 ) {
         zmap[base_port] = zpub;
     } else {
         delete zpub;

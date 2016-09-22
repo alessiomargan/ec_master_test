@@ -47,6 +47,7 @@ enum Robot_IDs {
     RL_A_P,
     RL_A_R,
     RL_FT,
+    RL_FOOT,
 
     // left leg
     LL_H_R = 51,
@@ -56,6 +57,7 @@ enum Robot_IDs {
     LL_A_P,
     LL_A_R,
     LL_FT,
+    LL_FOOT,
 };
 
 const std::vector<int> robot_head_ids = std::initializer_list<int> {
@@ -117,6 +119,10 @@ const std::vector<int> robot_hands_ids = std::initializer_list<int> {
 
 const std::vector<int> robot_fts_ids = std::initializer_list<int> {
     RL_FT, LL_FT, RA_FT, LA_FT
+};
+
+const std::vector<int> robot_foot_ids = std::initializer_list<int> {
+    RL_FOOT, LL_FOOT
 };
 
 const std::vector<int> robot_mcs_ids = std::initializer_list<int> {

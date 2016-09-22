@@ -40,6 +40,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
+#include <iit/ecat/advr/foot_sensor_esc.h>
 #include <iit/ecat/advr/power_board.h>
 #include <iit/ecat/advr/power_coman_board.h>
 #include <iit/ecat/advr/test_esc.h>
@@ -208,6 +209,7 @@ class ZMQ_Pub_thread : public Thread_hook {
 
     typedef Publisher<iit::ecat::advr::TestEscPdoTypes::pdo_rx> TestPub;
     typedef Publisher<iit::ecat::advr::Ft6EscPdoTypes::pdo_rx> FtPub;
+    typedef Publisher<iit::ecat::advr::FootSensorEscPdoTypes::pdo_rx> FootPub;
     typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx> McPub;
     typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
     typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx> PwCmnPub;

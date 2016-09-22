@@ -147,7 +147,7 @@ void Ec_Thread_Boards_base::xddps_init ( void ) {
         slave_pos = item.first;
         fs = item.second;
         xddps[slave_pos] = XDDP_pipe();
-        xddps[slave_pos].init ( "Foot_sensor_id_"+std::to_string ( fs->get_robot_id() ) );
+        xddps[slave_pos].init ( "Foot_id_"+std::to_string ( fs->get_robot_id() ) );
     }
 
     for ( auto const& item : pows ) {

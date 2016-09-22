@@ -2,7 +2,9 @@
 #include <errno.h>
 #include <assert.h>
 #include <signal.h>
+
 #include <exception>
+#include <iostream>
 
 #include <ec_boards_basic.h>
 

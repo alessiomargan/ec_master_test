@@ -1,5 +1,4 @@
 #
-
 ec_board_ctrl:
   eth_iface: rteth0
   #eth_iface: eth1
@@ -9,9 +8,13 @@ ec_board_ctrl:
   #sync_cycle_time_ns: 5000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 0
-  sync_cycle_offset_ns: 0
+  sync_cycle_offset_ns: 1000000000
   power_off_boards: false
-  
+
+#
+ec_boards_base:
+  create_pipes: true  
+
 firmware_update:
   #
   fw_path: ../firmware/  
@@ -46,7 +49,18 @@ firmware_update:
     bin_file: FT6.bin
     passwd: 0xbeef
 
+#############################
+# GENERIC LpESC config
+#############################
 
+LpESC_X:
+  sign: 1
+  pos_offset: 0
+
+HpESC_X:
+  sign: 1
+  pos_offset: 0
+    
 #############################
 # HEAD
 #############################
