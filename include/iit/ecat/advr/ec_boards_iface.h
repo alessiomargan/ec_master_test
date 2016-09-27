@@ -21,6 +21,7 @@
 #include <iit/ecat/advr/mc_lowpwr_esc.h>
 #include <iit/ecat/advr/mc_lowpwr_sph_esc.h>
 #include <iit/ecat/advr/mc_lowpwr_sphbrk_esc.h>
+#include <iit/ecat/advr/mc_centAC_esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/foot_sensor_esc.h>
 #include <iit/ecat/advr/hub_esc.h>
@@ -119,8 +120,6 @@ public:
      * @param slave_index id of the slave
      * @param pdo_rx&
      */
-    //int getRxPDO(int slave_index, McEscPdoTypes::pdo_rx &pdo);
-    //int getRxPDO(int slave_index, Ft6EscPdoTypes::pdo_rx &pdo);
     template<typename T, class C>
     int getRxPDO ( int slave_index, T &pdo );
     template<typename T, class C>
@@ -134,8 +133,6 @@ public:
      * @param iit::ecat::advr::McESCTypes::pdo_rx&
      * @return void
      */
-    //int setTxPDO(int slave_index, McEscPdoTypes::pdo_tx pdo);
-    //int setTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx pdo);
     template<typename T, class C>
     int setTxPDO ( int slave_index, const T &pdo );
     /**
@@ -144,8 +141,6 @@ public:
      * @param slave_index id of the slave
      * @param iit::ecat::advr::McESCTypes::pdo_rx&
      */
-    //int getTxPDO(int slave_index, McEscPdoTypes::pdo_tx &pdo);
-    //int getTxPDO(int slave_index, Ft6EscPdoTypes::pdo_tx &pdo);
     template<typename T, class C>
     int getTxPDO ( int slave_index, T &pdo );
     template<typename T, class C>
@@ -199,7 +194,7 @@ public:
      *
      * @return int
      */
-    int update_board_firmware ( uint16_t slave_pos, std::string firmware, uint32_t passwd_firm );
+    int update_board_firmware ( uint16_t slave_pos, std::string firmware, uint32_t passwd_firm, const std::string mcu_info );
 
     EscWrapper * slave_as_EscWrapper ( uint16_t sPos ) {
         return ( slaves.find ( sPos ) != slaves.end() ) ? slaves[sPos].get() : NULL;
@@ -216,6 +211,8 @@ public:
     Motor * 	slave_as_Motor ( uint16_t sPos )	{
         return ( slaves.find ( sPos ) != slaves.end() ) ? dynamic_cast<Motor*> ( slaves[sPos].get() ) : NULL;
     }
+    
+    // check ... could be removed ?!?!
     HpESC *  	slave_as_HP ( uint16_t sPos )	{
         return ( slaves.find ( sPos ) != slaves.end() ) ? dynamic_cast<HpESC*> ( slaves[sPos].get() ) : NULL;
     }

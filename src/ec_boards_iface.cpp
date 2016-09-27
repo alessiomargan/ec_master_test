@@ -143,6 +143,24 @@ void Ec_Boards_ctrl::factory_board ( void ) {
                 pos2rid[i] = rid;
             }
         }
+        ///////////////////////////////////////////////////
+        // Centauro AC
+        else if ( ec_slave[i].eep_id == CENT_AC ) {
+
+            CentAcESC * mc_slave = new CentAcESC ( ec_slave[i] );
+            if ( mc_slave->init ( root_cfg ) != EC_BOARD_OK ) {
+                // skip this slave
+                zombies[i] = iit::ecat::ESCPtr ( mc_slave );
+                continue;
+            }
+            slaves[i] = iit::ecat::ESCPtr ( mc_slave );
+            rid = mc_slave->get_robot_id();
+            mc_slave->print_info();
+            if ( rid != -1 ) {
+                rid2pos[rid] = i;
+                pos2rid[i] = rid;
+            }
+        }
 
         ///////////////////////////////////////////////////
         // FT6 Sensor
@@ -469,7 +487,7 @@ static int esc_gpio_ll_wr ( uint16_t configadr, uint16_t gpio_val ) {
  * bit1 reset
  * bit2 boot
  */
-int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firmware, uint32_t passwd_firm ) {
+int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firmware, uint32_t passwd_firm, std::string mcu_info = "none" ) {
 
     int wc, ret = 0;
     char * ec_err_string;
@@ -496,9 +514,11 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
 
     // check slave type ... HiPwr uses ET1100 GPIO to force/release bootloader
     if ( s ) {
-        if ( ( s->get_ESC_type() == POW_BOARD ) ||
-                ( s->get_ESC_type() == HI_PWR_AC_MC ) ||
-                ( s->get_ESC_type() == HI_PWR_DC_MC ) ) {
+        if (( s->get_ESC_type() == POW_BOARD ) ||
+            ( s->get_ESC_type() == HI_PWR_AC_MC ) ||
+            ( s->get_ESC_type() == HI_PWR_DC_MC ) ||
+            ( s->get_ESC_type() == CENT_AC ) )
+        {
             // pre-update
             // POW_OFF+RESET 0x2
             if ( esc_gpio_ll_wr ( configadr, 0x2 ) <= 0 ) {
@@ -531,11 +551,15 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
 
 
     if ( s ) {
-        if ( ( s->get_ESC_type() == POW_BOARD ) ||
-                ( s->get_ESC_type() == HI_PWR_AC_MC ) ||
-                ( s->get_ESC_type() == HI_PWR_DC_MC ) ) {
+        if (( s->get_ESC_type() == POW_BOARD ) ||
+            ( s->get_ESC_type() == HI_PWR_AC_MC ) ||
+            ( s->get_ESC_type() == HI_PWR_DC_MC ) ||
+            ( s->get_ESC_type() == CENT_AC ) )
+        {
             // erase flash
             flash_cmd = 0x00EE;
+            if ( mcu_info.compare("m3") == 0 ) { flash_cmd = 0x00E1; }
+            if ( mcu_info.compare("c28") == 0 ) { flash_cmd = 0x00E2; }
             flash_cmd_ack = 0x0;
             tries = 30;
 

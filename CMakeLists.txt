@@ -36,6 +36,7 @@ link_directories(${SOEM_ROOT}/lib)
 
 add_library(walkman_master${LIB_TYPE} SHARED
     src/ec_boards_iface.cpp
+    src/mc_centAC_esc.cpp
     src/mc_hipwr_esc.cpp
     src/mc_lowpwr_esc.cpp
     src/mc_lowpwr_sph_esc.cpp

@@ -57,7 +57,7 @@ static const iit::ecat::objd_t source_SDOs[] = {
 
     // SD0 0x8001
     { 0x8001, 0x1, DTYPE_VISIBLE_STRING,64, ATYPE_RO,    "firmware_version"  	    ,0     },
-    { 0x8001, 0x2, DTYPE_UNSIGNED32,    32, ATYPE_RW,    "board_enable_mask"         ,0     },
+    { 0x8001, 0x2, DTYPE_UNSIGNED32,    32, ATYPE_RW,    "board_enable_mask"        ,0     },
     { 0x8001, 0x3, DTYPE_REAL32,        32, ATYPE_RW,    "Direct_ref"  			    ,0     },
     { 0x8001, 0x4, DTYPE_REAL32,        32, ATYPE_RO,    "V_batt_filt_100ms" 	    ,0     },
     { 0x8001, 0x5, DTYPE_REAL32,        32, ATYPE_RO,    "Board_Temperature"  	    ,0     },
