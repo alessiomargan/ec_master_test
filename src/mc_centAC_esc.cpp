@@ -81,6 +81,11 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8001, 0xc, DTYPE_REAL32,           32, ATYPE_RO, "board_temp",          0},
     { 0x8001, 0xd, DTYPE_REAL32,           32, ATYPE_RO, "motor_temp",          0},
 
+    // SD0 0x8002
+    { 0x8002, 1, DTYPE_REAL32,      32, ATYPE_RO, "pos_ref_fb",                 0},
+    { 0x8002, 2, DTYPE_REAL32,      32, ATYPE_RO, "iq_ref_fb",                  0},
+    { 0x8002, 3, DTYPE_REAL32,      32, ATYPE_RO, "iq_out_fb",                  0},
+
     {0, 0, 0, 0, 0, 0, 0 }
 
 
@@ -153,6 +158,12 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.torque_read;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.board_temp;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.motor_temp;
+    
+    // 0x8002
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.pos_ref_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_ref_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_out_fb;
+    
     // end marker
     SDOs[i++].data = 0;
 

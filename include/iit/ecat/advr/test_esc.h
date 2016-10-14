@@ -263,7 +263,7 @@ public:
             push_back ( log );
         }
 
-        PDO_aux(getSDObjd("pos_ref_fb")).on_rx(rx_pdo);
+        //PDO_aux(getSDObjd("pos_ref_fb")).on_rx(rx_pdo);
         //PDO_aux(getSDObjd("volt_ref")).on_rx(rx_pdo);
 
     }
@@ -271,7 +271,7 @@ public:
     virtual void on_writePDO ( void ) {
         tx_pdo.ts = get_time_ns() / 1000;
         //
-        PDO_aux(getSDObjd("pos_ref_fb")).on_tx(tx_pdo);
+        //PDO_aux(getSDObjd("pos_ref_fb")).on_tx(tx_pdo);
     }
 
     virtual const objd_t * get_SDOs() {

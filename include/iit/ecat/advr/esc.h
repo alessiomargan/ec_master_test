@@ -28,6 +28,7 @@
 
 #define CTRL_SET_IMPED_MODE		0x00D4
 #define CTRL_SET_POS_MODE		0x003B
+#define CTRL_SET_POS_LINK_MODE  0x003C
 #define CTRL_SET_VEL_MODE       0x0037
 #define CTRL_SET_VOLT_MODE      0x0039
 
@@ -390,9 +391,11 @@ inline std::ostream& operator<< (std::ostream& os, const McEscPdoTypes::pdo_rx& 
 
 class PDO_aux {
 public:
+    PDO_aux(): sdo_objd(NULL) {}
     PDO_aux( const objd_t * sdo_obj_data ): sdo_objd( sdo_obj_data ) {}
+    PDO_aux( const PDO_aux& rhs ): sdo_objd( rhs.sdo_objd ) {}
     //
-    // following template methods expect [rx/tx]_pdo struct with op_idx_aux/op_idx_ack and aux fields
+    // these template methods expect [rx/tx]_pdo struct with op_idx_aux/op_idx_ack and aux fields
     // 
     template<class T>
     int on_tx( T& tx_pdo ) {

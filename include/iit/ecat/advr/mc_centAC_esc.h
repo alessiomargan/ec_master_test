@@ -74,7 +74,10 @@ struct CentAcEscSdoTypes {
     float       torque_read;
     float       board_temp;
     float       motor_temp;
-
+    float       pos_ref_fb;
+    float       iq_ref_fb;
+    float       iq_out_fb;
+    
 
 };
 
@@ -85,23 +88,24 @@ struct PROC_FAULT {
 
 struct BIT_FAULT {
 
-    uint16_t  m3_rxpdo_pos_ref:1;
-    uint16_t  m3_rxpdo_vel_ref:1;
-    uint16_t  m3_rxpdo_tor_ref:1;
-    uint16_t  m3_link_enc_fault:1;
-    uint16_t  m3_defl_enc_fault:1;
-    uint16_t  m3_fault_hardware:1;
-    uint16_t  m3_params_out_of_range:1;
-    uint16_t  m3_flag_1:1;
-    uint16_t  m3_flag_2:1;
-    uint16_t  m3_flag_3:1;
-    uint16_t  m3_flag_4:1;
-    uint16_t  m3_irq_alive:1;
+       uint16_t  m3_rxpdo_pos_ref:1;
+       uint16_t  m3_rxpdo_vel_ref:1;
+       uint16_t  m3_rxpdo_tor_ref:1;
+       uint16_t  m3_flag_1:1;
+       uint16_t  m3_fault_hardware:1;
+       uint16_t  m3_params_out_of_range:1;
+       uint16_t  m3_flag_2:1;
+       uint16_t  m3_flag_3:1;
+       uint16_t  m3_link_enc_error_reading:1;
+       uint16_t  m3_link_enc_hw_error:1;
+       uint16_t  m3_defl_enc_error_reading:1;
+       uint16_t  m3_defl_enc_hw_error:1;
+ 
 
-    uint16_t  c28_fault_motor_enc:1;
-    uint16_t  c28_Max_cur_limited_for_temp:1;
-    uint16_t  c28_flag_3:1;
-    uint16_t  c28_irq_alive:1;
+       uint16_t  c28_motor_enc_error_reading:1;
+       uint16_t  c28_motor_enc_hw_error:1;
+       uint16_t  c28_Max_cur_limited_for_temp:1;
+       uint16_t  c28_irq_alive:1;
 };
 
 typedef union{
@@ -116,18 +120,27 @@ struct CentAcLogTypes {
 
     uint64_t                ts;         // ns
     float                   pos_ref;
-    uint8_t                 m3_link_enc_fault;
-    uint8_t                 m3_defl_enc_fault;
-    uint8_t                 c28_fault_motor_enc;
+    uint8_t                 m3_link_enc_error_reading;
+    uint8_t                 m3_link_enc_hw_error;
+    uint8_t                 m3_defl_enc_error_reading;
+    uint8_t                 m3_defl_enc_hw_error;
+    uint8_t                 c28_motor_enc_error_reading;
+    uint8_t                 c28_motor_enc_hw_error;
     //
     McEscPdoTypes::pdo_rx   rx_pdo;
     
     void fprint ( FILE *fp ) {
-        fprintf ( fp, "%lu\t%f\t%d\t%d\t%d\t", ts, pos_ref, m3_link_enc_fault, m3_defl_enc_fault, c28_fault_motor_enc );
+        fprintf ( fp, "%lu\t%f\t%d\t%d\t%d\t%d\t%d\t%d\t", ts, pos_ref,
+                  m3_link_enc_error_reading, m3_link_enc_hw_error,
+                  m3_defl_enc_error_reading, m3_defl_enc_hw_error,
+                  c28_motor_enc_error_reading, c28_motor_enc_hw_error);
         rx_pdo.fprint ( fp );
     }
     int sprint ( char *buff, size_t size ) {
-        int l = snprintf ( buff, size, "%lu\t%f\t%d\t%d\t%d\t", ts, pos_ref, m3_link_enc_fault, m3_defl_enc_fault, c28_fault_motor_enc );
+        int l = snprintf ( buff, size, "%lu\t%f\t%d\t%d\t%d\t%d\t%d\t%d\t", ts, pos_ref,
+                  m3_link_enc_error_reading, m3_link_enc_hw_error,
+                  m3_defl_enc_error_reading, m3_defl_enc_hw_error,
+                  c28_motor_enc_error_reading, c28_motor_enc_hw_error);
         return l + rx_pdo.sprint ( buff+l,size-l );
     }
 };
@@ -153,7 +166,6 @@ public:
         Log ( std::string ( "/tmp/CentAcESC"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ) {
         
             _start_log = false;
-            //_actual_state = EC_STATE_PRE_OP;
     }
 
     virtual ~CentAcESC ( void ) {
@@ -207,15 +219,20 @@ protected :
         rx_pdo.motor_pos = centac_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
         //rx_pdo.pos_ref_fb  = centac_esc::M2J ( rx_pdo.pos_ref_fb,_sgn,_offset );
 
+        curr_pdo_aux->on_rx(rx_pdo);
+        
         if ( _start_log ) {
             Log::log_t log;
             log.ts      = get_time_ns() - _start_log_ts ;
             //log.pos_ref = centac_esc::M2J ( tx_pdo.pos_ref,_sgn,_offset );
             //
             fault.all = rx_pdo.fault;
-            log.m3_link_enc_fault = fault.bit.m3_link_enc_fault; 
-            log.m3_defl_enc_fault = fault.bit.m3_defl_enc_fault; 
-            log.c28_fault_motor_enc = fault.bit.c28_fault_motor_enc; 
+            log.m3_link_enc_error_reading = fault.bit.m3_link_enc_error_reading; 
+            log.m3_link_enc_hw_error = fault.bit.m3_link_enc_hw_error; 
+            log.m3_defl_enc_error_reading = fault.bit.m3_defl_enc_error_reading; 
+            log.m3_defl_enc_hw_error = fault.bit.m3_defl_enc_hw_error; 
+            log.c28_motor_enc_error_reading = fault.bit.c28_motor_enc_error_reading; 
+            log.c28_motor_enc_hw_error = fault.bit.c28_motor_enc_hw_error; 
             rx_pdo.fault &= 0x7FFF; 
             log.rx_pdo  = rx_pdo;
             push_back ( log );
@@ -226,6 +243,7 @@ protected :
     virtual void on_writePDO ( void ) {
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
+        curr_pdo_aux->on_tx(tx_pdo);
         // NOOOOOOOOOOOO
         // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
         //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
@@ -266,21 +284,13 @@ public :
     /// Motor method implementation
     ///
     ///////////////////////////////////////////////////////
-    virtual bool am_i_HpESC() { return false; }
-    virtual bool am_i_LpESC() { return false; }
     virtual uint16_t get_ESC_type() {
         if ( product_code == CENT_AC ) return CENT_AC;
         return NO_TYPE;
     }
-    virtual const pdo_rx_t& getRxPDO() const        {
-        return Base::getRxPDO();
-    }
-    virtual const pdo_tx_t& getTxPDO() const        {
-        return Base::getTxPDO();
-    }
-    virtual void setTxPDO ( const pdo_tx_t & pdo_tx )  {
-        Base::setTxPDO ( pdo_tx );
-    }
+    virtual const pdo_rx_t& getRxPDO() const { return Base::getRxPDO(); }
+    virtual const pdo_tx_t& getTxPDO() const { return Base::getTxPDO(); }
+    virtual void setTxPDO ( const pdo_tx_t & pdo_tx ) { Base::setTxPDO ( pdo_tx ); }
 
     virtual int init ( const YAML::Node & root_cfg ) {
 
@@ -290,6 +300,10 @@ public :
             // !! sgn and offset must set before init_sdo_lookup !!
             init_SDOs();
             init_sdo_lookup();
+            pos_ref_fb_aux = PDO_aux(getSDObjd("pos_ref_fb"));
+            iq_ref_fb_aux = PDO_aux(getSDObjd("iq_ref_fb"));
+            iq_out_fb_aux = PDO_aux(getSDObjd("iq_out_fb"));
+            curr_pdo_aux = &pos_ref_fb_aux;
             readSDO_byname ( "Joint_robot_id", Joint_robot_id );
             readSDO_byname ( "Serial_Number_A" );
             readSDO_byname ( "m3_fw_ver" );
@@ -336,6 +350,9 @@ public :
         readSDO_byname ( "Direct_ref", direct_ref );
         assert ( direct_ref == 0.0 );
 
+        float max_cur = 15;
+        writeSDO_byname ( "Max_cur", max_cur );
+        
         // we log when receive PDOs
         start_log ( true );
 
@@ -372,7 +389,8 @@ public :
             // pdo gains will be used in OP
             
             // set actual position as reference
-            readSDO_byname ( "link_pos", act_position );
+            //readSDO_byname ( "link_pos", act_position );
+            readSDO_byname ( "motor_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
             DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
                       act_position,
@@ -440,6 +458,10 @@ public :
     virtual int set_torRef ( float joint_tor ) {
         tx_pdo.tor_ref = joint_tor;
     }
+    virtual int set_ivRef ( float joint_iv ) {
+        sdo.iq_ref = joint_iv;
+    // TODO
+    }
 
 #if 0
     virtual int set_torOffs ( float tor_offs ) {
@@ -457,16 +479,20 @@ public :
 #endif
     virtual int move_to ( float pos_ref, float step ) {
 
-        float       pos, tx_pos_ref;
+        float       pos, link_pos, motor_pos, tx_pos_ref;
         uint16_t    fault;
 
         try {
             readSDO_byname ( "fault", fault );
             handle_fault();
-            readSDO_byname ( "link_pos", pos );
+            readSDO_byname ( "link_pos", link_pos );
+            readSDO_byname ( "motor_pos", motor_pos );
             readSDO_byname ( "pos_ref", tx_pos_ref );
             tx_pos_ref = centac_esc::M2J ( tx_pos_ref,_sgn,_offset );
 
+            // use motor_position !!!
+            pos = motor_pos;
+            
             if ( fabs ( pos - pos_ref ) > step ) {
                 if ( pos > pos_ref ) {
                     tx_pos_ref -= step;
@@ -525,7 +551,6 @@ public :
 
         cmd = 0x0085;
         writeSDO_byname ( "ctrl_status_cmd", cmd );
-        //readSDO_byname  ( "ctrl_status_cmd_ack", ack );
         DPRINTF ( "run_torque_calibration ... \n");
         return EC_BOARD_OK;
     }
@@ -538,7 +563,7 @@ private:
             return EC_BOARD_KEY_NOT_FOUND;
         }
 
-        DPRINTF ( "Using config %s\n", conf_key.c_str() );
+        DPRINTF ( "\tUsing config %s\n", conf_key.c_str() );
         
         node_cfg = root_cfg[conf_key];
         
@@ -559,7 +584,13 @@ private:
     stat_t  s_rtt;
 
     objd_t * SDOs;
-
+    
+    PDO_aux *   curr_pdo_aux;
+    PDO_aux     pos_ref_fb_aux;
+    PDO_aux     iq_ref_fb_aux;
+    PDO_aux     iq_out_fb_aux;
+    
+    std::vector<PDO_aux>     pdo_auxes;
 };
 
 

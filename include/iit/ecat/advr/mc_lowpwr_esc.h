@@ -220,12 +220,6 @@ public:
     /// Motor method implementation
     ///
     ///////////////////////////////////////////////////////
-    virtual bool am_i_HpESC() {
-        return false;
-    }
-    virtual bool am_i_LpESC() {
-        return true;
-    }
     virtual uint16_t get_ESC_type() {
         return LO_PWR_DC_MC;
     }

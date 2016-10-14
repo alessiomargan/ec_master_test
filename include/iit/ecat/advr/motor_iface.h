@@ -13,9 +13,10 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-
+class EcBoardsError;
 class HpESC;
 class LpESC;
+class CentAcESC;
 
 template <typename MotorPdoTypes>
 class AbsMotor {
@@ -53,21 +54,40 @@ public:
 
     template<typename T>
     int writeSDO ( std::string const & name, T value ) {
-        if ( am_i_HpESC() ) {
+        
+        if ( get_ESC_type() == HI_PWR_AC_MC || get_ESC_type() == HI_PWR_DC_MC ) { 
             return writeSDO_impl<HpESC> ( name, value );
-        } else if ( am_i_LpESC() ) {
+
+        } else if ( get_ESC_type() == LO_PWR_DC_MC ) {
             return writeSDO_impl<LpESC> ( name, value );
+            
+        } else if ( get_ESC_type() == CENT_AC ) {
+            return writeSDO_impl<CentAcESC> ( name, value );
+            
+        } else {
+            throw EcBoardsError ( EC_BOARD_NOK, "writeSDO_impl" );
         }
+
+
         return EC_WRP_NOK;
     }
 
     template<typename T>
     int readSDO ( std::string const & name, T & value ) {
-        if ( am_i_HpESC() ) {
+        
+        if ( get_ESC_type() == HI_PWR_AC_MC || get_ESC_type() == HI_PWR_DC_MC ) { 
             return readSDO_impl<HpESC> ( name, value );
-        } else if ( am_i_LpESC() ) {
+                    
+        } else if ( get_ESC_type() == LO_PWR_DC_MC ) {
             return readSDO_impl<LpESC> ( name, value );
+            
+        } else if ( get_ESC_type() == CENT_AC ) {
+            return readSDO_impl<CentAcESC> ( name, value );
+            
+        } else {
+            throw EcBoardsError ( EC_BOARD_NOK, "readSDO_impl" );
         }
+
         return EC_WRP_NOK;
     }
 
@@ -82,9 +102,7 @@ public:
 //     }
 
     //virtual int init(const YAML::Node &) = 0;
-    virtual int start ( int controller_type ) {
-        return EC_BOARD_NOK;
-    }
+    virtual int start ( int controller_type ) { return EC_BOARD_NOK; }
     virtual int start ( int controller_type, float _p, float _i, float _d ) = 0;
     virtual int stop ( void ) = 0;
 
@@ -113,23 +131,21 @@ public:
 
     //virtual void handle_fault(void) = 0;
 
-    //virtual void set_off_sgn(float offset, int sgn) = 0;
-    //virtual void start_log(bool start) = 0;
 
     //void set_state(ec_state state) { _actual_state = state; }
 
     virtual int16_t get_robot_id() = 0;
 
-    virtual bool am_i_HpESC() = 0;
-    virtual bool am_i_LpESC() = 0;
-
+    //virtual bool am_i_HpESC() = 0;
+    //virtual bool am_i_LpESC() = 0;
+    virtual uint16_t get_ESC_type(void) = 0;
+    
 protected:
 
     //ec_state     _actual_state;
 };
 
 typedef AbsMotor<McEscPdoTypes> Motor;
-
 
 }
 }

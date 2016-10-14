@@ -231,12 +231,6 @@ public :
     /// Motor method implementation
     ///
     ///////////////////////////////////////////////////////
-    virtual bool am_i_HpESC() {
-        return true;
-    }
-    virtual bool am_i_LpESC() {
-        return false;
-    }
     virtual uint16_t get_ESC_type() {
         if ( product_code == HI_PWR_AC_MC ) return HI_PWR_AC_MC;
         if ( product_code == HI_PWR_DC_MC ) return HI_PWR_DC_MC;

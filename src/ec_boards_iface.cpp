@@ -108,42 +108,6 @@ void Ec_Boards_ctrl::factory_board ( void ) {
             }
         }
         ///////////////////////////////////////////////////
-        // LP Saphari Motor
-        else if ( ec_slave[i].eep_id == LO_PWR_SPH_MC ) {
-
-            LpSphESC * mc_slave = new LpSphESC ( ec_slave[i] );
-            if ( mc_slave->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( mc_slave );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( mc_slave );
-            rid = mc_slave->get_robot_id();
-            mc_slave->print_info();
-            if ( rid != -1 ) {
-                rid2pos[rid] = i;
-                pos2rid[i] = rid;
-            }
-        }
-        ///////////////////////////////////////////////////
-        // LP Saphari Motor Brake
-        else if ( ec_slave[i].eep_id == LO_PWR_SPH_MCBRK ) {
-
-            LpSphBrkESC * mc_slave = new LpSphBrkESC ( ec_slave[i] );
-            if ( mc_slave->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( mc_slave );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( mc_slave );
-            rid = mc_slave->get_robot_id();
-            mc_slave->print_info();
-            if ( rid != -1 ) {
-                rid2pos[rid] = i;
-                pos2rid[i] = rid;
-            }
-        }
-        ///////////////////////////////////////////////////
         // Centauro AC
         else if ( ec_slave[i].eep_id == CENT_AC ) {
 
@@ -259,7 +223,7 @@ void Ec_Boards_ctrl::factory_board ( void ) {
     iit::ecat::setExpectedSlaves ( slaves );
 
     if ( zombies.size() > 0 ) {
-        DPRINTF ( "Warning you got %lud zombies !!!\n", zombies.size() );
+        DPRINTF ( "Warning you got %lu zombies !!!\n", zombies.size() );
         for ( auto it = zombies.begin(); it != zombies.end(); it++ ) {
             DPRINTF ( "\tpos %d ", it->first );
         }
