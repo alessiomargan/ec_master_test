@@ -63,12 +63,12 @@ protected :
     XDDP_pipe termInXddp;
     XDDP_pipe debugOutXddp;
     
-    std::map<int, iit::ecat::advr::Motor*> motors;
-    std::map<int, iit::ecat::advr::Ft6ESC*> 	fts;
-    std::map<int, iit::ecat::advr::FootSensorESC*> foot_sensors;
-    std::map<int, iit::ecat::advr::PowESC*> 	pows;
-    std::map<int, iit::ecat::advr::PowComanESC*>powCmns;
-    std::map<int, iit::ecat::advr::TestESC*> 	tests;
+    std::map<int, iit::ecat::advr::Motor*>          motors;
+    std::map<int, iit::ecat::advr::Ft6ESC*>         fts;
+    std::map<int, iit::ecat::advr::FootSensorESC*>  foot_sensors;
+    std::map<int, iit::ecat::advr::PowESC*>         pows;
+    std::map<int, iit::ecat::advr::PowComanESC*>    powCmns;
+    std::map<int, iit::ecat::advr::TestESC*>        tests;
 
     void remove_rids_intersection(std::vector<int> &, const std::vector<int> &);
     

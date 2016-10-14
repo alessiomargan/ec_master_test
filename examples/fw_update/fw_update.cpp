@@ -110,7 +110,7 @@ int main ( int argc, char *argv[] ) try {
                 slave_list.push_back ( it->first );
             }
         } else if ( slave_list[0] == -3 ) {
-            // med motor
+            // lopwr motor
             use_rId = false;
             slave_list.clear();
             std::map<int, LpESC*> lp_boards;
@@ -121,6 +121,19 @@ int main ( int argc, char *argv[] ) try {
             ec_boards_ctrl->get_zombie_map_bytype ( LO_PWR_DC_MC, lp_boards );
             for ( auto it = lp_boards.begin(); it != lp_boards.end(); it++ ) {
                 slave_list.push_back ( it->first );
+            }
+        } else if ( slave_list[0] == -4 ) {
+            // centAC motor
+            use_rId = false;
+            slave_list.clear();
+            std::map<int, CentAcESC*> centAC_boards;
+            ec_boards_ctrl->get_esc_map_byclass ( centAC_boards );
+            for ( auto const& item : centAC_boards ) {
+                slave_list.push_back ( item.first );
+            }
+            ec_boards_ctrl->get_zombie_map_bytype ( CENT_AC, centAC_boards );
+            for ( auto const& item : centAC_boards ) {
+                slave_list.push_back ( item.first );
             }
         }
     }
@@ -170,16 +183,41 @@ int main ( int argc, char *argv[] ) try {
             case POW_BOARD  :
                 motor_type = firmware_update["power_hub"];
                 break;
+            case CENT_AC :
+                motor_type = firmware_update["cent_AC"];
+                break;
             default :
                 break;
             }
 
             if ( ! motor_type.IsNull() ) {
-                bin_file    = motor_type["bin_file"].as<std::string>();
-                passwd      = motor_type["passwd"].as<int>();
-                DPRINTF ( "%d %s 0x%04X \n", *it, ( fw_path+bin_file ).c_str(), passwd );
-                if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd ) ) {
-                    DPRINTF ( "FAIL update slave pos %d\n" ,sPos );
+                
+                // special case F28M3x MCUs have 2 cores
+                if ( esc->get_ESC_type() == CENT_AC ) {
+                    // M3
+                    if ( motor_type["m3"] ) {
+                        bin_file    = motor_type["m3"]["bin_file"].as<std::string>();
+                        passwd      = motor_type["m3"]["passwd"].as<int>();
+                        DPRINTF ( "%d %s 0x%04X \n", *it, ( fw_path+bin_file ).c_str(), passwd );
+                        if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "m3") ) {
+                            DPRINTF ( "FAIL update slave pos M3 MCU %d\n" ,sPos );
+                        }
+                    }
+                    // C28
+                    if ( motor_type["c28"] ) {
+                        bin_file    = motor_type["c28"]["bin_file"].as<std::string>();
+                        passwd      = motor_type["c28"]["passwd"].as<int>();
+                        if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "c28" ) ) {
+                            DPRINTF ( "FAIL update slave pos C28 MCU %d\n" ,sPos );
+                        }
+                    }
+                } else {
+                    bin_file    = motor_type["bin_file"].as<std::string>();
+                    passwd      = motor_type["passwd"].as<int>();
+                    DPRINTF ( "%d %s 0x%04X \n", *it, ( fw_path+bin_file ).c_str(), passwd );
+                    if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "none" ) ) {
+                        DPRINTF ( "FAIL update slave pos %d\n" ,sPos );
+                    }
                 }
             } else {
                 DPRINTF ( "Unknown esc type %d\n" ,bType );
@@ -191,6 +229,7 @@ int main ( int argc, char *argv[] ) try {
     delete ec_boards_ctrl;
 
     ///////////////////////////////////////////////////////////////////////////
+    sleep(1);
     ///////////////////////////////////////////////////////////////////////////
 
     ec_boards_ctrl = new Ec_Boards_ctrl ( argv[1] );

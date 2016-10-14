@@ -46,5 +46,6 @@ firmware_update:
   force_torque_6:
     bin_file: FT6.bin
     passwd: 0xbeef
-
+  
+      
 

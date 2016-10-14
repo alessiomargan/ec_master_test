@@ -169,8 +169,8 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         // - read actual joint position and set as pos_ref
         //DPRINTF ( ">>> START %d wait xddp terminal ....\n", moto->get_robot_id() );
         //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }
-        if ( moto->am_i_LpESC() ) { moto->start ( CTRL_SET_POS_MODE ); }
-        else if ( moto->am_i_HpESC() ) { moto->start ( CTRL_SET_MIX_POS_MODE ); }
+        if (moto->get_ESC_type() == LO_PWR_DC_MC ) { moto->start ( CTRL_SET_POS_MODE ); }
+        else if ( moto->get_ESC_type() == HI_PWR_AC_MC || moto->get_ESC_type() == HI_PWR_DC_MC) { moto->start ( CTRL_SET_MIX_POS_MODE ); }
         else {  }
         //while ( ! moto->move_to(home[slave_pos], 0.005) ) { osal_usleep(100);  }
     }

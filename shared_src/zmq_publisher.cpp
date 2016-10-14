@@ -10,6 +10,7 @@
 #include <iit/advr/zmq_publisher.h>
 #include <iit/advr/coman_robot_id.h>
 #include <iit/advr/walkman_robot_id.h>
+#include <iit/advr/centauro_robot_id.h>
 
 using namespace iit::ecat::advr;
 
@@ -89,16 +90,18 @@ void ZMQ_Pub_thread::th_init ( void* ) {
 
     Abs_Publisher * zpub;
 
-    int base_port = 9000;
+    int base_port;
     std::string uri ( "tcp://*:" );
 
     std::string motor_prefix ( "Motor_id_" );
     std::string ft_prefix ( "Ft_id_" );
     std::string foot_prefix ( "Foot_id_" );
 
+#if 0
     ///////////////////////////////////////////////////////////////////////
     // COMAN
     ///////////////////////////////////////////////////////////////////////
+    base_port = 9000;
     // coman::robot_mcs_ids
     for ( auto const& rid : coman::robot_mcs_ids ) {
         zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
@@ -165,6 +168,21 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     } else {
         delete zpub;
     }
+#endif
+    ///////////////////////////////////////////////////////////////////////
+    // CENTAURO
+    ///////////////////////////////////////////////////////////////////////
+    base_port = 9600;
+    // centauro::robot_mcs_ids
+    for ( auto const& rid : centauro::robot_mcs_ids ) {
+        zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
+        if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
+            zmap[base_port+rid] = zpub;
+        } else {
+            delete zpub;
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////
     //

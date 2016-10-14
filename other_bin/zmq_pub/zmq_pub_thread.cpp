@@ -32,10 +32,10 @@ int main ( int argc, char *argv[] ) try {
         sleep ( 1 );
     }
 
-    for ( auto it = threads.begin(); it != threads.end(); it++ ) {
-        it->second->stop();
-        it->second->join();
-        delete it->second;
+    for ( auto const& item : threads ) {
+        item.second->stop();
+        item.second->join();
+        delete item.second;
     }
 
     std::cout << "Exit main" << std::endl;

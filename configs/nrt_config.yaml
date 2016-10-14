@@ -1,13 +1,14 @@
 #
 ec_boards_base:
   create_pipes: true
+  urdf_config_file: ../configs/centauro_urdf.yaml
 
 ec_board_ctrl:
   eth_iface: eth1
   #sync_cycle_time_ns: 500000
-  #sync_cycle_time_ns: 1000000
+  sync_cycle_time_ns: 1000000
   #sync_cycle_time_ns: 2000000
-  sync_cycle_time_ns: 10000000
+  #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 50000000
   #sync_cycle_time_ns: 0
   #sync_cycle_offset_ns: 4000000000
@@ -18,15 +19,17 @@ firmware_update:
   #fw_path: ../firmware/
   #fw_path: ../examples/fw_update/fw_pdo56/
   fw_path: ../examples/fw_update/fw_test/
-  #slave_pos_list: [3]
+  #slave_pos_list: [1]
   # all esc
   #slave_pos_list: [0]
   # all BigMotor
   #slave_pos_list: [-1]
   # all MedMotor
-  slave_pos_list: [-2]
+  #slave_pos_list: [-2]
   # all LowPower motor
   #slave_pos_list: [-3]
+  # all CentAC motor
+  slave_pos_list: [-4]
   
   big_motor:
     bin_file: BigMotor.bin
@@ -43,7 +46,14 @@ firmware_update:
   force_torque_6:
     bin_file: FT6.bin
     passwd: 0xbeef
-
+  cent_AC:
+    m3:
+      bin_file: cent_AC_m3.bin
+      passwd: 0xA550
+    c28:
+      bin_file: cent_AC_c28.bin
+      passwd: 0xDAD0
+      
 #############################
 # GENERIC LpESC config
 #############################
@@ -71,3 +81,10 @@ HpESC_X:
   pos_offset: 0
   pid :
     position: [100.0 , 10.0 , 1.0]
+    
+CentAcESC_X:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [250.0 , 0.0 , 10.0]
+

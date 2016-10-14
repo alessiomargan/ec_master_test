@@ -10,7 +10,6 @@ set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 set(ENABLE_XENO         CACHE BOOL "OFF")
 set(SHARED_SRC          ${CMAKE_CURRENT_SOURCE_DIR}/shared_src) 
 
-
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
     find_package(RTnet)
@@ -47,11 +46,12 @@ optional_build(joint_joy    examples/joint_joy	OFF)
 optional_build(coman_walk   examples/coman_walk	OFF)
 optional_build(coman_test   examples/coman_test	OFF)
 optional_build(coman_impedance   examples/coman_impedance OFF)
-optional_build(coman_torque   examples/coman_torque OFF)
+optional_build(coman_torque examples/coman_torque OFF)
 optional_build(coman_V_loop examples/coman_V_loop OFF)
 optional_build(ati_ft6      examples/ati_ft6_calib OFF)
-
-optional_build(walkman_test   examples/walkman_test OFF)
+optional_build(centAC_test  examples/centAC_test OFF)
+optional_build(centAC_urdf  examples/centAC_urdf OFF)
+optional_build(walkman_test examples/walkman_test OFF)
 
 optional_build(joy_forward 	other_bin/joy_forward	OFF)
 optional_build(spnav_forward 	other_bin/spnav_forward	OFF)

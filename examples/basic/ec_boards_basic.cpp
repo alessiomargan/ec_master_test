@@ -31,6 +31,14 @@ void Ec_Boards_basic::init_preOP ( void ) {
 
 void Ec_Boards_basic::init_OP ( void ) {
 
+#if 0
+    // get first motor ....
+    iit::ecat::advr::CentAcESC * moto = slave_as<iit::ecat::advr::CentAcESC>(1); 
+    if ( moto ) {
+        moto->run_torque_calibration( );
+    }
+#endif
+
 }
 
 template<class C>

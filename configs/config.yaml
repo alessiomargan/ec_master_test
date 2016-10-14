@@ -60,7 +60,19 @@ LpESC_X:
 HpESC_X:
   sign: 1
   pos_offset: 0
-    
+
+CentAcESC_X:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [180.0 , 0.0 , 5.0]
+
+CentAcESC_9:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [180.0 , 0.0 , 5.0]
+
 #############################
 # HEAD
 #############################

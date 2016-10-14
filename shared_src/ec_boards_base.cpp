@@ -183,6 +183,7 @@ void Ec_Thread_Boards_base::xddps_loop ( void ) {
         case iit::ecat::advr::LO_PWR_DC_MC :
         case iit::ecat::advr::HI_PWR_AC_MC :
         case iit::ecat::advr::HI_PWR_DC_MC :
+        case iit::ecat::advr::CENT_AC :
             item.second.xddp_write ( motors[slave_pos]->getRxPDO() );
             break;
         case iit::ecat::advr::FT6 :
