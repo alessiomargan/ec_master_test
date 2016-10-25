@@ -1,0 +1,24 @@
+#
+urdf_file : ../examples/centAC_urdf/centauro.urdf
+
+# robot IDs are stored in motor-controller flash
+# mapping urdf body name and robot id
+urdf_joints_map :
+
+  torso_2 :  1 
+  # boh
+  arm2_1  :  2
+  arm2_2  :  3
+  arm2_3  :  4
+  arm2_4  :  5
+  arm2_5  :  6
+  arm2_6  :  7
+  arm2_7  :  8
+  # boh ... 
+  arm1_1  :  9
+  arm1_2  : 10
+  arm1_3  : 11
+  arm1_4  : 12
+  arm1_5  : 13
+  arm1_6  : 14
+  arm1_7  : 15

@@ -1,0 +1,154 @@
+#
+ec_board_ctrl:
+  eth_iface: rteth0
+  #eth_iface: eth1
+  #sync_cycle_time_ns: 500000
+  sync_cycle_time_ns: 1000000
+  #sync_cycle_time_ns: 2000000
+  #sync_cycle_time_ns: 5000000
+  #sync_cycle_time_ns: 10000000
+  #sync_cycle_time_ns: 0
+  sync_cycle_offset_ns: 1000000000
+  power_off_boards: false
+
+#
+ec_boards_base:
+  create_pipes: true  
+  urdf_config_file: ../configs/centauro_urdf.yaml
+  
+firmware_update:
+  #
+  fw_path: ../examples/fw_update/fw_test/
+  #slave_pos_list: [7]
+  slave_rId_list: [7]
+  # all esc
+  #slave_pos_list: [0]
+  # all BigMotor
+  #slave_pos_list: [-1]
+  # all MedMotor
+  #slave_pos_list: [-2]
+  # all LowPower motor
+  #slave_pos_list: [-3]
+  # all CentAC motor
+  #slave_pos_list: [-4]
+  
+  cent_AC:
+    no_m3:
+      bin_file: cent_AC_m3.bin
+      passwd: 0xA550
+    c28:
+      bin_file: cent_AC_c28.bin
+      passwd: 0xDAD0
+      
+#############################
+# GENERIC ESC config
+#############################
+
+LpESC_X:
+  sign: 1
+  pos_offset: 0
+
+HpESC_X:
+  sign: 1
+  pos_offset: 0
+
+CentAcESC_X:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [180.0 , 0.0 , 5.0]
+
+#############################
+# waist
+#############################
+
+CentAcESC_1:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [220.0 , 0.0 , 5.0]
+
+##############################
+# Right Arm
+
+CentAcESC_2:
+  sign: 1
+  pos_offset: 45
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_3:
+  sign: 1
+  pos_offset: 45
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_5:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_6:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_7:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_8:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+##############################
+# Left Arm
+    
+CentAcESC_9:
+  sign: 1
+  pos_offset: -45
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_10:
+  sign: 1
+  pos_offset: -45
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_11:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]    
+    
+CentAcESC_12:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]    
+    
+    
+CentAcESC_13:
+  sign: -1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_14:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_15:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
