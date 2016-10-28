@@ -146,7 +146,7 @@ void EC_boards_coman_test::init_OP ( void ) {
     if ( ! q_spln.empty() ) {
         running_spline = q_spln.front();
         last_run_spline = running_spline;
-        advr::reset_spline_trj ( *running_spline );
+        advr::reset_trj ( *running_spline );
     }
     
     DPRINTF ( "End Init_OP\n" );
@@ -184,7 +184,7 @@ int EC_boards_coman_test::user_loop ( void ) {
                 if ( ! q_spln.empty() ) {
                     running_spline = q_spln.front();
                     smooth_splines_trj ( motors_to_start, *running_spline, *last_run_spline );
-                    advr::reset_spline_trj ( *running_spline );
+                    advr::reset_trj ( *running_spline );
                 }
             }
         } else {
@@ -202,7 +202,7 @@ int EC_boards_coman_test::user_loop ( void ) {
             // !!! since queue was empty reset the first spline
             running_spline = q_spln.front();
             last_run_spline = running_spline;
-            advr::reset_spline_trj ( *running_spline );
+            advr::reset_trj ( *running_spline );
         }
 #endif
     }
@@ -246,7 +246,7 @@ int EC_boards_coman_test::xddp_input ( C &user_cmd ) {
                     if ( running_spline ) {
                         smooth_splines_trj ( motors_to_start, spline_any2home, *running_spline, 1.0 );
                     }
-                    advr::reset_spline_trj ( spline_any2home );
+                    advr::reset_trj ( spline_any2home );
                     q_spln.push ( &spline_any2home );
                     DPRINTF ( "ANY2HOME ....\n" );
                     break;
@@ -292,27 +292,27 @@ int EC_boards_coman_test::xddp_input ( C &user_cmd ) {
             case 0 :
                 if ( js_cmd.value && user_state == IDLE ) {
                     user_state = HOME2MID;
-                    advr::reset_spline_trj ( spline_home2test );
+                    advr::reset_trj ( spline_home2test );
                 }
                 break;
             case 1 :
                 if ( js_cmd.value && user_state == IDLE ) {
                     user_state = MID2HOME;
-                    advr::reset_spline_trj ( spline_test2home );
+                    advr::reset_trj ( spline_test2home );
                 }
                 break;
             case 2 :
                 if ( js_cmd.value && user_state == IDLE ) {
                     set_any2home ( motors_to_start, spline_any2home, *running_spline );
                     user_state = ANY2HOME;
-                    advr::reset_spline_trj ( spline_any2home );
+                    advr::reset_trj ( spline_any2home );
                 }
                 break;
             case 9 :
                 if ( js_cmd.value && user_state == IDLE ) {
                     user_state = HOMING;
                     home_state = TEST_HOME;
-                    advr::reset_spline_trj ( spline_start2home );
+                    advr::reset_trj ( spline_start2home );
                 }
                 break;
             case 4 :

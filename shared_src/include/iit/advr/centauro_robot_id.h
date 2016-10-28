@@ -122,7 +122,7 @@ std::map<int, float> robot_ids_zero_pos_deg = {
 
 std::map<int, float> robot_ids_up_pos_deg = {
 
-    {WAIST_Y,   0.0},
+    {WAIST_Y, 45.0},
 
     {RA_SH_1, 45.0}, {RA_SH_2, 10.0}, {RA_SH_3,50.0}, {RA_EL, 90.0},
     {RA_WR_1,  0.0}, {RA_WR_2, 60.0}, {RA_WR_3, 0.0}, {RA_HA,  0.0},
@@ -134,7 +134,7 @@ std::map<int, float> robot_ids_up_pos_deg = {
 
 std::map<int, float> robot_ids_extend_pos_deg = {
 
-    {WAIST_Y,   0.0},
+    {WAIST_Y,  -45.0},
 
     {RA_SH_1,  0.0}, {RA_SH_2, 90.0}, {RA_SH_3, 0.0}, {RA_EL, 0.0},
     {RA_WR_1,  0.0}, {RA_WR_2,  0.0}, {RA_WR_3, 0.0}, {RA_HA, 0.0},

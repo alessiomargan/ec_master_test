@@ -134,7 +134,7 @@ void EC_boards_walk::init_OP ( void ) {
     if ( ! q_spln.empty() ) {
         running_spline = q_spln.front();
         last_run_spline = running_spline;
-        advr::reset_spline_trj ( *running_spline );
+        advr::reset_trj ( *running_spline );
 // 	while ( ! go_there(motors, *running_spline, 0.05, true) ) { usleep(1000); }
     }
     DPRINTF ( "End Init_OP\n" );
@@ -150,7 +150,7 @@ void EC_boards_walk::init_OP ( void ) {
 // 				if ( ! q_spln.empty() ) {
 // 				    running_spline = q_spln.front();
 // 				    smooth_splines_trj(*running_spline, *last_run_spline);
-// 				    advr::reset_spline_trj(*running_spline);
+// 				    advr::reset_trj(*running_spline);
 // 				}
 // 		    }
 // 		}
@@ -225,7 +225,7 @@ int EC_boards_walk::user_loop ( void ) {
                 if ( ! q_spln.empty() ) {
                     running_spline = q_spln.front();
                     smooth_splines_trj ( motors_ctrl_pos, *running_spline, *last_run_spline );
-                    advr::reset_spline_trj ( *running_spline );
+                    advr::reset_trj ( *running_spline );
                 }
             }
         } else {

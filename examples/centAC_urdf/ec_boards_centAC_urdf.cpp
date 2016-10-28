@@ -100,7 +100,7 @@ void EC_boards_centAC_urdf::init_preOP ( void ) {
         home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
 
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos], home[slave_pos] };
-        spline_start2home[slave_pos].set_points ( Xt3_6s, Ys );
+        spline_start2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt3_6s, Ys );
 
         //////////////////////////////////////////////////////////////////////////
         // start controller :
@@ -141,7 +141,7 @@ void EC_boards_centAC_urdf::init_preOP ( void ) {
     
     if ( motors_to_start.size() > 0 ) {
         //
-        q_spln.push ( &spline_start2home );
+        trj_queue.push ( &spline_start2home );
     }
 }
 
@@ -149,10 +149,10 @@ void EC_boards_centAC_urdf::init_preOP ( void ) {
 void EC_boards_centAC_urdf::init_OP ( void ) {
 
 
-    if ( ! q_spln.empty() ) {
-        running_spline = q_spln.front();
-        last_run_spline = running_spline;
-        advr::reset_spline_trj ( *running_spline );
+    if ( ! trj_queue.empty() ) {
+        running_trj = trj_queue.front();
+        last_run_trj = running_trj;
+        advr::reset_trj ( *running_trj );
     }
     
     DPRINTF ( "End Init_OP\n" );
@@ -177,29 +177,29 @@ int EC_boards_centAC_urdf::user_loop ( void ) {
     
     ///////////////////////////////////////////////////////
     //
-    if ( ! q_spln.empty() ) {
+    if ( ! trj_queue.empty() ) {
 
-        running_spline = q_spln.front();
-        if ( running_spline ) {
+        running_trj = trj_queue.front();
+        if ( running_trj ) {
             // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors_to_start, *running_spline, spline_error, true) ) {
+            if ( go_there ( motors_to_start, *running_trj, spline_error, true) ) {
                 // running spline has finish !!
-                last_run_spline = running_spline;
-                // pop running_spline
-                q_spln.pop();
-                if ( ! q_spln.empty() ) {
-                    running_spline = q_spln.front();
-                    smooth_splines_trj ( motors_to_start, *running_spline, *last_run_spline );
-                    advr::reset_spline_trj ( *running_spline );
+                last_run_trj = running_trj;
+                // pop running_trj
+                trj_queue.pop();
+                if ( ! trj_queue.empty() ) {
+                    running_trj = trj_queue.front();
+                    smooth_splines_trj ( motors_to_start, *running_trj, *last_run_trj );
+                    advr::reset_trj ( *running_trj );
                 }
             }
         } else {
             DPRINTF ( "Error NULL running spline ... pop it\n" );
-            q_spln.pop();
+            trj_queue.pop();
         }
-    } else { // q_spln is empty
+    } else { // trj_queue is empty
         
-        running_spline = last_run_spline = 0;
+        running_trj = last_run_trj = 0;
         
         ///////////////////////////////////////////////////////
         //

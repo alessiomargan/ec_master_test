@@ -42,9 +42,9 @@ private :
 
     std::map<int,float> test_pos;
     
-    advr::Spline_map spline_start2home;
-    advr::Spline_map spline_home2test_pos;
-    advr::Spline_map spline_test_pos2home;
+    advr::Trj_ptr_map spline_start2home;
+    advr::Trj_ptr_map spline_home2test_pos;
+    advr::Trj_ptr_map spline_test_pos2home;
     
 };
 

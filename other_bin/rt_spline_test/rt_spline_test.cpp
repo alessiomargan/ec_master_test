@@ -42,7 +42,7 @@ class RT_thread : public Thread_hook {
     iit::ecat::stat_t       loop_time;
     XDDP_pipe               OutXddp;
     std::string             pipe_name;
-    advr::Spline_map        spline_map;
+    advr::Trj_ptr_map        spline_map;
     gazebo::msgs::Vector2d  vector;
     std::string             pbStr;    
     
@@ -76,7 +76,7 @@ public:
         std::vector<double> Xs =  std::initializer_list<double> { 0, 1, 2, 3 };
         spline_map[0].set_points ( Xs, Ys );
 
-        advr::reset_spline_trj ( spline_map );
+        advr::reset_trj ( spline_map );
     }
     
     virtual void th_loop ( void * ) {

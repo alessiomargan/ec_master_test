@@ -146,7 +146,7 @@ void Ec_Boards_coman_impedance::init_OP ( void ) {
     if ( ! q_spln.empty() ) {
         running_spline = q_spln.front();
         last_run_spline = running_spline;
-        advr::reset_spline_trj ( *running_spline );
+        advr::reset_trj ( *running_spline );
     }
     
     DPRINTF ( "End Init_OP\n" );
@@ -173,7 +173,7 @@ int Ec_Boards_coman_impedance::user_loop ( void ) {
                 if ( ! q_spln.empty() ) {
                     running_spline = q_spln.front();
                     smooth_splines_trj ( motors_ctrl_pos, *running_spline, *last_run_spline );
-                    advr::reset_spline_trj ( *running_spline );
+                    advr::reset_trj ( *running_spline );
                 }
             }
         } else {
@@ -192,7 +192,7 @@ int Ec_Boards_coman_impedance::user_loop ( void ) {
             // !!! since queue was empty reset the first spline
             running_spline = q_spln.front();
             last_run_spline = running_spline;
-            advr::reset_spline_trj ( *running_spline );
+            advr::reset_trj ( *running_spline );
         }
 #endif
 

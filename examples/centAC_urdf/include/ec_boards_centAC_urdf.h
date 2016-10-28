@@ -153,7 +153,7 @@ private :
 
     XDDP_pipe jsInXddp, navInXddp;
 
-    advr::Spline_map spline_start2home;
+    advr::Trj_ptr_map spline_start2home;
 
     std::map<int, iit::ecat::advr::Motor*> 	left_arm;;
     std::map<int, iit::ecat::advr::Motor*> 	right_arm;

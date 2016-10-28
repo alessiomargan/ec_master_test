@@ -286,23 +286,15 @@ bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Moto
     return ( cond_cnt == cond_sum );
 }
 
-bool Ec_Thread_Boards_base::go_there ( const std::map<int,float> &target_pos,
-                                       float eps, bool debug )
-{
-    return go_there(motors, target_pos, eps, debug);
-}
 
-//template <typename T>
 bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-                                       //const std::map<int,advr::trajectory<T>> &spline_map_trj,
-                                       const advr::Spline_map &spline_map_trj,
+                                       const advr::Trj_ptr_map &trj_map,
                                        float eps, bool debug )
 {
     int cond, cond_cnt, cond_sum;
     float pos_ref, motor_err, link_err, motor_link_err;
     int slave_pos;
-    //advr::trajectory<T> trj;
-    advr::Spline_Trj trj;
+    advr::Trj_ptr trj;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
     std::vector<int> truth_vect;
@@ -315,21 +307,21 @@ bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Moto
 
         // check in the spline_trj map if the current slave_pos exist
         try {
-            trj = spline_map_trj.at ( slave_pos );
+            trj = trj_map.at ( slave_pos );
         } catch ( const std::out_of_range& oor ) {
             continue;
         }
 
         motor_pdo_rx = moto->getRxPDO();
-        //pos_ref = (float)(*trj)();
-        pos_ref = ( float ) trj();
+        pos_ref = (float)(*trj)();
+        //pos_ref = ( float ) trj();
         moto->set_posRef ( pos_ref );
 
         link_err = fabs ( motor_pdo_rx.link_pos  - pos_ref );
         motor_err = fabs ( motor_pdo_rx.motor_pos - pos_ref );
         motor_link_err = fabs ( motor_pdo_rx.motor_pos - motor_pdo_rx.link_pos );
 
-        cond = ( ( link_err <= eps || motor_err <= eps ) && trj.finish() ) ? 1 : 0;
+        cond = ( ( link_err <= eps || motor_err <= eps ) && trj->ended() ) ? 1 : 0;
         cond_cnt++;
         cond_sum += cond;
 
@@ -356,21 +348,16 @@ bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Moto
     return ( cond_cnt == cond_sum );
 }
 
-bool Ec_Thread_Boards_base::go_there ( const advr::Spline_map &spline_map_trj,
-                                       float eps, bool debug )
-{
-    return go_there(motors, spline_map_trj, eps, debug);
-}
 
 void Ec_Thread_Boards_base::smooth_splines_trj ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-                                                 advr::Spline_map &new_spline_trj,
-                                                 const advr::Spline_map &old_spline_trj,
+                                                 advr::Trj_ptr_map &new_trj_map,
+                                                 const advr::Trj_ptr_map &old_trj_map,
                                                  double smooth_time )
 {
     int slave_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
-    advr::Spline_Trj spln, old_spln;
+    advr::Trj_ptr trj, old_trj;
     std::vector<double> Ys;
     std::vector<double> Xs;
     double t1 = smooth_time;
@@ -384,57 +371,51 @@ void Ec_Thread_Boards_base::smooth_splines_trj ( const std::map<int, iit::ecat::
         motor_pdo_rx = moto->getRxPDO();
 
         try {
-            spln = new_spline_trj.at ( slave_pos );
+            trj = new_trj_map.at ( slave_pos );
         } catch ( const std::out_of_range& oor ) {
             DPRINTF ( "Error : new_spline_trj.at ( %d )\n", slave_pos );
             continue;
         }
         try {
-            old_spln = old_spline_trj.at ( slave_pos );
+            old_trj = old_trj_map.at ( slave_pos );
         } catch ( const std::out_of_range& oor ) {
             DPRINTF ( "old_spline error\n" );
             continue;
         }
 
-        if ( old_spln.finish() ) {
-            t0_point = old_spln.end_point();
-            t1_point = old_spln.get_value ( old_spln.end_time() + ( smooth_time/5 ) ,false );
+        if ( old_trj->ended() ) {
+            t0_point = old_trj->end_point();
+            t1_point = old_trj->get_value ( old_trj->end_time() + ( smooth_time/5 ) ,false );
         } else {
             //t0_point =  motor_pdo_rx.link_pos;
-            t0_point =  old_spln();
-            old_spln.get_start_time ( old_spline_start_time );
+            t0_point =  (*old_trj)();
+            old_trj->get_start_time ( old_spline_start_time );
             old_spline_xtime = (double)(iit::ecat::get_time_ns() - old_spline_start_time) / 1000000000;
-            t1_point = old_spln.get_value ( old_spline_xtime + ( smooth_time/5 ), false );
+            t1_point = old_trj->get_value ( old_spline_xtime + ( smooth_time/5 ), false );
         }
 
         //
-        if ( spln.end_time() > t1 ) {
-            Xs = std::initializer_list<double> { 0, t1, spln.end_time() };
+        if ( trj->end_time() > t1 ) {
+            Xs = std::initializer_list<double> { 0, t1, trj->end_time() };
         } else {
-            Xs = std::initializer_list<double> { 0, t1, t1+spln.end_time() };
+            Xs = std::initializer_list<double> { 0, t1, t1+trj->end_time() };
         }
-        Ys = std::initializer_list<double> {t0_point, t1_point, spln.end_point() };
-        new_spline_trj[slave_pos].set_points ( Xs ,Ys );
+        Ys = std::initializer_list<double> {t0_point, t1_point, trj->end_point() };
+        new_trj_map[slave_pos]->set_points ( Xs ,Ys );
     }
 
 }
 
-void Ec_Thread_Boards_base::smooth_splines_trj ( advr::Spline_map &new_spline_trj,
-                                                 const advr::Spline_map &old_spline_trj,
-                                                 double smooth_time )
-{
-    smooth_splines_trj(motors, new_spline_trj, old_spline_trj, smooth_time);
-}
 
 void Ec_Thread_Boards_base::get_trj_for_end_points ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-                                                     advr::Spline_map &new_spline_trj,
+                                                     advr::Trj_ptr_map &new_trj,
                                                      std::map<int,float> &end_points,
                                                      float secs )
 {
     int slave_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
-    advr::Spline_Trj spln;
+    advr::Trj_ptr trj;
     std::vector<double> Ys;
     std::vector<double> Xs = std::initializer_list<double> { 0, secs };
 
@@ -450,37 +431,70 @@ void Ec_Thread_Boards_base::get_trj_for_end_points ( const std::map<int, iit::ec
             continue;
         }
         try {
-            spln = new_spline_trj.at ( slave_pos );
+            trj = new_trj.at ( slave_pos );
         } catch ( const std::out_of_range& oor ) {
             DPRINTF ( "new_spline error\n" );
             continue;
         }
 
         Ys = std::initializer_list<double> {motor_pdo_rx.link_pos, end_points[slave_pos] };
-        new_spline_trj[slave_pos].set_points ( Xs ,Ys );
+        new_trj[slave_pos]->set_points ( Xs ,Ys );
     }
 
 }
 
-void Ec_Thread_Boards_base::get_trj_for_end_points ( advr::Spline_map &new_spline_trj,
-                                                     std::map<int,float> &end_points,
-                                                     float secs )
-{
-    get_trj_for_end_points(motors, new_spline_trj, end_points, secs);   
-}
 
 void Ec_Thread_Boards_base::set_any2home ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-                                           advr::Spline_map &new_spline_trj,
-                                           advr::Spline_map &old_spline_trj )
+                                           advr::Trj_ptr_map &new_trj,
+                                           advr::Trj_ptr_map &old_trj )
 {
-    get_trj_for_end_points ( motor_set, new_spline_trj, home, 5 );
+    get_trj_for_end_points ( motor_set, new_trj, home, 5 );
     DPRINTF ( "Set_any2home\n" );
 }
 
-void Ec_Thread_Boards_base::set_any2home ( advr::Spline_map &new_spline_trj,
-                                           advr::Spline_map &old_spline_trj )
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////////////////////////
+
+bool Ec_Thread_Boards_base::go_there ( const std::map<int,float> &target_pos,
+                                       float eps, bool debug )
 {
-    set_any2home(motors, new_spline_trj, old_spline_trj);
+    return go_there(motors, target_pos, eps, debug);
 }
+
+
+bool Ec_Thread_Boards_base::go_there ( const advr::Trj_ptr_map &trj_map,
+                                       float eps, bool debug )
+{
+    return go_there(motors, trj_map, eps, debug);
+}
+
+
+void Ec_Thread_Boards_base::smooth_splines_trj ( advr::Trj_ptr_map &new_trj,
+                                                 const advr::Trj_ptr_map &old_trj,
+                                                 double smooth_time )
+{
+    smooth_splines_trj(motors, new_trj, old_trj, smooth_time);
+}
+
+void Ec_Thread_Boards_base::get_trj_for_end_points ( advr::Trj_ptr_map &new_trj,
+                                                     std::map<int,float> &end_points,
+                                                     float secs )
+{
+    get_trj_for_end_points(motors, new_trj, end_points, secs);   
+}
+
+void Ec_Thread_Boards_base::set_any2home ( advr::Trj_ptr_map &new_trj,
+                                           advr::Trj_ptr_map &old_trj )
+{
+    set_any2home(motors, new_trj, old_trj);
+}
+
+
+
+
+
 
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

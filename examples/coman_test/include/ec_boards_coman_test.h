@@ -57,10 +57,10 @@ private :
     std::map<int,float> test_pos;
     
 
-    advr::Spline_map spline_start2home;
-    advr::Spline_map spline_home2test;
-    advr::Spline_map spline_test2home;
-    advr::Spline_map spline_any2home;
+    advr::Trj_ptr_map spline_start2home;
+    advr::Trj_ptr_map spline_home2test;
+    advr::Trj_ptr_map spline_test2home;
+    advr::Trj_ptr_map spline_any2home;
 
     XDDP_pipe jsInXddp, navInXddp, imuInXddp;
 

@@ -52,9 +52,9 @@ protected :
     std::map<int,float> home;
     std::map<int,float> start_pos;
 
-    std::queue<advr::Spline_map *> q_spln;
-    advr::Spline_map * running_spline;
-    advr::Spline_map * last_run_spline;
+    std::queue<advr::Trj_ptr_map *> trj_queue;
+    advr::Trj_ptr_map * running_trj;
+    advr::Trj_ptr_map * last_run_trj;
 
     void xddps_init ( void );
     void xddps_loop ( void );
@@ -78,36 +78,34 @@ protected :
     bool go_there ( const std::map<int,float> &target_pos,
                     float eps, bool debug = false );
 
-    //template <typename T>
     bool go_there ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-                    //const std::map<int,advr::trajectory<T>> &spline_map_trj,
-                    const advr::Spline_map &spline_map_trj,
+                    const advr::Trj_ptr_map &spline_map_trj,
                     float eps, bool debug = false );
-    bool go_there ( const advr::Spline_map &spline_map_trj,
+    bool go_there ( const advr::Trj_ptr_map &spline_map_trj,
                     float eps, bool debug = false );
 
 
     void get_trj_for_end_points ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-                                  advr::Spline_map &new_spline_trj,
+                                  advr::Trj_ptr_map &new_spline_trj,
                                   std::map<int,float> &end_points,
                                   float secs );
-    void get_trj_for_end_points ( advr::Spline_map &new_spline_trj,
+    void get_trj_for_end_points ( advr::Trj_ptr_map &new_spline_trj,
                                   std::map<int,float> &end_points,
                                   float secs );
 
     void smooth_splines_trj ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-                              advr::Spline_map &new_spline_trj,
-                              const advr::Spline_map &old_spline_trj,
+                              advr::Trj_ptr_map &new_spline_trj,
+                              const advr::Trj_ptr_map &old_spline_trj,
                               double smooth_time=0.5 );
-    void smooth_splines_trj ( advr::Spline_map &new_spline_trj,
-                              const advr::Spline_map &old_spline_trj,
+    void smooth_splines_trj ( advr::Trj_ptr_map &new_spline_trj,
+                              const advr::Trj_ptr_map &old_spline_trj,
                               double smooth_time=0.5 );
 
     void set_any2home ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
-                        advr::Spline_map &new_spline_trj,
-                        advr::Spline_map &old_spline_trj );
-    void set_any2home ( advr::Spline_map &new_spline_trj,
-                        advr::Spline_map &old_spline_trj );
+                        advr::Trj_ptr_map &new_spline_trj,
+                        advr::Trj_ptr_map &old_spline_trj );
+    void set_any2home ( advr::Trj_ptr_map &new_spline_trj,
+                        advr::Trj_ptr_map &old_spline_trj );
 
 private:
 

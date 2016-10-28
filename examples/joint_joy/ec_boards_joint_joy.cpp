@@ -107,7 +107,7 @@ void EC_boards_joint_joy::init_preOP ( void ) {
 void EC_boards_joint_joy::init_OP ( void ) {
 
     running_spline = &spline_start2home;
-    advr::reset_spline_trj ( spline_start2home );
+    advr::reset_trj ( spline_start2home );
 }
 
 int EC_boards_joint_joy::user_loop ( void ) {
@@ -148,7 +148,7 @@ int EC_boards_joint_joy::user_loop ( void ) {
             user_state = TRJ_1;
             //user_state = HOMING;
             DPRINTF ( "At Step 2 ....\n" );
-            advr::reset_spline_trj ( spline1_trj );
+            advr::reset_trj ( spline1_trj );
             running_spline = &spline1_trj;
         }
         break;
@@ -157,7 +157,7 @@ int EC_boards_joint_joy::user_loop ( void ) {
         if ( go_there ( motors, spline1_trj, 0.05 ) ) {
             user_state = TRJ_2;
             DPRINTF ( "At trj_1 end ....\n" );
-            advr::reset_spline_trj ( spline2_trj );
+            advr::reset_trj ( spline2_trj );
         }
         break;
 

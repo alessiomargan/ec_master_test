@@ -40,7 +40,7 @@ private :
     std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_tor;
     std::map<int, iit::ecat::advr::Motor*>  motors_ctrl_pos;
 
-    advr::Spline_map spline_start2home;
+    advr::Trj_ptr_map spline_start2home;
     
 };
 
