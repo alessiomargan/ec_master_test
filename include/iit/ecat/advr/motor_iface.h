@@ -104,6 +104,7 @@ public:
     //virtual int init(const YAML::Node &) = 0;
     virtual int start ( int controller_type ) { return EC_BOARD_NOK; }
     virtual int start ( int controller_type, float _p, float _i, float _d ) = 0;
+    //virtual int start ( int controller_type, std::vector<float> &gains ) { return EC_BOARD_NOK;  };
     virtual int stop ( void ) = 0;
 
     virtual const motor_pdo_rx_t & getRxPDO() const = 0;

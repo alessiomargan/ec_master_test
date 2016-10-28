@@ -343,6 +343,7 @@ public:
                 configFlags |= (0x1 << 8); 
                 writeSDO_byname("ConfigFlags", configFlags);
             }
+            
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );

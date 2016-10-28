@@ -429,6 +429,9 @@ public:
         *(float*)sdo_objd->data = rx_pdo.aux;
         return 0;
     }
+    
+    int get_idx(void) { return (sdo_objd == 0) ? 0 : sdo_objd->subindex; }
+    
 private:
     const objd_t *  sdo_objd; 
 };
