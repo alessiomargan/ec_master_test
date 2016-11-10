@@ -14,6 +14,7 @@
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 #include <protobuf/ecat_pdo.pb.h>
 
@@ -134,7 +135,9 @@ struct FootSensorEscSdoTypes {
 
 class FootSensorESC :
     public BasicEscWrapper<FootSensorEscPdoTypes, FootSensorEscSdoTypes>,
-    public PDO_log<FootSensorEscPdoTypes::pdo_rx> {
+    public PDO_log<FootSensorEscPdoTypes::pdo_rx>,
+    public XDDP_pipe
+{
 public:
     typedef BasicEscWrapper<FootSensorEscPdoTypes,FootSensorEscSdoTypes>       Base;
     typedef PDO_log<FootSensorEscPdoTypes::pdo_rx>                             Log;
@@ -142,7 +145,8 @@ public:
 public:
     FootSensorESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/FootSensorESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE )
+        Log ( std::string ( "/tmp/FootSensorESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
+        XDDP_pipe ()
     { }
 
     virtual ~FootSensorESC ( void ) {
@@ -187,6 +191,8 @@ public:
             log.rtt         = rx_pdo.rtt;
             push_back ( log );
         }
+        
+        xddp_write ( rx_pdo );
 
     }
 
@@ -235,6 +241,8 @@ public:
         // we log when receive PDOs
         start_log ( true );
 
+        XDDP_pipe::init ( "Foot_id_"+std::to_string ( get_robot_id() ) );
+            
         return EC_BOARD_OK;
 
     }

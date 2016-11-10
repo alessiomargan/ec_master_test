@@ -101,10 +101,9 @@ public:
 //         return EC_WRP_NOK;
 //     }
 
-    //virtual int init(const YAML::Node &) = 0;
-    virtual int start ( int controller_type ) { return EC_BOARD_NOK; }
-    virtual int start ( int controller_type, float _p, float _i, float _d ) = 0;
-    //virtual int start ( int controller_type, std::vector<float> &gains ) { return EC_BOARD_NOK;  };
+    virtual int init( const YAML::Node & ) = 0;
+    virtual int start ( int controller_type ) = 0;
+    virtual int start ( int controller_type, const std::vector<float> &gains ) = 0;
     virtual int stop ( void ) = 0;
 
     virtual const motor_pdo_rx_t & getRxPDO() const = 0;
@@ -114,16 +113,13 @@ public:
     virtual int set_posRef ( float joint_pos ) = 0;
     virtual int set_velRef ( float joint_vel ) = 0;
     virtual int set_torRef ( float joint_tor ) = 0;
-    
     //virtual int set_torOffs ( float tor_offs ) = 0;
     
     //virtual int set_posGainP ( float p_gain )  = 0;
     //virtual int set_posGainI ( float i_gain )  = 0;
     //virtual int set_posGainD ( float d_gain )  = 0;
 
-    virtual int move_to ( float pos, float step ) {
-        return 0;
-    }
+    virtual int move_to ( float pos, float step ) = 0; //{ return 0; }
 
     //virtual int get_pos(float &joint_pos)   = 0;
     //virtual int get_posGainP(float &p_gain) = 0;
@@ -136,9 +132,6 @@ public:
     //void set_state(ec_state state) { _actual_state = state; }
 
     virtual int16_t get_robot_id() = 0;
-
-    //virtual bool am_i_HpESC() = 0;
-    //virtual bool am_i_LpESC() = 0;
     virtual uint16_t get_ESC_type(void) = 0;
     
 protected:

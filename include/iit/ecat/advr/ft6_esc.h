@@ -18,6 +18,7 @@
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 
 namespace iit {
@@ -174,7 +175,9 @@ struct Ft6LogTypes {
 
 class Ft6ESC :
     public BasicEscWrapper<Ft6EscPdoTypes, Ft6EscSdoTypes>,
-    public PDO_log<Ft6LogTypes> {
+    public PDO_log<Ft6LogTypes>,
+    public XDDP_pipe
+{
 public:
     typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes>   Base;
     typedef PDO_log<Ft6LogTypes>                             Log;
@@ -182,8 +185,11 @@ public:
 public:
     Ft6ESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/Ft6ESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE )
-    { }
+        Log ( std::string ( "/tmp/Ft6ESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
+        XDDP_pipe ()
+    { 
+        _start_log = false;
+    }
 
     virtual ~Ft6ESC ( void ) {
         delete [] SDOs;
@@ -226,6 +232,8 @@ public:
             log.rx_pdo  = rx_pdo;
             push_back ( log );
         }
+        
+        xddp_write ( rx_pdo );
 
     }
 
@@ -274,6 +282,8 @@ public:
         // we log when receive PDOs
         start_log ( true );
 
+        XDDP_pipe::init( "Ft_id_"+std::to_string ( get_robot_id() ) );
+        
         return EC_BOARD_OK;
 
     }

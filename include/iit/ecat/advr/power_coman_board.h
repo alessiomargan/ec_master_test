@@ -9,6 +9,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 
 #include <map>
 #include <string>
@@ -140,8 +141,9 @@ struct PowCmnEscSdoTypes {
 
 class PowComanESC :
     public BasicEscWrapper<PowCmnEscPdoTypes,PowCmnEscSdoTypes>,
-    public PDO_log<PowCmnEscPdoTypes::pdo_rx> {
-
+    public PDO_log<PowCmnEscPdoTypes::pdo_rx>,
+    public XDDP_pipe
+{
 public:
     typedef BasicEscWrapper<PowCmnEscPdoTypes,PowCmnEscSdoTypes>	Base;
     typedef PDO_log<PowCmnEscPdoTypes::pdo_rx>                    	Log;
@@ -172,6 +174,7 @@ public:
             push_back ( rx_pdo );
         }
 
+        xddp_write ( rx_pdo );
     }
 
     virtual void on_writePDO ( void ) {
@@ -202,6 +205,8 @@ public:
         // we log when receive PDOs
         start_log ( true );
 
+        XDDP_pipe::init( "PowCmn_pos_"+std::to_string ( position ));
+        
         osal_timer_start ( &motor_on_timer, 0 );
         readSDO_byname ( "status" );
         handle_status();

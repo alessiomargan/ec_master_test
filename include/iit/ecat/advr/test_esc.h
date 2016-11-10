@@ -9,6 +9,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
@@ -215,15 +216,18 @@ struct TestEscLogTypes {
 
 class TestESC :
     public BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>,
-    public PDO_log<TestEscLogTypes> {
-
+    public PDO_log<TestEscLogTypes>,
+    public XDDP_pipe
+{
 public:
     typedef BasicEscWrapper<TestEscPdoTypes,TestEscSdoTypes>    Base;
     typedef PDO_log<TestEscLogTypes>                            Log;
 
     TestESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/ESC_test_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ) {
+        Log ( std::string ( "/tmp/ESC_test_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
+        XDDP_pipe ()
+    {
 
     }
 
@@ -319,6 +323,8 @@ public:
         // Should be better to start logging when enter OP ....
         start_log ( true );
 
+        XDDP_pipe::init ( "Test_pos_"+std::to_string ( position ) );
+        
         return EC_WRP_OK;
 
     }

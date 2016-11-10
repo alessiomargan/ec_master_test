@@ -19,6 +19,7 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 #include <map>
 
@@ -119,7 +120,9 @@ struct HiPwrLogTypes {
 class HpESC :
     public BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes>,
     public PDO_log<HiPwrLogTypes>,
-    public Motor {
+    public XDDP_pipe,
+    public Motor
+{
 
 public:
     typedef BasicEscWrapper<McEscPdoTypes,HiPwrEscSdoTypes> Base;
@@ -127,7 +130,9 @@ public:
 
     HpESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/HpESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ) {
+        Log ( std::string ( "/tmp/HpESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
+        XDDP_pipe ()
+    {
         _start_log = false;
         //_actual_state = EC_STATE_PRE_OP;
     }
@@ -185,6 +190,8 @@ protected :
             log.rx_pdo  = rx_pdo;
             push_back ( log );
         }
+        
+        xddp_write( rx_pdo );
 
     }
 
@@ -303,6 +310,8 @@ public :
         // we log when receive PDOs
         start_log ( true );
 
+        XDDP_pipe::init ( "Motor_id_"+std::to_string ( get_robot_id() ) );
+        
         return EC_BOARD_OK;
 
     }
@@ -312,7 +321,7 @@ public :
      * !! in OPERATIONAL DO NOT ALLOW to set_SDO that maps TX_PDO !!
      * @return int
      */
-    virtual int start ( int controller_type, float _p, float _i, float _d ) {
+    virtual int start ( int controller_type, const std::vector<float> &gains ) {
 
         float act_position;
         uint16_t fault;
@@ -321,18 +330,18 @@ public :
         float max_vel = 3.0;
 
         DPRINTF ( "Start motor[%d] 0x%02X %.2f %.2f %.2f\n",
-                  Joint_robot_id, controller_type, _p, _i, _d );
+                  Joint_robot_id, controller_type, gains[0], gains[1], gains[2] );
 
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
             // set PID gains ... this will NOT set tx_pdo.gainP ....
-            writeSDO_byname ( "PosGainP", _p );
-            writeSDO_byname ( "PosGainI", _i );
-            writeSDO_byname ( "PosGainD", _d );
+            writeSDO_byname ( "PosGainP", gains[0] );
+            writeSDO_byname ( "PosGainI", gains[1] );
+            writeSDO_byname ( "PosGainD", gains[2] );
             // this will SET tx_pdo.gainP
-            gain = ( uint16_t ) _p;
+            gain = ( uint16_t ) gains[0];
             writeSDO_byname ( "gain_0", gain );
-            gain = ( uint16_t ) _d;
+            gain = ( uint16_t ) gains[2];
             writeSDO_byname ( "gain_1", gain );
             // pdo gains will be used in OP
             //writeSDO_byname ( "board_enable_mask", enable_mask );
@@ -371,15 +380,15 @@ public :
 
     virtual int start ( int controller_type ) {
 
-        std::vector<float> pid;
+        std::vector<float> gains;
         try {
-            pid = node_cfg["pid"]["mix_position"].as<std::vector<float>>();
-            assert ( pid.size() == 3 );
+            gains = node_cfg["pid"]["mix_position"].as<std::vector<float>>();
+            assert ( gains.size() == 3 );
         } catch ( std::exception &e ) {
             DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
             return EC_BOARD_NOK;
         }
-        return start ( controller_type, pid[0], pid[1], pid[2] );
+        return start ( controller_type, gains );
     }
 
     virtual int stop ( void ) {

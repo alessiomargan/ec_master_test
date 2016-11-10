@@ -34,7 +34,7 @@ include_directories(${CMAKE_BINARY_DIR})
 include_directories(${SOEM_ROOT}/include)
 link_directories(${SOEM_ROOT}/lib)
 
-add_library(walkman_master${LIB_TYPE} SHARED
+set(LIB_SOURCES
     src/ec_boards_iface.cpp
     src/mc_centAC_esc.cpp
     src/mc_hipwr_esc.cpp
@@ -44,6 +44,17 @@ add_library(walkman_master${LIB_TYPE} SHARED
     src/ft6_esc.cpp
     src/foot_sensor_esc.cpp
     src/test_esc.cpp
+)
+
+if ( Xenomai_FOUND )
+    set(RT_LIB_SOURCES
+        src/rt_ipc.cpp
+    )
+endif()
+
+
+add_library(walkman_master${LIB_TYPE} SHARED
+    ${LIB_SOURCES} ${RT_LIB_SOURCES}
 )
 
 add_dependencies(walkman_master${LIB_TYPE} pdo_pb)

@@ -11,12 +11,12 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x6000, 1, DTYPE_REAL32,          32, ATYPE_RO, "link_pos",   0},
     { 0x6000, 2, DTYPE_REAL32,          32, ATYPE_RO, "motor_pos",  0},
     { 0x6000, 3, DTYPE_REAL32,          32, ATYPE_RO, "link_vel",   0},
-#if 0
-    { 0x6000, 4, DTYPE_INTEGER16,       16, ATYPE_RO, "motor_vel",  0},
-    { 0x6000, 5, DTYPE_INTEGER16,       16, ATYPE_RO, "torque",     0},
-#else
+#ifdef FLOAT_PDO
     { 0x6000, 4, DTYPE_REAL32,       16, ATYPE_RO, "motor_vel",      0},
     { 0x6000, 5, DTYPE_REAL32,       16, ATYPE_RO, "torque",     0},
+#else
+    { 0x6000, 4, DTYPE_INTEGER16,       16, ATYPE_RO, "motor_vel",  0},
+    { 0x6000, 5, DTYPE_INTEGER16,       16, ATYPE_RO, "torque",     0},
 #endif
     { 0x6000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RO, "temperature",0},
     { 0x6000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RO, "fault",      0},
@@ -26,15 +26,7 @@ static const iit::ecat::objd_t source_SDOs[] = {
 
     // SD0 0x7000
     { 0x7000, 1, DTYPE_REAL32,          32, ATYPE_RW, "pos_ref",    0},
-#if 0
-    { 0x7000, 2, DTYPE_INTEGER16,       16, ATYPE_RW, "vel_ref",    0},
-    { 0x7000, 3, DTYPE_INTEGER16,       16, ATYPE_RW, "tor_ref",    0},
-    { 0x7000, 4, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_0",     0},
-    { 0x7000, 5, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_1",     0},
-    { 0x7000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_2",     0},
-    { 0x7000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_3",     0},
-    { 0x7000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_4",     0},
-#else
+#if FLOAT_PDO
     { 0x7000, 2, DTYPE_REAL32,          32, ATYPE_RW, "vel_ref",    0},
     { 0x7000, 3, DTYPE_REAL32,          32, ATYPE_RW, "tor_ref",    0},
     { 0x7000, 4, DTYPE_REAL32,          32, ATYPE_RW, "gain_0",     0},
@@ -42,6 +34,14 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x7000, 6, DTYPE_REAL32,          32, ATYPE_RW, "gain_2",     0},
     { 0x7000, 7, DTYPE_REAL32,          32, ATYPE_RW, "gain_3",     0},
     { 0x7000, 8, DTYPE_REAL32,          32, ATYPE_RW, "gain_4",     0},
+#else
+    { 0x7000, 2, DTYPE_INTEGER16,       16, ATYPE_RW, "vel_ref",    0},
+    { 0x7000, 3, DTYPE_INTEGER16,       16, ATYPE_RW, "tor_ref",    0},
+    { 0x7000, 4, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_0",     0},
+    { 0x7000, 5, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_1",     0},
+    { 0x7000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_2",     0},
+    { 0x7000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_3",     0},
+    { 0x7000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_4",     0},
 #endif
     { 0x7000, 9, DTYPE_UNSIGNED16,      16, ATYPE_RW, "fault_ack",  0},
     { 0x7000, 10, DTYPE_UNSIGNED16,     16, ATYPE_RW, "ts",         0},

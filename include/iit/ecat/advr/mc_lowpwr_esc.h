@@ -20,6 +20,7 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 
 namespace iit {
@@ -109,14 +110,19 @@ struct LoPwrLogTypes {
 class LpESC :
     public BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes>,
     public PDO_log<LoPwrLogTypes>,
-    public Motor {
+    public XDDP_pipe,
+    public Motor
+{
 public:
     typedef BasicEscWrapper<McEscPdoTypes,LoPwrEscSdoTypes> 	Base;
     typedef PDO_log<LoPwrLogTypes>                   		Log;
 
     LpESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/LpESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ) {
+        Log ( std::string ( "/tmp/LpESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
+        XDDP_pipe ()
+    {
+         _start_log = false;
         //_actual_state = EC_STATE_PRE_OP;
     }
 
@@ -175,6 +181,8 @@ protected :
             log.rx_pdo = rx_pdo;
             push_back ( log );
         }
+        
+        xddp_write ( rx_pdo );
     }
 
     virtual void on_writePDO ( void ) {
@@ -291,41 +299,40 @@ public:
         // we log when receive PDOs
         start_log ( true );
 
+        XDDP_pipe::init ("Motor_id_"+std::to_string ( get_robot_id() ));
+        
         return EC_WRP_OK;
 
     }
     
-    virtual int start ( int controller_type, float _p, float _i, float _d ) {
+    //virtual int start ( int controller_type, float _p, float _i, float _d ) {
+    virtual int start ( int controller_type, const std::vector<float> &gains ) {
 
-        float act_position, test_ref;
-        int32_t fault;
         std::ostringstream oss;
+        float act_position;
+        int32_t fault;
+        //uint16_t gain;
+        float gain;
         
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
-            // set actual position as reference
-            readSDO_byname ( "link_pos", act_position );
-            writeSDO_byname ( "pos_ref", act_position );
-            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
-                      act_position,
-                      lopwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
             
             if ( controller_type == CTRL_SET_POS_MODE ) {
-            
-                writeSDO_byname( "pos_gain_P", _p );
-                writeSDO_byname( "pos_gain_I", _i );
-                writeSDO_byname( "pos_gain_D", _d );
-                DPRINTF ( "\tPosGain %f %f %f\n", _p,_i,_d );
+                
+                writeSDO_byname( "pos_gain_P", gains[0] );
+                writeSDO_byname( "pos_gain_I", gains[1] );
+                writeSDO_byname( "pos_gain_D", gains[2] );
+                DPRINTF ( "\tPosGain %f %f %f\n", gains[0], gains[1], gains[2] );
             
             } else if ( controller_type == CTRL_SET_IMPED_MODE ) {
 
                 // Impedance gains : position PD torque PI 
                 // PosGainP
-                writeSDO_byname( "gain_0", (uint16_t)(_p/100.0));
+                writeSDO_byname( "gain_0", (uint16_t)(gains[0]/100.0));
                 // TorGainP
                 writeSDO_byname( "gain_1", (uint16_t)(sdo.TorGainP*1000));
                 // PosGainD
-                writeSDO_byname( "gain_2", (uint16_t)_d);
+                writeSDO_byname( "gain_2", (uint16_t)gains[2]);
                 // TorGainD
                 //writeSDO_byname( "gain_3", (uint16_t)(sdo.TorGainP));
                 // TorGainIs
@@ -344,11 +351,24 @@ public:
                 writeSDO_byname("ConfigFlags", configFlags);
             }
             
+            // set actual position as reference
+            readSDO_byname ( "link_pos", act_position );
+            writeSDO_byname ( "pos_ref", act_position );
+            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
+                      act_position,
+                      lopwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
+            oss << tx_pdo;
+            DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
-            // set controller_type ...
+
+            readSDO_byname ( "fault", fault );
+            handle_fault();
+
+            // set controller mode
             set_ctrl_status_X ( this, controller_type );
+
 
         } catch ( EscWrpError &e ) {
 
@@ -362,33 +382,34 @@ public:
 
     virtual int start ( int controller_type ) {
         
-        std::vector<float> pid = {0.0, 0.0, 0.0};
+        std::vector<float> gains = {0.0, 0.0, 0.0};
         
         if ( controller_type == CTRL_SET_POS_MODE ) {
             // use default value read in init()
-            pid[0] = sdo.PosGainP;
-            pid[1] = sdo.PosGainI;
-            pid[2] = sdo.PosGainD;
+            gains[0] = sdo.PosGainP;
+            gains[1] = sdo.PosGainI;
+            gains[2] = sdo.PosGainD;
             
             if ( node_cfg["pid"]["position"] ) {
                 try {
-                    pid = node_cfg["pid"]["position"].as<std::vector<float>>();
-                    assert ( pid.size() == 3 );
+                    gains = node_cfg["pid"]["position"].as<std::vector<float>>();
+                    assert ( gains.size() == 3 );
                 } catch ( std::exception &e ) {
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
                 }
             }
         } 
         if ( controller_type == CTRL_SET_IMPED_MODE ) {
+            // Impedance gains : [ Pos_P, Pos_D torque PI 
             // use default value read in init()
-            pid[0] = sdo.ImpedancePosGainP;
-            pid[1] = 0,0; // not used
-            pid[2] = sdo.ImpedancePosGainD;
+            gains[0] = sdo.ImpedancePosGainP;
+            gains[1] = 0,0; // not used
+            gains[2] = sdo.ImpedancePosGainD;
 
             if ( node_cfg["pid"]["impedance"] ) {
                 try {
-                    pid = node_cfg["pid"]["impedance"].as<std::vector<float>>();
-                    assert ( pid.size() == 3 );
+                    gains = node_cfg["pid"]["impedance"].as<std::vector<float>>();
+                    assert ( gains.size() == 3 );
                     DPRINTF ( "using yaml values\n");  
                 } catch ( std::exception &e ) {
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
@@ -396,7 +417,8 @@ public:
             }
         } 
 
-        return start ( controller_type, pid[0], pid[1], pid[2] );
+        //return start ( controller_type, gains[0], gains[1], gains[2] );
+        return start ( controller_type, gains );
     }
 
     virtual int stop ( void ) {

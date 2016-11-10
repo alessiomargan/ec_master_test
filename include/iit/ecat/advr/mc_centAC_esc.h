@@ -18,7 +18,9 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
+
 #include <map>
 
 namespace iit {
@@ -154,7 +156,7 @@ struct CentAcLogTypes {
 class CentAcESC :
     public BasicEscWrapper<McEscPdoTypes,CentAcEscSdoTypes>,
     public PDO_log<CentAcLogTypes>,
-    //public AbsMotor<CentAcEscPdoTypes> {
+    public XDDP_pipe,
     public Motor {
 
 public:
@@ -163,9 +165,10 @@ public:
 
     CentAcESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/CentAcESC"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ) {
-        
-            _start_log = false;
+        Log ( std::string ( "/tmp/CentAcESC"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
+        XDDP_pipe ()
+    {
+        _start_log = false;
     }
 
     virtual ~CentAcESC ( void ) {
@@ -214,6 +217,7 @@ protected :
             tx_pdo.fault_ack = 0;
         }
 
+        ///////////////////////////////////////////////////
         // apply transformation from Motor to Joint
         rx_pdo.link_pos = centac_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
         rx_pdo.motor_pos = centac_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
@@ -223,8 +227,9 @@ protected :
         if ( curr_pdo_aux->get_idx() == 1 ) {
             rx_pdo.aux  = centac_esc::M2J ( rx_pdo.aux,_sgn,_offset );
         }
-
         
+        ///////////////////////////////////////////////////
+        // - logging
         if ( _start_log ) {
             Log::log_t log;
             log.ts      = get_time_ns() - _start_log_ts ;
@@ -242,6 +247,9 @@ protected :
             push_back ( log );
         }
 
+        ///////////////////////////////////////////////////
+        // - ipc 
+        xddp_write(rx_pdo);
     }
 
     virtual void on_writePDO ( void ) {
@@ -360,6 +368,8 @@ public :
         // we log when receive PDOs
         start_log ( true );
 
+        XDDP_pipe::init ("Motor_id_"+std::to_string ( sdo.Joint_robot_id ) );
+        
         return EC_BOARD_OK;
 
     }
@@ -369,13 +379,13 @@ public :
      * !! in OPERATIONAL DO NOT ALLOW to set_SDO that maps TX_PDO !!
      * @return int
      */
-    virtual int start ( int controller_type, float _p, float _i, float _d ) {
-    
+    virtual int start ( int controller_type, const std::vector<float> &gains ) {
+
         std::ostringstream oss;
         float act_position;
         uint16_t fault;
-        //uint16_t gain;
-        float gain;
+        uint16_t gain;
+        //float gain;
         
         DPRINTF ( "Start motor[%d] 0x%02X\n",
                   Joint_robot_id, controller_type);
@@ -387,83 +397,34 @@ public :
             // pdo gains will be used in OP
             
             if ( controller_type == CTRL_SET_POS_MODE ) {
+                // pos_Kp
                 //gain = ( uint16_t ) _p;
-                gain = _p;
+                gain = (uint16_t)gains[0];
                 writeSDO_byname ( "gain_0", gain );
+                // pos_Kd
                 //gain = ( uint16_t ) _d;
-                gain = _d;
+                gain = (uint16_t)gains[2];
                 writeSDO_byname ( "gain_1", gain );
-                
-            }
-            
-            // set actual position as reference
-            //readSDO_byname ( "link_pos", act_position );
-            readSDO_byname ( "motor_pos", act_position );
-            writeSDO_byname ( "pos_ref", act_position );
-            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
-                      act_position,
-                      centac_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
-            oss << tx_pdo;
-                DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
-            // set direct mode and power on modulator
-            set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
-            set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
-
-            readSDO_byname ( "fault", fault );
-            handle_fault();
-
-            // set position mode
-            set_ctrl_status_X ( this, controller_type );
-
-        } catch ( EscWrpError &e ) {
-
-            DPRINTF ( "Catch Exception %s ... %s\n", __FUNCTION__, e.what() );
-            return EC_BOARD_NOK;
-        }
-
-        return EC_BOARD_OK;
-    }
-    
-    int start ( int controller_type, std::vector<float> &gains ) {
-
-        std::ostringstream oss;
-        float act_position;
-        uint16_t fault;
-        //uint16_t gain;
-        float gain;
-        
-        DPRINTF ( "Start motor[%d] 0x%02X\n",
-                  Joint_robot_id, controller_type);
-
-        try {
-            set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
-            
-            // set tx_pdo.gainP
-            // pdo gains will be used in OP
-            
-            if ( controller_type == CTRL_SET_POS_MODE ) {
-                //gain = ( uint16_t ) _p;
-                gain = gains[0];
-                writeSDO_byname ( "gain_0", gain );
+                // pos_Ki
                 //gain = ( uint16_t ) _d;
-                gain = gains[2];
-                writeSDO_byname ( "gain_1", gain );
+                gain = (uint16_t)gains[1];
+                writeSDO_byname ( "gain_4", gain );
                 
             } else if ( controller_type == CTRL_SET_IMPED_MODE ) {
                 // pos_Kp
-                gain = gains[0];
+                gain = (uint16_t)gains[0];
                 writeSDO_byname ( "gain_0", gain );
                 // pos_Kd
-                gain = gains[1];
+                gain = (uint16_t)gains[1];
                 writeSDO_byname ( "gain_1", gain );
                 // tor_Kp
-                gain = gains[2];
+                gain = (uint16_t)(gains[2] * 10000);
                 writeSDO_byname ( "gain_2", gain );
                 // tor_Kd
-                gain = gains[3];
+                gain = (uint16_t)(gains[3] * 10000);
                 writeSDO_byname ( "gain_3", gain );
                 // tor_Ki
-                gain = gains[4];
+                gain = (uint16_t)(gains[4] * 10000);
                 writeSDO_byname ( "gain_4", gain );
                 
             }
@@ -476,7 +437,7 @@ public :
                       act_position,
                       centac_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
             oss << tx_pdo;
-                DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
+            DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
@@ -484,7 +445,7 @@ public :
             readSDO_byname ( "fault", fault );
             handle_fault();
 
-            // set position mode
+            // set controller mode
             set_ctrl_status_X ( this, controller_type );
 
         } catch ( EscWrpError &e ) {

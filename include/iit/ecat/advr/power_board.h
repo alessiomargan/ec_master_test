@@ -9,6 +9,7 @@
 
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
+#include <iit/ecat/advr/pipes.h>
 #include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
@@ -129,17 +130,19 @@ struct PowEscSdoTypes {
 
 class PowESC :
     public BasicEscWrapper<PowEscPdoTypes,PowEscSdoTypes>,
-    public PDO_log<PowEscPdoTypes::pdo_rx> {
-
+    public PDO_log<PowEscPdoTypes::pdo_rx>,
+    public XDDP_pipe
+{
 public:
     typedef BasicEscWrapper<PowEscPdoTypes,PowEscSdoTypes>    Base;
     typedef PDO_log<PowEscPdoTypes::pdo_rx>                    Log;
 
     PowESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/PowESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ) {
+        Log ( std::string ( "/tmp/PowESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
+        XDDP_pipe()
+    {
         _start_log = false;
-
     }
 
     virtual ~PowESC ( void ) {
@@ -161,6 +164,7 @@ public:
             push_back ( rx_pdo );
         }
 
+        xddp_write ( rx_pdo );
     }
 
     virtual void on_writePDO ( void ) {
@@ -191,6 +195,8 @@ public:
         // we log when receive PDOs
         start_log ( true );
 
+        XDDP_pipe::init( "PowWkm_pos_"+std::to_string ( position ) );
+        
         osal_timer_start ( &motor_on_timer, 0 );
         readSDO_byname ( "status" );
         handle_status();
