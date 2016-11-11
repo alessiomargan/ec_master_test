@@ -4,7 +4,7 @@ project(${PRJ_DIR})
 
 include_directories(include)
 
-add_definitions("-DUSE_LPMS_IMU")
+
 
 add_executable(${PROJECT_NAME}
     ec_boards_${PRJ_DIR}.cpp

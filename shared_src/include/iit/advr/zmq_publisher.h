@@ -156,6 +156,7 @@ public:
     int publish ( void ) {
         
         if ( read_pipe ( pub_data ) <= 0 ) {
+            //std::cout << "Error read from pipe" << std::endl;
             return -1;
         }
         return publish ( pub_data );

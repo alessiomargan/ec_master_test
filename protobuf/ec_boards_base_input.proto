@@ -1,0 +1,48 @@
+package iit.advr;
+
+import "header.proto";
+import "vector2d.proto";
+
+message Smoother_step {
+
+    repeated gazebo.msgs.Vector2d  point = 1;
+}
+
+message Gains {
+
+    enum Type { 
+        POSITION    = 1;
+        IMPEDANCE   = 2;
+        TORQUE      = 3;
+    }
+
+    // Identifies which field is filled in.
+    required Type   type = 1;
+    
+    required double kp  = 2;
+    required double ki  = 3;
+    required double kd  = 4;
+    optional double kkp = 5;
+    optional double kki = 6;
+    optional double kkd = 7;
+    
+}
+
+message Ec_board_base_input {
+
+   enum Type { 
+        SET_SMOOTHER_STEP = 1;
+        SET_GAINS = 2;
+    }
+
+    // Identifies which field is filled in.
+    required Type   type = 1;
+    
+    optional gazebo.msgs.Header header = 2;
+    
+    // One of the following will be filled in.
+    optional Smoother_step      smoother_step = 3;
+    optional Gains              gains = 4;
+
+}
+

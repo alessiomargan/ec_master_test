@@ -17,7 +17,7 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 
 #include <iit/advr/thread_util.h>
-#include <iit/advr/pipes.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/advr/trajectory.h>
 
 #include <queue>
@@ -55,10 +55,6 @@ protected :
     std::queue<advr::Trj_ptr_map *> trj_queue;
     advr::Trj_ptr_map * running_trj;
     advr::Trj_ptr_map * last_run_trj;
-
-    void xddps_init ( void );
-    void xddps_loop ( void );
-    std::map<int,XDDP_pipe> xddps;
 
     XDDP_pipe termInXddp;
     XDDP_pipe debugOutXddp;

@@ -36,10 +36,6 @@ EC_boards_centAC_test::EC_boards_centAC_test ( const char* config_yaml ) :
     priority = sched_get_priority_max ( schedpolicy )-10;
     stacksize = ECAT_PTHREAD_STACK_SIZE;
 
-    // open pipe ... xeno xddp or fifo
-    jsInXddp.init  ( "EC_board_js_input" );
-    navInXddp.init ( "EC_board_nav_input" );
-    imuInXddp.init ( "Lpms_imu" );
 }
 
 EC_boards_centAC_test::~EC_boards_centAC_test() {
@@ -126,38 +122,26 @@ void EC_boards_centAC_test::init_preOP ( void ) {
             DEG2RAD ( centauro::robot_ids_up_pos_deg[pos2Rid(slave_pos)] ),
             DEG2RAD ( centauro::robot_ids_zero_pos_deg[pos2Rid(slave_pos)] ),
         };
-        trj_zero2up2extend2zero[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt5_16s, Ys );
+        trj_zero2up2extend2zero[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt5_4s, Ys );
         
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
-        if ( 0 && ( pos2Rid(slave_pos) == centauro::RA_WR_2 ) ) {
-            moto->start ( CTRL_SET_POS_LINK_MODE );
-        } else {
-            //moto->start ( CTRL_SET_POS_MODE );
-            moto->start ( CTRL_SET_IMPED_MODE );
-        }
+        //moto->start ( CTRL_SET_POS_MODE );
+        moto->start ( CTRL_SET_IMPED_MODE );
     }
 
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
-#if 1
+#if 0
     if ( motors_to_start.size() > 0 ) {
         //
-//         trj_queue.push ( &trj_start2home );
-//         trj_queue.push ( &trj_home2zero );
-//         trj_queue.push ( &trj_zero2up2extend2zero );
+        trj_queue.push ( &trj_start2home );
+        trj_queue.push ( &trj_home2zero );
+        trj_queue.push ( &trj_zero2up2extend2zero );
         
-    }
-#else    
-    for ( auto const& item : motors_to_start ) {
-        slave_pos = item.first;
-        moto = item.second;
-        while ( ! moto->move_to ( home[slave_pos], 0.002 ) ) {
-            osal_usleep ( 1000 );
-        }
     }
 #endif
 }
@@ -177,7 +161,7 @@ void EC_boards_centAC_test::init_OP ( void ) {
 
 int EC_boards_centAC_test::user_loop ( void ) {
 
-    static float ds;
+    static iit::advr::Ec_board_base_input pbEcInput;
     static uint64_t count;
     float trj_error = 0.07;
 
@@ -187,15 +171,15 @@ int EC_boards_centAC_test::user_loop ( void ) {
 
     ///////////////////////////////////////////////////////
     //
-    if ( xddp_input ( ds ) > 0 ) {
-        DPRINTF ( ">> %f\n", ds );
+    if ( xddp_input ( pbEcInput ) > 0 ) {
+        //DPRINTF ( ">> %s\n", pbEcInput. );
     }
 
     if ( ! trj_queue.empty() ) {
 
         running_trj = trj_queue.front();
         if ( running_trj ) {
-            // !@#%@$#%^^# ... tune error
+            // !@#%@$#%^^# ... tune trj_error
             if ( go_there ( motors_to_start, *running_trj, trj_error, false) ) {
                 // running trajectory has finish !!
                 last_run_trj = running_trj;
@@ -249,13 +233,21 @@ void EC_boards_centAC_test::tune_gains( std::vector<float> gains_incr ) {
 }
 
 
-template<class C>
-int EC_boards_centAC_test::xddp_input ( C &user_cmd ) {
+int EC_boards_centAC_test::xddp_input ( iit::advr::Ec_board_base_input &pbEcInput ) {
 
-    static int  bytes_cnt;
-    int         bytes = 0;
-    char        c;
-    
+        uint32_t msg_size;
+        uint8_t  msg_buff[1024];
+        int nbytes;
+#if 0
+        
+        nbytes = read ( termInXddp.get_fd(), ( void* ) &msg_size, sizeof ( msg_size ) );
+        if ( nbytes > 0 ) {
+            nbytes += read ( termInXddp.get_fd(), ( void* ) msg_buff, msg_size );
+            pbEcInput.ParseFromArray(msg_buff, msg_size);
+            std::cout << pbEcInput.type() << " "  << std::endl;
+        }
+#else
+    char c;
     std::vector<float> gains_incr(5);
     if ( termInXddp.xddp_read ( c ) > 0 ) {
         switch ( c ) {
@@ -274,8 +266,9 @@ int EC_boards_centAC_test::xddp_input ( C &user_cmd ) {
         }
         tune_gains(gains_incr);
     }
-    
-    return bytes;
+#endif
+
+    return nbytes;
 }
 
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

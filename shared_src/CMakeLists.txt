@@ -4,7 +4,6 @@ project(ecat_test_utils)
 if ( Xenomai_FOUND )
     set(LIB_TYPE _rt)
     set(RT_NRT_SRC
-    ${SHARED_SRC}/rt_ipc.cpp
     ${SHARED_SRC}/rt_thread.cpp
     ${SHARED_SRC}/nrt_thread.cpp)
 else()

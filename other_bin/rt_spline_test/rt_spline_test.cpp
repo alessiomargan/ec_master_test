@@ -11,7 +11,7 @@
 #include <random>
 
 #include <iit/ecat/utils.h>
-#include <iit/advr/pipes.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/advr/thread_util.h>
 #include <iit/advr/spline.h>
 #include <iit/advr/trajectory.h>
@@ -42,7 +42,7 @@ class RT_thread : public Thread_hook {
     iit::ecat::stat_t       loop_time;
     XDDP_pipe               OutXddp;
     std::string             pipe_name;
-    advr::Trj_ptr_map        spline_map;
+    advr::Trj_ptr           trj;
     gazebo::msgs::Vector2d  vector;
     std::string             pbStr;    
     
@@ -74,9 +74,7 @@ public:
         
         std::vector<double> Ys =  std::initializer_list<double> { 0, M_PI/4, M_PI/2, M_PI };
         std::vector<double> Xs =  std::initializer_list<double> { 0, 1, 2, 3 };
-        spline_map[0].set_points ( Xs, Ys );
-
-        advr::reset_trj ( spline_map );
+        trj = std::make_shared<advr::Spline_trajectory> ( Xs, Ys );
     }
     
     virtual void th_loop ( void * ) {
@@ -84,20 +82,18 @@ public:
         std::vector<double> Ys;
         std::vector<double> Xs;
     
-        if ( spline_map[0].finish() ) {
+        if ( trj->ended() ) {
             
-            //spline_map[0].start_time();
-
             Xs = std::initializer_list<double> { 0, 1, 2, 3, 4, 5 };
             Ys = std::initializer_list<double> { 0, uni(rng), uni(rng), uni(rng), uni(rng), uni(rng) };
-            spline_map[0].set_points ( Xs ,Ys );
+            trj = std::make_shared<advr::Spline_trajectory> ( Xs, Ys );
+            //trj->set_points ( Xs ,Ys );
             
         }
         
-        auto trj = spline_map[0];
-        auto v = trj();
+        auto v = (*trj)();
         uint64_t sT;
-        trj.get_start_time(sT);
+        trj->get_start_time(sT);
         //DPRINTF(">> %f\n", v);
         //OutXddp.xddp_write( v );
         

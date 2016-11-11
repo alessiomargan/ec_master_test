@@ -17,9 +17,9 @@ using namespace iit::ecat::advr;
 zmq::context_t zmq_ctx ( 1 );
 
 #ifdef __XENO_PIPE__
-const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
+static const std::string __pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
 #else
-const std::string pipe_prefix ( "/tmp/" );
+static const std::string __pipe_prefix ( "/tmp/" );
 #endif
 
 ///////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ Abs_Publisher::~Abs_Publisher() {
 int Abs_Publisher::open_pipe ( std::string pipe_name ) {
 
     pipe = pipe_name;
-    std::string pipe_path = pipe_prefix + pipe_name;
+    std::string pipe_path = __pipe_prefix + pipe_name;
 
     std::cout << "Opening xddp_socket " << pipe_path << std::endl;
     xddp_sock = open ( pipe_path.c_str(), O_RDONLY );
