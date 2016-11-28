@@ -37,6 +37,6 @@ protobuf_generate_python(PROTO_PY ${msgs})
 add_library (pdo_pb ${PROTO_HEADER} ${PROTO_SRC} ${PROTO_PY})
 
 install(TARGETS pdo_pb DESTINATION lib)
-install(FILES ${PROTO_HEADER}  DESTINATION include/protobuf)
+install(FILES ${PROTO_HEADER}  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/protobuf)
 
 
