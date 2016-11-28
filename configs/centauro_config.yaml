@@ -72,7 +72,7 @@ CentAcESC_1:
     position:   [180.0 , 0.0 , 1.0]
     # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance:  [100.0, 0.0, 0.5, 0.0005, 0.0]
+    impedance:  [100.0, 0.0, 0.04, 0.00004, 0.0]
     
 
 ##############################
@@ -81,36 +81,42 @@ CentAcESC_1:
 CentAcESC_2:
   sign: 1
   pos_offset: 45
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_3:
   sign: 1
   pos_offset: 45
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_5:
   sign: 1
   pos_offset: 0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_6:
   sign: -1
   pos_offset: 0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_7:
   sign: 1
   pos_offset: 0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_8:
   sign: 1
   pos_offset: 0
+  max_current_A: 15.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
@@ -120,24 +126,28 @@ CentAcESC_8:
 CentAcESC_9:
   sign: 1
   pos_offset: -45
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_10:
   sign: 1
   pos_offset: -45
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_11:
   sign: 1
   pos_offset: 0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]    
     
 CentAcESC_12:
   sign: 1
   pos_offset: 0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]    
     
@@ -145,17 +155,20 @@ CentAcESC_12:
 CentAcESC_13:
   sign: -1
   pos_offset: 0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_14:
   sign: 1
   pos_offset: 0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_15:
   sign: 1
   pos_offset: 0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]

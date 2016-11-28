@@ -176,6 +176,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     // centauro::robot_mcs_ids
     for ( auto const& rid : centauro::robot_mcs_ids ) {
         zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
+        //zpub = new EcSlavePub ( uri+std::to_string ( base_port+rid ) );
         if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
             zmap[base_port+rid] = zpub;
         } else {
@@ -189,7 +190,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     ///////////////////////////////////////////////////////////////////////
 
     zpub = new TestPub ( uri+std::to_string ( 12345 ) );
-    if ( zpub->open_pipe ( "Test_pos_2" ) == 0 ) {
+    if ( zpub->open_pipe ( "Test_pos_1" ) == 0 ) {
         zmap[base_port] = zpub;
     } else {
         delete zpub;

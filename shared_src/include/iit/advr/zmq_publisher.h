@@ -214,6 +214,8 @@ class ZMQ_Pub_thread : public Thread_hook {
     typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx> McPub;
     typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
     typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
+    
+    typedef Publisher<iit::advr::Ec_slave_pdo> EcSlavePub;
 
     iit::ecat::stat_t loop_time;
     uint64_t	tNow, dt;

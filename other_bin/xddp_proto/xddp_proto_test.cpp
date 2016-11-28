@@ -83,9 +83,7 @@ public:
         ///////////////////////////////////////////////////////////////////////
         // read from NRT
         nbytes = inXddp.xddp_read( msg_size );
-        //nbytes = read ( inXddp.get_fd(), ( void* ) &msg_size, sizeof ( msg_size ) );
         if ( nbytes > 0 ) {
-            //nbytes = read ( inXddp.get_fd(), ( void* ) pb_buf, msg_size );
             nbytes = inXddp.xddp_read ( pb_buf, msg_size );
             pb_msg.ParseFromArray(pb_buf, msg_size);
             std::cout << pb_msg.type() << std::endl;
