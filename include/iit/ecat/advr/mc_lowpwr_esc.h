@@ -153,6 +153,11 @@ public:
 
 protected :
     
+    virtual bool am_i_HpESC() { return false; }
+
+    virtual bool am_i_LpESC() { return true; }
+
+    
     virtual void on_readPDO ( void ) {
 
         if ( rx_pdo.rtt ) {
@@ -318,9 +323,7 @@ public:
         int32_t fault;
         //uint16_t gain;
         float gain;
-        
-        float act_position, test_ref;
-        int32_t fault;
+        float test_ref;
 
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
@@ -472,7 +475,6 @@ public:
         tx_pdo.gain_1 = d_gain;
     }
 #endif
-    virtual int move_to ( float pos_ref, float step ) {
 
     virtual int move_to(float pos_ref, float step) {
     

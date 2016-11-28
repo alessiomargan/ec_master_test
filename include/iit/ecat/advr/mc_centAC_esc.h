@@ -207,6 +207,10 @@ public:
     void init_SDOs ( void );
 
 protected :
+    
+    virtual bool am_i_HpESC() { return true; }
+
+    virtual bool am_i_LpESC() { return false; }
 
     virtual void on_readPDO ( void ) {
         

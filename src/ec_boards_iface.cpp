@@ -330,9 +330,6 @@ void Ec_Boards_ctrl::check_DataLayer ( void ) {
         it->second.get()->readErrReg();
     }
 }
-    
-
-int Ec_Boards_ctrl::set_operative(void) {
 
 int Ec_Boards_ctrl::set_operative ( void ) {
 

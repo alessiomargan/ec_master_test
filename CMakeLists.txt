@@ -40,8 +40,6 @@ add_library(${LIB_NAME} SHARED
     src/mc_centAC_esc.cpp
     src/mc_hipwr_esc.cpp
     src/mc_lowpwr_esc.cpp
-    src/mc_lowpwr_sph_esc.cpp
-    src/mc_lowpwr_sphbrk_esc.cpp
     src/power_board.cpp
     src/power_coman_board.cpp
     src/ft6_esc.cpp

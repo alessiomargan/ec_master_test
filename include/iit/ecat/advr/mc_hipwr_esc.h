@@ -230,10 +230,6 @@ protected :
         return EC_BOARD_OK;
     }
 
-    virtual const objd_t * get_SDOs() { return SDOs;}
-
-    void init_SDOs(void);
-
 public :
     ///////////////////////////////////////////////////////
     ///
