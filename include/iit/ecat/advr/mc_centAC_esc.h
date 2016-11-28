@@ -20,6 +20,7 @@
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
+#include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 
@@ -76,10 +77,16 @@ struct CentAcEscSdoTypes {
     float       torque_read;
     float       board_temp;
     float       motor_temp;
+    
+    // aux pdo
     float       pos_ref_fb;
     float       iq_ref_fb;
     float       iq_out_fb;
-    
+    float       torque_no_average;
+    float       torque_no_calibrated;
+    float       board_temp_fb;
+    float       motor_temp_fb;
+    float       i_batt_fb;
 
 };
 
@@ -210,6 +217,8 @@ protected :
             s_rtt ( rx_pdo.rtt );
         }
 
+        ///////////////////////////////////////////////////
+        // - faults
         if ( rx_pdo.fault & 0x7FFF ) {
             handle_fault();
         } else {
@@ -218,10 +227,13 @@ protected :
         }
 
         ///////////////////////////////////////////////////
-        // apply transformation from Motor to Joint
+        // - transformation from Motor to Joint
         rx_pdo.link_pos = centac_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
         rx_pdo.motor_pos = centac_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
         
+        ///////////////////////////////////////////////////
+        // - pdo_aux 
+        curr_pdo_aux = &pdo_aux_it->second;
         curr_pdo_aux->on_rx(rx_pdo);
         // if pos_ref_fb apply transformation
         if ( curr_pdo_aux->get_idx() == 1 ) {
@@ -249,13 +261,23 @@ protected :
 
         ///////////////////////////////////////////////////
         // - ipc 
-        xddp_write(rx_pdo);
+        xddp_write( rx_pdo );
+        //std::string sz_string;
+        //pb_toString( &sz_string , rx_pdo );
+        //xddp_write( sz_string.c_str() );
+        
     }
 
     virtual void on_writePDO ( void ) {
 
         tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
+        
+        ///////////////////////////////////////////////////
+        // pdo_aux 
+        if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
+        curr_pdo_aux = &pdo_aux_it->second;
         curr_pdo_aux->on_tx(tx_pdo);
+        
         // NOOOOOOOOOOOO
         // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
         //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
@@ -312,10 +334,28 @@ public :
             // !! sgn and offset must set before init_sdo_lookup !!
             init_SDOs();
             init_sdo_lookup();
+            
             pos_ref_fb_aux = PDO_aux(getSDObjd("pos_ref_fb"));
             iq_ref_fb_aux = PDO_aux(getSDObjd("iq_ref_fb"));
             iq_out_fb_aux = PDO_aux(getSDObjd("iq_out_fb"));
-            curr_pdo_aux = &pos_ref_fb_aux;
+            torque_no_average_aux = PDO_aux(getSDObjd("torque_no_average"));
+            torque_no_calibrated_aux = PDO_aux(getSDObjd("torque_no_calibrated"));
+            motor_temp_fb_aux = PDO_aux(getSDObjd("motor_temp_fb"));
+            board_temp_fb_aux = PDO_aux(getSDObjd("board_temp_fb"));
+            i_batt_fb_aux = PDO_aux(getSDObjd("i_batt_fb"));
+            // fill map, select which aux  
+            pdo_auxes_map["pos_ref_fb"] = pos_ref_fb_aux;
+            //pdo_auxes_map["iq_ref_fb"] = iq_ref_fb_aux;
+            //pdo_auxes_map["iq_out_fb"] = iq_out_fb_aux;
+            //pdo_auxes_map["torque_no_average"] = torque_no_average_aux;
+            //pdo_auxes_map["torque_no_calibrated"] = torque_no_calibrated_aux;
+            //pdo_auxes_map["motor_temp_fb"] = motor_temp_fb_aux;
+            //pdo_auxes_map["board_temp_fb"] = board_temp_fb_aux;
+            //pdo_auxes_map["i_batt_fb"] = i_batt_fb_aux;
+            
+            pdo_aux_it = pdo_auxes_map.begin();
+            curr_pdo_aux = &pdo_aux_it->second; //&pos_ref_fb_aux;
+            
             readSDO_byname ( "Joint_robot_id", Joint_robot_id );
             readSDO_byname ( "Serial_Number_A" );
             readSDO_byname ( "m3_fw_ver" );
@@ -633,6 +673,29 @@ private:
 
         return EC_WRP_OK;
     }
+    
+    void pb_toString( std::string * pb_str , const pdo_rx_t _pdo_rx) {
+            static struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            // Header
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
+            // Type
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_XT_MOTOR);
+            // Motor_xt_tx_pdo
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(_pdo_rx.link_pos);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(_pdo_rx.motor_pos);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_vel((float)_pdo_rx.link_vel/1000);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel((float)_pdo_rx.motor_vel/1000);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque(_pdo_rx.torque);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(_pdo_rx.temperature);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(_pdo_rx.fault);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_rtt(_pdo_rx.rtt);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_op_idx_ack(_pdo_rx.op_idx_ack);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_aux(_pdo_rx.aux);
+            pb_rx_pdo.SerializeToString(pb_str);
+        }
+
 
     int16_t Joint_robot_id;
 
@@ -645,12 +708,20 @@ private:
 
     objd_t * SDOs;
     
+    iit::advr::Ec_slave_pdo pb_rx_pdo;
+            
     PDO_aux *   curr_pdo_aux;
     PDO_aux     pos_ref_fb_aux;
     PDO_aux     iq_ref_fb_aux;
     PDO_aux     iq_out_fb_aux;
+    PDO_aux     torque_no_average_aux;
+    PDO_aux     torque_no_calibrated_aux;
+    PDO_aux     motor_temp_fb_aux;
+    PDO_aux     board_temp_fb_aux;
+    PDO_aux     i_batt_fb_aux;
     
-    std::vector<PDO_aux>     pdo_auxes;
+    std::map<std::string,PDO_aux>           pdo_auxes_map;
+    std::map<std::string,PDO_aux>::iterator pdo_aux_it;
 };
 
 

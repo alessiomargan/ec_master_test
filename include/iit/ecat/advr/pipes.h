@@ -59,19 +59,18 @@ public:
 #endif
     }
 
-    template<class XddpTxTypes>
+    template<typename XddpTxTypes>
     int xddp_write ( const XddpTxTypes & tx ) {
-        //char buff[pool_size];
-
-        if ( fd <= 0 ) {
-            return 0;
-        }
-        //tx.sprint(buff,sizeof(buff));
-        //printf("%s\n", buff);
+        if ( fd <= 0 ) { return 0; }
         return write ( fd, ( void* ) &tx, sizeof ( tx ) );
     }
 
-    template<class XddpRxTypes>
+    int xddp_write ( const uint8_t * buffer, int size ) {
+        if ( fd <= 0 ) { return 0; }
+        return write ( fd, ( void* ) buffer, size );
+    }
+
+    template<typename XddpRxTypes>
     int xddp_read ( const XddpRxTypes & rx ) {
 
         if ( fd <= 0 ) { return 0; }

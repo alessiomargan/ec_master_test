@@ -10,14 +10,14 @@ static const iit::ecat::objd_t source_SDOs[] = {
     // SD0 0x6000
     { 0x6000, 1, DTYPE_REAL32,          32, ATYPE_RO, "link_pos",   0},
     { 0x6000, 2, DTYPE_REAL32,          32, ATYPE_RO, "motor_pos",  0},
-    { 0x6000, 3, DTYPE_REAL32,          32, ATYPE_RO, "link_vel",   0},
 #ifdef FLOAT_PDO
-    { 0x6000, 4, DTYPE_REAL32,       16, ATYPE_RO, "motor_vel",      0},
-    { 0x6000, 5, DTYPE_REAL32,       16, ATYPE_RO, "torque",     0},
+    { 0x6000, 3, DTYPE_REAL32,          32, ATYPE_RO, "link_vel",   0},
+    { 0x6000, 4, DTYPE_REAL32,          32, ATYPE_RO, "motor_vel",  0},
 #else
+    { 0x6000, 3, DTYPE_INTEGER16,       16, ATYPE_RO, "link_vel",   0},
     { 0x6000, 4, DTYPE_INTEGER16,       16, ATYPE_RO, "motor_vel",  0},
-    { 0x6000, 5, DTYPE_INTEGER16,       16, ATYPE_RO, "torque",     0},
 #endif
+    { 0x6000, 5, DTYPE_REAL32,          32, ATYPE_RO, "torque",     0},
     { 0x6000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RO, "temperature",0},
     { 0x6000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RO, "fault",      0},
     { 0x6000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RO, "rtt",        0},
@@ -85,6 +85,11 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8002, 1, DTYPE_REAL32,      32, ATYPE_RO, "pos_ref_fb",                 0},
     { 0x8002, 2, DTYPE_REAL32,      32, ATYPE_RO, "iq_ref_fb",                  0},
     { 0x8002, 3, DTYPE_REAL32,      32, ATYPE_RO, "iq_out_fb",                  0},
+    { 0x8002, 4, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_average",          0},
+    { 0x8002, 5, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_calibrated",       0},
+    { 0x8002, 6, DTYPE_REAL32,      32, ATYPE_RO, "board_temp_fb",              0},
+    { 0x8002, 7, DTYPE_REAL32,      32, ATYPE_RO, "motor_temp_fb",              0},
+    { 0x8002, 8, DTYPE_REAL32,      32, ATYPE_RO, "i_batt_fb",                  0},
 
     {0, 0, 0, 0, 0, 0, 0 }
 
@@ -163,6 +168,11 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.pos_ref_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_ref_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_out_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.torque_no_average;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.torque_no_calibrated;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.board_temp_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.motor_temp_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.i_batt_fb;
     
     // end marker
     SDOs[i++].data = 0;

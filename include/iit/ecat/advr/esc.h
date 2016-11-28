@@ -131,7 +131,7 @@ typedef std::map<std::string, std::string> jmap_t;
 
 struct McEscPdoTypes {
     
-        // TX  slave_input -- master output
+    // TX  slave_input -- master output
     struct pdo_tx {
         float       pos_ref;    //link
         float       vel_ref;    //link
@@ -235,7 +235,7 @@ struct McEscPdoTypes {
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(link_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(motor_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_vel(link_vel);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel(link_vel);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel(motor_vel);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque(torque);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(temperature);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(fault);
@@ -254,14 +254,14 @@ struct McEscPdoTypes {
                     
     // TX  slave_input -- master output
     struct pdo_tx {
-        float       pos_ref;    //link
-        int16_t     vel_ref;    //link
-        int16_t     tor_ref;    //link
-        uint16_t    gain_0;     //kp_m  ImpPosP 
-        uint16_t    gain_1;     //kp_l  ImpTorP
-        uint16_t    gain_2;     //kd_m  ImpPosD
-        uint16_t    gain_3;     //kd_l  ImpTorD
-        uint16_t    gain_4;     //ki    ImpTorI
+        float       pos_ref;    // rad   
+        int16_t     vel_ref;    // mrad/s 
+        int16_t     tor_ref;    // mNm
+        uint16_t    gain_0;      
+        uint16_t    gain_1;     
+        uint16_t    gain_2;     
+        uint16_t    gain_3;     
+        uint16_t    gain_4;     
         uint16_t    fault_ack;
         uint16_t    ts;
         uint16_t    op_idx_aux;  // op [get/set] , idx
@@ -296,23 +296,23 @@ struct McEscPdoTypes {
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        float        link_pos;           // rad
-        float        motor_pos;          // rad
-        float        link_vel;           // rad TBD on the firmware 
-        int16_t      motor_vel;          // rad/s
-        int16_t      torque;             // Nm*100
-        uint16_t     temperature;        // C
+        float        link_pos;          // rad
+        float        motor_pos;         // rad
+        int16_t      link_vel;          // mrad/s 
+        int16_t      motor_vel;         // mrad/s
+        float        torque;            // Nm
+        uint16_t     temperature;       // C
         uint16_t     fault;
-        uint16_t     rtt;                // us
-        uint16_t     op_idx_ack;         // op [ack/nack] , idx
-        float        aux;                // get value or nack erro code
+        uint16_t     rtt;               // us
+        uint16_t     op_idx_ack;        // op [ack/nack] , idx
+        float        aux;               // get value or nack erro code
 
         std::ostream& dump ( std::ostream& os, const std::string delim ) const {
             os << link_pos << delim;
             os << motor_pos << delim;
-            os << link_vel << delim;
-            os << motor_vel << delim;
-            os << (float)torque/100 << delim;
+            os << (float)link_vel/1000 << delim;
+            os << (float)motor_vel/1000 << delim;
+            os << torque << delim;
             os << temperature << delim;
             os << fault << delim;
             os << rtt << delim;
@@ -334,9 +334,9 @@ struct McEscPdoTypes {
         void to_map ( jmap_t & jpdo ) {
             JPDO ( link_pos );
             JPDO ( motor_pos );
-            JPDO ( link_vel );
-            JPDO ( motor_vel );
-            JPDO ( (float)torque/100 );
+            JPDO ( (float)link_vel/1000 );
+            JPDO ( (float)motor_vel/1000 );
+            JPDO ( torque );
             JPDO ( temperature );
             JPDO ( fault );
             JPDO ( rtt );
@@ -355,9 +355,9 @@ struct McEscPdoTypes {
             // Motor_xt_tx_pdo
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(link_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(motor_pos);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_vel(link_vel);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel(link_vel);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque((float)torque/100);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_vel((float)link_vel/1000);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel((float)motor_vel/1000);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque(torque);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(temperature);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(fault);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_rtt(rtt);

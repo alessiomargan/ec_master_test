@@ -10,7 +10,9 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/advr/pipes.h>
+#include <iit/ecat/utils.h>
 #include <protobuf/ecat_pdo.pb.h>
+
 
 #include <map>
 #include <string>
@@ -23,7 +25,7 @@ namespace advr {
 
 struct TestEscPdoTypes {
     
-        // TX  slave_input -- master output
+    // TX  slave_input -- master output
     struct pdo_tx {
         float       pos_ref;    //link
         float       vel_ref;    //link
@@ -113,7 +115,6 @@ struct TestEscPdoTypes {
             JPDO ( rtt );
             JPDO ( op_idx_ack );
             JPDO ( aux );
-            
         }
         void pb_toString( std::string * pb_str ) {
             static iit::advr::Ec_slave_pdo pb_rx_pdo;
@@ -128,7 +129,7 @@ struct TestEscPdoTypes {
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(link_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(motor_pos);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_vel(link_vel);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel(link_vel);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel(motor_vel);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque(torque);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(temperature);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(fault);
@@ -139,7 +140,7 @@ struct TestEscPdoTypes {
         }
     }  __attribute__ ( ( __packed__ ) ); // 32 bytes
 
-}; // 56 bytes
+}; // 74 bytes
 
 /*
 template <typename T>
@@ -159,42 +160,21 @@ inline std::ostream& operator<< (std::ostream& os, const TestEscPdoTypes::pdo_rx
 
 struct TestEscSdoTypes {
     
-    // 0x8001 flash param
-    float   PosGainP;
-    float   PosGainI;
-    float   PosGainD;
-    float   TorGainP;
-    float   TorGainI;
-    float   TorGainD;
-    float   Pos_I_lim;
-    float   Tor_I_lim;
-    float   Min_pos;
-    float   Max_pos;
-    float   Max_tor;
-    float   Max_cur;
-    int16_t ConfigFlags;
-    int16_t ConfigFlags2;
-    float   ImpedancePosGainP;
-    float   ImpedancePosGainD;
-    int     MaxPWM;
-    int16_t Joint_number;
-    int16_t Joint_robot_id;
-    float   Target_velocity;
-    // 0x8002 ram param
-    char fw_ver[8];
-    unsigned int ack_board_faults;
-    unsigned short ctrl_status_cmd;
-    unsigned short ctrl_status_cmd_ack;
-    float direct_ref;
-    float abs_pos;
-    float m_current;
-    unsigned short flash_params_cmd;
-    unsigned short flash_params_cmd_ack;
+    // 0x8000 flash param
+    uint32_t    board_id;
+    // 0x8001 ram param
+    char        fw_ver[8];
+    uint16_t    ctrl_status_cmd;
+    uint16_t    ctrl_status_cmd_ack;
+    uint16_t    flash_params_cmd;
+    uint16_t    flash_params_cmd_ack;
+    uint16_t    ack_board_faults;
     // 0x8002 aux param
-    float volt_ref;
-    float current;
-    float vout;
-    float pos_ref_fb;
+    float       volt_ref;
+    float       current;
+    float       vout;
+    float       pos_ref_fb;
+    float       pwm_duty;
     
 };
 
@@ -238,11 +218,11 @@ public:
     }
 
     void print_info ( void ) {
-        DPRINTF ( "\tJoint id %d\tJoint robot id %d\n", sdo.Joint_number, sdo.Joint_robot_id );
-        DPRINTF ( "\tmin pos %f\tmax pos %f\tmax vel %f\n", sdo.Min_pos, sdo.Max_pos, sdo.Target_velocity );
-        DPRINTF ( "\tPosGainP: %f PosGainI: %f PosGainD: %f I lim: %f\n", sdo.PosGainP, sdo.PosGainI, sdo.PosGainD, sdo.Pos_I_lim );
-        DPRINTF ( "\tImpPosGainP :%f ImpPosGainD:%f\n", sdo.ImpedancePosGainP, sdo.ImpedancePosGainD );
-        DPRINTF ( "\tTorGainP:%f TorGainI:%f Tor_I_lim:%f\n", sdo.TorGainP, sdo.TorGainI, sdo.Tor_I_lim );
+//         DPRINTF ( "\tJoint id %d\tJoint robot id %d\n", sdo.Joint_number, sdo.Joint_robot_id );
+//         DPRINTF ( "\tmin pos %f\tmax pos %f\tmax vel %f\n", sdo.Min_pos, sdo.Max_pos, sdo.Target_velocity );
+//         DPRINTF ( "\tPosGainP: %f PosGainI: %f PosGainD: %f I lim: %f\n", sdo.PosGainP, sdo.PosGainI, sdo.PosGainD, sdo.Pos_I_lim );
+//         DPRINTF ( "\tImpPosGainP :%f ImpPosGainD:%f\n", sdo.ImpedancePosGainP, sdo.ImpedancePosGainD );
+//         DPRINTF ( "\tTorGainP:%f TorGainI:%f Tor_I_lim:%f\n", sdo.TorGainP, sdo.TorGainI, sdo.Tor_I_lim );
         DPRINTF ( "\tfw_ver %s\n", std::string((const char *)sdo.fw_ver,8).c_str() );
     }
 
@@ -260,6 +240,13 @@ public:
             tx_pdo.fault_ack = 0;
         }
 
+        ///////////////////////////////////////////////////
+        // - pdo_aux 
+        curr_pdo_aux = &pdo_aux_it->second;
+        curr_pdo_aux->on_rx(rx_pdo);
+        
+        ///////////////////////////////////////////////////
+        // - logging 
         if ( _start_log ) {
             Log::log_t log;
             log.ts = get_time_ns() - _start_log_ts ;
@@ -267,15 +254,24 @@ public:
             push_back ( log );
         }
 
-        //PDO_aux(getSDObjd("pos_ref_fb")).on_rx(rx_pdo);
-        //PDO_aux(getSDObjd("volt_ref")).on_rx(rx_pdo);
+        ///////////////////////////////////////////////////
+        // - ipc 
+        xddp_write( rx_pdo );
+        //std::string sz_string;
+        //pb_toString( &sz_string , rx_pdo );
+        //xddp_write( sz_string.c_str() );
+
 
     }
 
     virtual void on_writePDO ( void ) {
         tx_pdo.ts = get_time_ns() / 1000;
-        //
-        //PDO_aux(getSDObjd("pos_ref_fb")).on_tx(tx_pdo);
+
+        ///////////////////////////////////////////////////
+        // pdo_aux 
+        if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
+        curr_pdo_aux = &pdo_aux_it->second;
+        curr_pdo_aux->on_tx(tx_pdo);
     }
 
     virtual const objd_t * get_SDOs() {
@@ -293,6 +289,21 @@ public:
 
             init_SDOs();
             init_sdo_lookup();
+            
+            pos_ref_fb_aux = PDO_aux(getSDObjd("pos_ref_fb"));
+            volt_ref_fb_aux = PDO_aux(getSDObjd("volt_ref_fb"));
+            vout_fb_aux = PDO_aux(getSDObjd("vout_fb"));
+            current_fb_aux = PDO_aux(getSDObjd("current_fb"));
+            pwm_duty_aux = PDO_aux(getSDObjd("pwm_duty"));
+            // fill map, select which aux  
+            pdo_auxes_map["pos_ref_fb"] = pos_ref_fb_aux;
+            pdo_auxes_map["current_fb"] = current_fb_aux;
+            pdo_auxes_map["volt_ref_fb"] = volt_ref_fb_aux;
+            pdo_auxes_map["vout_fb"] = vout_fb_aux;
+            pdo_auxes_map["pwm_duty"] = pwm_duty_aux;
+            
+            pdo_aux_it = pdo_auxes_map.begin();
+            curr_pdo_aux = &pdo_aux_it->second; //&pos_ref_fb_aux;
 
         } catch ( EscWrpError &e ) {
 
@@ -305,21 +316,7 @@ public:
         }
 
         readSDO_byname ( "fw_ver" );
-        readSDO_byname ( "PosGainP");
-        readSDO_byname ( "PosGainI");
-        readSDO_byname ( "PosGainD");
         
-#if 0
-        readSDO_byname ( "Min_pos" );
-        readSDO_byname ( "Max_pos" );
-        readSDO_byname ( "link_pos" );
-        readSDO_byname ( "Pos_I_lim");
-        readSDO_byname ( "ImpPosGainP");
-        readSDO_byname ( "ImpPosGainD");
-        readSDO_byname ( "TorGainP");
-        readSDO_byname ( "TorGainI");
-        readSDO_byname ( "Tor_I_lim");
-#endif
         // Should be better to start logging when enter OP ....
         start_log ( true );
 
@@ -331,10 +328,46 @@ public:
 
 
 private:
+    
+    void pb_toString( std::string * pb_str , const pdo_rx_t _pdo_rx) {
+        static struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        // Header
+        pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+        pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
+        // Type
+        pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_XT_MOTOR);
+        // Motor_xt_tx_pdo
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(_pdo_rx.link_pos);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(_pdo_rx.motor_pos);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_vel((float)_pdo_rx.link_vel/1000);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel((float)_pdo_rx.motor_vel/1000);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque(_pdo_rx.torque);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(_pdo_rx.temperature);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(_pdo_rx.fault);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_rtt(_pdo_rx.rtt);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_op_idx_ack(_pdo_rx.op_idx_ack);
+        pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_aux(_pdo_rx.aux);
+        pb_rx_pdo.SerializeToString(pb_str);
+    }
+
 
     objd_t * SDOs;
 
     stat_t  s_rtt;
+    
+    iit::advr::Ec_slave_pdo pb_rx_pdo;
+            
+    PDO_aux *   curr_pdo_aux;
+    PDO_aux     pos_ref_fb_aux;
+    PDO_aux     volt_ref_fb_aux;
+    PDO_aux     vout_fb_aux;
+    PDO_aux     current_fb_aux;
+    PDO_aux     pwm_duty_aux;
+    
+    std::map<std::string,PDO_aux>           pdo_auxes_map;
+    std::map<std::string,PDO_aux>::iterator pdo_aux_it;
+
 
 };
 
