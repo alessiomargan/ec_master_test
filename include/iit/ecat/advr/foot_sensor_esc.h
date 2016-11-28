@@ -1,63 +1,50 @@
 /*
- * ft6_esc.h
+ *  ft6_esc.h
+ *      
+ *  Foot Sensor Board (grid 16 x 8)
  * 
- *  Force Toruqe sensor
- *  based on TI tm4c123AH6PM - Tiva Microcontroller
- *  
- *  http://www.ti.com/product/tm4c123ah6pm
- *  
- *  Created on: Jan 2015
- *      Author: alessio margan
+ *  Created on: Apr 2016
+ *      Author: Luca Muratore
+ *      E-mail: luca.muratore@iit.it 
  */
 
-#ifndef __IIT_ECAT_ADVR_FT6_ESC_H__
-#define __IIT_ECAT_ADVR_FT6_ESC_H__
+#ifndef __IIT_ECAT_ADVR_FOOT_SENSOR_ESC_H__
+#define __IIT_ECAT_ADVR_FOOT_SENSOR_ESC_H__
 
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
+#include <protobuf/ecat_pdo.pb.h>
+
 #include <map>
+#include <iostream>
+
+#define SENSOR_NUMBER 128
 
 namespace iit {
 namespace ecat {
 namespace advr {
 
 
-struct Ft6EscPdoTypes {
-    
+struct FootSensorEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
         uint16_t    ts;
-        
-        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
-            os << ts << delim;
-            //os << std::endl;
-            return os;
-        }
-
     }  __attribute__ ( ( __packed__ ) );
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        float       force_X;            // N
-        float       force_Y;            // N
-        float       force_Z;            // N
-        float       torque_X;           // Nm
-        float       torque_Y;           // Nm
-        float       torque_Z;           // Nm
-        uint16_t    fault;
-        uint16_t    rtt;                // ns
+        uint8_t    forceXY[SENSOR_NUMBER];
+        uint16_t   fault;
+        uint16_t   rtt;                
         
         std::ostream& dump ( std::ostream& os, const std::string delim ) const {
-            os << force_X << delim;
-            os << force_Y << delim;
-            os << force_Z << delim;
-            os << torque_X << delim;
-            os << torque_Y << delim;
-            os << torque_Z << delim;
-            os << fault << delim;
+            for (int i=0; i<SENSOR_NUMBER; i++) {
+                os << (unsigned)forceXY[i] << delim;
+            }
+            os << std::hex << fault << std::dec << delim;
             os << rtt << delim;
             //os << std::endl;
             return os;
@@ -72,54 +59,44 @@ struct Ft6EscPdoTypes {
             dump(oss,"\t");
             return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
+
         void to_map ( jmap_t & jpdo ) {
-            JPDO ( force_X );
-            JPDO ( force_Y );
-            JPDO ( force_Z );
-            JPDO ( torque_X );
-            JPDO ( torque_Y );
-            JPDO ( torque_Z );
+            for(int i = 0; i < SENSOR_NUMBER; i++) {
+                jpdo["forceXY_"+std::to_string(i)] = std::to_string( forceXY[i] );
+            }
             JPDO ( fault );
             JPDO ( rtt );
         }
         void pb_toString( std::string * pb_str ) {
-            static iit::advr::Ec_slave_pdo pb_rx_pdo;
+            // !!! NO static declaration
+            iit::advr::Ec_slave_pdo pb_rx_pdo;
             static struct timespec ts;
             clock_gettime(CLOCK_MONOTONIC, &ts);
             // Header
             pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
             pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
-            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_FT6);
-            // FT6_rx_pdo
-            pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_x(force_X);
-            pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_y(force_Y);
-            pb_rx_pdo.mutable_ft6_rx_pdo()->set_force_z(force_Z);
-            pb_rx_pdo.mutable_ft6_rx_pdo()->set_torque_x(torque_X);
-            pb_rx_pdo.mutable_ft6_rx_pdo()->set_torque_y(torque_Y);
-            pb_rx_pdo.mutable_ft6_rx_pdo()->set_torque_z(torque_Z);
-            pb_rx_pdo.mutable_ft6_rx_pdo()->set_fault(fault);
-            pb_rx_pdo.mutable_ft6_rx_pdo()->set_rtt(rtt);
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_FOOT_SENS);
+            // footWalkman_rx_pdo
+            pb_rx_pdo.mutable_footwalkman_rx_pdo()->set_fault(fault);
+            pb_rx_pdo.mutable_footwalkman_rx_pdo()->set_rtt(rtt);
+            //for (int i=0; i<SENSOR_NUMBER; i++) { pb_rx_pdo.mutable_footwalkman_rx_pdo()->set_forcexy(i,(unsigned)forceXY[i]); }
+            //pb_rx_pdo.mutable_footwalkman_rx_pdo()->clear_forcexy();
+            for (int i=0; i<SENSOR_NUMBER; i++) { pb_rx_pdo.mutable_footwalkman_rx_pdo()->add_forcexy((unsigned)forceXY[i]); }
+            //std::cout << "FootXY " << pb_rx_pdo.mutable_footwalkman_rx_pdo()->forcexy_size() << std::endl;
             pb_rx_pdo.SerializeToString(pb_str);
         }
 
     }  __attribute__ ( ( __packed__ ) );
 };
 
-inline std::ostream& operator<< (std::ostream& os, const Ft6EscPdoTypes::pdo_tx& tx_pdo ) {
-    return tx_pdo.dump(os,"\t");
-}
 
-inline std::ostream& operator<< (std::ostream& os, const Ft6EscPdoTypes::pdo_rx& rx_pdo ) {
-    return rx_pdo.dump(os,"\t");
-}
-
-struct Ft6EscSdoTypes {
+struct FootSensorEscSdoTypes {
 
     // flash
 
     unsigned long Block_control;
-    long NumAvSamples;   
+    long NumAvSamples;
 
     unsigned long calibration_offset0;
     unsigned long calibration_offset1;
@@ -152,45 +129,27 @@ struct Ft6EscSdoTypes {
     uint16_t    flash_params_cmd_ack;
 };
 
-struct Ft6LogTypes {
-
-    uint64_t                ts;     // ns
-    Ft6EscPdoTypes::pdo_rx  rx_pdo;
-
-    void fprint ( FILE *fp ) {
-        fprintf ( fp, "%lu\t", ts );
-        rx_pdo.fprint ( fp );
-    }
-    int sprint ( char *buff, size_t size ) {
-        int l = snprintf ( buff, size, "%lu\t", ts );
-        return l + rx_pdo.sprint ( buff+l,size-l );
-    }
-};
-
-
 /**
-*  
-**/ 
+*
+**/
 
-class Ft6ESC :
-    public BasicEscWrapper<Ft6EscPdoTypes, Ft6EscSdoTypes>,
-    public PDO_log<Ft6LogTypes>,
+class FootSensorESC :
+    public BasicEscWrapper<FootSensorEscPdoTypes, FootSensorEscSdoTypes>,
+    public PDO_log<FootSensorEscPdoTypes::pdo_rx>,
     public XDDP_pipe
 {
 public:
-    typedef BasicEscWrapper<Ft6EscPdoTypes,Ft6EscSdoTypes>   Base;
-    typedef PDO_log<Ft6LogTypes>                             Log;
+    typedef BasicEscWrapper<FootSensorEscPdoTypes,FootSensorEscSdoTypes>       Base;
+    typedef PDO_log<FootSensorEscPdoTypes::pdo_rx>                             Log;
 
 public:
-    Ft6ESC ( const ec_slavet& slave_descriptor ) :
+    FootSensorESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
-        Log ( std::string ( "/tmp/Ft6ESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
+        Log ( std::string ( "/tmp/FootSensorESC_pos"+std::to_string ( position ) +"_log.txt" ),DEFAULT_LOG_SIZE ),
         XDDP_pipe ()
-    { 
-        _start_log = false;
-    }
+    { }
 
-    virtual ~Ft6ESC ( void ) {
+    virtual ~FootSensorESC ( void ) {
         delete [] SDOs;
         DPRINTF ( "~%s pos %d\n", typeid ( this ).name(), position );
         print_stat ( s_rtt );
@@ -203,7 +162,7 @@ public:
     }
     virtual void init_SDOs ( void );
     virtual uint16_t get_ESC_type() {
-        return FT6;
+        return FOOT_SENSOR;
     }
 
     virtual void on_writePDO ( void ) {
@@ -227,8 +186,9 @@ public:
 
         if ( _start_log ) {
             Log::log_t log;
-            log.ts      = get_time_ns() - _start_log_ts ;
-            log.rx_pdo  = rx_pdo;
+            memcpy(log.forceXY, rx_pdo.forceXY, sizeof(rx_pdo.forceXY));
+            log.fault       = rx_pdo.fault;
+            log.rtt         = rx_pdo.rtt;
             push_back ( log );
         }
         
@@ -265,7 +225,7 @@ public:
 #if 0
         if ( robot_id > 0 ) {
             try {
-                std::string esc_conf_key = std::string ( "Ft6ESC_"+std::to_string ( robot_id ) );
+                std::string esc_conf_key = std::string ( "FootSensorESC_"+std::to_string ( robot_id ) );
                 const YAML::Node& esc_conf = root_cfg[esc_conf_key];
                 if ( esc_conf.Type() != YAML::NodeType::Null ) {
                 }
@@ -276,13 +236,13 @@ public:
         }
 #endif
         // set filename with robot_id
-        log_filename = std::string ( "/tmp/Ft6ESC_"+std::to_string ( sdo.sensor_robot_id ) +"_log.txt" );
+        log_filename = std::string ( "/tmp/FootSensorESC_"+std::to_string ( sdo.sensor_robot_id ) +"_log.txt" );
 
         // we log when receive PDOs
         start_log ( true );
 
-        XDDP_pipe::init( "Ft_id_"+std::to_string ( get_robot_id() ) );
-        
+        XDDP_pipe::init ( "Foot_id_"+std::to_string ( get_robot_id() ) );
+            
         return EC_BOARD_OK;
 
     }
@@ -306,9 +266,9 @@ private:
 };
 
 
-typedef std::map<int, Ft6ESC*>  FtSlavesMap;
+typedef std::map<int, FootSensorESC*>  FootSensorSlavesMap;
 
-inline int Ft6ESC::set_cal_matrix ( std::vector<std::vector<float>> &cal_matrix ) {
+inline int FootSensorESC::set_cal_matrix ( std::vector<std::vector<float>> &cal_matrix ) {
     int     res = 0;
     int16_t ack;
     int16_t flash_row_cmd = 0x00C7;
@@ -339,4 +299,4 @@ inline int Ft6ESC::set_cal_matrix ( std::vector<std::vector<float>> &cal_matrix 
 }
 }
 }
-#endif /* __IIT_ECAT_ADVR_FT6_ESC_H__ */
+#endif /* __IIT_ECAT_ADVR_FOOT_SENSOR_ESC_H__ */

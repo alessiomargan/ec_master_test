@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package iit.advr;
+
+message FootWalkman_tx_pdo {
+    required uint32 ts      = 1;
+}
+
+message FootWalkman_rx_pdo {
+
+    required uint32 fault   = 1;
+    required uint32 rtt     = 2;
+    repeated uint32 forceXY = 3 [packed=true];
+}
+
+
+

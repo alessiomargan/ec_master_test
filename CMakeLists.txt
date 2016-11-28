@@ -19,6 +19,8 @@ else ()
     set(LIB_TYPE _nrt)
 endif()
 
+add_subdirectory(protobuf)
+
 #######################
 ## libwalkman_master
 #######################
@@ -35,6 +37,7 @@ include_directories(${soem${LIB_TYPE}_INCLUDE_DIRS}
 
 add_library(${LIB_NAME} SHARED
     src/ec_boards_iface.cpp
+    src/mc_centAC_esc.cpp
     src/mc_hipwr_esc.cpp
     src/mc_lowpwr_esc.cpp
     src/mc_lowpwr_sph_esc.cpp
@@ -42,6 +45,7 @@ add_library(${LIB_NAME} SHARED
     src/power_board.cpp
     src/power_coman_board.cpp
     src/ft6_esc.cpp
+    src/foot_sensor_esc.cpp
     src/test_esc.cpp
 )
 

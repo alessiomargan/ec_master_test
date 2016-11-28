@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package iit.advr;
+
+message FT6_tx_pdo {
+    required uint32 ts          = 1;
+}
+
+message FT6_rx_pdo {
+    required float  force_x     = 1;
+    required float  force_y     = 2;
+    required float  force_z     = 3;
+    required float  torque_x    = 4;
+    required float  torque_y    = 5;
+    required float  torque_z    = 6;
+    required uint32 fault       = 7;
+    required uint32 rtt         = 8;
+}

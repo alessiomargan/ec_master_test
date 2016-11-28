@@ -1,0 +1,54 @@
+syntax = "proto2";
+
+package iit.advr;
+
+message Motor_tx_pdo {
+    required float  pos_ref     = 1;
+    required uint32 fault_ack   = 2;
+    required int32  gainP       = 3;
+    required int32  gainD       = 4;
+    required uint32 ts          = 5;
+}
+
+message Motor_rx_pdo {
+    required float  link_pos    = 1;
+    required float  motor_pos   = 2;
+    required float  pos_ref_fb  = 3;
+    required uint32 temperature = 4;
+    required int32  torque      = 5;
+    required uint32 fault       = 6;
+    required uint32 rtt         = 7;
+}
+
+
+message Motor_xt_tx_pdo {
+    required float  pos_ref     = 1;
+    required float  vel_ref     = 2;
+    required float  tor_ref     = 3;
+    required float gain_0      = 4;
+    required float gain_1      = 5;
+    required float gain_2      = 6;
+    required float gain_3      = 7;
+    required float gain_4      = 8;
+    required uint32 fault_ack   = 9;
+    required uint32 ts          = 10;
+    optional uint32 op_idx_aux  = 11;
+    optional float  aux         = 12;
+}
+
+
+message Motor_xt_rx_pdo {
+    required float  link_pos    = 1;
+    required float  motor_pos   = 2;
+    required float  link_vel    = 3;
+    required float  motor_vel   = 4;
+    required float  torque      = 5;
+    required uint32 temperature = 6;
+    required uint32 fault       = 7;
+    required uint32 rtt         = 8;
+    optional uint32 op_idx_ack  = 9;
+    optional float  aux         = 10;
+    // aux pdo
+    optional float motor_temp  = 11;
+    optional float board_temp  = 12;
+}

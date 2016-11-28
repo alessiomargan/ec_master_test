@@ -1,6 +1,5 @@
 #include <iit/ecat/advr/mc_lowpwr_esc.h>
 #include <string>
-#include <iostream>
 
 using namespace iit::ecat;
 using namespace iit::ecat::advr;
@@ -108,181 +107,180 @@ static char acName8001_1[] = "fw_ver";
 static char acName8001_2[] = "ack_board_faults";
 static char acName8001_3[] = "ctrl_status_cmd";
 static char acName8001_4[] = "ctrl_status_cmd_ack";
-static char acName8001_5[] = "V_batt";
-static char acName8001_6[] = "T_inv";
-static char acName8001_7[] = "T_mot";
+static char acName8001_5[] = "Direct_ref";
+static char acName8001_6[] = "Abs_Pos";
+static char acName8001_7[] = "M_Current";
 static char acName8001_8[] = "flash_params_cmd";
 static char acName8001_9[] = "flash_params_cmd_ack";
+
 
 //template<class EscPDOTypes, class EscSDOTypes>
 //typename BasicEscWrapper<EscPDOTypes, EscSDOTypes>::sdo_t    BasicEscWrapper<EscPDOTypes, EscSDOTypes>::sdo;
 
-static const iit::ecat::objd_t source_SDOs[] =
-{
+static const iit::ecat::objd_t source_SDOs[] = {
 
     // SD0 0x6000
-    { 0X6000, 0x1, DTYPE_REAL32,        32,  ATYPE_RO,   "link_pos"                 ,0     },
-    { 0X6000, 0x2, DTYPE_REAL32,        32,  ATYPE_RO,   "motor_pos"                ,0     },
-    { 0X6000, 0x3, DTYPE_REAL32,        32,  ATYPE_RO,   "link_vel"                 ,0     },
-    { 0X6000, 0x4, DTYPE_INTEGER16,     16,  ATYPE_RO,   "motor_vel"                ,0     },
-    { 0X6000, 0x5, DTYPE_INTEGER16,     16,  ATYPE_RO,   "torque"                   ,0     },
-    { 0X6000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "max_temperature"          ,0     },
-    { 0X6000, 0x7, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "fault"                    ,0     },
-    { 0X6000, 0x8, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "rtt"                      ,0     },
-    { 0X6000, 0x9, DTYPE_UNSIGNED16,    16,  ATYPE_RO,   "op_idx_ack"               ,0     },
-    { 0X6000, 0xa, DTYPE_REAL32,        32,  ATYPE_RO,   "aux"                      ,0     },
-    
-    // SD0 0x7000                                                                         
-    { 0X7000, 0x1, DTYPE_REAL32,        32,  ATYPE_RW,   "pos_ref"                  ,0     },
-    { 0X7000, 0x2, DTYPE_INTEGER16,     16,  ATYPE_RW,   "vel_ref"                  ,0     }, 
-    { 0X7000, 0x3, DTYPE_INTEGER16,     16,  ATYPE_RW,   "tor_ref"                  ,0     },
-    { 0X7000, 0x4, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gains1"                   ,0     },
-    { 0X7000, 0x5, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gains2"                   ,0     },
-    { 0X7000, 0x6, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gains3"                   ,0     },
-    { 0X7000, 0x7, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gains4"                   ,0     },
-    { 0X7000, 0x8, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "gains5"                   ,0     },
-    { 0X7000, 0x9, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "fault_ack"                ,0     },  
-    { 0X7000, 0xa, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "ts"                       ,0     },  
-    { 0X7000, 0xb, DTYPE_UNSIGNED16,    16,  ATYPE_RW,   "op_idx_aux"               ,0     },
-    { 0X7000, 0xc, DTYPE_REAL32,        32,  ATYPE_RW,   "rtt"                      ,0     },
+    { 0x6000, 1, DTYPE_REAL32,          32, ATYPE_RO, "link_pos",       0},
+    { 0x6000, 2, DTYPE_REAL32,          32, ATYPE_RO, "motor_pos",      0},
+    { 0x6000, 3, DTYPE_REAL32,          32, ATYPE_RO, "link_vel",       0},
+    { 0x6000, 4, DTYPE_INTEGER16,       16, ATYPE_RO, "motor_vel",      0},
+    { 0x6000, 5, DTYPE_INTEGER16,       16, ATYPE_RO, "torque",     0},
+    { 0x6000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RO, "temperature",        0},
+    { 0x6000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RO, "fault",      0},
+    { 0x6000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RO, "rtt",        0},
+    { 0x6000, 9, DTYPE_UNSIGNED16,      16, ATYPE_RO, "op_idx_ack",     0},
+    { 0x6000, 10, DTYPE_REAL32,         32, ATYPE_RO, "aux",        0},
+    // SD0 0x7000
+    { 0x7000, 1, DTYPE_REAL32,          32, ATYPE_RW, "pos_ref",        0},
+    { 0x7000, 2, DTYPE_INTEGER16,       16, ATYPE_RW, "vel_ref",        0},
+    { 0x7000, 3, DTYPE_INTEGER16,       16, ATYPE_RW, "tor_ref",        0},
+    { 0x7000, 4, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_0",      0},
+    { 0x7000, 5, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_1",      0},
+    { 0x7000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_2",      0},
+    { 0x7000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_3",      0},
+    { 0x7000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_4",        0},
+    { 0x7000, 9, DTYPE_UNSIGNED16,      16, ATYPE_RW, "fault_ack",      0},
+    { 0x7000, 10, DTYPE_UNSIGNED16,     16, ATYPE_RW, "ts",     0},
+    { 0x7000, 11, DTYPE_UNSIGNED16,     16, ATYPE_RW, "op_idx_aux",     0},
+    { 0x7000, 12, DTYPE_REAL32,         32, ATYPE_RW, "aux",        0},
+    // SDO 0x8000
+    {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1         ,0   },
+    {0x8000, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_2         ,0   },
+    {0x8000, 0x3, DTYPE_REAL32,        32, ATYPE_RW, acName8000_3         ,0   },
+    {0x8000, 0x4, DTYPE_REAL32,        32, ATYPE_RW, acName8000_4         ,0   },
+    {0x8000, 0x5, DTYPE_REAL32,        32, ATYPE_RW, acName8000_5         ,0   },
+    {0x8000, 0x6, DTYPE_REAL32,        32, ATYPE_RW, acName8000_6         ,0   },
+    {0x8000, 0x7, DTYPE_REAL32,        32, ATYPE_RW, acName8000_7         ,0   },
+    {0x8000, 0x8, DTYPE_REAL32,        32, ATYPE_RW, acName8000_8         ,0   },
+    {0x8000, 0x9, DTYPE_REAL32,        32, ATYPE_RW, acName8000_9         ,0   },
+    {0x8000, 0xa, DTYPE_REAL32,        32, ATYPE_RW, acName8000_10        ,0   },
+    {0x8000, 0xb, DTYPE_REAL32,        32, ATYPE_RW, acName8000_11        ,0   },
+    {0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW, acName8000_12        ,0   },
+    {0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RW, acName8000_13        ,0   },
+    {0x8000, 0xe, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_14        ,0   },
+    {0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW, acName8000_15        ,0   },
+    {0x8000, 0x10, DTYPE_REAL32,       32, ATYPE_RW, acName8000_16        ,0   },
+    {0x8000, 0x11, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_17        ,0   },
+    {0x8000, 0x12, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_18        ,0   },
+    {0x8000, 0x13, DTYPE_REAL32,       32, ATYPE_RW, acName8000_19        ,0   },
+    {0x8000, 0x14, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_20        ,0   },
+    {0x8000, 0x15, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_21        ,0   },
+    {0x8000, 0x16, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_22        ,0   },
+    {0x8000, 0x17, DTYPE_REAL32,       32, ATYPE_RW, acName8000_23        ,0   },
+    {0x8000, 0x18, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_24        ,0   },
+    {0x8000, 0x19, DTYPE_REAL32,       32, ATYPE_RW, acName8000_25        ,0   },
+    {0x8000, 0x1a, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_26        ,0   },
+    {0x8000, 0x1b, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_27        ,0   },
+    {0x8000, 0x1c, DTYPE_REAL32,       32, ATYPE_RW, acName8000_28        ,0   },
+    {0x8000, 0x1d, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_29        ,0   },
+    {0x8000, 0x1e, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_30        ,0   },
+    {0x8000, 0x1f, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_31        ,0   },
+    {0x8000, 0x20, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_32        ,0   },
+    {0x8000, 0x21, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_33        ,0   },
+    {0x8000, 0x22, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_34        ,0   },
+    {0x8000, 0x23, DTYPE_REAL32,       32, ATYPE_RW, acName8000_35        ,0   },
+    // SDO 0x8001
+    {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "fw_ver"                ,0   },
+    {0x8001, 0x2, DTYPE_UNSIGNED32,       32, ATYPE_RW, acName8001_2            ,0   },
+    {0x8001, 0x3, DTYPE_UNSIGNED16,       16, ATYPE_RW, "ctrl_status_cmd"       ,0   },
+    {0x8001, 0x4, DTYPE_UNSIGNED16,       16, ATYPE_RO, "ctrl_status_cmd_ack"   ,0   },
+    {0x8001, 0x5, DTYPE_REAL32,           32, ATYPE_RO, acName8001_5            ,0   },
+    {0x8001, 0x6, DTYPE_REAL32,           32, ATYPE_RO, acName8001_6            ,0   },
+    {0x8001, 0x7, DTYPE_REAL32,           32, ATYPE_RO, acName8001_7            ,0   },
+    {0x8001, 0x8, DTYPE_UNSIGNED16,       16, ATYPE_RW, "flash_params_cmd"      ,0   },
+    {0x8001, 0x9, DTYPE_UNSIGNED16,       16, ATYPE_RO, "flash_params_cmd_ack"  ,0   },
 
-    // SDO8000[] =                                                          
-    {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1         ,0   }, 
-    {0x8000, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_2         ,0   }, 
-    {0x8000, 0x3, DTYPE_REAL32,        32, ATYPE_RW, acName8000_3         ,0   }, 
-    {0x8000, 0x4, DTYPE_REAL32,        32, ATYPE_RW, acName8000_4         ,0   }, 
-    {0x8000, 0x5, DTYPE_REAL32,        32, ATYPE_RW, acName8000_5         ,0   }, 
-    {0x8000, 0x6, DTYPE_REAL32,        32, ATYPE_RW, acName8000_6         ,0   }, 
-    {0x8000, 0x7, DTYPE_REAL32,        32, ATYPE_RW, acName8000_7         ,0   }, 
-    {0x8000, 0x8, DTYPE_REAL32,        32, ATYPE_RW, acName8000_8         ,0   }, 
-    {0x8000, 0x9, DTYPE_REAL32,        32, ATYPE_RW, acName8000_9         ,0   }, 
-    {0x8000, 0xa, DTYPE_REAL32,        32, ATYPE_RW, acName8000_10        ,0   }, 
-    {0x8000, 0xb, DTYPE_REAL32,        32, ATYPE_RW, acName8000_11        ,0   }, 
-    {0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW, acName8000_12        ,0   }, 
-    {0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RW, acName8000_13        ,0   }, 
-    {0x8000, 0xe, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_14        ,0   }, 
-    {0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW, acName8000_15        ,0   }, 
-    {0x8000, 0x10, DTYPE_REAL32,       32, ATYPE_RW, acName8000_16        ,0   }, 
-    {0x8000, 0x11, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_17        ,0   }, 
-    {0x8000, 0x12, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_18        ,0   }, 
-    {0x8000, 0x13, DTYPE_REAL32,       32, ATYPE_RW, acName8000_19        ,0   }, 
-    {0x8000, 0x14, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_20        ,0   }, 
-    {0x8000, 0x15, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_21        ,0   }, 
-    {0x8000, 0x16, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_22        ,0   }, 
-    {0x8000, 0x17, DTYPE_REAL32,       32, ATYPE_RW, acName8000_23        ,0   }, 
-    {0x8000, 0x18, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_24        ,0   }, 
-    {0x8000, 0x19, DTYPE_REAL32,       32, ATYPE_RW, acName8000_25        ,0   }, 
-    {0x8000, 0x1a, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_26        ,0   }, 
-    {0x8000, 0x1b, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_27        ,0   }, 
-    {0x8000, 0x1c, DTYPE_REAL32,       32, ATYPE_RW, acName8000_28        ,0   }, 
-    {0x8000, 0x1d, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_29        ,0   }, 
-    {0x8000, 0x1e, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_30        ,0   }, 
-    {0x8000, 0x1f, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_31        ,0   }, 
-    {0x8000, 0x20, DTYPE_INTEGER32,    32, ATYPE_RW, acName8000_32        ,0   }, 
-    {0x8000, 0x21, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_33        ,0   }, 
-    {0x8000, 0x22, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_34        ,0   }, 
-    {0x8000, 0x23, DTYPE_REAL32,       32, ATYPE_RW, acName8000_35        ,0   }, 
-                                                                        
-    // SDO8001[] =                                                      
-    {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "fw_ver"                ,0   }, 
-    {0x8001, 0x2, DTYPE_UNSIGNED32,       32, ATYPE_RW, acName8001_2            ,0   }, 
-    {0x8001, 0x3, DTYPE_UNSIGNED16,       16, ATYPE_RW, "ctrl_status_cmd"       ,0   }, 
-    {0x8001, 0x4, DTYPE_UNSIGNED16,       16, ATYPE_RO, "ctrl_status_cmd_ack"   ,0   }, 
-    {0x8001, 0x5, DTYPE_REAL32,           32, ATYPE_RO, acName8001_5            ,0   }, 
-    {0x8001, 0x6, DTYPE_REAL32,           32, ATYPE_RO, acName8001_6            ,0   }, 
-    {0x8001, 0x7, DTYPE_REAL32,           32, ATYPE_RO, acName8001_7            ,0   }, 
-    {0x8001, 0x8, DTYPE_UNSIGNED16,       16, ATYPE_RW, "flash_params_cmd"      ,0   }, 
-    {0x8001, 0x9, DTYPE_UNSIGNED16,       16, ATYPE_RO, "flash_params_cmd_ack"  ,0   }, 
-                                                                      
-    {0, 0, 0, 0, 0, 0, 0 }                                                
-};                                                                    
-                                                                      
-                                                                      
-                                                                      
-                                                                      
-                                                                      
-void LpESC::init_SDOs(void) {                                         
-                                                                      
-    int objd_num, i = 0;                                              
-                                                                      
-    objd_num = sizeof(source_SDOs)/sizeof(objd_t);                    
-    SDOs = new objd_t [objd_num];                                     
-                                                                      
-    memcpy((void*)SDOs, source_SDOs, sizeof(source_SDOs));            
+    {0, 0, 0, 0, 0, 0, 0 }
+};
 
-    // 0x6000 
+
+
+
+
+void LpESC::init_SDOs ( void ) {
+
+    int objd_num, i = 0;
+
+    objd_num = sizeof ( source_SDOs ) /sizeof ( objd_t );
+    SDOs = new objd_t [objd_num];
+
+    memcpy ( ( void* ) SDOs, source_SDOs, sizeof ( source_SDOs ) );
+
+    //0x6000
     SDOs[i++].data = (void*)&LpESC::rx_pdo.link_pos;
     SDOs[i++].data = (void*)&LpESC::rx_pdo.motor_pos;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.link_vel;       
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.motor_vel;  
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.torque;       
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.max_temperature;         
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.fault;          
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.link_vel;
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.motor_vel;
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.torque;
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.temperature;
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.fault;
     SDOs[i++].data = (void*)&LpESC::rx_pdo.rtt;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.op_idx_ack;          
+    SDOs[i++].data = (void*)&LpESC::rx_pdo.op_idx_ack;
     SDOs[i++].data = (void*)&LpESC::rx_pdo.aux;
-    // 0x7000                                
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.pos_ref;        
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.vel_ref;       
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.tor_ref;       
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gains[0]; 
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gains[1];
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gains[2];
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gains[3];
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gains[4];
+
+    //0x7000
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.pos_ref;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.vel_ref;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.tor_ref;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_0;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_1;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_2;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_3;
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_4;
     SDOs[i++].data = (void*)&LpESC::tx_pdo.fault_ack;
     SDOs[i++].data = (void*)&LpESC::tx_pdo.ts;
     SDOs[i++].data = (void*)&LpESC::tx_pdo.op_idx_aux;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.aux;                         
+    SDOs[i++].data = (void*)&LpESC::tx_pdo.aux;
+    
     // 0x8000
-    SDOs[i++].data = (void*)&LpESC::sdo.Block_control;      
-    SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset_low;  
-    SDOs[i++].data = (void*)&LpESC::sdo.PosGainP;           
-    SDOs[i++].data = (void*)&LpESC::sdo.PosGainI;           
-    SDOs[i++].data = (void*)&LpESC::sdo.PosGainD;           
-    SDOs[i++].data = (void*)&LpESC::sdo.TorGainP;           
-    SDOs[i++].data = (void*)&LpESC::sdo.TorGainI;           
-    SDOs[i++].data = (void*)&LpESC::sdo.TorGainD;           
-    SDOs[i++].data = (void*)&LpESC::sdo.Torque_Mult;        
-    SDOs[i++].data = (void*)&LpESC::sdo.Pos_I_lim;          
-    SDOs[i++].data = (void*)&LpESC::sdo.Tor_I_lim;          
-    SDOs[i++].data = (void*)&LpESC::sdo.Min_pos;            
-    SDOs[i++].data = (void*)&LpESC::sdo.Max_pos;            
-    SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset_high; 
-    SDOs[i++].data = (void*)&LpESC::sdo.Max_tor;            
-    SDOs[i++].data = (void*)&LpESC::sdo.Max_cur;            
-    SDOs[i++].data = (void*)&LpESC::sdo.Enc_offset_1;       
-    SDOs[i++].data = (void*)&LpESC::sdo.Enc_offset_2;       
-    SDOs[i++].data = (void*)&LpESC::sdo.Torque_Offset;      
-    SDOs[i++].data = (void*)&LpESC::sdo.ConfigFlags;        
-    SDOs[i++].data = (void*)&LpESC::sdo.ConfigFlags2;       
-    SDOs[i++].data = (void*)&LpESC::sdo.NumEncoderLines;    
-    SDOs[i++].data = (void*)&LpESC::sdo.ImpedancePosGainP;  
-    SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset2_low; 
-    SDOs[i++].data = (void*)&LpESC::sdo.ImpedancePosGainD;  
-    SDOs[i++].data = (void*)&LpESC::sdo.Num_Abs_counts_rev; 
-    SDOs[i++].data = (void*)&LpESC::sdo.MaxPWM;             
-    SDOs[i++].data = (void*)&LpESC::sdo.Gearbox_ratio;      
-    SDOs[i++].data = (void*)&LpESC::sdo.ulCalPosition;      
-    SDOs[i++].data = (void*)&LpESC::sdo.Cal_Abs_Position;   
-    SDOs[i++].data = (void*)&LpESC::sdo.Cal_Abs2_Position;  
-    SDOs[i++].data = (void*)&LpESC::sdo.nonius_offset2_high;
-    SDOs[i++].data = (void*)&LpESC::sdo.Joint_number;
-    SDOs[i++].data = (void*)&LpESC::sdo.Joint_robot_id;
-    SDOs[i++].data = (void*)&LpESC::sdo.Target_velocity;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Block_control;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.nonius_offset_low;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.PosGainP;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.PosGainI;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.PosGainD;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.TorGainP;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.TorGainI;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.TorGainD;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Torque_Mult;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Pos_I_lim;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Tor_I_lim;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Min_pos;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Max_pos;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.nonius_offset_high;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Max_tor;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Max_cur;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Enc_offset_1;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Enc_offset_2;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Torque_Offset;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.ConfigFlags;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.ConfigFlags2;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.NumEncoderLines;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.ImpedancePosGainP;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.nonius_offset2_low;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.ImpedancePosGainD;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Num_Abs_counts_rev;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.MaxPWM;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Gearbox_ratio;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.ulCalPosition;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Cal_Abs_Position;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Cal_Abs2_Position;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.nonius_offset2_high;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Joint_number;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Joint_robot_id;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Target_velocity;
+    
     // 0x8001
-    SDOs[i++].data = (void*)&LpESC::sdo.firmware_version;     
-    SDOs[i++].data = (void*)&LpESC::sdo.enable_pdo_gains;      
-    SDOs[i++].data = (void*)&LpESC::sdo.set_ctrl_status;      
-    SDOs[i++].data = (void*)&LpESC::sdo.get_ctrl_status;      
-    SDOs[i++].data = (void*)&LpESC::sdo.V_batt_filt_100ms;    
-    SDOs[i++].data = (void*)&LpESC::sdo.T_inv_filt_100ms;     
-    SDOs[i++].data = (void*)&LpESC::sdo.T_mot1_filt_100ms;    
-    SDOs[i++].data = (void*)&LpESC::sdo.flash_params_cmd;     
-    SDOs[i++].data = (void*)&LpESC::sdo.flash_params_cmd_ack; 
+    SDOs[i++].data = ( void* ) &LpESC::sdo.firmware_version;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.enable_pdo_gains;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.set_ctrl_status;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.get_ctrl_status;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.V_batt_filt_100ms;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.T_inv_filt_100ms;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.T_mot1_filt_100ms;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.flash_params_cmd;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.flash_params_cmd_ack;
     // end marker
     SDOs[i++].data = 0;
 
     assert ( objd_num == i );
 }
-
