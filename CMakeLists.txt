@@ -34,6 +34,7 @@ add_definitions(-DKEEP_POWER_ON)
 include_directories(include)
 include_directories(${soem${LIB_TYPE}_INCLUDE_DIRS}
                     ${iitecat_iface${LIB_TYPE}_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})                    
 
 add_library(${LIB_NAME} SHARED
     src/ec_boards_iface.cpp
@@ -46,6 +47,8 @@ add_library(${LIB_NAME} SHARED
     src/foot_sensor_esc.cpp
     src/test_esc.cpp
 )
+
+add_dependencies(${LIB_NAME} protobuf)
 
 if ( Xenomai_FOUND )
     set_xeno_flags(${LIB_NAME})
