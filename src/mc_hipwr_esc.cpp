@@ -9,9 +9,9 @@ static const iit::ecat::objd_t source_SDOs[] = {
     // SD0 0x6000
     { 0x6000, 1, DTYPE_REAL32,      32, ATYPE_RO, "link_pos",       0},
     { 0x6000, 2, DTYPE_REAL32,      32, ATYPE_RO, "motor_pos",      0},
-    { 0x6000, 3, DTYPE_REAL32,      32, ATYPE_RO, "link_vel",       0},
+    { 0x6000, 3, DTYPE_INTEGER16,      32, ATYPE_RO, "link_vel",       0},
     { 0x6000, 4, DTYPE_INTEGER16,       16, ATYPE_RO, "motor_vel",      0},
-    { 0x6000, 5, DTYPE_INTEGER16,       16, ATYPE_RO, "torque",     0},
+    { 0x6000, 5, DTYPE_REAL32,       16, ATYPE_RO, "torque",     0},
     { 0x6000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RO, "temperature",        0},
     { 0x6000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RO, "fault",      0},
     { 0x6000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RO, "rtt",        0},
