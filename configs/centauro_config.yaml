@@ -56,7 +56,7 @@ HpESC_X:
 CentAcESC_X:
   sign: 1
   pos_offset: 0
-  max_current_A: 15.0
+  max_current_A: 10.0
   pid :
     position: [220.0 , 0.0 , 5.0]
 
@@ -81,28 +81,35 @@ CentAcESC_1:
 CentAcESC_2:
   sign: 1
   pos_offset: 45
-  max_current_A: 10.0
+  max_current_A: 15.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_3:
   sign: 1
   pos_offset: 45
-  max_current_A: 10.0
+  max_current_A: 15.0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+
+CentAcESC_4:
+  sign: 1
+  pos_offset: 0
+  max_current_A: 15.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_5:
   sign: 1
   pos_offset: 0
-  max_current_A: 10.0
+  max_current_A: 15.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_6:
   sign: -1
   pos_offset: 0
-  max_current_A: 10.0
+  max_current_A: 1.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
@@ -126,28 +133,28 @@ CentAcESC_8:
 CentAcESC_9:
   sign: 1
   pos_offset: -45
-  max_current_A: 10.0
+  max_current_A: 15.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_10:
   sign: 1
   pos_offset: -45
-  max_current_A: 10.0
+  max_current_A: 15.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
 
 CentAcESC_11:
   sign: 1
   pos_offset: 0
-  max_current_A: 10.0
+  max_current_A: 15.0
   pid :
     position: [1000.0 , 0.0 , 30.0]    
     
 CentAcESC_12:
   sign: 1
   pos_offset: 0
-  max_current_A: 10.0
+  max_current_A: 15.0
   pid :
     position: [1000.0 , 0.0 , 30.0]    
     
