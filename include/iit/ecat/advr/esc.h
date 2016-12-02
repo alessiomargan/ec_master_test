@@ -126,128 +126,6 @@ typedef std::map<std::string, std::string> jmap_t;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////
-#if FLOAT_PDO
-
-struct McEscPdoTypes {
-    
-    // TX  slave_input -- master output
-    struct pdo_tx {
-        float       pos_ref;    //link
-        float       vel_ref;    //link
-        float       tor_ref;    //link
-        float       gain_0;     //kp_m  ImpPosP 
-        float       gain_1;     //kp_l  ImpTorP
-        float       gain_2;     //kd_m  ImpPosD
-        float       gain_3;     //kd_l  ImpTorD
-        float       gain_4;     //ki    ImpTorI
-        uint16_t    fault_ack;
-        uint16_t    ts;
-        uint16_t    op_idx_aux;  // op [get/set] , idx
-        float       aux;         // set value
-
-        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
-            os << pos_ref << delim;
-            os << vel_ref << delim;
-            os << tor_ref << delim;
-            os << gain_0 << delim;
-            os << gain_1 << delim;
-            os << gain_2 << delim;
-            os << gain_3 << delim;
-            os << gain_4 << delim;
-            os << fault_ack << delim;
-            os << ts << delim;
-            //os << std::endl;
-            return os;
-        }
-        void fprint ( FILE *fp ) {
-            std::ostringstream oss;
-            dump(oss,"\t");
-            fprintf ( fp, "%s", oss.str().c_str() );
-        }
-        int sprint ( char *buff, size_t size ) {
-            std::ostringstream oss;
-            dump(oss,"\t");
-            return snprintf ( buff, size, "%s", oss.str().c_str() );
-        }
-
-    }  __attribute__ ( ( __packed__ ) ); // 42 bytes
-
-    // RX  slave_output -- master input
-    struct pdo_rx {
-        float       link_pos;           // rad
-        float       motor_pos;          // rad
-        float       link_vel;           // rad TBD on the firmware 
-        float       motor_vel;          // rad/s
-        float       torque;             // Nm
-        uint16_t    temperature;        // C
-        uint16_t    fault;
-        uint16_t    rtt;                // us
-        uint16_t    op_idx_ack;         // op [ack/nack] , idx
-        float       aux;                // get value or nack erro code
-
-        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
-            os << link_pos << delim;
-            os << motor_pos << delim;
-            os << link_vel << delim;
-            os << motor_vel << delim;
-            os << torque << delim;
-            os << temperature << delim;
-            os << fault << delim;
-            os << rtt << delim;
-            os << op_idx_ack << delim;
-            os << aux << delim;
-            //os << std::endl;
-            return os;
-        }
-        void fprint ( FILE *fp ) {
-            std::ostringstream oss;
-            dump(oss,"\t");
-            fprintf ( fp, "%s", oss.str().c_str() );
-        }
-        int sprint ( char *buff, size_t size ) {
-            std::ostringstream oss;
-            dump(oss,"\t");
-            return snprintf ( buff, size, "%s", oss.str().c_str() );
-        }
-        void to_map ( jmap_t & jpdo ) {
-            JPDO ( link_pos );
-            JPDO ( motor_pos );
-            JPDO ( link_vel );
-            JPDO ( motor_vel );
-            JPDO ( torque );
-            JPDO ( temperature );
-            JPDO ( fault );
-            JPDO ( rtt );
-            JPDO ( op_idx_ack );
-            JPDO ( aux );
-        }
-        void pb_toString( std::string * pb_str ) {
-            static iit::advr::Ec_slave_pdo pb_rx_pdo;
-            static struct timespec ts;
-            clock_gettime(CLOCK_MONOTONIC, &ts);
-            // Header
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
-            pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
-            // Type
-            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_XT_MOTOR);
-            // Motor_xt_tx_pdo
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(link_pos);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_pos(motor_pos);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_vel(link_vel);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel(motor_vel);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque(torque);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(temperature);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(fault);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_rtt(rtt);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_op_idx_ack(op_idx_ack);
-            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_aux(aux);
-            pb_rx_pdo.SerializeToString(pb_str);
-        }
-    }  __attribute__ ( ( __packed__ ) ); // 32 bytes
-
-}; // 74 bytes
-
-#else
 
 struct McEscPdoTypes {
                     
@@ -291,7 +169,7 @@ struct McEscPdoTypes {
             return snprintf ( buff, size, "%s", oss.str().c_str() );
         }
 
-    }  __attribute__ ( ( __packed__ ) ); // 28 bytes
+    } pdo_data_tx __attribute__ ( ( __packed__ ) ); // 28 bytes
 
     // RX  slave_output -- master input
     struct pdo_rx {
@@ -364,12 +242,10 @@ struct McEscPdoTypes {
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_aux(aux);
             pb_rx_pdo.SerializeToString(pb_str);
         }
-    }  __attribute__ ( ( __packed__ ) ); // 28 bytes
+    } pdo_data_rx __attribute__ ( ( __packed__ ) ); // 28 bytes
 
 }; // 56 bytes
 
-
-#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //

@@ -50,7 +50,13 @@ private:
 //         return c->getSDO_byname( name.c_str(), value );
 //     }
 
+    
+    std::string _control_mode;
+
 public:
+    
+    const std::string& get_control_mode() const { return _control_mode; }
+    void set_control_mode(const std::string& ctrl_mode) { _control_mode = ctrl_mode; }
 
     template<typename T>
     int writeSDO ( std::string const & name, T value ) {
@@ -141,7 +147,7 @@ protected:
     virtual bool am_i_HpESC() = 0;
     virtual bool am_i_LpESC() = 0;
 
-    //ec_state     _actual_state;
+    
 };
 
 typedef AbsMotor<McEscPdoTypes> Motor;

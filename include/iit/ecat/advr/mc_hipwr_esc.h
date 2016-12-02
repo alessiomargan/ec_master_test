@@ -515,6 +515,7 @@ private:
         _sgn = node_cfg["sign"].as<int>();
         _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
+        set_control_mode(root_cfg[conf_key]["control_mode"].as<std::string>());
 
         return EC_WRP_OK;
     }

@@ -46,6 +46,7 @@ add_library(${LIB_NAME} SHARED
     src/ft6_esc.cpp
     src/foot_sensor_esc.cpp
     src/test_esc.cpp
+    src/rt_ipc.cpp
 )
 
 add_dependencies(${LIB_NAME} protobuf)
