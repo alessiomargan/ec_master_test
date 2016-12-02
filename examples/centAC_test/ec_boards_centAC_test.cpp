@@ -55,7 +55,7 @@ void EC_boards_centAC_test::init_preOP ( void ) {
     std::vector<int> no_control = std::initializer_list<int> {
         centauro::RA_HA,
         centauro::LA_HA,
-        
+
 //         centauro::WAIST_Y,
 //         centauro::RA_SH_1,
 //         centauro::RA_SH_2,
@@ -128,14 +128,12 @@ void EC_boards_centAC_test::init_preOP ( void ) {
         // start controller :
         // - read actual joint position and set as pos_ref
         moto->start ( CTRL_SET_POS_MODE );
-        //moto->start ( CTRL_SET_IMPED_MODE );
     }
 
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
-#if 1
     if ( motors_to_start.size() > 0 ) {
         //
         trj_queue.push ( &trj_start2home );
@@ -143,7 +141,6 @@ void EC_boards_centAC_test::init_preOP ( void ) {
         trj_queue.push ( &trj_zero2up2extend2zero );
         
     }
-#endif
 }
 
 
@@ -197,7 +194,6 @@ int EC_boards_centAC_test::user_loop ( void ) {
     } else { 
         // trj_queue is empty
         running_trj = last_run_trj = 0;
-#if 1
         if ( motors_to_start.size() > 0 ) {
             // add trajectory ....
             trj_queue.push ( &trj_zero2up2extend2zero );
@@ -206,7 +202,6 @@ int EC_boards_centAC_test::user_loop ( void ) {
             last_run_trj = running_trj;
             advr::reset_trj ( *running_trj );
         }
-#endif
     }
 
 }

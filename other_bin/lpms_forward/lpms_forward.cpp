@@ -16,9 +16,9 @@
 #include <protobuf/quaternion.pb.h>
 
 #ifdef __XENO_PIPE__
-static const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
+static const std::string __pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
 #else
-static const std::string pipe_prefix ( "/tmp/" );
+static const std::string __pipe_prefix ( "/tmp/" );
 #endif
 
 extern void main_common ( __sighandler_t sig_handler );
@@ -67,13 +67,13 @@ class ImuHandler {
             JPDO ( qY );
             JPDO ( qZ );
         }
-        void pb_toString( std::string * pb_str ) {
+        void pb_toString ( std::string * pb_str ) {
             gazebo::msgs::Quaternion quat;
-            quat.set_x(qX);
-            quat.set_y(qY);
-            quat.set_z(qZ);
-            quat.set_w(qW);
-            quat.SerializeToString(pb_str);
+            quat.set_x ( qX );
+            quat.set_y ( qY );
+            quat.set_z ( qZ );
+            quat.set_w ( qW );
+            quat.SerializeToString ( pb_str );
         }
     private :
         ImuData data;
@@ -117,7 +117,7 @@ void ImuHandler::imu_data_cb ( const ImuData &imu_data, const char* id ) {
     ImuDataExt zzz ( imu_data );
     imuPub->publish ( zzz );
 
-    int	nbytes;
+    int nbytes;
     if ( xddp_sock > 0 ) {
         nbytes = write ( xddp_sock, ( void* ) &imu_data, sizeof ( imu_data ) );
     }
@@ -144,7 +144,7 @@ void ImuHandler::setup ( std::string pipe_name, bool use_cb ) {
 
     /////////////////////////////////////////////////////////////////
     //
-    std::string pipe ( pipe_prefix + pipe_name );
+    std::string pipe ( __pipe_prefix + pipe_name );
     xddp_sock = open ( pipe.c_str(), O_WRONLY );
 
     if ( xddp_sock < 0 ) {
@@ -166,8 +166,8 @@ void ImuHandler::setup ( std::string pipe_name, bool use_cb ) {
 }
 
 void ImuHandler::operator() () const {
-    ImuData	imu_data;
-    char 	id[64];
+    ImuData imu_data;
+    char    id[64];
 
     lpms->getDeviceId ( id );
 

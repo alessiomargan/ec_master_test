@@ -53,6 +53,7 @@ optional_build(coman_V_loop examples/coman_V_loop OFF)
 optional_build(ati_ft6      examples/ati_ft6_calib OFF)
 optional_build(centAC_test  examples/centAC_test OFF)
 optional_build(centAC_urdf  examples/centAC_urdf OFF)
+optional_build(centAC_impedance  examples/centAC_impedance OFF)
 optional_build(walkman_test examples/walkman_test OFF)
 
 optional_build(joy_forward 	other_bin/joy_forward   OFF)

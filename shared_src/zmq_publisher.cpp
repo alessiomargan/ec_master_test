@@ -26,7 +26,7 @@ static const std::string __pipe_prefix ( "/tmp/" );
 //
 ///////////////////////////////////////////////////////////////////////
 
-Abs_Publisher::Abs_Publisher ( std::string _uri ) : uri(_uri) {
+Abs_Publisher::Abs_Publisher ( std::string _uri ) : uri ( _uri ) {
 
     int opt_linger = 1;
 #if ZMQ_VERSION_MAJOR == 2
@@ -184,7 +184,6 @@ void ZMQ_Pub_thread::th_init ( void* ) {
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////
@@ -252,4 +251,4 @@ void ZMQ_Pub_thread::th_loop ( void * ) {
 }
 
 
-// kate: indent-mode cstyle; indent-width 4; replace-tabs on; // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

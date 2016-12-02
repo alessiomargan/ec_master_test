@@ -10,10 +10,10 @@
 
 #define MID_POS(m,M)    (m+(M-m)/2)
 
-typedef struct js_event	js_input_t;
-typedef spnav_event	spnav_input_t;
+typedef struct js_event js_input_t;
+typedef spnav_event     spnav_input_t;
 
-static const std::vector<double> Xt = std::initializer_list<double> { 0, 1, 2, 3, 4, 5, 6, 10 };
+static const std::vector<double> Xt10_10s = std::initializer_list<double> { 0, 1, 2, 3, 4, 5, 6, 10 };
 static const std::vector<double> Xt_1s  = std::initializer_list<double> { 0, 1 };
 static const std::vector<double> Xt_3s  = std::initializer_list<double> { 0, 3 };
 static const std::vector<double> Xt_5s  = std::initializer_list<double> { 0, 5 };
@@ -79,23 +79,21 @@ void EC_boards_joint_joy::init_preOP ( void ) {
         DPRINTF ( "%d home %f mid %f step %f\n", pos2Rid ( slave_pos ), home[slave_pos],step_1[slave_pos],step_2[slave_pos] );
 
         Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        //spline_start2home[slave_pos] = new advr::Spline_Trj();
-        spline_start2home[slave_pos].set_points ( Xt_5s,Ys );
+        trj_start2home[slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xt_5s, Ys );
 
         Ys = std::initializer_list<double> { step_2[slave_pos], 1.5, 2.5, 1.0, 2.2, 1.0 , 2.0, home[slave_pos] };
-        //spline1_trj[slave_pos] = new advr::Spline_Trj();
-        spline1_trj[slave_pos].set_points ( Xt,Ys );
+        trj_1[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt10_10s,Ys );
 
         Ys = std::initializer_list<double> { home[slave_pos], 5.0, 3.5, 4.5, 4.0, 3.0 , 3.5, step_1[slave_pos] };
         //spline2_trj[slave_pos] = new advr::Spline_Trj();
-        spline2_trj[slave_pos].set_points ( Xt,Ys );
+        trj_2[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt10_10s,Ys );
 
         //spline_any2home[slave_pos] = new advr::Spline_Trj();
 
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
-        moto->start ( CTRL_SET_MIX_POS_MODE );
+        moto->start ( CTRL_SET_POS_MODE );
 
     }
 
@@ -106,8 +104,12 @@ void EC_boards_joint_joy::init_preOP ( void ) {
 
 void EC_boards_joint_joy::init_OP ( void ) {
 
-    running_spline = &spline_start2home;
-    advr::reset_trj ( spline_start2home );
+    if ( ! trj_queue.empty() ) {
+        running_trj = trj_queue.front();
+        last_run_trj = running_trj;
+        advr::reset_trj ( *running_trj );
+    }
+
 }
 
 int EC_boards_joint_joy::user_loop ( void ) {
@@ -130,7 +132,7 @@ int EC_boards_joint_joy::user_loop ( void ) {
 
     case HOMING :
         //if ( go_there(motors, home, 0.05) ) {
-        if ( go_there ( motors, spline_start2home, 0.05, true ) ) {
+        if ( go_there ( motors, trj_start2home, 0.05, true ) ) {
             user_state = STEP_1;
             DPRINTF ( "At Home ....\n" );
         }
@@ -148,31 +150,31 @@ int EC_boards_joint_joy::user_loop ( void ) {
             user_state = TRJ_1;
             //user_state = HOMING;
             DPRINTF ( "At Step 2 ....\n" );
-            advr::reset_trj ( spline1_trj );
-            running_spline = &spline1_trj;
+            advr::reset_trj ( trj_1 );
+            running_trj = &trj_2;
         }
         break;
 
     case TRJ_1 :
-        if ( go_there ( motors, spline1_trj, 0.05 ) ) {
+        if ( go_there ( motors, trj_1, 0.05 ) ) {
             user_state = TRJ_2;
             DPRINTF ( "At trj_1 end ....\n" );
-            advr::reset_trj ( spline2_trj );
+            advr::reset_trj ( trj_2 );
         }
         break;
 
     case TRJ_2 :
-        if ( go_there ( motors, spline2_trj, 0.05 ) ) {
+        if ( go_there ( motors, trj_2, 0.05 ) ) {
             //user_state = IDLE;
             /////////////////////////////
             user_state = ANY2HOME;
-            set_any2home ( motors, spline_any2home,spline2_trj );
+            set_any2home ( motors, trj_any2home, trj_2 );
             DPRINTF ( "At trj_2 end ....\n" );
         }
         break;
 
     case ANY2HOME :
-        if ( go_there ( motors, spline_any2home, 0.05 ) ) {
+        if ( go_there ( motors, trj_any2home, 0.05 ) ) {
             user_state = STEP_1;
             DPRINTF ( "At Home ....\n" );
         }
@@ -198,65 +200,78 @@ int EC_boards_joint_joy::user_loop ( void ) {
 template<class C>
 int EC_boards_joint_joy::user_input ( C &user_cmd ) {
 
-    static int	bytes_cnt;
-    int		bytes;
+    static int  bytes_cnt;
+    int         bytes;
 
-    spnav_input_t	nav_cmd;
-    js_input_t		js_cmd;
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    {
+        spnav_input_t   nav_cmd;
 
-    if ( ( bytes = navInXddp.xddp_read ( nav_cmd ) ) > 0 ) {
-        //user_cmd = process_spnav_input(nav_cmd);
-        // [-1.0 .. 1.0] / 200 ==> 0.005 rad/ms
-        if ( nav_cmd.type == SPNAV_EVENT_MOTION ) {
-            user_cmd = ( ( float ) nav_cmd.motion.ry / ( 350.0 ) ) / 200 ;
-        } else if ( nav_cmd.type == SPNAV_EVENT_BUTTON ) {
-            if ( nav_cmd.button.press ) {
-                switch ( nav_cmd.button.bnum ) {
-                case 1 :
-                    user_state = ANY2HOME;
-                    set_any2home ( motors, spline_any2home, *running_spline );
-                    DPRINTF ( "ANY2HOME ....\n" );
-                    break;
-                case 0 :
-                    user_state = MOVING;
-                    DPRINTF ( "Moving ....\n" );
-                    break;
-                default :
-                    break;
+        if ( ( bytes = navInXddp.xddp_read ( nav_cmd ) ) > 0 ) {
+            //user_cmd = process_spnav_input(nav_cmd);
+            // [-1.0 .. 1.0] / 200 ==> 0.005 rad/ms
+            if ( nav_cmd.type == SPNAV_EVENT_MOTION ) {
+                user_cmd = ( ( float ) nav_cmd.motion.ry / ( 350.0 ) ) / 200 ;
+            } else if ( nav_cmd.type == SPNAV_EVENT_BUTTON ) {
+                if ( nav_cmd.button.press ) {
+                    switch ( nav_cmd.button.bnum ) {
+                    case 1 :
+                        user_state = ANY2HOME;
+                        set_any2home ( motors, trj_any2home, *running_trj );
+                        DPRINTF ( "ANY2HOME ....\n" );
+                        break;
+                    case 0 :
+                        user_state = MOVING;
+                        DPRINTF ( "Moving ....\n" );
+                        break;
+                    default :
+                        break;
+                    }
+                } else {
+                    ; // release btn
                 }
-            } else {
-                ; // release btn
             }
         }
     }
-
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    {
+        js_input_t  js_cmd;
+        
+        if ( ( bytes = jsInXddp.xddp_read ( js_cmd ) ) > 0 ) {
+            //user_cmd = process_js_input(js_cmd);
+            switch ( js_cmd.type & ~JS_EVENT_INIT ) {
+            case JS_EVENT_AXIS:
+                switch ( js_cmd.number ) {
+                case 0 :
+                    // [-1.0 .. 1.0] / 500 ==> [-0.002 .. 0.002] rads
+                    user_cmd = ( ( float ) js_cmd.value/ ( 32767.0 ) ) / 500 ;
+                    break;
+                case 2 :
+                    // [-1.0 .. 1.0] / 250 ==> [-0.004 .. 0.004] rads
+                    user_cmd = ( ( float ) js_cmd.value/ ( 32767.0 ) ) / 250 ;
+                    break;
+                default:
+                    break;
+                }
+                break;
 
-    if ( ( bytes = jsInXddp.xddp_read ( js_cmd ) ) > 0 ) {
-        //user_cmd = process_js_input(js_cmd);
-        switch ( js_cmd.type & ~JS_EVENT_INIT ) {
-        case JS_EVENT_AXIS:
-            switch ( js_cmd.number ) {
-            case 0 :
-                // [-1.0 .. 1.0] / 500 ==> [-0.002 .. 0.002] rads
-                user_cmd = ( ( float ) js_cmd.value/ ( 32767.0 ) ) / 500 ;
-                break;
-            case 2 :
-                // [-1.0 .. 1.0] / 250 ==> [-0.004 .. 0.004] rads
-                user_cmd = ( ( float ) js_cmd.value/ ( 32767.0 ) ) / 250 ;
-                break;
             default:
                 break;
+
             }
-            break;
-
-        default:
-            break;
-
         }
     }
-
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
 

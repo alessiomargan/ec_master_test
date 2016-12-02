@@ -25,7 +25,7 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
 
-#define FT_ECAT_POS 2
+#define FT_ECAT_POS 1
 
 
 using namespace iit::ecat::advr;

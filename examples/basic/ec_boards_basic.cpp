@@ -1,6 +1,9 @@
 #include <ec_boards_basic.h>
+#include <iit/advr/centauro_robot_id.h>
 
 #define MID_POS(m,M)    (m+(M-m)/2)
+
+using namespace iit::ecat::advr;
 
 Ec_Boards_basic::Ec_Boards_basic ( const char* config_yaml ) : Ec_Thread_Boards_base ( config_yaml ) {
 
@@ -32,8 +35,41 @@ void Ec_Boards_basic::init_preOP ( void ) {
 void Ec_Boards_basic::init_OP ( void ) {
 
 #if 0
+    //std::vector<int> motor_rid = centauro::robot_mcs_ids;
+    std::vector<int> motor_rid = std::initializer_list<int> {
+        centauro::WAIST_Y,
+        centauro::RA_SH_1,
+        centauro::RA_SH_2,
+        centauro::RA_SH_3,
+        centauro::RA_EL,
+        centauro::RA_WR_1,
+        centauro::RA_WR_2,
+        centauro::RA_WR_3,
+        centauro::LA_SH_1,
+        centauro::LA_SH_2,
+        centauro::LA_SH_3,
+        centauro::LA_EL,
+        centauro::LA_WR_1,
+        centauro::LA_WR_2,
+        centauro::LA_WR_3,
+
+    };
+
+    get_esc_map_byclass ( motors,  motor_rid );
+
+    int slave_pos;
+    Motor * moto;
+    for ( auto const& item : motors ) {
+    
+        slave_pos = item.first;
+        moto = item.second;
+        set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
+        
+    }
+#endif
+#if 0
     // get first motor ....
-    iit::ecat::advr::CentAcESC * moto = slave_as<iit::ecat::advr::CentAcESC>(1); 
+    CentAcESC * moto = slave_as<CentAcESC>(1); 
     if ( moto ) {
         moto->run_torque_calibration( );
     }

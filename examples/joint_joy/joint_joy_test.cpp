@@ -33,23 +33,14 @@ int main ( int argc, char *argv[] ) try {
     threads["EC_boards_joint_joy"] = new EC_boards_joint_joy ( argv[1] );
     threads["EC_boards_joint_joy"]->create ( true,2 );
 
-#if 0
-    // ZMQ_pub wait for pipe creation
-    while ( ! dynamic_cast<Ec_Thread_Boards_base*> ( threads["EC_boards_joint_joy"] )->init_OK() ) {
-        sleep ( 1 );
-    }
-    threads["ZMQ_pub"] = new iit::ZMQ_Pub_thread();
-    threads["ZMQ_pub"]->create ( false,3 );
-#endif
-
     while ( main_loop ) {
         sleep ( 1 );
     }
 
-    for ( auto it = threads.begin(); it != threads.end(); it++ ) {
-        it->second->stop();
-        it->second->join();
-        delete it->second;
+    for ( auto const& item : threads ) {
+        item.second->stop();
+        item.second->join();
+        delete item.second;
     }
 
     std::cout << "Exit main" << std::endl;
