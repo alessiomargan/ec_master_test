@@ -236,6 +236,11 @@ protected :
         rx_pdo.motor_pos = centac_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
         
         ///////////////////////////////////////////////////
+        // - scaling values
+        rx_pdo.link_vel /= 1000;
+        rx_pdo.motor_vel /= 1000;
+        
+        ///////////////////////////////////////////////////
         // - pdo_aux 
         curr_pdo_aux = &pdo_aux_it->second;
         curr_pdo_aux->on_rx(rx_pdo);
