@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include <iit/ecat/ec_master_iface.h>
-#include <iit/advr/pipes.h>
+#include <iit/ecat/advr/pipes.h>
 #include <iit/advr/thread_util.h>
 
 extern void main_common ( __sighandler_t sig_handler );
