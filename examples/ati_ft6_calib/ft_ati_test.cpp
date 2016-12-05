@@ -172,9 +172,10 @@ int main ( int argc, char **argv ) {
     //load_matrix("RightWristCalibMatrix.txt", cal_matrix);
     //load_matrix("LeftWristCalibMatrix.txt", cal_matrix);
     //load_matrix("ExtraWristCalibMatrix.txt", cal_matrix);
+    //load_matrix("sensor1_calib.txt", cal_matrix);
+    //load_matrix("sensor2_calib.txt", cal_matrix);
     //load_matrix("ones.txt", cal_matrix);
 
-    //std::vector<std::vector<float>>::const_iterator it = cal_matrix.begin();
     auto it = cal_matrix.begin();
     while ( it != cal_matrix.end() ) {
         std::vector<float> row ( *it );
