@@ -20,10 +20,13 @@ endforeach()
 
 set(msgs
   ec_boards_base_input.proto
-  ${PROTOBUF_IMPORT_DIRS}/quaternion.proto
-  ${PROTOBUF_IMPORT_DIRS}/vector2d.proto
-  ${PROTOBUF_IMPORT_DIRS}/header.proto
-  ${PROTOBUF_IMPORT_DIRS}/time.proto
+  vector2d.proto
+  header.proto
+  time.proto
+#  ${PROTOBUF_IMPORT_DIRS}/quaternion.proto
+#  ${PROTOBUF_IMPORT_DIRS}/vector2d.proto
+#  ${PROTOBUF_IMPORT_DIRS}/header.proto
+#  ${PROTOBUF_IMPORT_DIRS}/time.proto
 )
 
 add_definitions(-fPIC)
