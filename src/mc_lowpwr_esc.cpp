@@ -120,29 +120,46 @@ static char acName8001_9[] = "flash_params_cmd_ack";
 static const iit::ecat::objd_t source_SDOs[] = {
 
     // SD0 0x6000
-    { 0x6000, 1, DTYPE_REAL32,          32, ATYPE_RO, "link_pos",       0},
-    { 0x6000, 2, DTYPE_REAL32,          32, ATYPE_RO, "motor_pos",      0},
-    { 0x6000, 3, DTYPE_REAL32,          32, ATYPE_RO, "link_vel",       0},
-    { 0x6000, 4, DTYPE_INTEGER16,       16, ATYPE_RO, "motor_vel",      0},
-    { 0x6000, 5, DTYPE_INTEGER16,       16, ATYPE_RO, "torque",     0},
-    { 0x6000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RO, "temperature",        0},
+    { 0x6000, 1, DTYPE_REAL32,          32, ATYPE_RO, "link_pos",   0},
+    { 0x6000, 2, DTYPE_REAL32,          32, ATYPE_RO, "motor_pos",  0},
+#ifdef FLOAT_PDO
+    { 0x6000, 3, DTYPE_REAL32,          32, ATYPE_RO, "link_vel",   0},
+    { 0x6000, 4, DTYPE_REAL32,          32, ATYPE_RO, "motor_vel",  0},
+#else
+    { 0x6000, 3, DTYPE_INTEGER16,       16, ATYPE_RO, "link_vel",   0},
+    { 0x6000, 4, DTYPE_INTEGER16,       16, ATYPE_RO, "motor_vel",  0},
+#endif
+    { 0x6000, 5, DTYPE_REAL32,          32, ATYPE_RO, "torque",     0},
+    { 0x6000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RO, "temperature",0},
     { 0x6000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RO, "fault",      0},
     { 0x6000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RO, "rtt",        0},
-    { 0x6000, 9, DTYPE_UNSIGNED16,      16, ATYPE_RO, "op_idx_ack",     0},
+    { 0x6000, 9, DTYPE_UNSIGNED16,      16, ATYPE_RO, "op_idx_ack", 0},
     { 0x6000, 10, DTYPE_REAL32,         32, ATYPE_RO, "aux",        0},
+
     // SD0 0x7000
-    { 0x7000, 1, DTYPE_REAL32,          32, ATYPE_RW, "pos_ref",        0},
-    { 0x7000, 2, DTYPE_INTEGER16,       16, ATYPE_RW, "vel_ref",        0},
-    { 0x7000, 3, DTYPE_INTEGER16,       16, ATYPE_RW, "tor_ref",        0},
-    { 0x7000, 4, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_0",      0},
-    { 0x7000, 5, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_1",      0},
-    { 0x7000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_2",      0},
-    { 0x7000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_3",      0},
-    { 0x7000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_4",        0},
-    { 0x7000, 9, DTYPE_UNSIGNED16,      16, ATYPE_RW, "fault_ack",      0},
-    { 0x7000, 10, DTYPE_UNSIGNED16,     16, ATYPE_RW, "ts",     0},
-    { 0x7000, 11, DTYPE_UNSIGNED16,     16, ATYPE_RW, "op_idx_aux",     0},
+    { 0x7000, 1, DTYPE_REAL32,          32, ATYPE_RW, "pos_ref",    0},
+#if FLOAT_PDO
+    { 0x7000, 2, DTYPE_REAL32,          32, ATYPE_RW, "vel_ref",    0},
+    { 0x7000, 3, DTYPE_REAL32,          32, ATYPE_RW, "tor_ref",    0},
+    { 0x7000, 4, DTYPE_REAL32,          32, ATYPE_RW, "gain_0",     0},
+    { 0x7000, 5, DTYPE_REAL32,          32, ATYPE_RW, "gain_1",     0},
+    { 0x7000, 6, DTYPE_REAL32,          32, ATYPE_RW, "gain_2",     0},
+    { 0x7000, 7, DTYPE_REAL32,          32, ATYPE_RW, "gain_3",     0},
+    { 0x7000, 8, DTYPE_REAL32,          32, ATYPE_RW, "gain_4",     0},
+#else
+    { 0x7000, 2, DTYPE_INTEGER16,       16, ATYPE_RW, "vel_ref",    0},
+    { 0x7000, 3, DTYPE_INTEGER16,       16, ATYPE_RW, "tor_ref",    0},
+    { 0x7000, 4, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_0",     0},
+    { 0x7000, 5, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_1",     0},
+    { 0x7000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_2",     0},
+    { 0x7000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_3",     0},
+    { 0x7000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RW, "gain_4",     0},
+#endif
+    { 0x7000, 9, DTYPE_UNSIGNED16,      16, ATYPE_RW, "fault_ack",  0},
+    { 0x7000, 10, DTYPE_UNSIGNED16,     16, ATYPE_RW, "ts",         0},
+    { 0x7000, 11, DTYPE_UNSIGNED16,     16, ATYPE_RW, "op_idx_aux", 0},
     { 0x7000, 12, DTYPE_REAL32,         32, ATYPE_RW, "aux",        0},
+    
     // SDO 0x8000
     {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1         ,0   },
     {0x8000, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_2         ,0   },

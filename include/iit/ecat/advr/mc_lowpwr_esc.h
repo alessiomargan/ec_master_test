@@ -320,7 +320,7 @@ public:
 
         std::ostringstream oss;
         float act_position;
-        int32_t fault;
+        uint16_t fault;
         //uint16_t gain;
         float gain;
         float test_ref;
