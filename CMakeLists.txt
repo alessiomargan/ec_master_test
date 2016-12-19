@@ -36,7 +36,7 @@ include_directories(${soem${LIB_TYPE}_INCLUDE_DIRS}
                     ${iitecat_iface${LIB_TYPE}_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})                    
 
-add_library(${LIB_NAME} SHARED
+set(LIB_SOURCES
     src/ec_boards_iface.cpp
     src/mc_centAC_esc.cpp
     src/mc_hipwr_esc.cpp
@@ -46,14 +46,21 @@ add_library(${LIB_NAME} SHARED
     src/ft6_esc.cpp
     src/foot_sensor_esc.cpp
     src/test_esc.cpp
-    src/rt_ipc.cpp
 )
 
-add_dependencies(${LIB_NAME} protobuf)
 
 if ( Xenomai_FOUND )
     set_xeno_flags(${LIB_NAME})
+    set(RT_LIB_SOURCES
+        src/rt_ipc.cpp
+        )
 endif()
+
+add_library(${LIB_NAME} SHARED
+            ${LIB_SOURCES} ${RT_LIB_SOURCES}
+            )
+
+add_dependencies(${LIB_NAME} protobuf)
 
 target_link_libraries(${LIB_NAME} ${soem${LIB_TYPE}_LIBRARIES} 
                                   ${iitecat_iface${LIB_TYPE}_LIBRARIES}
