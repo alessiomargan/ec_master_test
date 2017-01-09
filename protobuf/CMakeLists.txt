@@ -20,6 +20,7 @@ endforeach()
 
 set(msgs
   ec_boards_base_input.proto
+  quaternion.proto
   vector2d.proto
   header.proto
   time.proto

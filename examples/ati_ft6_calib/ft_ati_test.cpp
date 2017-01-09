@@ -173,7 +173,7 @@ int main ( int argc, char **argv ) {
     //load_matrix("LeftWristCalibMatrix.txt", cal_matrix);
     //load_matrix("ExtraWristCalibMatrix.txt", cal_matrix);
     //load_matrix("sensor1_calib.txt", cal_matrix);
-    //load_matrix("sensor2_calib.txt", cal_matrix);
+    //load_matrix("calib_matrix_sens_set2_left_foot_walkman_Dec_12_2016.txt", cal_matrix);
     //load_matrix("ones.txt", cal_matrix);
 
     auto it = cal_matrix.begin();
@@ -254,12 +254,12 @@ int main ( int argc, char **argv ) {
         memcpy ( ( void* ) &sens_data.iit, &ft_pdo_rx.force_X, sizeof ( float ) * 6 );
         sens_log.push_back ( sens_data );
         
-        if ( fabs(sample.ft[0]) > 500 || 
-             fabs(sample.ft[1]) > 500 ||
-             fabs(sample.ft[2]) > 500 ||
-             fabs(sample.ft[3]) > 20 ||
-             fabs(sample.ft[4]) > 20 ||
-             fabs(sample.ft[5]) > 20 ) { printf(ANSI_COLOR_RED); }
+        if ( fabs(sample.ft[0]) > 300 || 
+             fabs(sample.ft[1]) > 300 ||
+             fabs(sample.ft[2]) > 300 ||
+             fabs(sample.ft[3]) > 15 ||
+             fabs(sample.ft[4]) > 15 ||
+             fabs(sample.ft[5]) > 15 ) { printf(ANSI_COLOR_RED); }
         sens_data.fprint ( stderr );
         printf(ANSI_COLOR_RESET);
         

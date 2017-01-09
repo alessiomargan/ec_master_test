@@ -1,5 +1,6 @@
 #include <ec_boards_sine.h>
 #include <iit/advr/coman_robot_id.h>
+#include <iit/advr/walkman_robot_id.h>
 #include <iit/advr/centauro_robot_id.h>
 
 #define MID_POS(m,M)    (m+(M-m)/2)
@@ -37,21 +38,25 @@ void Ec_Boards_sine::init_preOP ( void ) {
     float min_pos, max_pos, link_pos, motor_pos;
 
     std::vector<int> test_rid = std::initializer_list<int> {
-        centauro::WAIST_Y,
-        centauro::RA_SH_1,
-        centauro::RA_SH_2,
-        centauro::RA_SH_3,
-        centauro::RA_EL,
-        centauro::RA_WR_1,
-        centauro::RA_WR_2,
-        centauro::RA_WR_3,
-        centauro::LA_SH_1,
-        centauro::LA_SH_2,
-        centauro::LA_SH_3,
-        centauro::LA_EL,
-        centauro::LA_WR_1,
-        centauro::LA_WR_2,
-        centauro::LA_WR_3,
+
+//         centauro::WAIST_Y,
+//         centauro::RA_SH_1,
+//         centauro::RA_SH_2,
+//         centauro::RA_SH_3,
+//         centauro::RA_EL,
+//         centauro::RA_WR_1,
+//         centauro::RA_WR_2,
+//         centauro::RA_WR_3,
+//         centauro::LA_SH_1,
+//         centauro::LA_SH_2,
+//         centauro::LA_SH_3,
+//         centauro::LA_EL,
+//         centauro::LA_WR_1,
+//         centauro::LA_WR_2,
+//         centauro::LA_WR_3,
+    
+        22,
+        123
         
     };
 
@@ -73,18 +78,23 @@ void Ec_Boards_sine::init_preOP ( void ) {
         DPRINTF ( ">> Joint_id %d motor %f link %f start %f home %f\n", pos2Rid ( slave_pos ), motor_pos, link_pos, start_pos[slave_pos], home[slave_pos]);
         
         // set home to mid pos
-        //home[slave_pos] = MID_POS ( min_pos,max_pos );
+        home[slave_pos] = MID_POS ( min_pos,max_pos );
         //home[slave_pos] = start_pos[slave_pos];
-        home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        //home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
         
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref  
-        //moto->start ( CTRL_SET_MIX_POS_MODE );
-        moto->start ( CTRL_SET_POS_MODE );
+        //assert ( moto->start ( CTRL_SET_MIX_POS_MODE ) == EC_BOARD_OK );
+        assert ( moto->start ( CTRL_SET_POS_MODE ) == EC_BOARD_OK );
         //moto->start ( CTRL_SET_POS_LINK_MODE );
     }
 
+    DPRINTF ( ">>> wait xddp terminal ....\n" );
+    DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
+    char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
+
+    
     for ( auto const& item : motors_to_start ) {
         slave_pos = item.first;
         moto = item.second;
@@ -138,16 +148,9 @@ int Ec_Boards_sine::user_loop ( void ) {
         int slave_pos;
         for ( auto const& item : motors ) {
             slave_pos = item.first;
-            if ( 
-                pos2Rid(slave_pos) == centauro::RA_EL ||
-                pos2Rid(slave_pos) == centauro::RA_WR_1 ||
-                pos2Rid(slave_pos) == centauro::RA_WR_2 ||
-                pos2Rid(slave_pos) == centauro::RA_WR_3
-            ) {
-                moto = item.second;
-                A = home[slave_pos] - 1;
-                moto->set_posRef ( home[slave_pos] + A * sinf ( 2*M_PI*freq*dt ) );
-            }
+            moto = item.second;
+            A = home[slave_pos] - 1;
+            moto->set_posRef ( home[slave_pos] + A * sinf ( 2*M_PI*freq*dt ) );
         }
     }
     //////////////////////////////////////////////////////

@@ -16,7 +16,7 @@ add_executable(${PROJECT_NAME}
     lpms_forward.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp LpSensor pdo_pb protobuf)
+target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp LpSensor pdo_pb ec_master_pb protobuf)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 

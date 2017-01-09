@@ -70,7 +70,7 @@ void EC_boards_centAC_impedance::init_preOP ( void ) {
         centauro::LA_WR_1,
         centauro::LA_WR_2,
         centauro::LA_WR_3,
-         
+        123, 
 
     };
     
