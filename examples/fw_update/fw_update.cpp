@@ -154,7 +154,7 @@ int main ( int argc, char *argv[] ) try {
                 sPos = rid2pos.at ( *it );
             } catch ( const std::out_of_range& oor ) {
                 DPRINTF ( "%s\n", oor.what() );
-                continue;
+                //continue;
             }
         } else {
             // use slave pos
