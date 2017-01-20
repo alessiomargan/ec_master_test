@@ -59,7 +59,7 @@ EC_boards_walkman_test:: ~EC_boards_walkman_test() {
 void EC_boards_walkman_test::init_preOP ( void ) {
 
     Motor * moto;
-    int slave_pos;
+    int slave_pos, motor_start;
     float min_pos, max_pos, pos_ref_fb;
 
     get_esc_map_byclass ( left_leg,  walkman::robot_left_leg_ids );
@@ -99,23 +99,21 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
         test_pos[slave_pos] = DEG2RAD ( walkman::robot_ids_test_pos_deg[pos2Rid(slave_pos)] );
         
-        DPRINTF ( "Joint_id %d start %f home %f test_pos %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
+        DPRINTF ( "Joint_id %d start %f home %f test_pos %f\n",
+                  pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
 
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        spline_start2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt_5s, Ys );
+        trj_start2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt_5s, Ys );
 
-        Ys = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos] };
-        spline_home2test_pos[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt_3s, Ys );
-
-        Ys = std::initializer_list<double> { test_pos[slave_pos], home[slave_pos] };
-        spline_test_pos2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt_3s, Ys );
+        Ys = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos], home[slave_pos] };
+        trj_home2test_pos2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( std::initializer_list<double>{ 0, 3, 6 }, Ys );
 
         /* If k does not match the key of any element in the container, the function inserts a new element with that key
             * and returns a reference to its mapped value. Notice that this always increases the container size by one,
             * even if no mapped value is assigned to the element (the element is constructed using its default constructor).
             */
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        spline_any2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt_5s, Ys );
+        trj_any2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt_5s, Ys );
 
     }
     
@@ -141,7 +139,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 //         walkman::RL_H_Y,
 //         walkman::RL_A_R,
 
-//        walkman::LL_K,
+//         walkman::LL_K,
 
 //         walkman::LL_H_Y,
 //         walkman::LL_A_R,
@@ -152,9 +150,9 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     };
     
     remove_rids_intersection(pos_ctrl_ids, no_control);
-//    remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_arm_ids);
-//    remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_arm_ids);
-//    remove_rids_intersection(pos_ctrl_ids, walkman::robot_waist_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_arm_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_arm_ids);
+    remove_rids_intersection(pos_ctrl_ids, walkman::robot_waist_ids);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_leg_ids);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_leg_ids);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
@@ -169,30 +167,37 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         // - read actual joint position and set as pos_ref
         //DPRINTF ( ">>> START %d wait xddp terminal ....\n", moto->get_robot_id() );
         //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }
-        if (moto->get_ESC_type() == LO_PWR_DC_MC ) { moto->start ( CTRL_SET_POS_MODE ); }
-        else if ( moto->get_ESC_type() == HI_PWR_AC_MC || moto->get_ESC_type() == HI_PWR_DC_MC) { moto->start ( CTRL_SET_MIX_POS_MODE ); }
-        else {  }
+        
+        if (moto->get_ESC_type() == LO_PWR_DC_MC ) {
+            motor_start = moto->start ( CTRL_SET_POS_MODE );
+        } else if ( moto->get_ESC_type() == HI_PWR_AC_MC ) {
+           motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
+            //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
+        } else if ( moto->get_ESC_type() == HI_PWR_DC_MC) {
+            motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
+            //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
+        } else {
+            
+        }
+
+        assert( motor_start == EC_BOARD_OK );
+        
         //while ( ! moto->move_to(home[slave_pos], 0.005) ) { osal_usleep(100);  }
     }
 
-
+    motors2move = motors2ctrl;
+    
     DPRINTF ( ">>> motors2ctrl %d motors2move %d\n", motors2ctrl.size(), motors2move.size() );
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     if ( motors2move.size() > 0 ) {
-        trj_queue.push ( &spline_start2home );
-        trj_queue.push ( &spline_home2test_pos );
-        trj_queue.push ( &spline_test_pos2home );
+        trj_queue.push ( &trj_start2home );
     }
 }
 
 
 void EC_boards_walkman_test::init_OP ( void ) {
-
-    user_state = HOMING;
-    //user_state = IDLE;
-    home_state = TEST_HOME;
 
     //DPRINTF ( ">>> wait xddp terminal ....\n" );
     //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
@@ -249,8 +254,7 @@ int EC_boards_walkman_test::user_loop ( void ) {
             
         if ( motors2move.size() > 0 ) {
             // add splines ....
-            trj_queue.push ( &spline_home2test_pos );
-            trj_queue.push ( &spline_test_pos2home );
+            trj_queue.push ( &trj_home2test_pos2home );
             // !!! since queue was empty reset the first spline
             running_trj = trj_queue.front();
             last_run_trj = running_trj;
@@ -320,12 +324,12 @@ int EC_boards_walkman_test::xddp_input ( C &user_cmd ) {
 //                 while ( ! trj_queue.empty() ) {
 //                         trj_queue.pop();
 //                     }
-//                     get_trj_for_end_points ( spline_any2home, home, 2.0 );
+//                     get_trj_for_end_points ( trj_any2home, home, 2.0 );
 //                     if ( running_trj ) {
-//                         smooth_splines_trj ( spline_any2home, *running_trj, 1.0 );
+//                         smooth_splines_trj ( trj_any2home, *running_trj, 1.0 );
 //                     }
-//                     advr::reset_trj ( spline_any2home );
-//                     trj_queue.push ( &spline_any2home );
+//                     advr::reset_trj ( trj_any2home );
+//                     trj_queue.push ( &trj_any2home );
 //                     DPRINTF ( "ANY2HOME ....\n" );
 //             break;
 //                 
@@ -381,9 +385,10 @@ int EC_boards_walkman_test::xddp_input ( C &user_cmd ) {
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
     }
+
     ///////////////////////////////////////////////////////
     //
-    js_input_t		js_cmd;
+    js_input_t  js_cmd;
     if ( ( bytes = jsInXddp.xddp_read ( js_cmd ) ) > 0 ) {
 
         //user_cmd = process_js_input(js_cmd);
@@ -406,37 +411,17 @@ int EC_boards_walkman_test::xddp_input ( C &user_cmd ) {
         case JS_EVENT_BUTTON :
             switch ( js_cmd.number ) {
             case 0 :
-                if ( js_cmd.value && user_state == IDLE ) {
-                    user_state = HOME2MID;
-                    advr::reset_trj ( spline_home2test_pos );
-                }
                 break;
             case 1 :
-                if ( js_cmd.value && user_state == IDLE ) {
-                    user_state = MID2HOME;
-                    advr::reset_trj ( spline_test_pos2home );
-                }
                 break;
             case 2 :
-                if ( js_cmd.value && user_state == IDLE ) {
-                    set_any2home ( motors2ctrl, spline_any2home, *running_trj );
-                    user_state = ANY2HOME;
-                    advr::reset_trj ( spline_any2home );
-                }
                 break;
             case 9 :
-                if ( js_cmd.value && user_state == IDLE ) {
-                    user_state = HOMING;
-                    home_state = TEST_HOME;
-                    advr::reset_trj ( spline_start2home );
-                }
                 break;
             case 4 :
             case 5 :
             case 6 :
             case 7 :
-                user_state == IDLE;
-                DPRINTF ( "Set IDLE state\n" );
                 break;
             default:
                 DPRINTF ( "Not handle : cmd %d value %d\n", js_cmd.number, js_cmd.value );

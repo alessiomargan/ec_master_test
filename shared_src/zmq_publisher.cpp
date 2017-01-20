@@ -86,6 +86,18 @@ int Abs_Publisher::publish_msg() {
 //
 ///////////////////////////////////////////////////////////////////////
 
+template <typename T>
+void ZMQ_Pub_thread::zpub_factory(const int rid, const std::string uri_prefix, const std::string pipe_prefix, int base_port ) {
+
+    Abs_Publisher * zpub = new T ( uri_prefix+std::to_string ( base_port+rid ) );
+    if ( zpub->open_pipe ( pipe_prefix+std::to_string ( rid ) ) == 0 ) {
+        zmap[base_port+rid] = zpub;
+    } else {
+        delete zpub;
+    }
+
+}
+
 void ZMQ_Pub_thread::th_init ( void* ) {
 
     Abs_Publisher * zpub;
@@ -96,30 +108,18 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     std::string motor_prefix ( "Motor_id_" );
     std::string ft_prefix ( "Ft_id_" );
     std::string foot_prefix ( "Foot_id_" );
+    std::string hand_prefix ( "Hand_id_" );
 
 #if 0
     ///////////////////////////////////////////////////////////////////////
     // COMAN
     ///////////////////////////////////////////////////////////////////////
     base_port = 9000;
-    // coman::robot_mcs_ids
-    for ( auto const& rid : coman::robot_mcs_ids ) {
-        zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
-        if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
-            zmap[base_port+rid] = zpub;
-        } else {
-            delete zpub;
-        }
+    for ( auto const& rid : coman::robot_fts_ids ) { 
+        zpub_factory<McPub>(rid, motor_prefix, uri, base_port);
     }
-    ///////////////////////////////////////////////////////////////////////
-    // coman::robot_fts_ids
     for ( auto const& rid : coman::robot_fts_ids ) {
-        zpub = new FtPub ( uri+std::to_string ( base_port+rid ) );
-        if ( zpub->open_pipe ( ft_prefix+std::to_string ( rid ) ) == 0 ) {
-            zmap[base_port+rid] = zpub;
-        } else {
-            delete zpub;
-        }
+        zpub_factory<FtPub>(rid, ft_prefix, uri, base_port);
     }
     zpub = new PwCmnPub ( uri+std::to_string ( 10000 ) );
     if ( zpub->open_pipe ( "PowCmn_pos_1" ) == 0 ) {
@@ -132,36 +132,17 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     // WALKMAN
     ///////////////////////////////////////////////////////////////////////
     base_port = 9500;
-    // walkman::robot_mcs_ids
     for ( auto const& rid : walkman::robot_mcs_ids ) {
-        zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
-        if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
-            zmap[base_port+rid] = zpub;
-        } else {
-            delete zpub;
-        }
+        zpub_factory<McPub>(rid, motor_prefix, uri, base_port);
     }
-    ///////////////////////////////////////////////////////////////////////
-    // walkman::robot_fts_ids
     for ( auto const& rid : walkman::robot_fts_ids ) {
-        zpub = new FtPub ( uri+std::to_string ( base_port+rid ) );
-        if ( zpub->open_pipe ( ft_prefix+std::to_string ( rid ) ) == 0 ) {
-            zmap[base_port+rid] = zpub;
-        } else {
-            delete zpub;
-        }
+        zpub_factory<FtPub>(rid, ft_prefix, uri, base_port);
     }
     ///////////////////////////////////////////////////////////////////////
     // walkman::robot_footsens_ids
     for ( auto const& rid : walkman::robot_foot_ids ) {
-        zpub = new FootPub ( uri+std::to_string ( base_port+rid ) );
-        if ( zpub->open_pipe ( foot_prefix+std::to_string ( rid ) ) == 0 ) {
-            zmap[base_port+rid] = zpub;
-        } else {
-            delete zpub;
-        }
+        zpub_factory<FootPub>(rid, ft_prefix, uri, base_port);
     }
-
     zpub = new PwPub ( uri+std::to_string ( 10001 ) );
     if ( zpub->open_pipe ( "PowWkm_pos_1" ) == 0 ) {
         zmap[10001] = zpub;
@@ -173,21 +154,19 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     // CENTAURO
     ///////////////////////////////////////////////////////////////////////
     base_port = 9600;
-    // centauro::robot_mcs_ids
     for ( auto const& rid : centauro::robot_mcs_ids ) {
-        zpub = new McPub ( uri+std::to_string ( base_port+rid ) );
-        //zpub = new EcSlavePub ( uri+std::to_string ( base_port+rid ) );
-        if ( zpub->open_pipe ( motor_prefix+std::to_string ( rid ) ) == 0 ) {
-            zmap[base_port+rid] = zpub;
-        } else {
-            delete zpub;
-        }
+        zpub_factory<McPub>(rid, motor_prefix, uri, base_port);
     }
 
     ///////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////
 
+    base_port = 9800;
+    for ( auto const& rid : std::initializer_list<int>{1,2,3} ) {
+        zpub_factory<McHandPub>(rid, hand_prefix, uri, base_port);
+    }
+    
     zpub = new TestPub ( uri+std::to_string ( 12345 ) );
     if ( zpub->open_pipe ( "Test_pos_1" ) == 0 ) {
         zmap[base_port] = zpub;

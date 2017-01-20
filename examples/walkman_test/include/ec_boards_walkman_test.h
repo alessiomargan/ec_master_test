@@ -58,15 +58,11 @@ private :
     
     std::map<int,float> test_pos;
 
-    advr::Trj_ptr_map spline_start2home;
-    advr::Trj_ptr_map spline_home2test_pos;
-    advr::Trj_ptr_map spline_test_pos2home;
-    advr::Trj_ptr_map spline_any2home;
+    advr::Trj_ptr_map trj_start2home;
+    advr::Trj_ptr_map trj_home2test_pos2home;
+    advr::Trj_ptr_map trj_any2home;
 
     XDDP_pipe jsInXddp, navInXddp, imuInXddp;
-
-    user_state_t user_state;
-    home_state_t home_state;
 
     std::map<int, iit::ecat::advr::Motor*>  head;
     std::map<int, iit::ecat::advr::Motor*> 	left_arm;;

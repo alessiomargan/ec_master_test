@@ -43,6 +43,7 @@
 #include <iit/ecat/advr/foot_sensor_esc.h>
 #include <iit/ecat/advr/power_board.h>
 #include <iit/ecat/advr/power_coman_board.h>
+#include <iit/ecat/advr/mc_hand_esc.h>
 #include <iit/ecat/advr/test_esc.h>
 
 #include <iit/advr/thread_util.h>
@@ -214,6 +215,7 @@ class ZMQ_Pub_thread : public Thread_hook {
     typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx> McPub;
     typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
     typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
+    typedef Publisher<iit::ecat::advr::McHandEscPdoTypes::pdo_rx> McHandPub;
     
     typedef Publisher<iit::advr::Ec_slave_pdo> EcSlavePub;
 
@@ -246,6 +248,12 @@ public:
 
     virtual void th_init ( void * );
     virtual void th_loop ( void * );
+
+private:
+    
+    template <typename T>
+    void zpub_factory(const int rid, const std::string uri_prefix, const std::string pipe_prefix, int base_port );
+
 };
 
 
