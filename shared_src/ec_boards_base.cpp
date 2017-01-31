@@ -131,6 +131,44 @@ void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_des
     
 }
 
+bool Ec_Thread_Boards_base::set_impedance_refs ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+                                                 const advr::ImpTrj_ptr_map &imp_trj_map,
+                                                 float eps, bool debug )
+{
+    float pos_ref, vel_ref, tor_ref;
+    int slave_pos;
+    std::array<advr::Trj_ptr,3> trj;
+    iit::ecat::advr::Motor * moto;
+    iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    iit::ecat::advr::Motor::motor_pdo_tx_t motor_pdo_tx;
+
+    for ( auto const& item : motor_set ) {
+        slave_pos = item.first;
+        moto =  item.second;
+
+        // check in the spline_trj map if the current slave_pos exist
+        try {
+            trj = imp_trj_map.at ( slave_pos );
+        } catch ( const std::out_of_range& oor ) {
+            continue;
+        }
+
+        pos_ref = (float)(*trj[0])();
+        moto->set_posRef ( pos_ref );
+        vel_ref = (float)(*trj[1])();
+        moto->set_velRef ( vel_ref );
+        tor_ref = (float)(*trj[2])();
+        moto->set_torRef ( tor_ref );
+
+        motor_pdo_rx = moto->getRxPDO();
+        motor_pdo_tx = moto->getTxPDO();
+        
+        
+    }
+
+    return ( trj[0]->ended() && trj[1]->ended() && trj[2]->ended() );
+}
+
 
 /**
  * NOTE this is a step reference !!!
@@ -161,10 +199,10 @@ bool Ec_Thread_Boards_base::go_there ( const std::map<int, iit::ecat::advr::Moto
             continue;
         }
 
-        motor_pdo_rx = moto->getRxPDO();
         //getRxPDO(slave_pos, motor_pdo_rx);
         moto->set_posRef ( pos_ref );
 
+        motor_pdo_rx = moto->getRxPDO();
         link_err = fabs ( motor_pdo_rx.link_pos  - pos_ref );
         motor_err = fabs ( motor_pdo_rx.motor_pos - pos_ref );
         motor_link_err = fabs ( motor_pdo_rx.motor_pos - motor_pdo_rx.link_pos );

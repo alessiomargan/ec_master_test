@@ -83,7 +83,9 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     get_esc_map_byclass ( hands,       walkman::robot_hands_ids );
     DPRINTF ( "found %lu <Motor> hands\n", hands.size() );
 
-    std::vector<double> Ys;
+    std::vector<double> vPos;
+    std::vector<double> vVel;
+    std::vector<double> vTor;
     std::vector<double> Xs;
 
     ///////////////////////////////////////////////////////////////////////
@@ -102,54 +104,38 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         DPRINTF ( "Joint_id %d start %f home %f test_pos %f\n",
                   pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
 
-        Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        trj_start2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt_5s, Ys );
+        vPos =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+        trj_start2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt_5s, vPos );
 
-        Ys = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos], home[slave_pos] };
-        trj_home2test_pos2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 3, 6 }, Ys );
+        vPos = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos], home[slave_pos] };
+        trj_home2test_pos2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 3, 6 }, vPos );
 
         /* If k does not match the key of any element in the container, the function inserts a new element with that key
             * and returns a reference to its mapped value. Notice that this always increases the container size by one,
             * even if no mapped value is assigned to the element (the element is constructed using its default constructor).
             */
-        Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        trj_any2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt_5s, Ys );
+        vPos =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+        trj_any2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt_5s, vPos );
 
     }
     
     
     std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
-    //std::vector<int> pos_ctrl_ids = walkman::robot_left_arm_ids;
-    //std::vector<int> pos_ctrl_ids = walkman::robot_right_leg_ids;
-    //std::vector<int> pos_ctrl_ids = walkman::robot_left_leg_ids;
+//     std::vector<int> pos_ctrl_ids = walkman::robot_left_arm_ids;
+//     std::vector<int> pos_ctrl_ids = walkman::robot_right_leg_ids;
+//     std::vector<int> pos_ctrl_ids = walkman::robot_left_leg_ids;
 //     std::vector<int> pos_ctrl_ids = std::initializer_list<int> {
-//         walkman::RL_H_P,
-//         walkman::RL_K,
-//         walkman::RL_A_P,
-//         walkman::RL_A_R,
-// 
-//         walkman::LL_A_P,
-//         walkman::LL_A_R,
 //     };
+
+    std::vector<int> tor_ctrl_ids = std::initializer_list<int> {
+        walkman::RL_H_R, // 41
+    };
+
     
     std::vector<int> no_control = std::initializer_list<int> {
-//         walkman::RL_H_R,
-//         walkman::LL_H_R,
-//       
-//         walkman::RL_H_Y,
-//         walkman::RL_A_R,
-
-//         walkman::LL_K,
-
-//         walkman::LL_H_Y,
-//         walkman::LL_A_R,
-// 
-//         walkman::WAIST_Y,
-//         walkman::WAIST_P,
-//         walkman::WAIST_R,
     };
     
-    remove_rids_intersection(pos_ctrl_ids, no_control);
+//    remove_rids_intersection(pos_ctrl_ids, no_control);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_arm_ids);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_arm_ids);
     remove_rids_intersection(pos_ctrl_ids, walkman::robot_waist_ids);
@@ -157,25 +143,28 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_leg_ids);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
+    
     get_esc_map_byclass ( motors2ctrl,  pos_ctrl_ids );
 
     for ( auto const& item : motors2ctrl ) {
         slave_pos = item.first;
         moto = item.second;
-        //////////////////////////////////////////////////////////////////////////
-        // start controller :
-        // - read actual joint position and set as pos_ref
+
         //DPRINTF ( ">>> START %d wait xddp terminal ....\n", moto->get_robot_id() );
         //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }
         
+        //////////////////////////////////////////////////////////////////////////
+        // start controller :
+        // - read actual joint position and set as pos_ref
         if (moto->get_ESC_type() == LO_PWR_DC_MC ) {
             motor_start = moto->start ( CTRL_SET_POS_MODE );
         } else if ( moto->get_ESC_type() == HI_PWR_AC_MC ) {
-            motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
-            //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
+            //motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
+            motor_start = moto->start ( CTRL_SET_IMPED_MODE );
         } else if ( moto->get_ESC_type() == HI_PWR_DC_MC) {
-            motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
-            //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
+            //motor_start = moto->start ( CTRL_SET_POS_MODE );
+            //motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
+            motor_start = moto->start ( CTRL_SET_IMPED_MODE );
         } else {
             
         }

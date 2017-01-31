@@ -178,9 +178,18 @@ protected:
 
 typedef std::shared_ptr<Trajectory> Trj_ptr;
 typedef std::map<int, Trj_ptr> Trj_ptr_map;
+typedef std::map<int, std::array< Trj_ptr, 3>> ImpTrj_ptr_map;
 
 inline void reset_trj ( Trj_ptr_map  &trjs ) {
     for ( auto item : trjs ) { item.second->start_time(); }
+}
+
+inline void reset_imp_trj ( ImpTrj_ptr_map  &trjs ) {
+    for ( auto item : trjs ) {
+        item.second[0]->start_time();
+        item.second[1]->start_time();
+        item.second[2]->start_time();
+    }
 }
 
 

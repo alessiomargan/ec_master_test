@@ -86,18 +86,6 @@ int Abs_Publisher::publish_msg() {
 //
 ///////////////////////////////////////////////////////////////////////
 
-template <typename T>
-void ZMQ_Pub_thread::zpub_factory(const int rid, const std::string uri_prefix, const std::string pipe_prefix, int base_port ) {
-
-    Abs_Publisher * zpub = new T ( uri_prefix+std::to_string ( base_port+rid ) );
-    if ( zpub->open_pipe ( pipe_prefix+std::to_string ( rid ) ) == 0 ) {
-        zmap[base_port+rid] = zpub;
-    } else {
-        delete zpub;
-    }
-
-}
-
 void ZMQ_Pub_thread::th_init ( void* ) {
 
     Abs_Publisher * zpub;
@@ -110,16 +98,16 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     std::string foot_prefix ( "Foot_id_" );
     std::string hand_prefix ( "Hand_id_" );
 
-#if 0
     ///////////////////////////////////////////////////////////////////////
     // COMAN
     ///////////////////////////////////////////////////////////////////////
+#if 0
     base_port = 9000;
-    for ( auto const& rid : coman::robot_fts_ids ) { 
-        zpub_factory<McPub>(rid, motor_prefix, uri, base_port);
+    for ( auto const& rid : coman::robot_mcs_ids ) { 
+        zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
     }
     for ( auto const& rid : coman::robot_fts_ids ) {
-        zpub_factory<FtPub>(rid, ft_prefix, uri, base_port);
+        zpub_factory<FtPub>(rid, uri, ft_prefix, base_port);
     }
     zpub = new PwCmnPub ( uri+std::to_string ( 10000 ) );
     if ( zpub->open_pipe ( "PowCmn_pos_1" ) == 0 ) {
@@ -127,21 +115,20 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     } else {
         delete zpub;
     }
-
+#endif
     ///////////////////////////////////////////////////////////////////////
     // WALKMAN
     ///////////////////////////////////////////////////////////////////////
+#if 1
     base_port = 9500;
     for ( auto const& rid : walkman::robot_mcs_ids ) {
-        zpub_factory<McPub>(rid, motor_prefix, uri, base_port);
+        zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
     }
     for ( auto const& rid : walkman::robot_fts_ids ) {
-        zpub_factory<FtPub>(rid, ft_prefix, uri, base_port);
+        zpub_factory<FtPub>(rid, uri, ft_prefix, base_port);
     }
-    ///////////////////////////////////////////////////////////////////////
-    // walkman::robot_footsens_ids
     for ( auto const& rid : walkman::robot_foot_ids ) {
-        zpub_factory<FootPub>(rid, ft_prefix, uri, base_port);
+        zpub_factory<FootPub>(rid, uri, foot_prefix, base_port);
     }
     zpub = new PwPub ( uri+std::to_string ( 10001 ) );
     if ( zpub->open_pipe ( "PowWkm_pos_1" ) == 0 ) {
@@ -154,8 +141,8 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     // CENTAURO
     ///////////////////////////////////////////////////////////////////////
     base_port = 9600;
-    for ( auto const& rid : centauro::robot_mcs_ids ) {
-        zpub_factory<McPub>(rid, motor_prefix, uri, base_port);
+    for ( auto const &rid : centauro::robot_mcs_ids ) {
+        zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -164,7 +151,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
 
     base_port = 9800;
     for ( auto const& rid : std::initializer_list<int>{1,2,3} ) {
-        zpub_factory<McHandPub>(rid, hand_prefix, uri, base_port);
+        zpub_factory<McHandPub>(rid, uri, hand_prefix, base_port);
     }
     
     zpub = new TestPub ( uri+std::to_string ( 12345 ) );

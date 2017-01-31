@@ -56,6 +56,7 @@ optional_build(centAC_urdf  examples/centAC_urdf OFF)
 optional_build(centAC_impedance  examples/centAC_impedance OFF)
 optional_build(walkman_test examples/walkman_test OFF)
 optional_build(hand_test    examples/hand_test OFF)
+optional_build(impedance_trj_test examples/impedance_trj_test OFF)
 
 optional_build(joy_forward 	other_bin/joy_forward   OFF)
 optional_build(spnav_forward    other_bin/spnav_forward OFF)

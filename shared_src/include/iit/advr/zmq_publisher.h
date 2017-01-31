@@ -220,7 +220,7 @@ class ZMQ_Pub_thread : public Thread_hook {
     typedef Publisher<iit::advr::Ec_slave_pdo> EcSlavePub;
 
     iit::ecat::stat_t loop_time;
-    uint64_t	tNow, dt;
+    uint64_t    tNow, dt;
     PubMap_t    zmap;
 
 public:
@@ -252,7 +252,16 @@ public:
 private:
     
     template <typename T>
-    void zpub_factory(const int rid, const std::string uri_prefix, const std::string pipe_prefix, int base_port );
+    void zpub_factory(const int rid, const std::string uri_prefix, const std::string pipe_prefix, int base_port ) {
+
+        Abs_Publisher * zpub = new T ( uri_prefix+std::to_string ( base_port+rid ) );
+        if ( zpub->open_pipe ( pipe_prefix+std::to_string ( rid ) ) == 0 ) {
+            zmap[base_port+rid] = zpub;
+        } else {
+            delete zpub;
+        }
+
+    }
 
 };
 

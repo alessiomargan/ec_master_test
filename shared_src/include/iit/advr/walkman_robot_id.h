@@ -141,6 +141,16 @@ const std::vector<int> robot_mcs_ids = std::initializer_list<int> {
 
 };
 
+const std::vector<int> robot_mcs_upg_ids = std::initializer_list<int> {
+    // torso roll
+    WAIST_R,
+    // right leg
+    RL_H_R, RL_H_Y, RL_H_P, RL_K, RL_A_P, RL_A_R,
+    // left leg
+    LL_H_R, LL_H_Y, LL_H_P, LL_K, LL_A_P, LL_A_R,
+
+};
+
 std::map<int, float> robot_ids_home_pos_deg = {
 
     {HEAD_R, 0.0}, {HEAD_P, 0.0},

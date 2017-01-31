@@ -53,6 +53,7 @@ protected :
     std::map<int,float> start_pos;
 
     std::queue<advr::Trj_ptr_map *> trj_queue;
+    
     advr::Trj_ptr_map * running_trj;
     advr::Trj_ptr_map * last_run_trj;
 
@@ -79,6 +80,10 @@ protected :
                     float eps, bool debug = false );
     bool go_there ( const advr::Trj_ptr_map &spline_map_trj,
                     float eps, bool debug = false );
+
+    bool set_impedance_refs ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
+                              const advr::ImpTrj_ptr_map &imp_trj_map,
+                              float eps, bool debug );
 
 
     void get_trj_for_end_points ( const std::map<int, iit::ecat::advr::Motor*> &motor_set,
