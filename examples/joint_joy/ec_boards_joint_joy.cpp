@@ -24,7 +24,7 @@ static const std::vector<double> Xt_20s = std::initializer_list<double> { 0, 20 
 EC_boards_joint_joy::EC_boards_joint_joy ( const char* config_yaml ) :
     Ec_Thread_Boards_base ( config_yaml ) {
 
-    name = "EC_boards_joint_joy";
+    name = "Ecat_Joint_joy";
     // not periodic
     period.period = {0,1};
 

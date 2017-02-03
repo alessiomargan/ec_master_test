@@ -352,8 +352,8 @@ HpESC_23:
     position: [50.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
     impedance:  [100.0, 10.0, 3.0, 0.03, 0.8]
-  #gear_ratio: GR_80
-  gear_ratio: GR_100
+  gear_ratio: GR_80
+  #gear_ratio: GR_100
 
 # LA_EL = 24
 HpESC_24:
@@ -396,7 +396,7 @@ LpESC_29:
 # WAIST
 #############################
 
-# WST_P = 31
+# WST_Y = 31
 HpESC_31:
   sign: -1
   pos_offset: 0
@@ -404,7 +404,7 @@ HpESC_31:
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
 
-# WST_R = 32
+# WST_P = 32
 HpESC_32:
   sign: -1
   pos_offset: 0
@@ -412,7 +412,7 @@ HpESC_32:
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
 
-# WST_Y = 33
+# WST_R = 33
 HpESC_33:
   sign: -1
   pos_offset: 0
@@ -421,28 +421,4 @@ HpESC_33:
     mix_position: [800.0, 0.0, 5.0]
 
 
-#############################
-# TEST JOINT
-#############################
 
-HpESC_666:
-  sign: 1
-  pos_offset: 0
-  pid :
-    position: [40.0, 0.0, 1.0]
-    mix_position: [2500.0, 0.005, 10.0]
-
-HpESC_1000:
-  sign: 1
-  pos_offset: 0
-  pid :
-    position: [40.0, 0.0, 1.0]
-    mix_position: [2500.0, 0.005, 100.0]
-
-
-LpESC_999:
-  sign: 1
-  pos_offset: 0
-  pid :
-    position: [40.0, 0.0, 1.0]
-    mix_position: [2500.0,0.005,100.0]

@@ -1,4 +1,7 @@
 #include <ec_boards_basic.h>
+
+#include <iit/advr/coman_robot_id.h>
+#include <iit/advr/walkman_robot_id.h>
 #include <iit/advr/centauro_robot_id.h>
 
 #define MID_POS(m,M)    (m+(M-m)/2)
@@ -30,6 +33,7 @@ Ec_Boards_basic::~Ec_Boards_basic() {
 
 void Ec_Boards_basic::init_preOP ( void ) {
 
+    
 }
 
 void Ec_Boards_basic::init_OP ( void ) {

@@ -82,7 +82,7 @@ const std::vector<int> robot_mcs_ids = std::initializer_list<int> {
 
 };
 
-std::map<int, float> robot_ids_home_pos_deg = {
+const std::map<int, float> robot_ids_home_pos_deg = {
 
     {WAIST_Y,   0.0},
 
@@ -94,7 +94,7 @@ std::map<int, float> robot_ids_home_pos_deg = {
 
 };
 
-std::map<int, float> robot_ids_test_pos_deg = {
+const std::map<int, float> robot_ids_test_pos_deg = {
 
     {WAIST_Y, 0.0},
     
@@ -108,7 +108,7 @@ std::map<int, float> robot_ids_test_pos_deg = {
 
 };
 
-std::map<int, float> robot_ids_zero_pos_deg = {
+const std::map<int, float> robot_ids_zero_pos_deg = {
 
     {WAIST_Y,   0.0},
 
@@ -120,7 +120,7 @@ std::map<int, float> robot_ids_zero_pos_deg = {
 
 };
 
-std::map<int, float> robot_ids_up_pos_deg = {
+const std::map<int, float> robot_ids_up_pos_deg = {
 
     {WAIST_Y, 0.0},
 
@@ -132,7 +132,7 @@ std::map<int, float> robot_ids_up_pos_deg = {
 
 };
 
-std::map<int, float> robot_ids_extend_pos_deg = {
+const std::map<int, float> robot_ids_extend_pos_deg = {
 
     {WAIST_Y,  0.0},
 

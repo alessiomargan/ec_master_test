@@ -123,7 +123,7 @@ void EC_boards_centAC_impedance::init_preOP ( void ) {
         assert ( EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
 
         start_pos[slave_pos] = motor_pos; 
-        home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
 
         DPRINTF ( ">> Joint_id %d motor %f link %f start %f home %f\n",
                   pos2Rid ( slave_pos ), motor_pos, link_pos, start_pos[slave_pos], home[slave_pos] );

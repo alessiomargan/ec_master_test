@@ -101,7 +101,7 @@ void EC_boards_centAC_test::init_preOP ( void ) {
         assert ( EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
 
         start_pos[slave_pos] = motor_pos; 
-        home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
 
         DPRINTF ( ">> Joint_id %d motor %f link %f start %f home %f\n",
                   pos2Rid ( slave_pos ), motor_pos, link_pos, start_pos[slave_pos], home[slave_pos] );
@@ -111,16 +111,16 @@ void EC_boards_centAC_test::init_preOP ( void ) {
         
         Ys = std::initializer_list<double> { 
             home[slave_pos],
-            DEG2RAD ( centauro::robot_ids_zero_pos_deg[pos2Rid(slave_pos)] )
+            DEG2RAD ( centauro::robot_ids_zero_pos_deg.at(pos2Rid(slave_pos)) )
         };
         trj_home2zero[slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xt_2s, Ys );
         
         Ys = std::initializer_list<double> { 
-            DEG2RAD ( centauro::robot_ids_zero_pos_deg[pos2Rid(slave_pos)] ),
-            DEG2RAD ( centauro::robot_ids_up_pos_deg[pos2Rid(slave_pos)] ),
-            DEG2RAD ( centauro::robot_ids_extend_pos_deg[pos2Rid(slave_pos)] ),
-            DEG2RAD ( centauro::robot_ids_up_pos_deg[pos2Rid(slave_pos)] ),
-            DEG2RAD ( centauro::robot_ids_zero_pos_deg[pos2Rid(slave_pos)] ),
+            DEG2RAD ( centauro::robot_ids_zero_pos_deg.at(pos2Rid(slave_pos)) ),
+            DEG2RAD ( centauro::robot_ids_up_pos_deg.at(pos2Rid(slave_pos)) ),
+            DEG2RAD ( centauro::robot_ids_extend_pos_deg.at(pos2Rid(slave_pos)) ),
+            DEG2RAD ( centauro::robot_ids_up_pos_deg.at(pos2Rid(slave_pos)) ),
+            DEG2RAD ( centauro::robot_ids_zero_pos_deg.at(pos2Rid(slave_pos)) ),
         };
         trj_zero2up2extend2zero[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt5_4s, Ys );
         
