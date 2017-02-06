@@ -22,18 +22,21 @@ firmware_update:
   #fw_path: ../examples/fw_update/fw_pdo56/walkman_up/  
   #fw_path: ../examples/fw_update/fw_pdo56/walkman_NOup/  
   
-  # legs+torso_roll UPGRADED motors
-  #slave_rId_list: [33,41,42,43,44,45,46,51,52,53,54,55,56]
+  # legs+torso_roll+torso_pitchvUPGRADED motors
+  #slave_rId_list: [33,32,41,42,43,44,45,46,51,52,53,54,55,56]
   # upper body NOT UPGRADED motors
-  #slave_rId_list: [31,32,11,12,13,14,21,22,23,24]
+  #slave_rId_list: [31,11,12,13,14,21,22,23,24]
+  # AC/DC motors
+  #slave_rId_list: [33, 41,42,43,44,45,46, 51,52,53,54,55,56, 31,32, 11,12,13,14, 21,22,23,24]
+  
   # upper body arms
   #slave_rId_list: [11,12,13,14,21,22,23,24]
   # small motors
-  #slave_rId_list: [15,16,17,19,25,26,27,29,1,2]
-  slave_pos_list: [1,2]
-  #slave_pos_list: [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40]
-  #slave_rId_list: [1,2,15,16,17,19,25,26,27,29]
+  slave_rId_list: [1,2, 15,16,17,19, 25,26,27,29]
   #slave_rId_list: [32,33]
+  
+  #slave_pos_list: [1,2]
+  #slave_pos_list: [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40]
   #slave_pos_list: [4,5,6,7,8,9,17,18,19,20,27]
   #####################################################3
   # all esc
@@ -88,7 +91,7 @@ GR_100:
 
 GR_120: 
     Motor_Inertia: 0.8827
-    InvMotor_Inertia: 1.1329
+    Inv_Motor_Inertia: 1.1329
     Observer_Cut_Off: 5.0
     Inv_Geared_Torque_Constant: 0.0712
     Geared_Torque_Constant: 14.04
@@ -232,6 +235,7 @@ HpESC_54:
     mix_position: [800.0, 0.0, 5.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [100.0, 10.0, 5.0, 0.01, 0.8]
+    #impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
 
 # LL_A_P = 55
 HpESC_55:
@@ -265,6 +269,8 @@ HpESC_11:
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
+    impedance: [0.0, 0.0, 4.0, 0.01, 0.8]
+
   gear_ratio: GR_120
 
 # RA_SH_2 = 12
@@ -274,6 +280,7 @@ HpESC_12:
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
+    impedance: [0.0, 0.0, 4.0, 0.01, 0.8]
   gear_ratio: GR_120
 
 # RA_SH_3 = 13
@@ -283,6 +290,7 @@ HpESC_13:
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
+    impedance: [30.0, 1.0, 4.0, 0.01, 0.8]
   gear_ratio: GR_80
 
 # RA_EL_ = 14
@@ -292,6 +300,7 @@ HpESC_14:
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
+    impedance: [0.0, 0.0, 4.0, 0.01, 0.8]
   gear_ratio: GR_80
 
 # RA_WR_1 = 15
@@ -300,6 +309,7 @@ LpESC_15:
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]
+  gear_ratio: GR_100
 
 # RA_WR_2 = 16
 LpESC_16:
@@ -307,6 +317,7 @@ LpESC_16:
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]
+  gear_ratio: GR_100
 
 # RA_WR_3 = 17
 LpESC_17:
@@ -314,6 +325,7 @@ LpESC_17:
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]
+  gear_ratio: GR_100
 
 # RA_HA = 19
 LpESC_19:
@@ -333,6 +345,7 @@ HpESC_21:
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
+    impedance:  [0.0, 0.0, 4.0, 0.01, 0.8]
   gear_ratio: GR_120
 
 # LA_SH_2 = 22
@@ -342,6 +355,7 @@ HpESC_22:
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
+    impedance:  [0.0, 0.0, 4.0, 0.01, 0.8]
   gear_ratio: GR_120
 
 # LA_SH_3 = 23
@@ -351,9 +365,8 @@ HpESC_23:
   pid :
     position: [50.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
-    impedance:  [100.0, 10.0, 3.0, 0.03, 0.8]
-  #gear_ratio: GR_80
-  gear_ratio: GR_100
+    impedance:  [30.0, 1.0, 4.0, 0.01, 0.8]
+  gear_ratio: GR_80
 
 # LA_EL = 24
 HpESC_24:
@@ -362,6 +375,7 @@ HpESC_24:
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
+    impedance:  [0.0, 0.0, 4.0, 0.01, 0.8]
   gear_ratio: GR_80
 
 # LA_WR_1 = 25
@@ -370,6 +384,7 @@ LpESC_25:
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]
+  gear_ratio: GR_100
 
 # LA_WR_2 = 26
 LpESC_26:
@@ -377,6 +392,7 @@ LpESC_26:
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]
+  gear_ratio: GR_100
 
 # LA_WR_3 = 27
 LpESC_27:
@@ -384,6 +400,7 @@ LpESC_27:
   pos_offset: 0
   pid :
     position: [100000.0 , 0.0 , 0.0]
+  gear_ratio: GR_100
 
 # LA_HA = 29
 LpESC_29:
@@ -396,30 +413,32 @@ LpESC_29:
 # WAIST
 #############################
 
-# WST_P = 31
+# WST_Y = 31
 HpESC_31:
   sign: -1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
-
-# WST_R = 32
+  gear_ratio: GR_100
+  
+# WST_P = 32
 HpESC_32:
   sign: -1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
-
-# WST_Y = 33
+  gear_ratio: GR_160
+  
+# WST_R = 33
 HpESC_33:
   sign: -1
   pos_offset: 0
   pid :
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
-
+  gear_ratio: GR_160
 
 #############################
 # TEST JOINT

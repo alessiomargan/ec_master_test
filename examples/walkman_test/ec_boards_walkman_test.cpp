@@ -120,7 +120,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     }
     
     
-    std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
+     std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
 //     std::vector<int> pos_ctrl_ids = walkman::robot_left_arm_ids;
 //     std::vector<int> pos_ctrl_ids = walkman::robot_right_leg_ids;
 //     std::vector<int> pos_ctrl_ids = walkman::robot_left_leg_ids;
@@ -128,7 +128,6 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 //     };
 
     std::vector<int> tor_ctrl_ids = std::initializer_list<int> {
-        walkman::RL_H_R, // 41
     };
 
     
@@ -139,10 +138,10 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_arm_ids);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_arm_ids);
     remove_rids_intersection(pos_ctrl_ids, walkman::robot_waist_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_leg_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_leg_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
+    remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_leg_ids);
+    remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_leg_ids);
+    remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
+    remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
     
     get_esc_map_byclass ( motors2ctrl,  pos_ctrl_ids );
 
@@ -159,8 +158,8 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         if (moto->get_ESC_type() == LO_PWR_DC_MC ) {
             motor_start = moto->start ( CTRL_SET_POS_MODE );
         } else if ( moto->get_ESC_type() == HI_PWR_AC_MC ) {
-            //motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
-            motor_start = moto->start ( CTRL_SET_IMPED_MODE );
+            motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
+            //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
         } else if ( moto->get_ESC_type() == HI_PWR_DC_MC) {
             //motor_start = moto->start ( CTRL_SET_POS_MODE );
             //motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
