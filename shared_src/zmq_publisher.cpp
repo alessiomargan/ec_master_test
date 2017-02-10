@@ -161,6 +161,11 @@ void ZMQ_Pub_thread::th_init ( void* ) {
         delete zpub;
     }
 
+    base_port = 10000;
+    for ( auto const& rid : std::initializer_list<int>{101,102} ) {
+        zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
+    }
+
 #if 0
     base_port++;
     zpub = new McPub ( uri+std::to_string ( base_port ) );

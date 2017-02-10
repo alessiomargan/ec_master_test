@@ -1,7 +1,8 @@
 #
 
 ec_board_ctrl:
-  eth_iface: eth1
+  #eth_iface: eth1
+  eth_iface: enp2s0
   #sync_cycle_time_ns: 500000
   #sync_cycle_time_ns: 1000000
   sync_cycle_time_ns: 2000000
