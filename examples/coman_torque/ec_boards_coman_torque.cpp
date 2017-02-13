@@ -9,7 +9,7 @@ Ec_Boards_coman_torque::Ec_Boards_coman_torque ( const char* config_yaml ) : Ec_
     // non periodic
     period.period = {0,1};
 
-#ifdef __XENO__
+#ifdef __COBALT__
     schedpolicy = SCHED_FIFO;
 #else
     schedpolicy = SCHED_OTHER;

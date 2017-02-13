@@ -39,7 +39,7 @@ Ec_Boards_hand::Ec_Boards_hand ( const char* config_yaml ) : Ec_Thread_Boards_ba
     // do not go above ....
     period.period = {0,1};
 
-#ifdef __XENO__
+#ifdef __COBALT__
     schedpolicy = SCHED_FIFO;
 #else
     schedpolicy = SCHED_OTHER;

@@ -28,7 +28,7 @@ EC_boards_joint_joy::EC_boards_joint_joy ( const char* config_yaml ) :
     // not periodic
     period.period = {0,1};
 
-#ifdef __XENO__
+#ifdef __COBALT__
     schedpolicy = SCHED_FIFO;
 #else
     schedpolicy = SCHED_OTHER;

@@ -10,7 +10,7 @@ endif()
 
 add_executable(${PROJECT_NAME}
     ${SHARED_SRC}/test_common.cpp
-    ${SHARED_SRC}/nrt_thread.cpp
+    ${SHARED_SRC}/wrap_thread.cpp
     ${SHARED_SRC}/zmq_publisher.cpp    
     zmq_pub_thread.cpp
 )

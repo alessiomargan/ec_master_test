@@ -19,6 +19,7 @@
 #include <exception>
 #include <typeinfo>
 #include <iostream>
+#include <sys/timerfd.h>
 
 #include <iit/ecat/utils.h>
 
@@ -41,8 +42,8 @@ class Thread_hook;
 
 typedef Thread_hook* Thread_hook_Ptr;
 
-void * rt_periodic_thread ( Thread_hook_Ptr );
-void * rt_non_periodic_thread ( Thread_hook_Ptr );
+void * periodic_thread ( Thread_hook_Ptr );
+void * non_periodic_thread ( Thread_hook_Ptr );
 void * nrt_thread ( Thread_hook_Ptr );
 
 
@@ -69,8 +70,8 @@ public:
     virtual void th_init ( void * ) = 0;
     virtual void th_loop ( void * ) = 0;
 
-    static void * nrt_th_helper ( void * );
-    static void * rt_th_helper ( void * );
+    static void * th_helper ( void * );
+    //static void * rt_th_helper ( void * );
 
 protected:
 
@@ -85,8 +86,10 @@ protected:
     int             priority;
     int             stacksize;
 
-    friend void * rt_periodic_thread ( Thread_hook_Ptr );
-    friend void * rt_non_periodic_thread ( Thread_hook_Ptr );
+    int             fd_timer;
+    
+    friend void * periodic_thread ( Thread_hook_Ptr );
+    friend void * non_periodic_thread ( Thread_hook_Ptr );
     friend void * nrt_thread ( Thread_hook_Ptr );
 
 };
@@ -101,26 +104,14 @@ inline int Thread_hook::is_non_periodic() {
     return ( period.period.tv_sec == 0 && period.period.tv_usec == 1 );
 }
 
-inline void * Thread_hook::nrt_th_helper ( void *kls ) {
-
-    try {
-        return nrt_thread ( ( Thread_hook_Ptr ) kls );
-    } catch ( std::exception &e ) {
-        DPRINTF ( "In function %s catch ::%s::\n\tThread %s quit\n",
-                  __FUNCTION__, e.what(), ( ( Thread_hook_Ptr ) kls )->name );
-        return 0;
-    }
-
-}
-
-inline void * Thread_hook::rt_th_helper ( void *kls )  {
+inline void * Thread_hook::th_helper ( void *kls )  {
 
     try {
 
         if ( ( ( Thread_hook_Ptr ) kls )->is_non_periodic() ) {
-            return rt_non_periodic_thread ( ( Thread_hook_Ptr ) kls );
+            return non_periodic_thread ( ( Thread_hook_Ptr ) kls );
         }
-        return rt_periodic_thread ( ( Thread_hook_Ptr ) kls );
+        return periodic_thread ( ( Thread_hook_Ptr ) kls );
 
     } catch ( std::exception &e ) {
         DPRINTF ( "In function %s catch ::%s::\n\tThread %s quit\n",
@@ -135,7 +126,8 @@ inline void Thread_hook::stop() {
 }
 
 inline void Thread_hook::join() {
-    /*pthread_cancel(thread_id);*/ pthread_join ( thread_id, 0 );
+    //pthread_cancel(thread_id);
+    pthread_join ( thread_id, 0 );
 }
 
 inline void Thread_hook::create ( int rt=true, int cpu_nr=0 ) {
@@ -164,15 +156,7 @@ inline void Thread_hook::create ( int rt=true, int cpu_nr=0 ) {
     pthread_attr_setdetachstate ( &attr, PTHREAD_CREATE_JOINABLE );
     pthread_attr_setaffinity_np ( &attr, sizeof ( cpu_set ), &cpu_set );
 
-#ifdef __XENO__
-    if ( rt ) {
-        ret = pthread_create ( &thread_id, &attr, &rt_th_helper, this );
-    } else {
-        ret = pthread_create ( &thread_id, &attr, &nrt_th_helper, this );
-    }
-#else
-    ret = pthread_create ( &thread_id, &attr, &nrt_th_helper, this );
-#endif
+    ret = pthread_create ( &thread_id, &attr, &th_helper, this );
 
     pthread_attr_destroy ( &attr );
 

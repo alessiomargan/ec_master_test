@@ -9,7 +9,7 @@ Ec_Boards_V_loop::Ec_Boards_V_loop ( const char* config_yaml ) : Ec_Thread_Board
     // non periodic
     period.period = {0,1};
 
-#ifdef __XENO__
+#ifdef __COBALT__
     schedpolicy = SCHED_FIFO;
 #else
     schedpolicy = SCHED_OTHER;

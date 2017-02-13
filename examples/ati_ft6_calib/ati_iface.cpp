@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 //#include <sys/ioctl.h>
 //#include <net/if.h>
-#ifdef __XENO__
+#ifdef __COBALT__
 #include <rtnet.h>
 #endif
 
@@ -15,7 +15,7 @@
 //#define ATI_IFACE_IP    "169.254.89.61"
 
 ////////////////////
-#undef __XENO__
+#undef __COBALT__
 ////////////////////
 
 
@@ -28,7 +28,7 @@ Ati_Sens::Ati_Sens ( bool run_thread ) : run ( run_thread ) {
     }
 
     // set socket timeout option
-#ifdef __XENO__
+#ifdef __COBALT__
     // This socket control option is used to specify the time-out on the socket before it returns.
     // It is used typically to wait for data on a Read.
     // The time-out specifies the amount of time the function will wait for data before it returns.
@@ -154,7 +154,7 @@ void * Ati_Sens::rx_thread ( void *_ ) {
 
     kls->start_time = iit::ecat::get_time_ns();
 
-#ifdef __XENO__
+#ifdef __COBALT__
     pthread_set_mode_np ( 0, PTHREAD_WARNSW );
     pthread_set_name_np ( pthread_self(), "rx_ati" );
 #endif
@@ -175,7 +175,7 @@ void Ati_Sens::start_thread ( void ) {
     struct sched_param  schedparam;
 
 
-#ifdef __XENO__
+#ifdef __COBALT__
     policy = SCHED_FIFO;
 #else
     policy = SCHED_OTHER;

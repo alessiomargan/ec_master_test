@@ -12,7 +12,7 @@
 #include <iit/ecat/advr/pipes.h>
 #include <iit/advr/thread_util.h>
 
-extern void main_common ( __sighandler_t sig_handler );
+extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );
 
 static int main_loop = 1;
@@ -53,8 +53,12 @@ public:
     }
 
     virtual void th_init ( void * ) {
+        int retry = 5;
         std::string pipe ( pipe_prefix + pipe_name );
-        xddp_fd = open ( pipe.c_str(), O_RDONLY |O_NONBLOCK );
+        while ( retry-- || xddp_fd <= 0 ) {
+            sleep(0.5);
+            xddp_fd = open ( pipe.c_str(), O_RDONLY |O_NONBLOCK );
+        }
         assert (xddp_fd > 0);
     }
     virtual void th_loop ( void * ) {
@@ -89,7 +93,7 @@ public:
         // non periodic
         period.period = {0,1};
 
-#ifdef __XENO__
+#ifdef __COBALT__
         schedpolicy = SCHED_FIFO;
 #else
         schedpolicy = SCHED_OTHER;
@@ -122,7 +126,7 @@ public:
 // Main
 ////////////////////////////////////////////////////
 
-int main ( int argc, char *argv[] ) try {
+int main ( int argc, char * const argv[] ) try {
 
     std::map<std::string, Thread_hook*> threads;
     
@@ -136,7 +140,7 @@ int main ( int argc, char *argv[] ) try {
     threads["UI_thread"] = new UI_thread(std::string("ec_timing"));
     threads["EC_thread"] = new EC_thread(iface, std::string("ec_timing"));
     
-    main_common ( shutdown );
+    main_common ( &argc, &argv, shutdown );
     
     threads["EC_thread"]->create(true);
     threads["UI_thread"]->create(false);

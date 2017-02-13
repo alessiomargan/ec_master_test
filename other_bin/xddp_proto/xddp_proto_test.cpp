@@ -56,7 +56,7 @@ public:
         // non periodic
         period.period = {0,99999};
 
-#ifdef __XENO__
+#ifdef __COBALT__
         schedpolicy = SCHED_FIFO;
 #else
         schedpolicy = SCHED_OTHER;

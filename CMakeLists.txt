@@ -12,7 +12,6 @@ set(SHARED_SRC          ${CMAKE_CURRENT_SOURCE_DIR}/shared_src)
 
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
-    find_package(RTnet)
 endif()
 
 if ( Xenomai_FOUND )
