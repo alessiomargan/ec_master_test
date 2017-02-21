@@ -99,16 +99,26 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
         home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
-        test_pos[slave_pos] = DEG2RAD ( walkman::robot_ids_test_pos_deg.at(pos2Rid(slave_pos)) );
         
-        DPRINTF ( "Joint_id %d start %f home %f test_pos %f\n",
-                  pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );
+        DPRINTF ( "Joint_id %d start %f home %f\n",
+                  pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos]);
 
         vPos =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         trj_start2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt_5s, vPos );
 
-        vPos = std::initializer_list<double> { home[slave_pos], test_pos[slave_pos], home[slave_pos] };
+        vPos = std::initializer_list<double> {
+            home[slave_pos],
+            DEG2RAD ( walkman::robot_ids_test_pos_deg.at(pos2Rid(slave_pos)) ),
+            home[slave_pos]
+        };
         trj_home2test_pos2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 3, 6 }, vPos );
+
+        vPos = std::initializer_list<double> {
+            home[slave_pos],
+            DEG2RAD ( walkman::robot_ids_arm_back_pos_deg.at(pos2Rid(slave_pos)) ),
+            home[slave_pos]
+        };
+        trj_home2arm_back2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 3, 6 }, vPos );
 
         /* If k does not match the key of any element in the container, the function inserts a new element with that key
             * and returns a reference to its mapped value. Notice that this always increases the container size by one,
@@ -132,16 +142,18 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 
     
     std::vector<int> no_control = std::initializer_list<int> {
+        walkman::WAIST_R,
+//         walkman::WAIST_P,
     };
-    
-//    remove_rids_intersection(pos_ctrl_ids, no_control);
+     
+     remove_rids_intersection(pos_ctrl_ids, no_control);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_arm_ids);
 //     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_arm_ids);
-    remove_rids_intersection(pos_ctrl_ids, walkman::robot_waist_ids);
-    remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_leg_ids);
-    remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_leg_ids);
-    remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
-    remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_waist_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_leg_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_leg_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
+//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
     
     get_esc_map_byclass ( motors2ctrl,  pos_ctrl_ids );
 
@@ -162,8 +174,8 @@ void EC_boards_walkman_test::init_preOP ( void ) {
             //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
         } else if ( moto->get_ESC_type() == HI_PWR_DC_MC) {
             //motor_start = moto->start ( CTRL_SET_POS_MODE );
-            //motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
-            motor_start = moto->start ( CTRL_SET_IMPED_MODE );
+            motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
+            //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
         } else {
             
         }
@@ -235,13 +247,14 @@ int EC_boards_walkman_test::user_loop ( void ) {
             DPRINTF ( "Error NULL running spline ... pop it\n" );
             trj_queue.pop();
         }
-    } else { // trj_queue is empty
-
+    } else {
+        // trj_queue is empty
         running_trj = last_run_trj = 0;
             
         if ( motors2move.size() > 0 ) {
             // add splines ....
             trj_queue.push ( &trj_home2test_pos2home );
+            trj_queue.push ( &trj_home2arm_back2home );
             // !!! since queue was empty reset the first spline
             running_trj = trj_queue.front();
             last_run_trj = running_trj;
