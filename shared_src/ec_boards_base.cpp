@@ -70,12 +70,12 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     get_esc_map_byclass ( tests );
     DPRINTF ( "found %lu tests\n", tests.size() );
 
-    for ( auto const& item : fts ) {
-        DPRINTF ("pos %d == %d rid2Pos() rid %d ==  %d pos2Rid()\n",
-                 item.first, rid2Pos(item.second->get_robot_id()),
-                 item.second->get_robot_id(), pos2Rid(item.first) );
-        assert( item.first == rid2Pos(item.second->get_robot_id()) && item.second->get_robot_id() == pos2Rid(item.first) );
-    }
+//     for ( auto const& item : fts ) {
+//         DPRINTF ("pos %d == %d rid2Pos() rid %d ==  %d pos2Rid()\n",
+//                  item.first, rid2Pos(item.second->get_robot_id()),
+//                  item.second->get_robot_id(), pos2Rid(item.first) );
+//         assert( item.first == rid2Pos(item.second->get_robot_id()) && item.second->get_robot_id() == pos2Rid(item.first) );
+//     }
 
     
     init_preOP();
@@ -86,10 +86,6 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
 
     start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;
-
-//     if ( config["ec_boards_base"]["create_pipes"].as<bool>() ) {
-//         xddps_init();
-//     }
 
     init_OP();
 

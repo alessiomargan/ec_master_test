@@ -270,7 +270,6 @@ HpESC_11:
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
     impedance: [0.0, 0.0, 4.0, 0.01, 0.8]
-
   gear_ratio: GR_120
 
 # RA_SH_2 = 12
@@ -421,7 +420,7 @@ HpESC_31:
     position: [40.0 , 0.0 , 1.0]
     mix_position: [800.0, 0.0, 5.0]
   gear_ratio: GR_100
-  
+
 # WST_P = 32
 HpESC_32:
   sign: -1
@@ -440,28 +439,4 @@ HpESC_33:
     mix_position: [800.0, 0.0, 5.0]
   gear_ratio: GR_160
 
-#############################
-# TEST JOINT
-#############################
 
-HpESC_666:
-  sign: 1
-  pos_offset: 0
-  pid :
-    position: [40.0, 0.0, 1.0]
-    mix_position: [2500.0, 0.005, 10.0]
-
-HpESC_1000:
-  sign: 1
-  pos_offset: 0
-  pid :
-    position: [40.0, 0.0, 1.0]
-    mix_position: [2500.0, 0.005, 100.0]
-
-
-LpESC_999:
-  sign: 1
-  pos_offset: 0
-  pid :
-    position: [40.0, 0.0, 1.0]
-    mix_position: [2500.0,0.005,100.0]

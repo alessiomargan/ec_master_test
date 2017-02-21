@@ -98,8 +98,8 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         moto->readSDO ( "Max_pos", max_pos );
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
-        home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
-        test_pos[slave_pos] = DEG2RAD ( walkman::robot_ids_test_pos_deg[pos2Rid(slave_pos)] );
+        home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
+        test_pos[slave_pos] = DEG2RAD ( walkman::robot_ids_test_pos_deg.at(pos2Rid(slave_pos)) );
         
         DPRINTF ( "Joint_id %d start %f home %f test_pos %f\n",
                   pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos], test_pos[slave_pos] );

@@ -94,10 +94,10 @@ void EC_boards_centAC_urdf::init_preOP ( void ) {
         start_pos[slave_pos] = motor_pos; 
         
         //
-        Q(rid2Urdf(pos2Rid(slave_pos))) = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        Q(rid2Urdf(pos2Rid(slave_pos))) = DEG2RAD ( centauro::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
         
         // home
-        home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
 
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos], home[slave_pos] };
         spline_start2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt3_6s, Ys );

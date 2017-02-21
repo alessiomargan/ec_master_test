@@ -62,7 +62,7 @@ private :
     advr::Trj_ptr_map trj_home2test_pos2home;
     advr::Trj_ptr_map trj_any2home;
 
-    advr::ImpTrj_ptr_map imp_trj;
+//     advr::ImpTrj_ptr_map imp_trj;
 
     XDDP_pipe jsInXddp, navInXddp, imuInXddp;
 

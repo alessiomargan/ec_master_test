@@ -151,7 +151,7 @@ const std::vector<int> robot_mcs_upg_ids = std::initializer_list<int> {
 
 };
 
-std::map<int, float> robot_ids_home_pos_deg = {
+const std::map<int, float> robot_ids_home_pos_deg = {
 
     {HEAD_R, 0.0}, {HEAD_P, 0.0},
     
@@ -171,7 +171,7 @@ std::map<int, float> robot_ids_home_pos_deg = {
 
 };
 
-std::map<int, float> robot_ids_test_pos_deg = {
+const std::map<int, float> robot_ids_test_pos_deg = {
 
     {HEAD_R, 0.0}, {HEAD_P, 0.0},
     

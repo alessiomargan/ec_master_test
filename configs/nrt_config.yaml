@@ -85,7 +85,47 @@ CentAcESC_X:
     position: [220.0 , 0.0 , 5.0]
 
 
+    
+#############################
+# TEST JOINT
+#############################
 
+# B14
+HpESC_101:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [100.0 , 0.0 , 1.0]
+    mix_position: [800.0, 0.0, 5.0]
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance:  [200.0, 20.0, 5.0, 0.01, 0.8]
+    #impedance:  [0.0, 0.0, 4.0, 0.01, 0.8]
+  gear_ratio: GR_120
+
+# M17
+HpESC_102:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [100.0 , 0.0 , 1.0]
+    mix_position: [800.0, 0.0, 5.0]
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance:  [200.0, 20.0, 5.0, 0.01, 0.8]
+    #impedance:  [0.0, 0.0, 4.0, 0.01, 0.8]
+  gear_ratio: GR_100
+
+
+LpESC_999:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [40.0, 0.0, 1.0]
+    mix_position: [2500.0,0.005,100.0]
+    
+
+#################################
+
+    
 LpHandESC_1:
   sign: 1
   pos_offset: 0
