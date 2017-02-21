@@ -11,7 +11,6 @@ ec_board_ctrl:
   sync_cycle_offset_ns: 1000000000
   power_off_boards: true
 
-
 #############################
 # GENERIC LpESC config
 #############################

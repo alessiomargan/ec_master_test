@@ -17,7 +17,7 @@
 
 #include <protobuf/ec_boards_base_input.pb.h>
 
-extern void main_common ( __sighandler_t sig_handler );
+extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );
 
 static int main_loop = 1;
@@ -176,14 +176,14 @@ public:
 // Main
 ////////////////////////////////////////////////////
 
-int main ( int argc, char *argv[] ) try {
+int main ( int argc, char * const argv[] ) try {
 
     std::map<std::string, Thread_hook*> threads;
     
     threads["UI_thread"] = new UI_thread(std::string("xddp_proto"));
     threads["RT_thread"] = new RT_thread(std::string("xddp_proto"));
     
-    main_common ( shutdown );
+    main_common ( &argc, &argv, shutdown );
     
     threads["RT_thread"]->create(true);
     threads["UI_thread"]->create(false);

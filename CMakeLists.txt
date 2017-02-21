@@ -65,4 +65,5 @@ optional_build(lpms_forward     other_bin/lpms_forward  OFF)
 optional_build(keyboard_control other_bin/keyboard_control OFF)
 optional_build(rt_spline_test   other_bin/rt_spline_test OFF)
 optional_build(xddp_proto       other_bin/xddp_proto OFF)
+optional_build(xeno-3_test      other_bin/xeno-3_test OFF)
 

@@ -91,7 +91,7 @@ public:
 
         name = "EC_thread";
         // non periodic
-        period.period = {0,1};
+        period.period = {0,100};
 
 #ifdef __COBALT__
         schedpolicy = SCHED_FIFO;
@@ -136,11 +136,11 @@ int main ( int argc, char * const argv[] ) try {
     }
 
     std::string iface = argv[1]; 
+
+    main_common ( &argc, &argv, shutdown );
     
     threads["UI_thread"] = new UI_thread(std::string("ec_timing"));
     threads["EC_thread"] = new EC_thread(iface, std::string("ec_timing"));
-    
-    main_common ( &argc, &argv, shutdown );
     
     threads["EC_thread"]->create(true);
     threads["UI_thread"]->create(false);

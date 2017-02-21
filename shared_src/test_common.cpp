@@ -20,7 +20,7 @@
 
 static void warn_upon_switch ( int sig __attribute__ ( ( unused ) ) ) {
     // handle rt to nrt contex switch
-    void *bt[5];
+    void *bt[10];
     int nentries;
 
     /* Dump a backtrace of the frame which caused the switch to
