@@ -196,20 +196,41 @@ const std::map<int, float> robot_ids_arm_back_pos_deg = {
     {HEAD_R, 0.0}, {HEAD_P, 0.0},
     
     {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
-
+    // right leg
     {RL_H_R, -15}, {RL_H_Y,   0.2}, {RL_H_P, -90.0},
     {RL_K,  90.0}, {RL_A_P, -20.0}, {RL_A_R,  20.0},
-
+    // left leg
     {LL_H_R,  15}, {LL_H_Y,  -0.2},  {LL_H_P, -90.0},
     {LL_K,  90.0}, {LL_A_P, -20.0}, {LL_A_R, -20.0},
-
+    // right arm
     {RA_SH_1, 88.0}, {RA_SH_2, -70.0}, {RA_SH_3, 30.0}, {RA_EL, -5},
     {RA_WR_1,  0.0}, {RA_WR_2,   0.0}, {RA_WR_3,  0.0}, {RA_HA,  0.0},
-    
+    // left arm
     {LA_SH_1, 88.0}, {LA_SH_2,  70.0}, {LA_SH_3,-30.0}, {LA_EL, -5.0},
     {LA_WR_1,  0.0}, {LA_WR_2,   0.0}, {LA_WR_3,  0.0}, {LA_HA,  0.0}
 
 };
+
+const std::map<int, float> robot_ids_arm_front_pos_deg = {
+
+    {HEAD_R, 0.0}, {HEAD_P, 0.0},
+    
+    {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
+    // right leg
+    {RL_H_R, 2.2}, {RL_H_Y,  0.15}, {RL_H_P, -17.0},
+    {RL_K,  33.0}, {RL_A_P, 16.0},  {RL_A_R,  -2.0},
+    // left leg
+    {LL_H_R, -2.2}, {LL_H_Y, -0.15}, {LL_H_P, -17.0},
+    {LL_K,   33.0}, {LL_A_P, 16.0},  {LL_A_R, 2.0},
+    // right arm
+    {RA_SH_1, -20.0}, {RA_SH_2, -70.0}, {RA_SH_3, -30.0}, {RA_EL, -150.0},
+    {RA_WR_1,  10.0}, {RA_WR_2,   0.0}, {RA_WR_3,  30.0}, {RA_HA,    0.0},
+    // left arm
+    {LA_SH_1, -20.0}, {LA_SH_2,  70.0}, {LA_SH_3,  30.0}, {LA_EL, -150.0},
+    {LA_WR_1, -10.0}, {LA_WR_2,   0.0}, {LA_WR_3, -30.0}, {LA_HA,    0.0}
+
+};
+
 
 }
 }

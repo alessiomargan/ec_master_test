@@ -120,6 +120,14 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         };
         trj_home2arm_back2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 3, 6 }, vPos );
 
+        
+        vPos = std::initializer_list<double> {
+            home[slave_pos],
+            DEG2RAD ( walkman::robot_ids_arm_front_pos_deg.at(pos2Rid(slave_pos)) ),
+            home[slave_pos]
+        };
+        trj_home2arm_front2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 2, 4 }, vPos );
+        
         /* If k does not match the key of any element in the container, the function inserts a new element with that key
             * and returns a reference to its mapped value. Notice that this always increases the container size by one,
             * even if no mapped value is assigned to the element (the element is constructed using its default constructor).
@@ -228,7 +236,6 @@ int EC_boards_walkman_test::user_loop ( void ) {
         DPRINTF ( ">> %f\n", ds );
     }
 
-
     if ( ! trj_queue.empty() ) {
 
         running_trj = trj_queue.front();
@@ -255,6 +262,7 @@ int EC_boards_walkman_test::user_loop ( void ) {
             // add splines ....
             trj_queue.push ( &trj_home2test_pos2home );
             trj_queue.push ( &trj_home2arm_back2home );
+            trj_queue.push ( &trj_home2arm_front2home );
             // !!! since queue was empty reset the first spline
             running_trj = trj_queue.front();
             last_run_trj = running_trj;
