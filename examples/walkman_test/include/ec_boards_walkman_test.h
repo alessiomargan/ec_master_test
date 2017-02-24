@@ -56,11 +56,7 @@ private :
     void move_head(float, float);
     void move_hands(float, float);
     
-    advr::Trj_ptr_map trj_start2home;
-    advr::Trj_ptr_map trj_home2test_pos2home;
-    advr::Trj_ptr_map trj_home2arm_back2home;
-    advr::Trj_ptr_map trj_home2arm_front2home;
-    advr::Trj_ptr_map trj_any2home;
+    advr::Trj_name_ptr_map trj_names;
 
 //     advr::ImpTrj_ptr_map imp_trj;
 

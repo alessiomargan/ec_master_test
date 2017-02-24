@@ -11,7 +11,6 @@ enum Robot_IDs {
     // neck
     HEAD_R = 1,
     HEAD_P,
-
     // right arm
     RA_SH_1 = 11,
     RA_SH_2,
@@ -22,7 +21,6 @@ enum Robot_IDs {
     RA_WR_3,
     RA_FT,
     RA_HA,
-
     // left arm
     LA_SH_1 = 21,
     LA_SH_2,
@@ -33,12 +31,10 @@ enum Robot_IDs {
     LA_WR_3,
     LA_FT,
     LA_HA,
-
     // waist
     WAIST_Y = 31,
     WAIST_P,
     WAIST_R,
-
     // right leg
     RL_H_R = 41,
     RL_H_Y,
@@ -48,7 +44,6 @@ enum Robot_IDs {
     RL_A_R,
     RL_FT,
     RL_FOOT,
-
     // left leg
     LL_H_R = 51,
     LL_H_Y,
@@ -58,7 +53,67 @@ enum Robot_IDs {
     LL_A_R,
     LL_FT,
     LL_FOOT,
+    // test bench motors
+    TEST_101 = 101,
+    TEST_102 = 102,
 };
+
+typedef enum Robot_IDs Robot_IDs_t;
+
+#define _MKS_(x) {#x,x}
+
+const std::map<std::string, Robot_IDs_t > robot_ids_names = {
+    // neck
+    _MKS_(HEAD_R),
+    _MKS_(HEAD_P),
+    // right arm
+    _MKS_(RA_SH_1),
+    _MKS_(RA_SH_2),
+    _MKS_(RA_SH_3),
+    _MKS_(RA_EL),
+    _MKS_(RA_WR_1),
+    _MKS_(RA_WR_2),
+    _MKS_(RA_WR_3),
+    _MKS_(RA_FT),
+    _MKS_(RA_HA),
+    // left arm
+    _MKS_(LA_SH_1),
+    _MKS_(LA_SH_2),
+    _MKS_(LA_SH_3),
+    _MKS_(LA_EL),
+    _MKS_(LA_WR_1),
+    _MKS_(LA_WR_2),
+    _MKS_(LA_WR_3),
+    _MKS_(LA_FT),
+    _MKS_(LA_HA),
+    // waist
+    _MKS_(WAIST_Y),
+    _MKS_(WAIST_P),
+    _MKS_(WAIST_R),
+    // right leg
+    _MKS_(RL_H_R),
+    _MKS_(RL_H_Y),
+    _MKS_(RL_H_P),
+    _MKS_(RL_K),
+    _MKS_(RL_A_P),
+    _MKS_(RL_A_R),
+    _MKS_(RL_FT),
+    _MKS_(RL_FOOT),
+    // left leg
+    _MKS_(LL_H_R),
+    _MKS_(LL_H_Y),
+    _MKS_(LL_H_P),
+    _MKS_(LL_K),
+    _MKS_(LL_A_P),
+    _MKS_(LL_A_R),
+    _MKS_(LL_FT),
+    _MKS_(LL_FOOT),
+    // test bench motors
+    _MKS_(TEST_101),
+    _MKS_(TEST_102),
+    
+};
+
 
 const std::vector<int> robot_head_ids = std::initializer_list<int> {
     // head

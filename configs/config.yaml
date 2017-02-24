@@ -11,6 +11,8 @@ ec_board_ctrl:
   sync_cycle_offset_ns: 1000000000
   power_off_boards: true
 
+ec_boards_base :
+  joints_poses_file : ../configs/test_poses.yaml
 
 #############################
 # GENERIC LpESC config

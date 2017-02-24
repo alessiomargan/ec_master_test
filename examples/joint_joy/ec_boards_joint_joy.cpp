@@ -106,7 +106,6 @@ void EC_boards_joint_joy::init_OP ( void ) {
 
     if ( ! trj_queue.empty() ) {
         running_trj = trj_queue.front();
-        last_run_trj = running_trj;
         advr::reset_trj ( *running_trj );
     }
 

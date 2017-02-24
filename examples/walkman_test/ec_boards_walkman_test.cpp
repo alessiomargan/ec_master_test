@@ -17,8 +17,8 @@
 
 using namespace iit::ecat::advr;
 
-typedef struct js_event	js_input_t;
-typedef spnav_event	spnav_input_t;
+typedef struct js_event js_input_t;
+typedef spnav_event     spnav_input_t;
 
 
 static const std::vector<double> Xt_2s = std::initializer_list<double> { 0, 2 };
@@ -60,12 +60,12 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 
     Motor * moto;
     int slave_pos, motor_start;
-    float min_pos, max_pos, pos_ref_fb;
+    float pos_ref_fb;
 
-    get_esc_map_byclass ( left_leg,  walkman::robot_left_leg_ids );
+    get_esc_map_byclass ( left_leg, walkman::robot_left_leg_ids );
     DPRINTF ( "found %lu <Motor> left_leg\n", left_leg.size() );
 
-    get_esc_map_byclass ( left_arm,  walkman::robot_left_arm_ids );
+    get_esc_map_byclass ( left_arm, walkman::robot_left_arm_ids );
     DPRINTF ( "found %lu <Motor> left_arm\n", left_arm.size() );
 
     get_esc_map_byclass ( right_leg, walkman::robot_right_leg_ids );
@@ -74,76 +74,112 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     get_esc_map_byclass ( right_arm, walkman::robot_right_arm_ids );
     DPRINTF ( "found %lu <Motor> right_arm\n", right_arm.size() );
 
-    get_esc_map_byclass ( waist,	   walkman::robot_waist_ids );
+    get_esc_map_byclass ( waist, walkman::robot_waist_ids );
     DPRINTF ( "found %lu <Motor> waist\n", waist.size() );
 
-    get_esc_map_byclass ( head,       walkman::robot_head_ids );
+    get_esc_map_byclass ( head, walkman::robot_head_ids );
     DPRINTF ( "found %lu <Motor> head\n", head.size() );
 
-    get_esc_map_byclass ( hands,       walkman::robot_hands_ids );
+    get_esc_map_byclass ( hands, walkman::robot_hands_ids );
     DPRINTF ( "found %lu <Motor> hands\n", hands.size() );
 
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    const YAML::Node config = get_config_YAML_Node();
+
+    std::map<std::string, std::map<walkman::Robot_IDs_t, float>> joints_pose_deg;
+    std::map<std::string, std::map<std::string, float>> poses_map; 
+    std::map<std::string, std::vector<std::pair<std::string, float>>> trj_map;
+    
+    try { 
+        std::string poses_file = get_config_YAML_Node()["ec_boards_base"]["joints_poses_file"].as<std::string>();
+        const YAML::Node poses_config = YAML::LoadFile ( poses_file );
+        
+        poses_map = poses_config["pos_map"].as<std::map<std::string,std::map<std::string,float>>>();
+        auto poses_keys = extract_keys( poses_map );
+        for (auto const &p: poses_keys)  { std::cout << p << ' '; } std::cout << std::endl; 
+        
+        trj_map = poses_config["trjs_map"].as<std::map<std::string, std::vector<std::pair<std::string, float>>>>();
+        
+        auto trjs_keys = extract_keys( trj_map );
+        auto trjs_values = extract_values( trj_map );
+        std::cout << '[';
+        for ( auto const &k: trjs_keys ) { std::cout << k << ','; }
+        std::cout << ']' << std::endl; 
+        std::cout << '[';
+        for ( auto const &v: trjs_values ) { 
+            std::cout << '[';
+            for ( auto const &p: v ) { std::cout << p.first << ' ' << p.second << ','; }
+            std::cout << ']'; 
+        }
+        std::cout << ']' << std::endl;
+        
+        for ( auto const &pose : poses_map ) {
+            auto pose_name = pose.first;
+            auto pose_joints = pose.second;
+            for ( auto const &kv : pose_joints ) {
+                auto joint_name = kv.first;
+                auto joint_pose_value = kv.second;
+                joints_pose_deg[pose.first][walkman::robot_ids_names.at(joint_name)] = joint_pose_value;
+                DPRINTF(">> %s %d_%s\t%f\n",
+                        pose.first.c_str(),
+                        walkman::robot_ids_names.at(joint_name),
+                        joint_name.c_str(),
+                        joints_pose_deg[pose.first][walkman::robot_ids_names.at(joint_name)]);
+            }
+        }
+        
+    } catch ( const std::exception &e ) {
+        std::cout << e.what() << '\n';
+    }
+    
+    
+    
     std::vector<double> vPos;
     std::vector<double> vVel;
     std::vector<double> vTor;
     std::vector<double> Xs;
 
-    ///////////////////////////////////////////////////////////////////////
-    // prepare trajectory splines for ALL motors
+    //////////////////////////////////////////////////////////////////////////
+    // prepare trajectory for ALL motors
     for ( auto const& item : motors ) {
     
         slave_pos = item.first;
         moto = item.second;
-        moto->readSDO ( "Min_pos", min_pos );
-        moto->readSDO ( "Max_pos", max_pos );
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
-        home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
+        //home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
+        home[slave_pos] = DEG2RAD ( joints_pose_deg["home"][(walkman::Robot_IDs)pos2Rid(slave_pos)] );
         
-        DPRINTF ( "Joint_id %d start %f home %f\n",
-                  pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos]);
+        DPRINTF ("Joint_id %d start %f home %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos]);
 
         vPos =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        trj_start2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt_5s, vPos );
+        trj_names["start2home"][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt_5s, vPos );
 
-        vPos = std::initializer_list<double> {
-            home[slave_pos],
-            DEG2RAD ( walkman::robot_ids_test_pos_deg.at(pos2Rid(slave_pos)) ),
-            home[slave_pos]
-        };
-        trj_home2test_pos2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 3, 6 }, vPos );
-
-        vPos = std::initializer_list<double> {
-            home[slave_pos],
-            DEG2RAD ( walkman::robot_ids_arm_back_pos_deg.at(pos2Rid(slave_pos)) ),
-            home[slave_pos]
-        };
-        trj_home2arm_back2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 3, 6 }, vPos );
-
-        
-        vPos = std::initializer_list<double> {
-            home[slave_pos],
-            DEG2RAD ( walkman::robot_ids_arm_front_pos_deg.at(pos2Rid(slave_pos)) ),
-            home[slave_pos]
-        };
-        trj_home2arm_front2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( std::initializer_list<double>{ 0, 2, 4 }, vPos );
-        
-        /* If k does not match the key of any element in the container, the function inserts a new element with that key
-            * and returns a reference to its mapped value. Notice that this always increases the container size by one,
-            * even if no mapped value is assigned to the element (the element is constructed using its default constructor).
-            */
-        vPos =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        trj_any2home[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt_5s, vPos );
+        for ( auto const & trj_name : extract_keys( trj_map ) ) {
+            Xs.clear();
+            vPos.clear();
+            for ( auto const & trj_pos_time : trj_map[trj_name] ) {
+                auto pos = joints_pose_deg[trj_pos_time.first][(walkman::Robot_IDs)pos2Rid(slave_pos)];
+                vPos.push_back( DEG2RAD ( pos ) );
+                auto time = trj_pos_time.second;
+                Xs.push_back( time );
+                DPRINTF("%s time %f pos %f\n", trj_name.c_str(), time, pos);
+            }
+            trj_names[trj_name][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xs, vPos );
+        }
 
     }
     
     
-     std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
+//     std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
 //     std::vector<int> pos_ctrl_ids = walkman::robot_left_arm_ids;
 //     std::vector<int> pos_ctrl_ids = walkman::robot_right_leg_ids;
 //     std::vector<int> pos_ctrl_ids = walkman::robot_left_leg_ids;
-//     std::vector<int> pos_ctrl_ids = std::initializer_list<int> {
-//     };
+    std::vector<int> pos_ctrl_ids = std::initializer_list<int> {
+
+        102
+    };
 
     std::vector<int> tor_ctrl_ids = std::initializer_list<int> {
     };
@@ -195,12 +231,12 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 
     motors2move = motors2ctrl;
     
-    DPRINTF ( ">>> motors2ctrl %d motors2move %d\n", motors2ctrl.size(), motors2move.size() );
+    DPRINTF ( ">>> motors2ctrl %ld motors2move %ld\n", motors2ctrl.size(), motors2move.size() );
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     if ( motors2move.size() > 0 ) {
-        trj_queue.push ( &trj_start2home );
+        trj_queue.push ( &trj_names["start2home"] );
     }
 }
 
@@ -212,7 +248,6 @@ void EC_boards_walkman_test::init_OP ( void ) {
 
     if ( ! trj_queue.empty() ) {
         running_trj = trj_queue.front();
-        last_run_trj = running_trj;
         advr::reset_trj ( *running_trj );
     }
     
@@ -227,7 +262,7 @@ int EC_boards_walkman_test::user_loop ( void ) {
     const float spline_error = 0.07;
 
     if ( ( count++ ) % 1000 == 0 ) {
-        DPRINTF ( "alive %d\n", count/1000 );
+        DPRINTF ( "alive %ld\n", count/1000 );
     }
 
     ///////////////////////////////////////////////////////
@@ -243,7 +278,6 @@ int EC_boards_walkman_test::user_loop ( void ) {
             // !@#%@$#%^^# ... tune error
             if ( go_there ( motors2move, *running_trj, spline_error, false) ) {
                 // running spline has finish !!
-                last_run_trj = running_trj;
                 trj_queue.pop();
                 if ( ! trj_queue.empty() ) {
                     running_trj = trj_queue.front();
@@ -256,17 +290,16 @@ int EC_boards_walkman_test::user_loop ( void ) {
         }
     } else {
         // trj_queue is empty
-        running_trj = last_run_trj = 0;
+        running_trj = 0;
             
         if ( motors2move.size() > 0 ) {
-            // add splines ....
-            trj_queue.push ( &trj_home2test_pos2home );
-            trj_queue.push ( &trj_home2arm_back2home );
-            trj_queue.push ( &trj_home2arm_front2home );
+            // add trajectory ....
+            trj_queue.push ( &trj_names["home@pos1@pos2@pos3@home"] );
             // !!! since queue was empty reset the first spline
-            running_trj = trj_queue.front();
-            last_run_trj = running_trj;
-            advr::reset_trj ( *running_trj );
+            if ( ! trj_queue.empty() ) {
+                running_trj = trj_queue.front();
+                advr::reset_trj ( *running_trj );
+            }
         }
     
     }

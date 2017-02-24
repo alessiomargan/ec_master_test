@@ -151,7 +151,6 @@ void EC_boards_centAC_urdf::init_OP ( void ) {
 
     if ( ! trj_queue.empty() ) {
         running_trj = trj_queue.front();
-        last_run_trj = running_trj;
         advr::reset_trj ( *running_trj );
     }
     
@@ -184,12 +183,10 @@ int EC_boards_centAC_urdf::user_loop ( void ) {
             // !@#%@$#%^^# ... tune error
             if ( go_there ( motors_to_start, *running_trj, spline_error, true) ) {
                 // running spline has finish !!
-                last_run_trj = running_trj;
                 // pop running_trj
                 trj_queue.pop();
                 if ( ! trj_queue.empty() ) {
                     running_trj = trj_queue.front();
-                    smooth_splines_trj ( motors_to_start, *running_trj, *last_run_trj );
                     advr::reset_trj ( *running_trj );
                 }
             }
@@ -199,7 +196,7 @@ int EC_boards_centAC_urdf::user_loop ( void ) {
         }
     } else { // trj_queue is empty
         
-        running_trj = last_run_trj = 0;
+        running_trj =  0;
         
         ///////////////////////////////////////////////////////
         //
@@ -273,6 +270,7 @@ int EC_boards_centAC_urdf::xddp_input ( C &user_cmd ) {
         // [-1.0 .. 1.0] / 500 ==> 0.002 rad/ms
         if ( nav_cmd.type == SPNAV_EVENT_MOTION ) {
             user_cmd = ( ( float ) nav_cmd.motion.ry / ( 350.0 ) ) / 500 ;
+                
         } else if ( nav_cmd.type == SPNAV_EVENT_BUTTON ) {
             if ( nav_cmd.button.press ) {
                 switch ( nav_cmd.button.bnum ) {

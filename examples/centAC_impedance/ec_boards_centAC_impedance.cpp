@@ -170,7 +170,6 @@ void EC_boards_centAC_impedance::init_OP ( void ) {
 
     if ( ! trj_queue.empty() ) {
         running_trj = trj_queue.front();
-        last_run_trj = running_trj;
         advr::reset_trj ( *running_trj );
     }
     
@@ -203,7 +202,6 @@ int EC_boards_centAC_impedance::user_loop ( void ) {
             // !@#%@$#%^^# ... tune trj_error
             if ( go_there ( motors_ctrl_pos, *running_trj, trj_error, false) ) {
                 // running trajectory has finish !!
-                last_run_trj = running_trj;
                 // pop running_trj
                 trj_queue.pop();
                 if ( ! trj_queue.empty() ) {
@@ -217,7 +215,7 @@ int EC_boards_centAC_impedance::user_loop ( void ) {
         }
     } else { 
         // trj_queue is empty
-        running_trj = last_run_trj = 0;
+        running_trj = 0;
     }
 }
 
