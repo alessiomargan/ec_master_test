@@ -1,0 +1,39 @@
+
+
+# #####################################
+
+trjs_map :
+  #start2home :
+  home@pos1@home : 
+    - [home, 0]
+    - [pos_1, 3]
+    - [home, 6]
+  home@pos1@pos2@home : 
+    - [home, 0]
+    - [pos_1, 3]
+    - [pos_2, 6]
+    - [home, 9]
+  home@pos1@pos2@pos3@home : 
+    - [home, 0]
+    - [pos_1, 3]
+    - [pos_2, 6]
+    - [pos_3, 9]
+    - [home, 12]
+
+    
+# #####################################
+# position in degrees
+pos_map :
+
+    home :
+        TEST_102 :   0.0
+
+    pos_1 :
+        TEST_102 :  45.0
+
+    pos_2 :
+        TEST_102 :  90.0
+
+    pos_3 :
+        TEST_102 : -90.0
+  

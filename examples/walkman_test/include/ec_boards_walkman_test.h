@@ -22,25 +22,6 @@
 class EC_boards_walkman_test : public Ec_Thread_Boards_base {
 public:
 
-    enum user_state_t : int {
-        HOMING 	= 1,
-        HOME2MID,
-        MID2HOME,
-        ANY2HOME,
-        MOVING,
-        //
-        IDLE,
-    };
-    enum home_state_t : int {
-        LEFT_LEG_HOME	= 1,
-        LEFT_ARM_HOME,
-        RIGHT_LEG_HOME,
-        RIGHT_ARM_HOME,
-        WAIST_HOME,
-        TEST_HOME,
-        END_HOME,
-    };
-
     EC_boards_walkman_test ( const char * config_yaml );
     virtual ~EC_boards_walkman_test();
 
@@ -63,9 +44,9 @@ private :
     XDDP_pipe jsInXddp, navInXddp, imuInXddp;
 
     std::map<int, iit::ecat::advr::Motor*>  head;
-    std::map<int, iit::ecat::advr::Motor*> 	left_arm;;
-    std::map<int, iit::ecat::advr::Motor*> 	right_arm;
-    std::map<int, iit::ecat::advr::Motor*> 	hands;
+    std::map<int, iit::ecat::advr::Motor*>  left_arm;;
+    std::map<int, iit::ecat::advr::Motor*>  right_arm;
+    std::map<int, iit::ecat::advr::Motor*>  hands;
     std::map<int, iit::ecat::advr::Motor*>  waist;
     std::map<int, iit::ecat::advr::Motor*>  left_leg;
     std::map<int, iit::ecat::advr::Motor*>  right_leg;

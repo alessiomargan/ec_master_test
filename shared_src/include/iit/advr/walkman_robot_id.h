@@ -206,6 +206,23 @@ const std::vector<int> robot_mcs_upg_ids = std::initializer_list<int> {
 
 };
 
+
+const std::map<const std::string, const std::vector<int>> robot_ids_group_names = {
+
+    { "@robot_mcs",         robot_mcs_ids },
+    { "@robot_mcs_upg",     robot_mcs_upg_ids },
+    { "@robot_hands",       robot_hands_ids },
+    { "@robot_head",        robot_head_ids },
+    { "@robot_waist",       robot_waist_ids },
+    { "@robot_left_arm",    robot_left_arm_ids },
+    { "@robot_right_arm",   robot_right_arm_ids },
+    { "@robot_left_leg",    robot_left_leg_ids },
+    { "@robot_right_leg",   robot_right_leg_ids },
+        
+};
+
+
+
 const std::map<int, float> robot_ids_home_pos_deg = {
 
     {HEAD_R, 0.0}, {HEAD_P, 0.0},

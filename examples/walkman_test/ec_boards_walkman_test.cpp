@@ -85,22 +85,19 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    const YAML::Node config = get_config_YAML_Node();
+    const YAML::Node config_poses = get_config_YAML_Node();
 
     std::map<std::string, std::map<walkman::Robot_IDs_t, float>> joints_pose_deg;
     std::map<std::string, std::map<std::string, float>> poses_map; 
     std::map<std::string, std::vector<std::pair<std::string, float>>> trj_map;
-    
+    std::map<std::string, std::vector<std::string>> joint_group_by_ctrl;
+    std::map<std::string, std::vector<int>> map_of_ctrlIDs;
+        
     try { 
-        std::string poses_file = get_config_YAML_Node()["ec_boards_base"]["joints_poses_file"].as<std::string>();
+        std::string poses_file = config_poses["ec_boards_base"]["joints_poses_file"].as<std::string>();
         const YAML::Node poses_config = YAML::LoadFile ( poses_file );
         
-        poses_map = poses_config["pos_map"].as<std::map<std::string,std::map<std::string,float>>>();
-        auto poses_keys = extract_keys( poses_map );
-        for (auto const &p: poses_keys)  { std::cout << p << ' '; } std::cout << std::endl; 
-        
         trj_map = poses_config["trjs_map"].as<std::map<std::string, std::vector<std::pair<std::string, float>>>>();
-        
         auto trjs_keys = extract_keys( trj_map );
         auto trjs_values = extract_values( trj_map );
         std::cout << '[';
@@ -113,7 +110,10 @@ void EC_boards_walkman_test::init_preOP ( void ) {
             std::cout << ']'; 
         }
         std::cout << ']' << std::endl;
-        
+
+        poses_map = poses_config["pos_map"].as<std::map<std::string,std::map<std::string,float>>>();
+        auto poses_keys = extract_keys( poses_map );
+        for ( auto const &p: poses_keys )  { std::cout << p << ' '; } std::cout << std::endl; 
         for ( auto const &pose : poses_map ) {
             auto pose_name = pose.first;
             auto pose_joints = pose.second;
@@ -125,31 +125,51 @@ void EC_boards_walkman_test::init_preOP ( void ) {
                         pose.first.c_str(),
                         walkman::robot_ids_names.at(joint_name),
                         joint_name.c_str(),
-                        joints_pose_deg[pose.first][walkman::robot_ids_names.at(joint_name)]);
+                        joints_pose_deg.at(pose.first).at(walkman::robot_ids_names.at(joint_name)));
+            }
+        }
+
+        joint_group_by_ctrl = poses_config["joint_group_by_controller"].as<std::map<std::string, std::vector<std::string>>>();
+        auto joint_group_by_ctrl_keys = extract_keys( joint_group_by_ctrl );
+        for ( auto const &p: joint_group_by_ctrl_keys )  { std::cout << p << ' '; } std::cout << std::endl; 
+        for ( auto const &c: joint_group_by_ctrl )  {
+            auto ctrl_name = c.first;
+            auto ctrl_set = c.second;
+            map_of_ctrlIDs[ctrl_name];
+            for ( auto const &g: ctrl_set )  {
+                if ( g[0] == '@' ) {
+                    for ( auto const &ids : walkman::robot_ids_group_names.at(g) ) {
+                        map_of_ctrlIDs[ctrl_name].push_back( ids );
+                    }
+                } else {
+                    map_of_ctrlIDs[ctrl_name].push_back( walkman::robot_ids_names.at(g) );
+                }
             }
         }
         
     } catch ( const std::exception &e ) {
         std::cout << e.what() << '\n';
+        //
+        joints_pose_deg.empty();
+        trj_map.empty();
+        map_of_ctrlIDs.empty();
     }
     
-    
-    
+    //////////////////////////////////////////////////////////////////////////
+    // prepare trajectory for ALL motors
+    DPRINTF ( "### Prepare trayectories\n" );
     std::vector<double> vPos;
     std::vector<double> vVel;
     std::vector<double> vTor;
     std::vector<double> Xs;
 
-    //////////////////////////////////////////////////////////////////////////
-    // prepare trajectory for ALL motors
     for ( auto const& item : motors ) {
     
         slave_pos = item.first;
         moto = item.second;
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
-        //home[slave_pos] = DEG2RAD ( walkman::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
-        home[slave_pos] = DEG2RAD ( joints_pose_deg["home"][(walkman::Robot_IDs)pos2Rid(slave_pos)] );
+        home[slave_pos] = DEG2RAD ( joints_pose_deg.at("home").at((walkman::Robot_IDs)pos2Rid(slave_pos)) );
         
         DPRINTF ("Joint_id %d start %f home %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos]);
 
@@ -160,7 +180,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
             Xs.clear();
             vPos.clear();
             for ( auto const & trj_pos_time : trj_map[trj_name] ) {
-                auto pos = joints_pose_deg[trj_pos_time.first][(walkman::Robot_IDs)pos2Rid(slave_pos)];
+                auto pos = joints_pose_deg.at(trj_pos_time.first).at((walkman::Robot_IDs)pos2Rid(slave_pos));
                 vPos.push_back( DEG2RAD ( pos ) );
                 auto time = trj_pos_time.second;
                 Xs.push_back( time );
@@ -170,59 +190,60 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         }
 
     }
-    
-    
-//     std::vector<int> pos_ctrl_ids = walkman::robot_mcs_ids;
-//     std::vector<int> pos_ctrl_ids = walkman::robot_left_arm_ids;
-//     std::vector<int> pos_ctrl_ids = walkman::robot_right_leg_ids;
-//     std::vector<int> pos_ctrl_ids = walkman::robot_left_leg_ids;
-    std::vector<int> pos_ctrl_ids = std::initializer_list<int> {
 
-        102
-    };
-
-    std::vector<int> tor_ctrl_ids = std::initializer_list<int> {
-    };
-
+    //////////////////////////////////////////////////////////////////////////
+    //
+    DPRINTF ( "### Prepare controller group\n" );
+    std::vector<int> ids2ctrl, tmp_union;
+    std::vector<int> ids_pos = map_of_ctrlIDs.at("position_ctrl");
+    std::vector<int> ids_imp = map_of_ctrlIDs.at("impedance_ctrl");
+    std::vector<int> ids_tor = map_of_ctrlIDs.at("torque_ctrl");
+    std::vector<int> ids_dir = map_of_ctrlIDs.at("direct_ctrl");
+    std::vector<int> ids_NO  = map_of_ctrlIDs.at("NO_ctrl");
+    for ( auto v : std::initializer_list<std::vector<int>>{ ids_pos, ids_imp, ids_tor, ids_dir, ids_NO } ) {
+        std::sort (v.begin(), v.end());
+    }
+    std::set_union(ids_pos.begin(), ids_pos.end(),ids_imp.begin(), ids_imp.end(),  std::back_inserter(ids2ctrl) );
+    std::set_union(ids2ctrl.begin(), ids2ctrl.end(),ids_tor.begin(), ids_tor.end(),  std::back_inserter(tmp_union) );
+    std::set_union(tmp_union.begin(), tmp_union.end(),ids_dir.begin(), ids_dir.end(),  std::back_inserter(ids2ctrl) );
     
-    std::vector<int> no_control = std::initializer_list<int> {
-        walkman::WAIST_R,
-//         walkman::WAIST_P,
-    };
-     
-     remove_rids_intersection(pos_ctrl_ids, no_control);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_arm_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_arm_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_waist_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_left_leg_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_right_leg_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_head_ids);
-//     remove_rids_intersection(pos_ctrl_ids, walkman::robot_hands_ids);
+    remove_rids_intersection( ids2ctrl, ids_NO );
     
-    get_esc_map_byclass ( motors2ctrl,  pos_ctrl_ids );
+    get_esc_map_byclass ( motors2ctrl,  ids2ctrl );
 
     for ( auto const& item : motors2ctrl ) {
         slave_pos = item.first;
         moto = item.second;
-
+        motor_start = -1;
         //DPRINTF ( ">>> START %d wait xddp terminal ....\n", moto->get_robot_id() );
         //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }
         
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
-        if (moto->get_ESC_type() == LO_PWR_DC_MC ) {
-            motor_start = moto->start ( CTRL_SET_POS_MODE );
-        } else if ( moto->get_ESC_type() == HI_PWR_AC_MC ) {
-            motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
-            //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
-        } else if ( moto->get_ESC_type() == HI_PWR_DC_MC) {
-            //motor_start = moto->start ( CTRL_SET_POS_MODE );
-            motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
-            //motor_start = moto->start ( CTRL_SET_IMPED_MODE );
-        } else {
+        if ( std::find( ids_pos.begin(), ids_pos.end(), pos2Rid(slave_pos) ) != ids_pos.end() ) {
+
+            if (moto->get_ESC_type() == LO_PWR_DC_MC ) {
+                motor_start = moto->start ( CTRL_SET_POS_MODE );
+            } else if ( (moto->get_ESC_type() == HI_PWR_AC_MC) || (moto->get_ESC_type() == HI_PWR_DC_MC) ) {
+                motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
+            } else {
+                
+            }
+                    
+        } else if ( std::find( ids_imp.begin(), ids_imp.end(), pos2Rid(slave_pos) ) != ids_imp.end() ) {
+
+            motor_start = moto->start ( CTRL_SET_IMPED_MODE );
             
-        }
+        } else if ( std::find( ids_tor.begin(), ids_tor.end(), pos2Rid(slave_pos) ) != ids_tor.end() ) {
+
+            motor_start = moto->start ( CTRL_SET_IMPED_MODE );
+            
+        } else if ( std::find( ids_dir.begin(), ids_dir.end(), pos2Rid(slave_pos) ) != ids_dir.end() ) {
+
+            motor_start = moto->start ( CTRL_SET_CURR_MODE );
+        } 
+        
 
         assert( motor_start == EC_BOARD_OK );
         
@@ -236,7 +257,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     if ( motors2move.size() > 0 ) {
-        trj_queue.push ( &trj_names["start2home"] );
+        trj_queue.push ( &trj_names.at("start2home") );
     }
 }
 
