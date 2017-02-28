@@ -15,6 +15,7 @@ ec_board_ctrl:
  
 ec_boards_base:
   urdf_config_file: ../configs/centauro_urdf.yaml
+  joints_poses_file : ../configs/test_poses.yaml
 
 firmware_update:
   #fw_path: ../firmware/

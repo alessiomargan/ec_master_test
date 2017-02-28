@@ -52,8 +52,6 @@ private :
     std::map<int, iit::ecat::advr::Motor*>  right_leg;
 
     std::map<int, iit::ecat::advr::Motor*>  motors2ctrl;
-    std::map<int, iit::ecat::advr::Motor*>  motors2move;
-    std::map<int, iit::ecat::advr::Motor*>  motors2torque;
 };
 
 

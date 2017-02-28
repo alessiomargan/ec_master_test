@@ -52,9 +52,8 @@ protected :
     std::map<int,float> home;
     std::map<int,float> start_pos;
 
-    std::queue<advr::Trj_ptr_map *> trj_queue;
-    
-    advr::Trj_ptr_map * running_trj;
+    std::deque<advr::Trj_ptr_map> trj_queue;
+    //advr::Trj_ptr_map running_trj;
 
     XDDP_pipe termInXddp;
     XDDP_pipe debugOutXddp;
@@ -64,6 +63,7 @@ protected :
     std::map<int, iit::ecat::advr::FootSensorESC*>  foot_sensors;
     std::map<int, iit::ecat::advr::PowESC*>         pows;
     std::map<int, iit::ecat::advr::PowComanESC*>    powCmns;
+    std::map<int, iit::ecat::advr::ImuVnESC*>       imus;
     std::map<int, iit::ecat::advr::TestESC*>        tests;
 
     void remove_rids_intersection(std::vector<int> &, const std::vector<int> &);

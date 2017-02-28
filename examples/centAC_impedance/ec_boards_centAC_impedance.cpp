@@ -77,23 +77,6 @@ void EC_boards_centAC_impedance::init_preOP ( void ) {
     std::vector<int> no_control = std::initializer_list<int> {
         centauro::RA_HA,
         centauro::LA_HA,
-        
-//         centauro::WAIST_Y,
-//         centauro::RA_SH_1,
-//         centauro::RA_SH_2,
-//         centauro::RA_SH_3,
-//         centauro::RA_EL,
-//         centauro::RA_WR_1,
-//         centauro::RA_WR_2,
-//         centauro::RA_WR_3,
-//         centauro::LA_SH_1,
-//         centauro::LA_SH_2,
-//         centauro::LA_SH_3,
-//         centauro::LA_EL,
-//         centauro::LA_WR_1,
-//         centauro::LA_WR_2,
-//         centauro::LA_WR_3,
-
     };
         
     remove_rids_intersection(pos_rid, no_control);
@@ -156,22 +139,19 @@ void EC_boards_centAC_impedance::init_preOP ( void ) {
         moto->start ( CTRL_SET_IMPED_MODE );
     }
     
-    if ( motors_ctrl_pos.size() > 0 ) {
-        //
-        trj_queue.push ( &trj_start2home );
-    }
-
-    
+    trj_queue.clear();
+    trj_queue.push_back ( trj_start2home );
     
 }
 
 
 void EC_boards_centAC_impedance::init_OP ( void ) {
 
-    if ( ! trj_queue.empty() ) {
-        running_trj = trj_queue.front();
-        advr::reset_trj ( *running_trj );
-    }
+    try { advr::reset_trj ( trj_queue.at(0) ); }
+    catch ( const std::out_of_range &e ) {
+        throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
+    }    
+
     
     DPRINTF ( "End Init_OP\n" );
     
@@ -196,26 +176,17 @@ int EC_boards_centAC_impedance::user_loop ( void ) {
     ///////////////////////////////////////////////////////
     //
     if ( ! trj_queue.empty() ) {
-
-        running_trj = trj_queue.front();
-        if ( running_trj ) {
-            // !@#%@$#%^^# ... tune trj_error
-            if ( go_there ( motors_ctrl_pos, *running_trj, trj_error, false) ) {
-                // running trajectory has finish !!
-                // pop running_trj
-                trj_queue.pop();
-                if ( ! trj_queue.empty() ) {
-                    running_trj = trj_queue.front();
-                    advr::reset_trj ( *running_trj );
-                }
+        if ( go_there ( motors_ctrl_imp, trj_queue.at(0), trj_error, false) ) {
+            // running trj has finish ... remove from queue  !!
+            DPRINTF ( "running trj has finish ... remove from queue !!\n" );
+            trj_queue.pop_front();
+            try { advr::reset_trj ( trj_queue.at(0) ); }
+            catch ( const std::out_of_range &e ) {
+                // add trajectory ....
+                //trj_queue.push_back ( trj_names["home@pos1@pos2@pos3@home"] );
+                //advr::reset_trj ( trj_queue.at(0) );
             }
-        } else {
-           DPRINTF ( "Error NULL running trajectory ... pop it\n" );
-           trj_queue.pop();
         }
-    } else { 
-        // trj_queue is empty
-        running_trj = 0;
     }
 }
 

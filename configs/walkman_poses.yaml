@@ -8,7 +8,7 @@ joint_group_by_controller :
         [ '@robot_mcs' ]
     impedance_ctrl :
         [ ]
-    torque_ctrl :
+    velocity_ctrl :
         [ ]
     direct_ctrl :
         [ ]
@@ -41,8 +41,8 @@ trjs_map :
 pos_map :
 
     home :
-        HEAD_R : 0.0
-        HEAD_P : 0.0
+        HEAD_R :     0.0
+        HEAD_P :     0.0
         # waist
         WAIST_Y :    0.0
         WAIST_P :    0.0
@@ -113,12 +113,12 @@ pos_map :
         RL_A_P :   -20.0
         RL_A_R :    20.0
         # left leg
-        LL_H_R :   15.0  
-        LL_H_Y :   35.0 
-        LL_H_P :  -80.0
-        LL_K :     80.0
-        LL_A_P :  -20.0
-        LL_A_R :  -20.0
+        LL_H_R :    15.0  
+        LL_H_Y :    35.0 
+        LL_H_P :   -80.0
+        LL_K :      80.0
+        LL_A_P :   -20.0
+        LL_A_R :   -20.0
 
     arms_back :
         HEAD_R :     0.0
@@ -153,12 +153,12 @@ pos_map :
         RL_A_P :   -20.0
         RL_A_R :    20.0
         # left leg
-        LL_H_R :   15.0  
-        LL_H_Y :   -0.2 
-        LL_H_P :  -90.0
-        LL_K :     90.0
-        LL_A_P :  -20.0
-        LL_A_R :  -20.0
+        LL_H_R :    15.0  
+        LL_H_Y :    -0.2 
+        LL_H_P :   -90.0
+        LL_K :      90.0
+        LL_A_P :   -20.0
+        LL_A_R :   -20.0
 
     high_guard :
         HEAD_R :     0.0

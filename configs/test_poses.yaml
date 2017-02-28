@@ -1,4 +1,21 @@
 
+# #####################################
+# map of sequences of string
+# macro sequences id @robot_mcs  
+
+joint_group_by_controller :
+    position_ctrl :
+        [ TEST_102 ]
+    impedance_ctrl :
+        [ ]
+    velocity_ctrl :
+        [ ]
+    direct_ctrl :
+        [ ]
+    # always subtract from above sets    
+    NO_ctrl :
+        [ ]
+
 
 # #####################################
 

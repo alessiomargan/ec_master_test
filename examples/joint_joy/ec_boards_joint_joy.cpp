@@ -106,7 +106,7 @@ void EC_boards_joint_joy::init_OP ( void ) {
 
     if ( ! trj_queue.empty() ) {
         running_trj = trj_queue.front();
-        advr::reset_trj ( *running_trj );
+        advr::reset_trj ( running_trj );
     }
 
 }
@@ -150,7 +150,7 @@ int EC_boards_joint_joy::user_loop ( void ) {
             //user_state = HOMING;
             DPRINTF ( "At Step 2 ....\n" );
             advr::reset_trj ( trj_1 );
-            running_trj = &trj_2;
+            running_trj = trj_2;
         }
         break;
 
@@ -217,7 +217,7 @@ int EC_boards_joint_joy::user_input ( C &user_cmd ) {
                     switch ( nav_cmd.button.bnum ) {
                     case 1 :
                         user_state = ANY2HOME;
-                        set_any2home ( motors, trj_any2home, *running_trj );
+                        set_any2home ( motors, trj_any2home, running_trj );
                         DPRINTF ( "ANY2HOME ....\n" );
                         break;
                     case 0 :

@@ -141,7 +141,7 @@ void EC_boards_centAC_urdf::init_preOP ( void ) {
     
     if ( motors_to_start.size() > 0 ) {
         //
-        trj_queue.push ( &spline_start2home );
+        trj_queue.push_back ( spline_start2home );
     }
 }
 
@@ -149,10 +149,11 @@ void EC_boards_centAC_urdf::init_preOP ( void ) {
 void EC_boards_centAC_urdf::init_OP ( void ) {
 
 
-    if ( ! trj_queue.empty() ) {
-        running_trj = trj_queue.front();
-        advr::reset_trj ( *running_trj );
-    }
+    try { advr::reset_trj ( trj_queue.at(0) ); }
+    catch ( const std::out_of_range &e ) {
+        throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
+    }    
+
     
     DPRINTF ( "End Init_OP\n" );
     
@@ -177,26 +178,16 @@ int EC_boards_centAC_urdf::user_loop ( void ) {
     ///////////////////////////////////////////////////////
     //
     if ( ! trj_queue.empty() ) {
-
-        running_trj = trj_queue.front();
-        if ( running_trj ) {
-            // !@#%@$#%^^# ... tune error
-            if ( go_there ( motors_to_start, *running_trj, spline_error, true) ) {
-                // running spline has finish !!
-                // pop running_trj
-                trj_queue.pop();
-                if ( ! trj_queue.empty() ) {
-                    running_trj = trj_queue.front();
-                    advr::reset_trj ( *running_trj );
-                }
+        if ( go_there ( motors_to_start, trj_queue.at(0), spline_error, false) ) {
+            // running trj has finish ... remove from queue  !!
+            DPRINTF ( "running trj has finish ... remove from queue !!\n" );
+            trj_queue.pop_front();
+            try { advr::reset_trj ( trj_queue.at(0) ); }
+            catch ( const std::out_of_range &e ) {
+                // add trajectory ....
             }
-        } else {
-            DPRINTF ( "Error NULL running spline ... pop it\n" );
-            trj_queue.pop();
         }
     } else { // trj_queue is empty
-        
-        running_trj =  0;
         
         ///////////////////////////////////////////////////////
         //
