@@ -104,10 +104,10 @@ void EC_boards_joint_joy::init_preOP ( void ) {
 
 void EC_boards_joint_joy::init_OP ( void ) {
 
-    if ( ! trj_queue.empty() ) {
-        running_trj = trj_queue.front();
-        advr::reset_trj ( running_trj );
-    }
+    try { advr::reset_trj ( trj_queue.at(0) ); }
+    catch ( const std::out_of_range &e ) {
+        throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
+    }    
 
 }
 
@@ -130,7 +130,6 @@ int EC_boards_joint_joy::user_loop ( void ) {
         break;
 
     case HOMING :
-        //if ( go_there(motors, home, 0.05) ) {
         if ( go_there ( motors, trj_start2home, 0.05, true ) ) {
             user_state = STEP_1;
             DPRINTF ( "At Home ....\n" );
@@ -150,7 +149,6 @@ int EC_boards_joint_joy::user_loop ( void ) {
             //user_state = HOMING;
             DPRINTF ( "At Step 2 ....\n" );
             advr::reset_trj ( trj_1 );
-            running_trj = trj_2;
         }
         break;
 
@@ -217,7 +215,7 @@ int EC_boards_joint_joy::user_input ( C &user_cmd ) {
                     switch ( nav_cmd.button.bnum ) {
                     case 1 :
                         user_state = ANY2HOME;
-                        set_any2home ( motors, trj_any2home, running_trj );
+                        //set_any2home ( motors, trj_any2home, trj_queue.at(0) );
                         DPRINTF ( "ANY2HOME ....\n" );
                         break;
                     case 0 :

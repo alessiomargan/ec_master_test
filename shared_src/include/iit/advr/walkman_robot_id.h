@@ -56,6 +56,7 @@ enum Robot_IDs {
     // test bench motors
     TEST_101 = 101,
     TEST_102 = 102,
+    TEST_103 = 103,
 };
 
 typedef enum Robot_IDs Robot_IDs_t;
@@ -111,6 +112,7 @@ const std::map<std::string, Robot_IDs_t > robot_ids_names = {
     // test bench motors
     _MKS_(TEST_101),
     _MKS_(TEST_102),
+    _MKS_(TEST_103),
     
 };
 

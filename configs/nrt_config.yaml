@@ -21,7 +21,7 @@ firmware_update:
   #fw_path: ../firmware/
   #fw_path: ../examples/fw_update/fw_pdo56/
   fw_path: ../examples/fw_update/fw_test/
-  slave_pos_list: [1]
+  #slave_pos_list: [1]
   # all esc
   #slave_pos_list: [0]
   # all BigMotor
@@ -31,7 +31,7 @@ firmware_update:
   # all LowPower motor
   #slave_pos_list: [-3]
   # all CentAC motor
-  #slave_pos_list: [-4]
+  slave_pos_list: [-4]
   
   big_motor:
     bin_file: BigMotor.bin
@@ -85,8 +85,13 @@ CentAcESC_X:
   max_current_A: 15.0
   pid :
     position: [220.0 , 0.0 , 5.0]
-
-
+  upg_params :
+    voltageFeedforward : 0.0
+    windingResistance : 1.0
+    backEmfCompensation : 2.0
+    directTorqueFeedbackGain : 3.0
+    sandBoxAngle : 4.0
+    sandBoxFriction : 5.0
     
 #############################
 # TEST JOINT

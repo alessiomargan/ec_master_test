@@ -52,7 +52,18 @@ CentAcESC_X:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
 
+  upg_params :
+    DOB_filterFrequencyHz : 10
+    voltageFeedforward : 1.0
+    backEmfCompensation : 0.8
+    directTorqueFeedbackGain : 1.0
+    sandBoxAngle : 0.05
+    sandBoxFriction : 0.5
 
+    gearedMotorInertia : 1.0
+    motorTorqueConstant : 0.05
+    windingResistance : 0.5
+    
 #############################
 # TEST JOINT
 #############################
