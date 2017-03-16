@@ -38,25 +38,8 @@ void Ec_Boards_sine::init_preOP ( void ) {
     float min_pos, max_pos, link_pos, motor_pos;
 
     std::vector<int> test_rid = std::initializer_list<int> {
-
-//         centauro::WAIST_Y,
-//         centauro::RA_SH_1,
-//         centauro::RA_SH_2,
-//         centauro::RA_SH_3,
-//         centauro::RA_EL,
-//         centauro::RA_WR_1,
-//         centauro::RA_WR_2,
-//         centauro::RA_WR_3,
-//         centauro::LA_SH_1,
-//         centauro::LA_SH_2,
-//         centauro::LA_SH_3,
-//         centauro::LA_EL,
-//         centauro::LA_WR_1,
-//         centauro::LA_WR_2,
-//         centauro::LA_WR_3,
     
-        22,
-        123
+        103
         
     };
 
@@ -86,7 +69,8 @@ void Ec_Boards_sine::init_preOP ( void ) {
         // start controller :
         // - read actual joint position and set as pos_ref  
         //assert ( moto->start ( CTRL_SET_MIX_POS_MODE ) == EC_BOARD_OK );
-        assert ( moto->start ( CTRL_SET_POS_MODE ) == EC_BOARD_OK );
+        //assert ( moto->start ( CTRL_SET_POS_MODE ) == EC_BOARD_OK );
+        assert ( moto->start ( CTRL_SET_CURR_MODE ) == EC_BOARD_OK );
         //moto->start ( CTRL_SET_POS_LINK_MODE );
     }
 
@@ -95,13 +79,13 @@ void Ec_Boards_sine::init_preOP ( void ) {
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
 
     
-    for ( auto const& item : motors_to_start ) {
-        slave_pos = item.first;
-        moto = item.second;
-        while ( ! moto->move_to ( home[slave_pos], 0.002 ) ) {
-            osal_usleep ( 1000 );
-        }
-    }
+//     for ( auto const& item : motors_to_start ) {
+//         slave_pos = item.first;
+//         moto = item.second;
+//         while ( ! moto->move_to ( home[slave_pos], 0.002 ) ) {
+//             osal_usleep ( 1000 );
+//         }
+//     }
 
 }
 
@@ -142,7 +126,7 @@ int Ec_Boards_sine::user_loop ( void ) {
         uint64_t tNow = iit::ecat::get_time_ns();
         float dt = ( tNow - start_time_sine ) / 1e9;
         // !!!!! if too fast adjust this
-        float freq = 0.2;
+        float freq = 1;
         float A;
         iit::ecat::advr::Motor * moto;
         int slave_pos;
@@ -150,7 +134,8 @@ int Ec_Boards_sine::user_loop ( void ) {
             slave_pos = item.first;
             moto = item.second;
             A = home[slave_pos] - 1;
-            moto->set_posRef ( home[slave_pos] + A * sinf ( 2*M_PI*freq*dt ) );
+            //moto->set_posRef ( home[slave_pos] + A * sinf ( 2*M_PI*freq*dt ) );
+            //moto->set_torRef ( 2 * cosf ( 2*M_PI*freq*dt ) );
         }
     }
     //////////////////////////////////////////////////////
