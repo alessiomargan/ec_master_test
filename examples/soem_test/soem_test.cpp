@@ -106,7 +106,7 @@ public:
 
     virtual void th_init ( void * ) {
         uint32_t sync_cycle_time_ns = 1e6;
-        uint32_t sync_cycle_offset_ns = 0; //1e9;
+        uint32_t sync_cycle_offset_ns = 1e9;
         
         OutXddp.init(pipe_name);
         iit::ecat::initialize ( ecat_iface.c_str() );
@@ -115,6 +115,8 @@ public:
     virtual void th_loop ( void * ) {
         iit::ecat::recv_from_slaves ( &timing );
         OutXddp.xddp_write( timing );
+        iit::ecat::send_to_slaves ( );
+        
     }
 };
 

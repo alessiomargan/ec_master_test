@@ -1,5 +1,5 @@
 #
-ec_board_ctrl:
+ec_board_ctrl :
   eth_iface: rteth0
   #eth_iface: eth1
   #sync_cycle_time_ns: 500000
@@ -9,10 +9,50 @@ ec_board_ctrl:
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 1000000000
-  power_off_boards: true
+  power_off_boards: false
 
 ec_boards_base :
   joints_poses_file : ../configs/test_poses.yaml
+
+  
+firmware_update:
+  #fw_path: ../firmware/
+  #fw_path: ../examples/fw_update/fw_pdo56/
+  fw_path: ../examples/fw_update/fw_test/
+  #slave_pos_list: [1]
+  # all esc
+  #slave_pos_list: [0]
+  # all BigMotor
+  #slave_pos_list: [-1]
+  # all MedMotor
+  #slave_pos_list: [-2]
+  # all LowPower motor
+  #slave_pos_list: [-3]
+  # all CentAC motor
+  slave_pos_list: [-4]
+
+  big_motor:
+    bin_file: BigMotor.bin
+    passwd: 0xb001
+  medium_motor:
+    bin_file: MedMotor.bin
+    passwd: 0xb002
+  power_hub:
+    bin_file: Pow_Hub.bin
+    passwd: 0xb003
+  small_motor:
+    bin_file: mc_tm4c.bin
+    passwd: 0xbeef
+  force_torque_6:
+    bin_file: FT6.bin
+    passwd: 0xbeef
+  cent_AC:
+    m3:
+      bin_file: cent_AC_m3.bin
+      passwd: 0xA550
+    c28:
+      bin_file: cent_AC_c28.bin
+      passwd: 0xDAD0
 
 #############################
 # GENERIC LpESC config
@@ -52,17 +92,17 @@ CentAcESC_X:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
 
-  upg_params :
+  upd_params :
+    # A0
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
     backEmfCompensation : 0.8
     directTorqueFeedbackGain : 1.0
     sandBoxAngle : 0.05
     sandBoxFriction : 0.5
-
-    gearedMotorInertia : 1.0
-    motorTorqueConstant : 0.05
-    windingResistance : 0.5
+    gearedMotorInertia : 1.181
+    motorTorqueConstant : 0.078
+    windingResistance : 0.318
     
 #############################
 # TEST JOINT

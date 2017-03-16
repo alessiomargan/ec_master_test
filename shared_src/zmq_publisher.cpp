@@ -162,7 +162,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     }
 
     base_port = 10000;
-    for ( auto const& rid : std::initializer_list<int>{101,102} ) {
+    for ( auto const& rid : std::initializer_list<int>{101,102,103,104} ) {
         zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
     }
 
