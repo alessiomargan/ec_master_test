@@ -25,14 +25,11 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
 
-#define FT_ECAT_POS 1
 
 
 using namespace iit::ecat::advr;
 
 static int run_loop = 1;
-
-
 
 typedef struct {
     uint64_t    ts;
@@ -56,12 +53,11 @@ typedef struct {
 // small sensor
                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
-
     }
 } sens_data_t ;
 
 
-void load_matrix ( std::string filename, std::vector<std::vector<float>> &cal_matrix ) {
+int load_matrix ( std::string filename, std::vector<std::vector<float>> &cal_matrix ) {
 
     std::string     line;
     std::fstream    file ( filename, std::ios::in );
@@ -69,25 +65,39 @@ void load_matrix ( std::string filename, std::vector<std::vector<float>> &cal_ma
     typedef boost::tokenizer<boost::char_separator<char>> Tokenizer;
     boost::char_separator<char> sep ( "," );
 
-    if ( file ) {
-
-        while ( getline ( file, line ) ) {
-
-            Tokenizer info ( line, sep ); // tokenize the line of data
-
-            std::vector<float> values;
-
-            for ( Tokenizer::iterator it = info.begin(); it != info.end(); ++it ) {
-                // convert data into double value, and store
-                values.push_back ( atof ( it->c_str() ) );
-            }
-            // store array of values
-            cal_matrix.push_back ( values );
-        }
-
-    } else {
+    if ( ! file ) {
         std::cerr << "Error: Unable to open file " << filename << std::endl;
+        return -1;
     }
+
+    while ( getline ( file, line ) ) {
+
+        Tokenizer info ( line, sep ); // tokenize the line of data
+
+        std::vector<float> values;
+
+        for ( Tokenizer::iterator it = info.begin(); it != info.end(); ++it ) {
+            // convert data into double value, and store
+            values.push_back ( atof ( it->c_str() ) );
+        }
+        // store array of values
+        cal_matrix.push_back ( values );
+    }
+
+    auto it = cal_matrix.begin();
+    while ( it != cal_matrix.end() ) {
+        std::vector<float> row ( *it );
+        std::vector<float>::const_iterator rit = row.begin();
+        while ( rit != row.end() ) {
+            std::cout << ( *rit ) << "\t";
+            rit ++;
+        }
+        std::cout << std::endl;
+        it ++;
+    }
+
+    
+    return 0;
 }
 
 static void warn_upon_switch ( int sig __attribute__ ( ( unused ) ) ) {
@@ -166,31 +176,6 @@ int main ( int argc, char **argv ) {
 
     ///////////////////////////////////////////////////////////////////////
 
-    std::vector<std::vector<float>> cal_matrix;
-    //load_matrix ( "RightFootCalibMatrix.txt", cal_matrix );
-    //load_matrix("LeftFootCalibMatrix.txt", cal_matrix);
-    //load_matrix("RightWristCalibMatrix.txt", cal_matrix);
-    //load_matrix("LeftWristCalibMatrix.txt", cal_matrix);
-    //load_matrix("ExtraWristCalibMatrix.txt", cal_matrix);
-    //load_matrix("sensor1_calib.txt", cal_matrix);
-    //load_matrix("calib_matrix_sens_set2_left_foot_walkman_Dec_12_2016.txt", cal_matrix);
-    //load_matrix("ones.txt", cal_matrix);
-
-    auto it = cal_matrix.begin();
-    while ( it != cal_matrix.end() ) {
-        std::vector<float> row ( *it );
-        std::vector<float>::const_iterator rit = row.begin();
-        while ( rit != row.end() ) {
-            std::cout << ( *rit ) << "\t";
-            rit ++;
-        }
-        std::cout << std::endl;
-        it ++;
-    }
-    //return 0;
-
-    ///////////////////////////////////////////////////////////////////////
-
     Ec_Boards_ctrl * ec_boards_ctrl;
 
     ec_boards_ctrl = new Ec_Boards_ctrl ( argv[1] );
@@ -203,10 +188,27 @@ int main ( int argc, char **argv ) {
 
     ec_boards_ctrl->configure_boards();
 
-    ec_boards_ctrl->set_flash_cmd ( FT_ECAT_POS, CTRL_REMOVE_TORQUE_OFFS );
+    const YAML::Node config = YAML::LoadFile ( argv[1] );
+    const YAML::Node ati_config = config["ati_config"];
+    std::vector<std::vector<float>> cal_matrix;
+    int ft_ecat_pos = 0;
+    if ( ati_config ) {
+        ft_ecat_pos = ati_config["ft_ecat_pos"].as<int>();
+        ec_boards_ctrl->set_flash_cmd ( ft_ecat_pos, CTRL_REMOVE_TORQUE_OFFS );
+        try {
+            std::string calib_file = ati_config["calib_mat_file"].as<std::string>();
+            if ( ! load_matrix( calib_file, cal_matrix ) && ati_config["save_calib_matrix"].as<bool>() ) {
+                ec_boards_ctrl->set_cal_matrix ( ft_ecat_pos, cal_matrix );
+                ec_boards_ctrl->set_flash_cmd ( ft_ecat_pos, 0x0012 );
+            }
+        } catch ( YAML::Exception &e ) {
+            DPRINTF ( "Catch Exception ... %s\n", e.what() );
+        } 
+    }
 
-    //ec_boards_ctrl->set_cal_matrix ( FT_ECAT_POS, cal_matrix );
-    //ec_boards_ctrl->set_flash_cmd ( FT_ECAT_POS, 0x0012 );
+    sleep(1.0);
+    
+    ///////////////////////////////////////////////////////////////////////
 
     Ft6ESC                  * ft; 
     Ft6EscPdoTypes::pdo_rx  ft_pdo_rx;
@@ -215,9 +217,9 @@ int main ( int argc, char **argv ) {
     ati_log_t   sample;
     sens_data_t sens_data;
 
-    ft = ec_boards_ctrl->slave_as_FT(FT_ECAT_POS);
+    ft = ec_boards_ctrl->slave_as_FT(ft_ecat_pos);
     if ( ! ft ) {
-        std::cout << "No Ft6ESC at pos " << FT_ECAT_POS << std::endl;
+        std::cout << "No Ft6ESC at pos " << ft_ecat_pos << std::endl;
         delete ec_boards_ctrl;
         return 0;
     }
@@ -273,10 +275,11 @@ int main ( int argc, char **argv ) {
     delete ati;
 
     /////////////////////////////////////////////////////////////////
-
-    std::string filename = "/tmp/sens.txt";
-    dump_buffer ( filename, sens_log );
-
+    
+    if ( ati_config["dump_log"].as<bool>() ) {
+        std::string filename = "/tmp/sens.txt";
+        dump_buffer ( filename, sens_log );
+    }
     return 0;
 }
 

@@ -134,23 +134,19 @@ void EC_boards_centAC_test::init_preOP ( void ) {
     DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
-    if ( motors_to_start.size() > 0 ) {
-        //
-        trj_queue.push ( &trj_start2home );
-        trj_queue.push ( &trj_home2zero );
-        trj_queue.push ( &trj_zero2up2extend2zero );
+    trj_queue.push_back ( trj_start2home );
+    trj_queue.push_back ( trj_home2zero );
+    trj_queue.push_back ( trj_zero2up2extend2zero );
         
-    }
 }
 
 
 void EC_boards_centAC_test::init_OP ( void ) {
 
-    if ( ! trj_queue.empty() ) {
-        running_trj = trj_queue.front();
-        last_run_trj = running_trj;
-        advr::reset_trj ( *running_trj );
-    }
+    try { advr::reset_trj ( trj_queue.at(0) ); }
+    catch ( const std::out_of_range &e ) {
+        throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
+    }    
     
     DPRINTF ( "End Init_OP\n" );
     
@@ -172,38 +168,19 @@ int EC_boards_centAC_test::user_loop ( void ) {
         //DPRINTF ( ">> %s\n", pbEcInput. );
     }
 
-    if ( ! trj_queue.empty() ) {
-
-        running_trj = trj_queue.front();
-        if ( running_trj ) {
-            // !@#%@$#%^^# ... tune trj_error
-            if ( go_there ( motors_to_start, *running_trj, trj_error, false) ) {
-                // running trajectory has finish !!
-                last_run_trj = running_trj;
-                // pop running_trj
-                trj_queue.pop();
-                if ( ! trj_queue.empty() ) {
-                    running_trj = trj_queue.front();
-                    advr::reset_trj ( *running_trj );
-                }
+    if ( ! trj_queue.empty() ) { 
+        if ( go_there ( motors_to_start, trj_queue.at(0), trj_error, false) ) {
+            // running trj has finish ... remove from queue  !!
+            DPRINTF ( "running trj has finish ... remove from queue !!\n" );
+            trj_queue.pop_front();
+            try { advr::reset_trj ( trj_queue.at(0) ); }
+            catch ( const std::out_of_range &e ) {
+                // add trajectory ....
+                trj_queue.push_back ( trj_zero2up2extend2zero );
+                advr::reset_trj ( trj_queue.at(0) );
             }
-        } else {
-           DPRINTF ( "Error NULL running trajectory ... pop it\n" );
-           trj_queue.pop();
-        }
-    } else { 
-        // trj_queue is empty
-        running_trj = last_run_trj = 0;
-        if ( motors_to_start.size() > 0 ) {
-            // add trajectory ....
-            trj_queue.push ( &trj_zero2up2extend2zero );
-            // !!! since queue was empty reset the first trj
-            running_trj = trj_queue.front();
-            last_run_trj = running_trj;
-            advr::reset_trj ( *running_trj );
         }
     }
-
 }
 
 void EC_boards_centAC_test::tune_gains( std::vector<float> gains_incr ) {
