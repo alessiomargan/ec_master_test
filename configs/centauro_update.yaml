@@ -16,7 +16,7 @@ CentAcESC_1:
   sign: 1
   pos_offset: 0
   max_current_A: 10.0
-  upg_params :
+  upd_params :
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
     backEmfCompensation : 0.8
@@ -35,7 +35,7 @@ CentAcESC_2:
   sign: 1
   pos_offset: 45
   max_current_A: 15.0
-  upg_params :
+  upd_params :
   # ...101...
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
@@ -51,7 +51,7 @@ CentAcESC_3:
   sign: 1
   pos_offset: 45
   max_current_A: 15.0
-  upg_params :
+  upd_params :
   # ...101...
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
@@ -67,7 +67,7 @@ CentAcESC_4:
   sign: 1
   pos_offset: 0
   max_current_A: 15.0
-  upg_params :
+  upd_params :
   # ...102...
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
@@ -83,7 +83,7 @@ CentAcESC_5:
   sign: 1
   pos_offset: 0
   max_current_A: 15.0
-  upg_params :
+  upd_params :
   # ...102...
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
@@ -99,7 +99,7 @@ CentAcESC_6:
   sign: -1
   pos_offset: 0
   max_current_A: 1.0
-  upg_params :
+  upd_params :
   # ...103...
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
@@ -115,7 +115,7 @@ CentAcESC_7:
   sign: 1
   pos_offset: 0
   max_current_A: 10.0
-  upg_params :
+  upd_params :
   # ...103...
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
@@ -131,7 +131,7 @@ CentAcESC_8:
   sign: 1
   pos_offset: 0
   max_current_A: 15.0
-  upg_params :
+  upd_params :
   # ...104...
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
@@ -150,7 +150,7 @@ CentAcESC_9:
   sign: 1
   pos_offset: -45
   max_current_A: 15.0
-upg_params :
+upd_params :
   # ...101...
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
@@ -165,7 +165,7 @@ CentAcESC_10:
   sign: 1
   pos_offset: -45
   max_current_A: 15.0
-  upg_params :
+  upd_params :
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
     backEmfCompensation : 0.8
@@ -180,7 +180,7 @@ CentAcESC_11:
   sign: 1
   pos_offset: 0
   max_current_A: 15.0
-  upg_params :
+  upd_params :
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
     backEmfCompensation : 0.8
@@ -195,7 +195,7 @@ CentAcESC_12:
   sign: 1
   pos_offset: 0
   max_current_A: 15.0
-  upg_params :
+  upd_params :
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
     backEmfCompensation : 0.8
@@ -210,7 +210,7 @@ CentAcESC_13:
   sign: -1
   pos_offset: 0
   max_current_A: 10.0
-  upg_params :
+  upd_params :
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
     backEmfCompensation : 0.8
@@ -225,7 +225,7 @@ CentAcESC_14:
   sign: 1
   pos_offset: 0
   max_current_A: 10.0
-  upg_params :
+  upd_params :
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
     backEmfCompensation : 0.8
@@ -240,7 +240,7 @@ CentAcESC_15:
   sign: 1
   pos_offset: 0
   max_current_A: 10.0
-  upg_params :
+  upd_params :
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0
     backEmfCompensation : 0.8

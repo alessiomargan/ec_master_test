@@ -21,7 +21,7 @@ firmware_update:
   #fw_path: ../firmware/
   #fw_path: ../examples/fw_update/fw_pdo56/
   fw_path: ../examples/fw_update/fw_test/
-  #slave_pos_list: [1]
+  #slave_pos_list: [2,3]
   # all esc
   #slave_pos_list: [0]
   # all BigMotor
@@ -85,14 +85,24 @@ CentAcESC_X:
   max_current_A: 15.0
   pid :
     position: [220.0 , 0.0 , 5.0]
-  upg_params :
-    voltageFeedforward : 0.0
-    windingResistance : 1.0
-    backEmfCompensation : 2.0
-    directTorqueFeedbackGain : 3.0
-    sandBoxAngle : 4.0
-    sandBoxFriction : 5.0
-    
+
+  NO_upd_params :
+    # A0 
+    DOB_filterFrequencyHz : 10
+    voltageFeedforward : 1.0
+    backEmfCompensation : 0.8
+    directTorqueFeedbackGain : 1.0
+    sandBoxAngle : 0.05
+    sandBoxFriction : 0.5
+    gearedMotorInertia : 1.181
+    motorTorqueConstant : 0.078
+    windingResistance : 0.318
+  
+  NO_aux_pdo : # names defined in SDO index 0x8002 
+     rd :  [ pos_ref_fb, iq_ref_fb, id_ref_fb ]
+     wr :  [ ]
+     wrd : [ "iq_offset&&iq_out_fb" ]
+     
 #############################
 # TEST JOINT
 #############################

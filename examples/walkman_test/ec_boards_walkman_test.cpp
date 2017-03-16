@@ -168,23 +168,31 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         moto = item.second;
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
-        home[slave_pos] = DEG2RAD ( joints_pose_deg.at("home").at((walkman::Robot_IDs)pos2Rid(slave_pos)) );
+        try {
+            home[slave_pos] = DEG2RAD ( joints_pose_deg.at("home").at((walkman::Robot_IDs)pos2Rid(slave_pos)) );
+        } catch (const std::out_of_range &e ) {
+                continue;
+        }
         
         DPRINTF ("Joint_id %d start %f home %f\n", pos2Rid ( slave_pos ), start_pos[slave_pos], home[slave_pos]);
 
         vPos =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         Xs = std::initializer_list<double> { 0, 5 };
-        trj_names["start2home"][slave_pos] = std::make_shared<advr::Smoother_trajectory> (std::initializer_list<double> {0,5}, vPos );
+        trj_names["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory> (std::initializer_list<double> {0,5}, vPos );
 
         for ( auto const & trj_name : extract_keys( trj_map ) ) {
             Xs.clear();
             vPos.clear();
             for ( auto const & trj_pos_time : trj_map[trj_name] ) {
-                auto pos = joints_pose_deg.at(trj_pos_time.first).at((walkman::Robot_IDs)pos2Rid(slave_pos));
-                vPos.push_back( DEG2RAD ( pos ) );
-                auto time = trj_pos_time.second;
-                Xs.push_back( time );
-                DPRINTF("%s time %f pos %f\n", trj_name.c_str(), time, pos);
+                try {
+                    auto pos = joints_pose_deg.at(trj_pos_time.first).at((walkman::Robot_IDs)pos2Rid(slave_pos));
+                    vPos.push_back( DEG2RAD ( pos ) );
+                    auto time = trj_pos_time.second;
+                    Xs.push_back( time );
+                    DPRINTF("%s time %f pos %f\n", trj_name.c_str(), time, pos);
+                } catch (const std::out_of_range &e ) {
+                    continue;
+                }
             }
             trj_names[trj_name][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xs, vPos );
         }
@@ -272,7 +280,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     trj_queue.clear();
-    trj_queue.push_back ( trj_names.at("start2home") );
+    trj_queue.push_back ( trj_names.at("start@home") );
     trj_queue.push_back ( trj_names.at("home@pos1@home") );
     
 }
