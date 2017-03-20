@@ -39,7 +39,7 @@ public:
 
         name = "UI_thread";
         // periodic
-        period.period = {0,100};
+        period.period = {0,1000};
 
         schedpolicy = SCHED_OTHER;
         priority = sched_get_priority_max ( schedpolicy ) /2;
@@ -91,7 +91,7 @@ public:
 
         name = "EC_thread";
         // non periodic
-        period.period = {0,100};
+        period.period = {0,1000};
 
 #ifdef __COBALT__
         schedpolicy = SCHED_FIFO;
@@ -109,7 +109,7 @@ public:
     }
 
     virtual void th_init ( void * ) {
-        uint32_t sync_cycle_time_ns = 1e6;
+        uint32_t sync_cycle_time_ns = 10e6;
         uint32_t sync_cycle_offset_ns = 0; //1e9;
         
         OutXddp.init(pipe_name);
@@ -117,8 +117,8 @@ public:
         iit::ecat::operational ( sync_cycle_time_ns, sync_cycle_offset_ns );
     }
     virtual void th_loop ( void * ) {
-        iit::ecat::recv_from_slaves ( &timing );
-        OutXddp.xddp_write( timing );
+        //iit::ecat::recv_from_slaves ( &timing );
+        //OutXddp.xddp_write( timing );
     }
 };
 
@@ -139,11 +139,11 @@ int main ( int argc, char * const argv[] ) try {
 
     main_common ( &argc, &argv, shutdown );
     
-    threads["UI_thread"] = new UI_thread(std::string("ec_timing"));
+    //threads["UI_thread"] = new UI_thread(std::string("ec_timing"));
     threads["EC_thread"] = new EC_thread(iface, std::string("ec_timing"));
     
     threads["EC_thread"]->create(true);
-    threads["UI_thread"]->create(false);
+    //threads["UI_thread"]->create(false);
 
     while ( main_loop ) {
 

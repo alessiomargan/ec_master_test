@@ -27,7 +27,7 @@ static void warn_upon_switch ( int sig __attribute__ ( ( unused ) ) ) {
        secondary mode: */
     nentries = backtrace ( bt,sizeof ( bt ) /sizeof ( bt[0] ) );
     // dump backtrace
-    backtrace_symbols_fd ( bt,nentries,fileno ( stdout ) );
+    //backtrace_symbols_fd ( bt,nentries,fileno ( stdout ) );
 }
 
 

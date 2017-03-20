@@ -42,7 +42,7 @@ public:
         th_name = std::string("RT_thrd_") + std::to_string(th_idx);
         name = th_name.c_str();
         // non periodic
-        period.period = {0,1000};
+        period.period = {0,(idx+1)*50};
 
 #ifdef __COBALT__
         schedpolicy = SCHED_FIFO;
