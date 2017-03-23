@@ -96,7 +96,7 @@ protected:
 
 inline Thread_hook::~Thread_hook() {
 
-    std::cout << "~" << typeid ( this ).name() << std::endl;
+    std::cout << "~" << typeid ( this ).name() << " " << std::string(name) <<std::endl;
 }
 
 inline int Thread_hook::is_non_periodic() {
@@ -126,7 +126,7 @@ inline void Thread_hook::stop() {
 }
 
 inline void Thread_hook::join() {
-    //pthread_cancel(thread_id);
+    pthread_cancel(thread_id);
     pthread_join ( thread_id, 0 );
 }
 

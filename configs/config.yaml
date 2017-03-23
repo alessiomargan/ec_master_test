@@ -7,6 +7,7 @@ ec_board_ctrl :
   #sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 5000000
   #sync_cycle_time_ns: 10000000
+  #sync_cycle_time_ns: 100000000
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 1000000000
   power_off_boards: false
@@ -19,7 +20,7 @@ firmware_update:
   #fw_path: ../firmware/
   #fw_path: ../examples/fw_update/fw_pdo56/
   fw_path: ../examples/fw_update/fw_test/
-  #slave_pos_list: [1]
+  slave_pos_list: [3]
   # all esc
   #slave_pos_list: [0]
   # all BigMotor
@@ -29,7 +30,7 @@ firmware_update:
   # all LowPower motor
   #slave_pos_list: [-3]
   # all CentAC motor
-  slave_pos_list: [-4]
+  #slave_pos_list: [-4]
 
   big_motor:
     bin_file: BigMotor.bin
@@ -92,7 +93,7 @@ CentAcESC_X:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
 
-  upd_params :
+  NO_upd_params :
     # A0
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0

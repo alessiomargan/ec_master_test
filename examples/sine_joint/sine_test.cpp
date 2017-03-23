@@ -6,7 +6,7 @@
 
 #include <ec_boards_sine.h>
 
-extern void main_common ( __sighandler_t sig_handler );
+extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 
 static int main_loop = 1;
 
@@ -18,7 +18,7 @@ void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
 // Main
 ////////////////////////////////////////////////////
 
-int main ( int argc, char *argv[] ) try {
+int main ( int argc, char * const argv[] ) try {
 
     std::map<std::string, Thread_hook*> threads;
 
@@ -27,8 +27,8 @@ int main ( int argc, char *argv[] ) try {
         return 0;
     }
 
-    main_common ( shutdown );
-
+    main_common ( &argc, &argv, shutdown );
+    
     threads["boards_ctrl"] = new Ec_Boards_sine ( argv[1] );
     threads["boards_ctrl"]->create ( true );
 

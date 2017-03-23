@@ -21,7 +21,7 @@ static const std::string __pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
 static const std::string __pipe_prefix ( "/tmp/" );
 #endif
 
-extern void main_common ( __sighandler_t sig_handler );
+extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );
 
 static int main_loop = 1;
@@ -196,10 +196,10 @@ void ImuHandler::operator() () const {
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-int main ( int argc, char *argv[] ) {
+int main ( int argc, char * const argv[] ) {
     bool use_cb = true;
     ImuHandler imu;
-    main_common ( shutdown );
+    main_common ( &argc, &argv, shutdown );
     lpms_cb = std::bind ( &ImuHandler::imu_data_cb, &imu, _1, _2 );
     imu.setup ( std::string ( "Lpms_imu" ),use_cb );
 

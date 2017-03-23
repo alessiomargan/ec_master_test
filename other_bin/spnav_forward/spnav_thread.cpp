@@ -28,7 +28,7 @@ static const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
 static const std::string pipe_prefix ( "/tmp/" );
 #endif
 
-extern void main_common ( __sighandler_t sig_handler );
+extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );
 
 static int main_loop = 1;
@@ -92,7 +92,7 @@ void * spnav_nrt_thread ( void * arg ) {
 //
 /////////////////////////////////////////////////////////////////////
 
-int main ( int argc, char *argv[] ) try {
+int main ( int argc, char * const argv[] ) try {
 
     char * pipe_arg = 0;
 
@@ -106,7 +106,7 @@ int main ( int argc, char *argv[] ) try {
 
     int policy = SCHED_OTHER;
 
-    main_common ( shutdown );
+    main_common ( &argc, &argv, shutdown );
     set_main_sched_policy ( sched_get_priority_max ( policy ) );
 
     spnav_nrt_thread ( pipe_arg );

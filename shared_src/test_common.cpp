@@ -20,14 +20,15 @@
 
 static void warn_upon_switch ( int sig __attribute__ ( ( unused ) ) ) {
     // handle rt to nrt contex switch
-    void *bt[10];
+    void *bt[20];
     int nentries;
 
     /* Dump a backtrace of the frame which caused the switch to
        secondary mode: */
     nentries = backtrace ( bt,sizeof ( bt ) /sizeof ( bt[0] ) );
     // dump backtrace
-    //backtrace_symbols_fd ( bt,nentries,fileno ( stdout ) );
+    backtrace_symbols_fd ( bt, nentries, fileno ( stdout ) );
+    printf ("-----------\n");
 }
 
 
@@ -36,9 +37,9 @@ static void set_signal_handler ( __sighandler_t sig_handler ) {
     signal ( SIGINT, sig_handler );
     signal ( SIGKILL, sig_handler );
 #ifdef __COBALT__
-    // call pthread_set_mode_np(0, PTHREAD_WARNSW) to cause a SIGXCPU
+//     // call pthread_set_mode_np(0, PTHREAD_WARNSW) to cause a SIGDEBUG
     // signal to be sent when the calling thread involontary switches to secondary mode
-    signal ( SIGXCPU, warn_upon_switch );
+    signal ( SIGDEBUG, warn_upon_switch );
 #endif
 }
 

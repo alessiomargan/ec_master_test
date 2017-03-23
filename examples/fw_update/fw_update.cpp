@@ -22,7 +22,7 @@ using namespace iit::ecat::advr;
 
 Ec_Boards_ctrl * ec_boards_ctrl;
 
-extern void main_common ( __sighandler_t sig_handler );
+extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 
 static int main_loop = 1;
 
@@ -35,15 +35,15 @@ void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
 // Main
 ////////////////////////////////////////////////////
 
-int main ( int argc, char *argv[] ) try {
+int main ( int argc, char * const argv[] ) try {
 
     if ( argc != 2 ) {
         printf ( "Usage: %s config.yaml\n", argv[0] );
         return 0;
     }
 
-    main_common ( shutdown );
-
+    main_common ( &argc, &argv, shutdown );
+    
     ///////////////////////////////////////////////////////////////////////////
 
     Ec_Boards_ctrl * ec_boards_ctrl = new Ec_Boards_ctrl ( argv[1] );
