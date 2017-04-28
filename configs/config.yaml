@@ -20,7 +20,7 @@ firmware_update:
   #fw_path: ../firmware/
   #fw_path: ../examples/fw_update/fw_pdo56/
   fw_path: ../examples/fw_update/fw_test/
-  slave_pos_list: [3]
+  #slave_pos_list: [1]
   # all esc
   #slave_pos_list: [0]
   # all BigMotor
@@ -30,7 +30,7 @@ firmware_update:
   # all LowPower motor
   #slave_pos_list: [-3]
   # all CentAC motor
-  #slave_pos_list: [-4]
+  slave_pos_list: [-4]
 
   big_motor:
     bin_file: BigMotor.bin

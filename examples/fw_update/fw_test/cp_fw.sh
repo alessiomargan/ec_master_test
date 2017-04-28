@@ -1,8 +1,8 @@
 #! /bin/sh
 
 #cp /home/amargan/workspace_v6/soes_test_dc_m3/Flash-Standalone/soes_test_dc_m3.bin soes_m3.bin
-#cp /home/amargan/workspace_v6/soes_test_dc_m3/Flash-AllCores/soes_test_dc_m3.bin soes_m3.bin
-#cp /home/amargan/workspace_v6/soes_test_dc_c28/Flash/soes_test_dc_c28.bin soes_c28.bin
+cp /home/amargan/workspace_v6/soes_test_dc_m3/Flash-AllCores/soes_test_dc_m3.bin soes_m3.bin
+cp /home/amargan/workspace_v6/soes_test_dc_c28/Flash/soes_test_dc_c28.bin soes_c28.bin
 
 cp /home/amargan/workspace_v6/centauro_AC_m3/Flash-AllCores/cent_AC_m3.bin .
 #cp /home/amargan/workspace_v6/centauro_AC_m3/Flash-AllCores_Release/cent_AC_m3.bin .
