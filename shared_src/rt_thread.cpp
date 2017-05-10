@@ -74,7 +74,8 @@ void * rt_periodic_thread ( Thread_hook_Ptr th_hook ) {
         th_hook->th_loop ( 0 );
 
     } // end while
-
+    
+    DPRINTF ( "EXIT RT THREAD : name = %s\n", ( *th_hook ).name );
 
     return 0;
 }
@@ -118,6 +119,8 @@ void * rt_non_periodic_thread ( Thread_hook_Ptr th_hook ) {
 
     } // end while
 
+    DPRINTF ( "EXIT RT THREAD : name = %s\n", ( *th_hook ).name );
+    
     return 0;
 }
 
