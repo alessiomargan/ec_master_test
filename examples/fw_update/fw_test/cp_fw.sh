@@ -8,6 +8,9 @@ cp /home/amargan/workspace_v6/centauro_AC_m3/Flash-AllCores/cent_AC_m3.bin .
 #cp /home/amargan/workspace_v6/centauro_AC_m3/Flash-AllCores_Release/cent_AC_m3.bin .
 cp /home/amargan/workspace_v6/centauro_AC_c28/Flash/cent_AC_c28.bin .
 
+cp /home/amargan/workspace_v6/f28m36_power_board_m3/Flash-Standalone/pow_m3.bin .
+cp /home/amargan/workspace_v6/f28m36_power_board_c28/Flash/pow_c28.bin .
+
 cp /home/amargan/workspace_v6/Walk_Man_Joint_AC/Release/BigMotor.bin .
 if [ ! -e "MedMotor.bin" ]; then
   ln -s BigMotor.bin MedMotor.bin

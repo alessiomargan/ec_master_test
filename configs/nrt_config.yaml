@@ -10,7 +10,7 @@ ec_board_ctrl:
   #sync_cycle_time_ns: 50000000
   #sync_cycle_time_ns: 0
   #sync_cycle_offset_ns: 4000000000
-  sync_cycle_offset_ns: 0
+  sync_cycle_offset_ns: 1000000000
   power_off_boards: false
  
 ec_boards_base:
@@ -31,7 +31,7 @@ firmware_update:
   # all LowPower motor
   #slave_pos_list: [-3]
   # all CentAC motor
-  slave_pos_list: [-4]
+  slave_pos_list: [3]
   
   big_motor:
     bin_file: BigMotor.bin
@@ -55,6 +55,13 @@ firmware_update:
     c28:
       bin_file: cent_AC_c28.bin
       passwd: 0xDAD0
+  power_f28m36:
+    m3:
+      bin_file: pow_m3.bin
+      passwd: 0xF2F2
+    no_c28:
+      bin_file: pow_c28.bin
+      passwd: 0xF3F3
       
 #############################
 ## GENERIC config

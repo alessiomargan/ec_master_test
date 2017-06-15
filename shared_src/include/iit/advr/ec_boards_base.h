@@ -62,6 +62,7 @@ protected :
     std::map<int, iit::ecat::advr::Ft6ESC*>         fts;
     std::map<int, iit::ecat::advr::FootSensorESC*>  foot_sensors;
     std::map<int, iit::ecat::advr::PowESC*>         pows;
+    std::map<int, iit::ecat::advr::PowF28M36ESC*>   powF28M36s;
     std::map<int, iit::ecat::advr::PowComanESC*>    powCmns;
     std::map<int, iit::ecat::advr::ImuVnESC*>       imus;
     std::map<int, iit::ecat::advr::TestESC*>        tests;

@@ -39,6 +39,8 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
 
     get_esc_map_byclass ( pows );
     DPRINTF ( "found %lu pows\n", pows.size() );
+    get_esc_map_byclass ( powF28M36s );
+    DPRINTF ( "found %lu powF28M36s\n", powF28M36s.size() );
     get_esc_map_byclass ( powCmns );
     DPRINTF ( "found %lu powCmns\n", powCmns.size() );
     

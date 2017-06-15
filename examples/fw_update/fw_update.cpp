@@ -166,55 +166,59 @@ int main ( int argc, char * const argv[] ) try {
             DPRINTF ( "..... try with Z0mb13 %d\n", sPos );
         }
         if ( esc ) {
-            YAML::Node motor_type;
+            YAML::Node esc_type;
             bType = esc->get_ESC_type();
             switch ( bType ) {
             case HI_PWR_AC_MC :
-                motor_type = firmware_update["big_motor"];
+                esc_type = firmware_update["big_motor"];
                 break;
             case HI_PWR_DC_MC :
-                motor_type = firmware_update["medium_motor"];
+                esc_type = firmware_update["medium_motor"];
                 break;
             case LO_PWR_DC_MC :
-                motor_type = firmware_update["small_motor"];
+                esc_type = firmware_update["small_motor"];
                 break;
             case FT6 :
-                motor_type = firmware_update["force_torque_6"];
+                esc_type = firmware_update["force_torque_6"];
                 break;
             case POW_BOARD  :
-                motor_type = firmware_update["power_hub"];
+                esc_type = firmware_update["power_hub"];
+                break;
+            case POW_F28M36_BOARD  :
+                esc_type = firmware_update["power_f28m36"];
                 break;
             case CENT_AC :
-                motor_type = firmware_update["cent_AC"];
+                esc_type = firmware_update["cent_AC"];
                 break;
             default :
                 break;
             }
 
-            if ( ! motor_type.IsNull() ) {
+            if ( ! esc_type.IsNull() ) {
                 
                 // special case F28M3x MCUs have 2 cores
-                if ( esc->get_ESC_type() == CENT_AC ) {
+                if ( esc->get_ESC_type() == CENT_AC || 
+                     esc->get_ESC_type() == POW_F28M36_BOARD ) {
                     // M3
-                    if ( motor_type["m3"] ) {
-                        bin_file    = motor_type["m3"]["bin_file"].as<std::string>();
-                        passwd      = motor_type["m3"]["passwd"].as<int>();
+                    if ( esc_type["m3"] ) {
+                        bin_file    = esc_type["m3"]["bin_file"].as<std::string>();
+                        passwd      = esc_type["m3"]["passwd"].as<int>();
                         DPRINTF ( "%d %s 0x%04X \n", *it, ( fw_path+bin_file ).c_str(), passwd );
                         if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "m3") ) {
                             DPRINTF ( "FAIL update slave pos M3 MCU %d\n" ,sPos );
                         }
                     }
                     // C28
-                    if ( motor_type["c28"] ) {
-                        bin_file    = motor_type["c28"]["bin_file"].as<std::string>();
-                        passwd      = motor_type["c28"]["passwd"].as<int>();
+                    if ( esc_type["c28"] ) {
+                        bin_file    = esc_type["c28"]["bin_file"].as<std::string>();
+                        passwd      = esc_type["c28"]["passwd"].as<int>();
                         if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "c28" ) ) {
                             DPRINTF ( "FAIL update slave pos C28 MCU %d\n" ,sPos );
                         }
                     }
                 } else {
-                    bin_file    = motor_type["bin_file"].as<std::string>();
-                    passwd      = motor_type["passwd"].as<int>();
+                    bin_file    = esc_type["bin_file"].as<std::string>();
+                    passwd      = esc_type["passwd"].as<int>();
                     DPRINTF ( "%d %s 0x%04X \n", *it, ( fw_path+bin_file ).c_str(), passwd );
                     if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "none" ) ) {
                         DPRINTF ( "FAIL update slave pos %d\n" ,sPos );
