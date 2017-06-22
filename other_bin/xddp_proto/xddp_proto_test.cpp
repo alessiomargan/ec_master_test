@@ -20,12 +20,6 @@
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );
 
-static int main_loop = 1;
-
-void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
-    main_loop = 0;
-    DPRINTF ( "got signal .... Shutdown\n" );
-}
 
 
 std::random_device rd;     // only used once to initialise (seed) engine
@@ -101,7 +95,7 @@ public:
         nbytes = write ( outXddp.get_fd(), ( void* ) &msg_size, sizeof( msg_size ) );
         nbytes += write ( outXddp.get_fd(), ( void* ) pb_str.c_str() , pb_str.length() );
         
-        DPRINTF("[RT] write to NRT %d\n", nbytes);
+        DPRINTF("[RT] write %d bytes to NRT %s%s\n", nbytes, pipe_name.c_str(), "_OUT");
     }
 };
 
@@ -180,18 +174,28 @@ int main ( int argc, char * const argv[] ) try {
 
     std::map<std::string, Thread_hook*> threads;
     
+    sigset_t set;
+    int sig;
+    sigemptyset(&set);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGTERM);
+    sigaddset(&set, SIGHUP);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+    
+    main_common (&argc, &argv, 0 );
+
     threads["UI_thread"] = new UI_thread(std::string("xddp_proto"));
     threads["RT_thread"] = new RT_thread(std::string("xddp_proto"));
-    
-    main_common ( &argc, &argv, shutdown );
     
     threads["RT_thread"]->create(true);
     threads["UI_thread"]->create(false);
 
-    while ( main_loop ) {
-
-        sleep(1);
-    }
+#ifdef __COBALT__
+    // here I want to catch CTRL-C 
+     __real_sigwait(&set, &sig);
+#else
+     sigwait(&set, &sig);  
+#endif
 
     for ( auto const &t : threads) {
         t.second->stop();

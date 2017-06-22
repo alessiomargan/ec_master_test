@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <sys/mman.h>
+#include <sys/types.h>
 #include <execinfo.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -12,11 +13,59 @@
 
 #ifdef __COBALT__
     #include <sys/mman.h>
+    //#include <sys/cobalt.h>
+    #include <cobalt/uapi/signal.h>
     #include <xenomai/init.h>
 #endif
 
 #define MEM_LOCKED (500*1024*1024) // 500MB
 
+#ifdef __COBALT__
+
+static const char *sigdebug_reasons[] = {
+        [SIGDEBUG_UNDEFINED] = "received SIGXCPU for unknown reason",
+        [SIGDEBUG_MIGRATE_SIGNAL] = "received signal",
+        [SIGDEBUG_MIGRATE_SYSCALL] = "invoked syscall",
+        [SIGDEBUG_MIGRATE_FAULT] = "triggered fault",
+        [SIGDEBUG_MIGRATE_PRIOINV] = "affected by priority inversion",
+        [SIGDEBUG_NOMLOCK] = "Xenomai: process memory not locked (missing mlockall?)",
+        [SIGDEBUG_WATCHDOG] = "Xenomai: watchdog triggered (period too short?)",
+};
+
+void sigdebug_handler(int sig, siginfo_t *si, void *context)
+{
+        const char fmt[] = "Mode switch (reason: %s), aborting. Backtrace:\n";
+        unsigned int reason = sigdebug_reason(si);
+        static char buffer[256];
+        static void *bt[200];
+        unsigned int n;
+
+        if (reason > SIGDEBUG_WATCHDOG)
+                reason = SIGDEBUG_UNDEFINED;
+
+        switch(reason) {
+        case SIGDEBUG_UNDEFINED:
+        case SIGDEBUG_NOMLOCK:
+        case SIGDEBUG_WATCHDOG:
+                /* These errors are lethal, something went really wrong. */
+                n = snprintf(buffer, sizeof(buffer),
+                             "%s -- reason %d\n", sigdebug_reasons[reason], sigdebug_reason(si));
+                write(STDERR_FILENO, buffer, n);
+                exit(EXIT_FAILURE);
+        }
+
+        /* Retrieve the current backtrace, and decode it to stdout. */
+        n = snprintf(buffer, sizeof(buffer), fmt, sigdebug_reasons[reason]);
+        n = write(STDERR_FILENO, buffer, n);
+        n = backtrace(bt, sizeof(bt)/sizeof(bt[0]));
+        backtrace_symbols_fd(bt, n, STDERR_FILENO);
+
+        signal(sig, SIG_DFL);
+        kill(getpid(), sig);
+
+    
+}
+#endif
 
 static void warn_upon_switch ( int sig __attribute__ ( ( unused ) ) ) {
     // handle rt to nrt contex switch
@@ -33,13 +82,22 @@ static void warn_upon_switch ( int sig __attribute__ ( ( unused ) ) ) {
 
 
 static void set_signal_handler ( __sighandler_t sig_handler ) {
-    signal ( SIGINT, sig_handler );
-    signal ( SIGINT, sig_handler );
-    signal ( SIGKILL, sig_handler );
+
+    if ( sig_handler ) {
+        signal ( SIGINT, sig_handler );
+        signal ( SIGTERM, sig_handler );
+        signal ( SIGKILL, sig_handler );
+    }
 #ifdef __COBALT__
-//     // call pthread_set_mode_np(0, PTHREAD_WARNSW) to cause a SIGDEBUG
+    // call pthread_set_mode_np(0, PTHREAD_WARNSW) to cause a SIGDEBUG
     // signal to be sent when the calling thread involontary switches to secondary mode
     signal ( SIGDEBUG, warn_upon_switch );
+    
+//     struct sigaction sa;
+//     sigemptyset(&sa.sa_mask);
+//     sa.sa_sigaction = sigdebug_handler;
+//     sa.sa_flags = SA_SIGINFO;
+//     sigaction(SIGDEBUG, &sa, NULL);
 #endif
 }
 
@@ -116,7 +174,7 @@ void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler )
     set_signal_handler ( sig_handler );
 
 #ifdef __COBALT__
-
+    
     xenomai_init(argcp, argvp);
 
     /* Prevent any memory-swapping for this program */

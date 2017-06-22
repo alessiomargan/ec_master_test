@@ -20,13 +20,6 @@
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );
 
-static int main_loop = 1;
-
-void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
-    main_loop = 0;
-    DPRINTF ( "got signal .... Shutdown\n" );
-}
-
 
 std::random_device rd;     // only used once to initialise (seed) engine
 std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
@@ -144,8 +137,17 @@ public:
     }
 
     virtual void th_init ( void * ) {
+        int retry = 10;
         std::string pipe ( pipe_prefix + pipe_name );
-        xddp_fd = open ( pipe.c_str(), O_RDONLY |O_NONBLOCK );
+        while ( retry -- ) {
+            xddp_fd = open ( pipe.c_str(), O_RDONLY |O_NONBLOCK );
+            if ( xddp_fd <= 0 ) {
+                std::cout << retry << ": " << pipe << std::endl;
+                usleep(100000);
+            } else {
+                break;
+            }
+        }
         assert (xddp_fd > 0);
     }
     virtual void th_loop ( void * ) {
@@ -175,15 +177,25 @@ int main ( int argc, char * const argv[] ) try {
     threads["UI_thread"] = new UI_thread(std::string("spline_test"));
     threads["RT_thread"] = new RT_thread(std::string("spline_test"));
     
-    main_common ( &argc, &argv, shutdown );
+    sigset_t set;
+    int sig;
+    sigemptyset(&set);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGTERM);
+    sigaddset(&set, SIGHUP);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+    
+    main_common (&argc, &argv, 0 );
     
     threads["RT_thread"]->create(true);
     threads["UI_thread"]->create(false);
 
-    while ( main_loop ) {
-
-        sleep(1);
-    }
+#ifdef __COBALT__
+    // here I want to catch CTRL-C 
+     __real_sigwait(&set, &sig);
+#else
+     sigwait(&set, &sig);  
+#endif
 
     for ( auto const &t : threads) {
         t.second->stop();

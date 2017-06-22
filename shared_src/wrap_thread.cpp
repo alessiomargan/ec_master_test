@@ -18,8 +18,9 @@ void * periodic_thread ( Thread_hook_Ptr th_hook ) {
     // thread specific initialization
     th_hook->th_init ( 0 );
 
-    DPRINTF ( "THREAD INIT: name = %s, period %ld us\n",
-              th_hook->name, th_hook->period.period.tv_usec );
+    DPRINTF ( "%s %s period %ld us\n",
+              __FUNCTION__, th_hook->name,
+              th_hook->period.period.tv_usec );
 
     ret = pthread_setname_np ( pthread_self(), th_hook->name );
     if ( ret != 0 ) {
@@ -59,7 +60,8 @@ void * periodic_thread ( Thread_hook_Ptr th_hook ) {
         exit ( 1 );        
     }
     
-    DPRINTF ( "THREAD INIT: start looping ...\n" );
+    DPRINTF ( "%s %s : start looping ...\n", 
+              __FUNCTION__, th_hook->name );
 
     while ( th_hook->_run_loop ) {
 
@@ -76,6 +78,8 @@ void * periodic_thread ( Thread_hook_Ptr th_hook ) {
 
     } // end while
 
+    DPRINTF ( "%s %s : exit thread ...\n",
+              __FUNCTION__, th_hook->name );
 
     return 0;
 }
@@ -91,8 +95,9 @@ void * non_periodic_thread ( Thread_hook_Ptr th_hook ) {
     // thread specific initialization
     th_hook->th_init ( 0 );
 
-    DPRINTF ( "THREAD INIT: name = %s, period %ld us\n",
-              th_hook->name, th_hook->period.period.tv_usec );
+    DPRINTF ( "%s %s, period %ld us\n",
+              __FUNCTION__, th_hook->name,
+              th_hook->period.period.tv_usec );
 
     ret = pthread_setname_np ( pthread_self(), th_hook->name );
     if ( ret != 0 ) {
@@ -112,7 +117,9 @@ void * non_periodic_thread ( Thread_hook_Ptr th_hook ) {
     }
 #endif
 
-    DPRINTF ( "THREAD INIT: start looping ...\n" );
+    DPRINTF ( "%s %s : start looping ...\n",
+              __FUNCTION__, th_hook->name );
+
 
     while ( th_hook->_run_loop ) {
 
@@ -121,6 +128,9 @@ void * non_periodic_thread ( Thread_hook_Ptr th_hook ) {
 
     } // end while
 
+    DPRINTF ( "%s %s : exit thread ...\n",
+              __FUNCTION__, th_hook->name );
+    
     return 0;
 }
 

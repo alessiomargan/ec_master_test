@@ -100,8 +100,16 @@ int main ( int argc, char * const argv[] ) try {
     std::string th_name;
     std::map<std::string, Thread_hook*> threads;
 
-    main_common ( &argc, &argv, shutdown );
+    sigset_t set;
+    int sig;
+    sigemptyset(&set);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGTERM);
+    sigaddset(&set, SIGHUP);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
     
+    main_common (&argc, &argv, 0 );
+
     for ( auto const idx : std::initializer_list<int>({0,1,2,3,4,5,6,7}) ) {
         th_name = std::string("RT_thrd_") + std::to_string(idx);
         std::cout << th_name << std::endl;
@@ -109,10 +117,12 @@ int main ( int argc, char * const argv[] ) try {
         threads[th_name]->create(true, idx);
     }
     
-    while ( main_loop ) {
-
-        sleep(1);
-    }
+#ifdef __COBALT__
+    // here I want to catch CTRL-C 
+     __real_sigwait(&set, &sig);
+#else
+     sigwait(&set, &sig);  
+#endif
 
     for ( auto const &t : threads) {
         t.second->stop();

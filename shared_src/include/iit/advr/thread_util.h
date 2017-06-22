@@ -126,7 +126,7 @@ inline void Thread_hook::stop() {
 }
 
 inline void Thread_hook::join() {
-    pthread_cancel(thread_id);
+    //pthread_cancel(thread_id);
     pthread_join ( thread_id, 0 );
 }
 
