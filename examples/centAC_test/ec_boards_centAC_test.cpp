@@ -134,6 +134,7 @@ void EC_boards_centAC_test::init_preOP ( void ) {
     DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
+    trj_queue.clear();
     trj_queue.push_back ( trj_start2home );
     trj_queue.push_back ( trj_home2zero );
     trj_queue.push_back ( trj_zero2up2extend2zero );
@@ -156,7 +157,7 @@ int EC_boards_centAC_test::user_loop ( void ) {
 
     static iit::advr::Ec_board_base_input pbEcInput;
     static uint64_t count;
-    float trj_error = 0.07;
+    const float trj_error = 0.07;
 
     if ( ( count++ ) % 10000 == 0 ) {
         DPRINTF ( "alive %ld\n", count/1000 );

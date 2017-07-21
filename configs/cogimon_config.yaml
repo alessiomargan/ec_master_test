@@ -1,0 +1,66 @@
+#
+ec_board_ctrl:
+  eth_iface: rteth0
+  #eth_iface: eth1
+  #sync_cycle_time_ns: 500000
+  sync_cycle_time_ns: 1000000
+  #sync_cycle_time_ns: 2000000
+  #sync_cycle_time_ns: 5000000
+  #sync_cycle_time_ns: 10000000
+  #sync_cycle_time_ns: 0
+  sync_cycle_offset_ns: 1000000000
+  power_off_boards: false
+
+#
+ec_boards_base:
+  robot_name : cogimon
+  urdf_config_file : ../configs/cogimon_urdf.yaml
+  joints_poses_file : ../configs/test_poses.yaml
+      
+#############################
+# GENERIC ESC config
+#############################
+
+LpESC_X:
+  sign: 1
+  pos_offset: 0
+
+HpESC_X:
+  sign: 1
+  pos_offset: 0
+
+CentAcESC_X:
+  sign: 1
+  pos_offset: 0
+  max_current_A: 10.0
+  pid :
+    position: [220.0 , 0.0 , 5.0]
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance:  [0.0, 0.0, 1.0, 0.002, 0.0]
+
+
+#############################
+# 
+#############################
+
+CentAcESC_1:
+  sign: 1
+  pos_offset: 0
+  max_current_A: 15.0
+  pid :
+    position:   [2000.0 , 0.0 , 30.0]
+    # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance:  [50.0, 0.0, 0.5, 0.001, 0.0]
+
+CentAcESC_2:
+  sign: -1
+  pos_offset: 0
+  max_current_A: 15.0
+  pid :
+    position:   [2000.0 , 0.0 , 30.0]
+    # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance:  [50.0, 0.0, 0.5, 0.001, 0.0]
+
+

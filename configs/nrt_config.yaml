@@ -31,7 +31,7 @@ firmware_update:
   # all LowPower motor
   #slave_pos_list: [-3]
   # all CentAC motor
-  slave_pos_list: [3]
+  slave_pos_list: [-4]
   
   big_motor:
     bin_file: BigMotor.bin
@@ -59,7 +59,7 @@ firmware_update:
     m3:
       bin_file: pow_m3.bin
       passwd: 0xF2F2
-    no_c28:
+    c28:
       bin_file: pow_c28.bin
       passwd: 0xF3F3
       

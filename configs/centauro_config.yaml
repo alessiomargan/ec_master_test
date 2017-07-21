@@ -13,25 +13,19 @@ ec_board_ctrl:
 
 #
 ec_boards_base:
+  robot_name : centauro
   urdf_config_file : ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
 
 firmware_update:
   #
   fw_path: ../examples/fw_update/fw_test/
-  #slave_pos_list: [7]
-  #slave_rId_list: [7]
   # all esc
   #slave_pos_list: [0]
-  # all BigMotor
-  #slave_pos_list: [-1]
-  # all MedMotor
-  #slave_pos_list: [-2]
-  # all LowPower motor
-  #slave_pos_list: [-3]
   # all CentAC motor
   slave_pos_list: [-4]
-  #slave_pos_list: [1]
+  #slave_pos_list: [7]
+  #slave_rId_list: [7]
   
   cent_AC:
     m3:
@@ -217,3 +211,34 @@ CentAcESC_15:
     position: [1000.0 , 0.0 , 30.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [100.0, 3.0, 1.0, 0.001, 0.0]
+
+    
+##############################
+# FrontLeft Leg
+    
+CentAcESC_71:
+  sign: 1
+  pos_offset: 0
+  max_current_A: 15.0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance:  [50.0, 0.0, 1.0, 0.003, 0.0]
+
+CentAcESC_72:
+  sign: 1
+  pos_offset: 0
+  max_current_A: 15.0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance:  [50.0, 0.0, 1.0, 0.003, 0.0]
+
+CentAcESC_73:
+  sign: 1
+  pos_offset: 0
+  max_current_A: 15.0
+  pid :
+    position: [1000.0 , 0.0 , 30.0]
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance:  [50.0, 0.0, 1.0, 0.003, 0.0]
