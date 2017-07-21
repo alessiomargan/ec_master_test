@@ -32,15 +32,15 @@ Ec_Boards_sine::~Ec_Boards_sine() {
 
 void Ec_Boards_sine::init_preOP ( void ) {
 
-    std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
     iit::ecat::advr::Motor * moto;
     int slave_pos;
     float min_pos, max_pos, link_pos, motor_pos;
 
     std::vector<int> test_rid = std::initializer_list<int> {
     
-        103
-        
+        //103,
+        1,
+        2,        
     };
 
     // fill motors map
@@ -54,52 +54,90 @@ void Ec_Boards_sine::init_preOP ( void ) {
         moto = item.second;
         moto->readSDO ( "Min_pos", min_pos );
         moto->readSDO ( "Max_pos", max_pos );
-        moto->readSDO ( "motor_pos", motor_pos );
-        moto->readSDO ( "link_pos", link_pos );
+        assert ( EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ));
+        assert ( EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
+
         start_pos[slave_pos] = motor_pos; 
-        
+        // set home pos
+        //home[slave_pos] = MID_POS ( min_pos,max_pos );
+        home[slave_pos] = start_pos[slave_pos];
+        //home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
+        //home[slave_pos] = 0;
+
         DPRINTF ( ">> Joint_id %d motor %f link %f start %f home %f\n", pos2Rid ( slave_pos ), motor_pos, link_pos, start_pos[slave_pos], home[slave_pos]);
         
-        // set home to mid pos
-        home[slave_pos] = MID_POS ( min_pos,max_pos );
-        //home[slave_pos] = start_pos[slave_pos];
-        //home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
-        
+        //////////////////////////////////////////////////////////////////////////
+        // trajectory
+        auto Xs = std::initializer_list<double> { 0, 5 };
+        auto Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+        trj_names["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
+        trj_names["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.5, 0.2, home[slave_pos], Xs );
+
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref  
         //assert ( moto->start ( CTRL_SET_MIX_POS_MODE ) == EC_BOARD_OK );
-        //assert ( moto->start ( CTRL_SET_POS_MODE ) == EC_BOARD_OK );
-        assert ( moto->start ( CTRL_SET_CURR_MODE ) == EC_BOARD_OK );
-        //moto->start ( CTRL_SET_POS_LINK_MODE );
+        assert ( moto->start ( CTRL_SET_POS_MODE ) == EC_BOARD_OK );
+        //assert ( moto->start ( CTRL_SET_CURR_MODE ) == EC_BOARD_OK );
+        //assert ( moto->start ( CTRL_SET_VEL_MODE ) == EC_BOARD_OK );
     }
 
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
-
     
-//     for ( auto const& item : motors_to_start ) {
-//         slave_pos = item.first;
-//         moto = item.second;
-//         while ( ! moto->move_to ( home[slave_pos], 0.002 ) ) {
-//             osal_usleep ( 1000 );
-//         }
-//     }
-
+    trj_queue.clear();
+    trj_queue.push_back ( trj_names.at("start@home") );
+    trj_queue.push_back ( trj_names.at("sineFROMhome") );
+    
 }
 
 void Ec_Boards_sine::init_OP ( void ) {
 
+    try { advr::reset_trj ( trj_queue.at(0) ); }
+    catch ( const std::out_of_range &e ) {
+        throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
+    }    
+    
+    DPRINTF ( "End Init_OP\n" );
 
+}
+
+
+int Ec_Boards_sine::user_loop ( void ) {
+
+    float trj_error = 0.07;
+    int what;
+    user_input ( what );
+
+    if ( ! trj_queue.empty() ) {
+        if ( go_there ( motors_to_start, trj_queue.at(0), trj_error, false) ) {
+            // running trj has finish ... remove from queue  !!
+            DPRINTF ( "running trj has finish ... remove from queue !!\n" );
+            trj_queue.pop_front();
+            try { advr::reset_trj ( trj_queue.at(0) ); }
+            catch ( const std::out_of_range &e ) {
+                // add trajectory ....
+                //advr::reset_trj ( trj_queue.at(0) );
+            }
+        }
+    }
+    
+#if 0
+    {
+        auto moto = slave_as<CentAcESC>(1);
+        moto->set_ivRef(0);
+    }
+#endif
+    
 }
 
 template<class C>
 int Ec_Boards_sine::user_input ( C &user_cmd ) {
 
-    static int	bytes_cnt;
-    int		bytes;
-    input_t	cmd;
+    static int  bytes_cnt;
+    int     bytes;
+    input_t cmd;
 
     if ( ( bytes = inXddp.xddp_read ( cmd ) ) <= 0 ) {
         return bytes;
@@ -110,44 +148,6 @@ int Ec_Boards_sine::user_input ( C &user_cmd ) {
     //DPRINTF(">> %d\n",cmd.value);
 
     return bytes;
-}
-
-int Ec_Boards_sine::user_loop ( void ) {
-
-    int what;
-    user_input ( what );
-
-    //////////////////////////////////////////////////////
-    // sine trajectory
-    //////////////////////////////////////////////////////
-    {
-        static uint64_t start_time_sine;
-        start_time_sine = start_time_sine ? start_time_sine : iit::ecat::get_time_ns();
-        uint64_t tNow = iit::ecat::get_time_ns();
-        float dt = ( tNow - start_time_sine ) / 1e9;
-        // !!!!! if too fast adjust this
-        float freq = 1;
-        float A;
-        iit::ecat::advr::Motor * moto;
-        int slave_pos;
-        for ( auto const& item : motors ) {
-            slave_pos = item.first;
-            moto = item.second;
-            A = home[slave_pos] - 1;
-            //moto->set_posRef ( home[slave_pos] + A * sinf ( 2*M_PI*freq*dt ) );
-            //moto->set_torRef ( 2 * cosf ( 2*M_PI*freq*dt ) );
-        }
-    }
-    //////////////////////////////////////////////////////
-    //
-    //////////////////////////////////////////////////////
-#if 0
-    {
-        auto moto = slave_as<CentAcESC>(1);
-        moto->set_ivRef(0);
-    }
-#endif
-    
 }
 
 

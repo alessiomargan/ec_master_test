@@ -6,20 +6,14 @@
 
 #include <ec_boards_impedance_test.h>
 
-extern void main_common ( __sighandler_t sig_handler );
+extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 
-static int main_loop = 1;
-
-void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
-    main_loop = 0;
-    printf ( "got signal .... Shutdown\n" );
-}
 
 ////////////////////////////////////////////////////
 // Main
 ////////////////////////////////////////////////////
 
-int main ( int argc, char *argv[] ) try {
+int main ( int argc, char * const argv[] ) try {
 
     std::map<std::string, Thread_hook*> threads;
 
@@ -28,7 +22,15 @@ int main ( int argc, char *argv[] ) try {
         return 0;
     }
 
-    main_common ( shutdown );
+    sigset_t set;
+    int sig;
+    sigemptyset(&set);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGTERM);
+    sigaddset(&set, SIGHUP);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+    
+    main_common (&argc, &argv, 0 );
 
     threads["impedance_test"] = new EC_boards_impedance_test ( argv[1] );
     threads["impedance_test"]->create ( true, 2 );
@@ -42,9 +44,12 @@ int main ( int argc, char *argv[] ) try {
     threads["ZMQ_pub"]->create ( false,3 );
 #endif
 
-    while ( main_loop ) {
-        sleep ( 1 );
-    }
+#ifdef __COBALT__
+    // here I want to catch CTRL-C 
+     __real_sigwait(&set, &sig);
+#else
+     sigwait(&set, &sig);  
+#endif
 
     for ( auto const &t : threads) {
         t.second->stop();

@@ -79,14 +79,14 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    const YAML::Node config_poses = get_config_YAML_Node();
+    const YAML::Node config_file = get_config_YAML_Node();
 
     std::map<std::string, std::map<int, float>> joints_pose_deg;
     std::map<std::string, std::vector<std::pair<std::string, float>>> trj_map;
     std::map<std::string, std::vector<int>> map_of_ctrlIDs;
         
     try { 
-        std::string poses_file = config_poses["ec_boards_base"]["joints_poses_file"].as<std::string>();
+        std::string poses_file = config_file["ec_boards_base"]["joints_poses_file"].as<std::string>();
         const YAML::Node poses_config = YAML::LoadFile ( poses_file );
 
         ///////////////////////////////////////////////////
@@ -178,7 +178,9 @@ void EC_boards_walkman_test::init_preOP ( void ) {
 
         vPos =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         Xs = std::initializer_list<double> { 0, 5 };
-        trj_names["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory> (std::initializer_list<double> {0,5}, vPos );
+        trj_names["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xs, vPos );
+
+        trj_names["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 1.0, 0.2, home[slave_pos], Xs );
 
         for ( auto const & trj_name : extract_keys( trj_map ) ) {
             Xs.clear();
@@ -232,47 +234,40 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         slave_pos = item.first;
         moto = item.second;
         motor_start = -1;
+        
         //DPRINTF ( ">>> START %d wait xddp terminal ....\n", moto->get_robot_id() );
         //char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }
         
         //////////////////////////////////////////////////////////////////////////
-        // start controller :
-        // - read actual joint position and set as pos_ref
-        if ( std::find( ids_pos.begin(), ids_pos.end(), pos2Rid(slave_pos) ) != ids_pos.end() ) {
+        // start controller
+        int rId = pos2Rid(slave_pos);
+        if ( std::find( ids_pos.begin(), ids_pos.end(), rId ) != ids_pos.end() ) {
 
             if (moto->get_ESC_type() == LO_PWR_DC_MC ) {
-
                 motor_start = moto->start ( CTRL_SET_POS_MODE );
                 
             } else if ( (moto->get_ESC_type() == HI_PWR_AC_MC) || (moto->get_ESC_type() == HI_PWR_DC_MC) ) {
-
                 motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
                 
             } else if ( moto->get_ESC_type() == CENT_AC ) {
-
                 motor_start = moto->start ( CTRL_SET_POS_MODE );
                 
             } else {
-                
+                // fall in assert ...
             }
                     
-        } else if ( std::find( ids_imp.begin(), ids_imp.end(), pos2Rid(slave_pos) ) != ids_imp.end() ) {
-
+        } else if ( std::find( ids_imp.begin(), ids_imp.end(), rId ) != ids_imp.end() ) {
             motor_start = moto->start ( CTRL_SET_IMPED_MODE );
             
-        } else if ( std::find( ids_vel.begin(), ids_vel.end(), pos2Rid(slave_pos) ) != ids_vel.end() ) {
-
+        } else if ( std::find( ids_vel.begin(), ids_vel.end(), rId ) != ids_vel.end() ) {
             motor_start = moto->start ( CTRL_SET_VEL_MODE );
             
-        } else if ( std::find( ids_dir.begin(), ids_dir.end(), pos2Rid(slave_pos) ) != ids_dir.end() ) {
-
+        } else if ( std::find( ids_dir.begin(), ids_dir.end(), rId ) != ids_dir.end() ) {
             motor_start = moto->start ( CTRL_SET_CURR_MODE );
         } 
-        
 
         assert( motor_start == EC_BOARD_OK );
         
-        //while ( ! moto->move_to(home[slave_pos], 0.005) ) { osal_usleep(100);  }
     }
 
     DPRINTF ( ">>> motors2ctrl %ld\n", motors2ctrl.size() );
@@ -281,8 +276,8 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     
     trj_queue.clear();
     trj_queue.push_back ( trj_names.at("start@home") );
-    trj_queue.push_back ( trj_names.at("home@pos1@home") );
-    
+    //trj_queue.push_back ( trj_names.at("home@pos1@home") );
+    trj_queue.push_back ( trj_names.at("sineFROMhome") );
 }
 
 
@@ -324,7 +319,8 @@ int EC_boards_walkman_test::user_loop ( void ) {
             try { advr::reset_trj ( trj_queue.at(0) ); }
             catch ( const std::out_of_range &e ) {
                 // add trajectory ....
-                trj_queue.push_back ( trj_names["home@pos1@pos2@pos3@home"] );
+                //trj_queue.push_back ( trj_names["home@pos1@pos2@pos3@home"] );
+                trj_queue.push_back ( trj_names["home@pos1@pos2@home"] );
                 advr::reset_trj ( trj_queue.at(0) );
             }
         }

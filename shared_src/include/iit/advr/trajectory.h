@@ -114,8 +114,7 @@ public :
         }
         return s ( x );
 
-    };
-    
+    };    
 
 protected:
 
@@ -131,6 +130,9 @@ public :
     Smoother_trajectory() {}
     Smoother_trajectory( const std::vector<double> &x, const std::vector<double> &y ) {
         set_points( x, y );
+    }
+    Smoother_trajectory( const Smoother_trajectory& rhs ) {
+        set_points( rhs._x , rhs._y); 
     }
 
     virtual void set_points ( const std::vector<double> &x, const std::vector<double> &y ) {
@@ -170,8 +172,47 @@ public :
     
     };
 
-protected:
+};
 
+
+class Sine_trajectory : public Trajectory {
+
+public :
+
+    Sine_trajectory() {}
+    Sine_trajectory( float freq, float A, float teta, const std::vector<double> &x )
+    : _freq(freq), _A(A), _teta(teta) { 
+        set_points(x,x);
+    }
+
+    virtual void set_points ( const std::vector<double> &x, const std::vector<double> &y ) {
+       
+        _x = x;
+        sT = iit::ecat::get_time_ns();
+        
+    }
+    
+    double get_value ( double x, bool limits=true ) const {
+        
+        double fx;
+        
+        if ( x <= _x.front() )     { x = _x.front(); }
+        else if ( x >= _x.back() ) { x = _x.back(); }
+
+        fx = _teta + _A * sinf ( 2*M_PI*_freq*x );
+        //DPRINTF("Sine_trajectory f(%f) = %f\n", x, fx );
+        
+        return fx;
+    
+    };
+    
+    virtual double end_point ( void ) {
+        assert(0);
+    }
+    
+
+protected:
+    float _freq, _A, _teta;
 
 };
 
