@@ -190,6 +190,9 @@ int main ( int argc, char * const argv[] ) try {
             case CENT_AC :
                 esc_type = firmware_update["cent_AC"];
                 break;
+            case F28M36_TEST :
+                esc_type = firmware_update["test_f28m36"];
+                break;
             default :
                 break;
             }
@@ -197,8 +200,8 @@ int main ( int argc, char * const argv[] ) try {
             if ( ! esc_type.IsNull() ) {
                 
                 // special case F28M3x MCUs have 2 cores
-                if ( esc->get_ESC_type() == CENT_AC || 
-                     esc->get_ESC_type() == POW_F28M36_BOARD ) {
+                std::set<uint16> esc_type_set = { CENT_AC, POW_F28M36_BOARD, F28M36_TEST };
+                if ( esc_type_set.find(esc->get_ESC_type()) != esc_type_set.end() ) {
                     // M3
                     if ( esc_type["m3"] ) {
                         bin_file    = esc_type["m3"]["bin_file"].as<std::string>();

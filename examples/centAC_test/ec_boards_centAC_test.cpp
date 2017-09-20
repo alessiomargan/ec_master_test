@@ -48,8 +48,8 @@ EC_boards_centAC_test::~EC_boards_centAC_test() {
 void EC_boards_centAC_test::init_preOP ( void ) {
 
     Motor * moto;
-    int slave_pos;
-    float min_pos, max_pos, link_pos, motor_pos;
+    int     slave_pos, motor_start;
+    float   min_pos, max_pos, link_pos, motor_pos;
 
     std::vector<int> pos_rid = centauro::robot_mcs_ids;
     std::vector<int> no_control = std::initializer_list<int> {
@@ -76,14 +76,26 @@ void EC_boards_centAC_test::init_preOP ( void ) {
         
     remove_rids_intersection(pos_rid, no_control);
 
-    get_esc_map_byclass ( left_arm,  centauro::robot_left_arm_ids );
+    get_esc_map_byclass ( left_arm,     centauro::robot_left_arm_ids );
     DPRINTF ( "found %lu <Motor> left_arm\n", left_arm.size() );
-
-    get_esc_map_byclass ( right_arm, centauro::robot_right_arm_ids );
+    
+    get_esc_map_byclass ( right_arm,    centauro::robot_right_arm_ids );
     DPRINTF ( "found %lu <Motor> right_arm\n", right_arm.size() );
-
-    get_esc_map_byclass ( waist,	   centauro::robot_waist_ids );
+    
+    get_esc_map_byclass ( waist,        centauro::robot_waist_ids );
     DPRINTF ( "found %lu <Motor> waist\n", waist.size() );
+    
+    get_esc_map_byclass ( left_front_leg,   centauro::robot_left_front_leg_ids );
+    DPRINTF ( "found %lu <Motor> left_front_leg\n", left_front_leg.size() );
+    
+    get_esc_map_byclass ( left_hind_leg,    centauro::robot_left_hind_leg_ids );
+    DPRINTF ( "found %lu <Motor> left_hind_leg\n", left_hind_leg.size() );
+    
+    get_esc_map_byclass ( right_front_leg,   centauro::robot_right_front_leg_ids );
+    DPRINTF ( "found %lu <Motor> right_front_leg\n", right_front_leg.size() );
+    
+    get_esc_map_byclass ( right_hind_leg,    centauro::robot_right_hind_leg_ids );
+    DPRINTF ( "found %lu <Motor> right_hind_leg\n", right_hind_leg.size() );
 
     // !!!
     get_esc_map_byclass ( motors_to_start,  pos_rid );
@@ -127,7 +139,7 @@ void EC_boards_centAC_test::init_preOP ( void ) {
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
-        moto->start ( CTRL_SET_POS_MODE );
+        motor_start = moto->start ( CTRL_SET_POS_MODE );
     }
 
     DPRINTF ( ">>> wait xddp terminal ....\n" );
@@ -136,8 +148,8 @@ void EC_boards_centAC_test::init_preOP ( void ) {
     
     trj_queue.clear();
     trj_queue.push_back ( trj_start2home );
-    trj_queue.push_back ( trj_home2zero );
-    trj_queue.push_back ( trj_zero2up2extend2zero );
+    //trj_queue.push_back ( trj_home2zero );
+    //trj_queue.push_back ( trj_zero2up2extend2zero );
         
 }
 

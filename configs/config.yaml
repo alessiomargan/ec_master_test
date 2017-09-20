@@ -3,8 +3,8 @@ ec_board_ctrl :
   eth_iface: rteth0
   #eth_iface: eth1
   #sync_cycle_time_ns: 500000
-  #sync_cycle_time_ns: 1000000
-  sync_cycle_time_ns: 2000000
+  sync_cycle_time_ns: 1000000
+  #sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 5000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 100000000
@@ -20,7 +20,7 @@ firmware_update:
   #fw_path: ../firmware/
   #fw_path: ../examples/fw_update/fw_pdo56/
   fw_path: ../examples/fw_update/fw_test/
-  #slave_pos_list: [1]
+  #slave_pos_list: [2]
   # all esc
   #slave_pos_list: [0]
   # all BigMotor
@@ -100,7 +100,10 @@ CentAcESC_X:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
 
-  NO_upd_params :
+  upd_params :
+    # orange
+    #Hardware_config : 0x4236
+    #Motor_gear_ratio : 120
     # A0
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0

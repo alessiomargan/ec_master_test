@@ -9,13 +9,14 @@
 #include <rtnet.h>
 #endif
 
+#include <cstring>
 #include <fstream>
 
 #define ATI_IFACE_IP    "192.168.1.1"
 //#define ATI_IFACE_IP    "169.254.89.61"
 
 ////////////////////
-#undef __COBALT__
+//#undef __COBALT__
 ////////////////////
 
 

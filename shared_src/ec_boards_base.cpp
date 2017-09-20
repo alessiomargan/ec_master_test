@@ -69,6 +69,8 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     DPRINTF ( "found %lu fts\n", fts.size() );
     get_esc_map_byclass ( foot_sensors );
     DPRINTF ( "found %lu foot_sensors\n", foot_sensors.size() );
+    get_esc_map_byclass ( skin_sensors );
+    DPRINTF ( "found %lu skin_sensors\n", skin_sensors.size() );
     get_esc_map_byclass ( tests );
     DPRINTF ( "found %lu tests\n", tests.size() );
 

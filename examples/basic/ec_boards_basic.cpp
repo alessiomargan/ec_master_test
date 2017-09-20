@@ -38,8 +38,9 @@ void Ec_Boards_basic::init_preOP ( void ) {
 
 void Ec_Boards_basic::init_OP ( void ) {
 
+    std::vector<int> motor_rid = centauro::robot_mcs_ids;
+    //std::vector<int> motor_rid = std::initializer_list<int> { };
 #if 0
-    //std::vector<int> motor_rid = centauro::robot_mcs_ids;
     std::vector<int> motor_rid = std::initializer_list<int> {
         centauro::WAIST_Y,
         centauro::RA_SH_1,
@@ -56,9 +57,8 @@ void Ec_Boards_basic::init_OP ( void ) {
         centauro::LA_WR_1,
         centauro::LA_WR_2,
         centauro::LA_WR_3,
-
     };
-
+#endif
     get_esc_map_byclass ( motors,  motor_rid );
 
     int slave_pos;
@@ -67,10 +67,10 @@ void Ec_Boards_basic::init_OP ( void ) {
     
         slave_pos = item.first;
         moto = item.second;
-        set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
-        
+        //set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
+        set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_FAN_ON );
     }
-#endif
+
 #if 0
     // get first motor ....
     CentAcESC * moto = slave_as<CentAcESC>(1); 
