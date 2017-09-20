@@ -19,3 +19,5 @@ cp $CCSVX/Walk_Man_Joint_AC/Release/BigMotor.bin .
 if [ ! -e "MedMotor.bin" ]; then
   ln -s BigMotor.bin MedMotor.bin
 fi
+
+cp *.bin /home/amargan/ownCloud

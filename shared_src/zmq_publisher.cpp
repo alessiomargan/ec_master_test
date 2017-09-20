@@ -101,6 +101,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     std::string motor_prefix ( "Motor_id_" );
     std::string ft_prefix ( "Ft_id_" );
     std::string foot_prefix ( "Foot_id_" );
+    std::string skin_prefix ( "Skin_id_" );
     std::string hand_prefix ( "Hand_id_" );
 
     ///////////////////////////////////////////////////////////////////////
@@ -147,6 +148,9 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     base_port = 9600;
     for ( auto const &rid : centauro::robot_mcs_ids ) {
         zpub_factory<McPub>(rid, uri, centauro+motor_prefix, base_port);
+    }
+    for ( auto const& rid : std::initializer_list<int>{1} ) {
+        zpub_factory<SkinPub>(rid, uri, norobot+skin_prefix, base_port);
     }
 
     ///////////////////////////////////////////////////////////////////////

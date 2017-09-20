@@ -15,6 +15,6 @@ add_executable(${PROJECT_NAME}
     zmq_pub_thread.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp pdo_pb protobuf)
+target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp pdo_pb protobuf ecat_master_nrt)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
