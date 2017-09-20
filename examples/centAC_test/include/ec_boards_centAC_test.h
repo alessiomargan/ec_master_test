@@ -41,10 +41,14 @@ private :
     advr::Trj_ptr_map trj_zero2up2extend2zero;
     advr::Trj_ptr_map trj_home2zero;
 
-    std::map<int, iit::ecat::advr::Motor*> 	left_arm;;
-    std::map<int, iit::ecat::advr::Motor*> 	right_arm;
-    std::map<int, iit::ecat::advr::Motor*> 	waist;
-
+    std::map<int, iit::ecat::advr::Motor*>  left_arm;;
+    std::map<int, iit::ecat::advr::Motor*>  right_arm;
+    std::map<int, iit::ecat::advr::Motor*>  waist;
+    std::map<int, iit::ecat::advr::Motor*>  left_front_leg;
+    std::map<int, iit::ecat::advr::Motor*>  left_hind_leg;
+    std::map<int, iit::ecat::advr::Motor*>  right_front_leg;
+    std::map<int, iit::ecat::advr::Motor*>  right_hind_leg;
+    
     std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
     
 protected:

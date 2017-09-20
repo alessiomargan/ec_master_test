@@ -93,9 +93,15 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     int base_port;
     std::string uri ( "tcp://*:" );
 
+    // robot prefix
+    std::string centauro( "centauro@" );
+    std::string walkman ( "walkman@" );
+    std::string norobot ( "void@" );
+    
     std::string motor_prefix ( "Motor_id_" );
     std::string ft_prefix ( "Ft_id_" );
     std::string foot_prefix ( "Foot_id_" );
+    std::string skin_prefix ( "Skin_id_" );
     std::string hand_prefix ( "Hand_id_" );
 
     ///////////////////////////////////////////////////////////////////////
@@ -119,16 +125,15 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     ///////////////////////////////////////////////////////////////////////
     // WALKMAN
     ///////////////////////////////////////////////////////////////////////
-#if 1
     base_port = 9500;
     for ( auto const& rid : walkman::robot_mcs_ids ) {
-        zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
+        zpub_factory<McPub>(rid, uri, walkman+motor_prefix, base_port);
     }
     for ( auto const& rid : walkman::robot_fts_ids ) {
-        zpub_factory<FtPub>(rid, uri, ft_prefix, base_port);
+        zpub_factory<FtPub>(rid, uri, walkman+ft_prefix, base_port);
     }
     for ( auto const& rid : walkman::robot_foot_ids ) {
-        zpub_factory<FootPub>(rid, uri, foot_prefix, base_port);
+        zpub_factory<FootPub>(rid, uri, walkman+foot_prefix, base_port);
     }
     zpub = new PwPub ( uri+std::to_string ( 10001 ) );
     if ( zpub->open_pipe ( "PowWkm_pos_1" ) == 0 ) {
@@ -136,19 +141,21 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     } else {
         delete zpub;
     }
-#endif
+    
     ///////////////////////////////////////////////////////////////////////
     // CENTAURO
     ///////////////////////////////////////////////////////////////////////
     base_port = 9600;
     for ( auto const &rid : centauro::robot_mcs_ids ) {
-        zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
+        zpub_factory<McPub>(rid, uri, centauro+motor_prefix, base_port);
+    }
+    for ( auto const& rid : std::initializer_list<int>{1} ) {
+        zpub_factory<SkinPub>(rid, uri, norobot+skin_prefix, base_port);
     }
 
     ///////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////
-
     base_port = 9800;
     for ( auto const& rid : std::initializer_list<int>{1,2,3} ) {
         zpub_factory<McHandPub>(rid, uri, hand_prefix, base_port);

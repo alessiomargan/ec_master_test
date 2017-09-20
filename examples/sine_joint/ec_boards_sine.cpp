@@ -39,11 +39,19 @@ void Ec_Boards_sine::init_preOP ( void ) {
     std::vector<int> test_rid = std::initializer_list<int> {
     
         //103,
-        //1,
-        //2,
-        71,
-        72,
-        73,
+        1,
+        2,
+        
+        // front right
+        //41,42,43,44,45,
+        
+        //51,52,/*53,54,*/55,
+        
+        //61,62,/*63,64,*/65,
+        
+        // front left
+        //71,72,73,74,75, 
+        
     };
 
     // fill motors map
@@ -60,12 +68,14 @@ void Ec_Boards_sine::init_preOP ( void ) {
         assert ( EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ));
         assert ( EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
 
+
         start_pos[slave_pos] = motor_pos; 
         // set home pos
         //home[slave_pos] = MID_POS ( min_pos,max_pos );
-        home[slave_pos] = start_pos[slave_pos];
-        //home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg[pos2Rid(slave_pos)] );
-        //home[slave_pos] = 0;
+        //home[slave_pos] = start_pos[slave_pos];
+        //home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
+        //home[slave_pos] = 0.6;
+        home[slave_pos] = DEG2RAD ( -65 );
 
         DPRINTF ( ">> Joint_id %d motor %f link %f start %f home %f\n", pos2Rid ( slave_pos ), motor_pos, link_pos, start_pos[slave_pos], home[slave_pos]);
         
@@ -74,7 +84,8 @@ void Ec_Boards_sine::init_preOP ( void ) {
         auto Xs = std::initializer_list<double> { 0, 5 };
         auto Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         trj_map["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );        
-        trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.5, 0.2, home[slave_pos], std::initializer_list<double> { 0, 60 } );
+        //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.1, 3.0, home[slave_pos], std::initializer_list<double> { 0, 60 } );
+        //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.25, 0.3, home[slave_pos], std::initializer_list<double> { 0, 60 } );
         //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.5, 0.5, home[slave_pos], std::initializer_list<double> { 0, 60 } );
 
         //////////////////////////////////////////////////////////////////////////
@@ -92,7 +103,7 @@ void Ec_Boards_sine::init_preOP ( void ) {
     
     trj_queue.clear();
     trj_queue.push_back ( trj_map.at("start@home") );
-    trj_queue.push_back ( trj_map.at("sineFROMhome") );
+    //trj_queue.push_back ( trj_map.at("sineFROMhome") );
     
 }
 
@@ -115,7 +126,7 @@ int Ec_Boards_sine::user_loop ( void ) {
     user_input ( what );
 
     if ( ! trj_queue.empty() ) {
-        if ( go_there ( motors_to_start, trj_queue.at(0), trj_error, false) ) {
+        if ( go_there ( motors_to_start, trj_queue.at(0), trj_error, true) ) {
             // running trj has finish ... remove from queue  !!
             DPRINTF ( "running trj has finish ... remove from queue !!\n" );
             trj_queue.pop_front();

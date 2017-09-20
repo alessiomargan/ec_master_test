@@ -39,6 +39,7 @@ trjs_map :
 #   - [sineFROMhome, 5]
     
 # #####################################
+# define position labels
 # position in degrees
 pos_map :
 

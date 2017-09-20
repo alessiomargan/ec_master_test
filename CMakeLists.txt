@@ -5,8 +5,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroOptionalBuild)
 include(MacroSetcap)
 
+#set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -g")            # Debug
+#set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -DNDEBUG")  # Release
 set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
-#set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11")
 set(ENABLE_XENO         CACHE BOOL "OFF")
 set(SHARED_SRC          ${CMAKE_CURRENT_SOURCE_DIR}/shared_src) 
 
@@ -25,7 +26,7 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 set(COMMON_LIBS
     ecat_test_utils${LIB_TYPE}
-    walkman_master${LIB_TYPE}
+    ecat_master${LIB_TYPE}
     iitecat_iface${LIB_TYPE}
     soem${LIB_TYPE}
     ec_master_pb
@@ -57,7 +58,7 @@ optional_build(walkman_test examples/walkman_test OFF)
 optional_build(hand_test    examples/hand_test OFF)
 optional_build(impedance_trj_test examples/impedance_trj_test OFF)
 
-optional_build(joy_forward 	other_bin/joy_forward   OFF)
+optional_build(joy_forward      other_bin/joy_forward   OFF)
 optional_build(spnav_forward    other_bin/spnav_forward OFF)
 optional_build(zmq_pub          other_bin/zmq_pub   OFF)
 optional_build(spline_test      other_bin/spline_test   OFF)
