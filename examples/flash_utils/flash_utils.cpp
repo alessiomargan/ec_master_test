@@ -57,15 +57,15 @@ int main ( int argc, char * const argv[] ) try {
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
     const YAML::Node doc = ec_boards_ctrl->get_config_YAML_Node();
-    const YAML::Node firmware_update = doc["firmware_update"];
+    const YAML::Node flash_files = doc["flash_files"];
 
     std::vector<int> slave_list;
     bool use_rId = true;
 
-    if ( firmware_update["slave_rId_list"] ) {
-        slave_list = firmware_update["slave_rId_list"].as<std::vector<int>>();
-    } else if ( firmware_update["slave_pos_list"] ) {
-        slave_list = firmware_update["slave_pos_list"].as<std::vector<int>>();
+    if ( flash_files["slave_rId_list"] ) {
+        slave_list = flash_files["slave_rId_list"].as<std::vector<int>>();
+    } else if ( flash_files["slave_pos_list"] ) {
+        slave_list = flash_files["slave_pos_list"].as<std::vector<int>>();
         use_rId = false;
     } else {
         std::cout << "NO slave list found !!" << std::endl;
@@ -74,55 +74,7 @@ int main ( int argc, char * const argv[] ) try {
     }
 
     if ( slave_list.size() == 1 ) {
-        if ( slave_list[0] == 0 ) {
-            // all esc
-            use_rId = false;
-            slave_list.resize ( ec_slavecount );
-            std::cout << "slave list size " << slave_list.size() << std::endl;
-            // exclude power board
-            // slave_list : [2 .. ec_slavecount)
-            std::iota ( slave_list.begin(), slave_list.end(), 2 );
-
-        } else if ( slave_list[0] == -1 ) {
-            // big motor
-            use_rId = false;
-            slave_list.clear();
-            std::map<int, HpESC*> hp_boards;
-            ec_boards_ctrl->get_esc_map_bytype ( HI_PWR_AC_MC, hp_boards );
-            for ( auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
-                slave_list.push_back ( it->first );
-            }
-            ec_boards_ctrl->get_zombie_map_bytype ( HI_PWR_AC_MC, hp_boards );
-            for ( auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
-                slave_list.push_back ( it->first );
-            }
-        } else if ( slave_list[0] == -2 ) {
-            // med motor
-            use_rId = false;
-            slave_list.clear();
-            std::map<int, HpESC*> hp_boards;
-            ec_boards_ctrl->get_esc_map_bytype ( HI_PWR_DC_MC, hp_boards );
-            for ( auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
-                slave_list.push_back ( it->first );
-            }
-            ec_boards_ctrl->get_zombie_map_bytype ( HI_PWR_DC_MC, hp_boards );
-            for ( auto it = hp_boards.begin(); it != hp_boards.end(); it++ ) {
-                slave_list.push_back ( it->first );
-            }
-        } else if ( slave_list[0] == -3 ) {
-            // lopwr motor
-            use_rId = false;
-            slave_list.clear();
-            std::map<int, LpESC*> lp_boards;
-            ec_boards_ctrl->get_esc_map_bytype ( LO_PWR_DC_MC, lp_boards );
-            for ( auto it = lp_boards.begin(); it != lp_boards.end(); it++ ) {
-                slave_list.push_back ( it->first );
-            }
-            ec_boards_ctrl->get_zombie_map_bytype ( LO_PWR_DC_MC, lp_boards );
-            for ( auto it = lp_boards.begin(); it != lp_boards.end(); it++ ) {
-                slave_list.push_back ( it->first );
-            }
-        } else if ( slave_list[0] == -4 ) {
+        if ( slave_list[0] == -4 ) {
             // centAC motor
             use_rId = false;
             slave_list.clear();
@@ -138,14 +90,16 @@ int main ( int argc, char * const argv[] ) try {
         }
     }
 
-    std::string fw_path;
+    std::string bin_path;
     std::string bin_file;
-    int passwd;
+    std::string save_as;
+    uint32_t passwd;
+    uint32_t size_byte;
     EscWrapper * esc;
     uint16_t   bType;
-    int sPos;
+    int sPos, rId = -1;
 
-    fw_path = firmware_update["fw_path"].as<std::string>();
+    bin_path = flash_files["bin_path"].as<std::string>();
 
     for ( auto it = slave_list.begin(); it != slave_list.end(); it++ ) {
         if ( use_rId ) {
@@ -164,11 +118,14 @@ int main ( int argc, char * const argv[] ) try {
         if ( !esc ) {
             esc = ec_boards_ctrl->slave_as_Zombie ( sPos );
             DPRINTF ( "..... try with Z0mb13 %d\n", sPos );
+        } else {
+            rId = esc->get_robot_id();
         }
         if ( esc ) {
             YAML::Node esc_type;
             bType = esc->get_ESC_type();
             switch ( bType ) {
+/*
             case HI_PWR_AC_MC :
                 esc_type = firmware_update["big_motor"];
                 break;
@@ -187,11 +144,12 @@ int main ( int argc, char * const argv[] ) try {
             case POW_F28M36_BOARD  :
                 esc_type = firmware_update["power_f28m36"];
                 break;
+*/
             case CENT_AC :
-                esc_type = firmware_update["cent_AC"];
+                esc_type = flash_files["cent_AC"];
                 break;
             case F28M36_TEST :
-                esc_type = firmware_update["test_f28m36"];
+                esc_type = flash_files["test_f28m36"];
                 break;
             default :
                 break;
@@ -202,30 +160,27 @@ int main ( int argc, char * const argv[] ) try {
                 if ( esc_F28M36_uc_set.find(esc->get_ESC_type()) != esc_F28M36_uc_set.end() ) {
                     // special case F28M3x MCUs have 2 cores
                     // M3
-                    if ( esc_type["m3"] ) {
-                        bin_file    = esc_type["m3"]["bin_file"].as<std::string>();
-                        passwd      = esc_type["m3"]["passwd"].as<int>();
-                        DPRINTF ( "%d %s 0x%04X \n", *it, ( fw_path+bin_file ).c_str(), passwd );
-                        if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "m3") ) {
-                            DPRINTF ( "FAIL update slave pos M3 MCU %d\n" ,sPos );
+                    for ( auto const& flash_sector : {"params","torque_cal"} ) {
+                    
+                        if ( esc_type["m3"][flash_sector] ) {
+                            auto m3_flash_sec = esc_type["m3"][flash_sector]; 
+                            bin_file    = m3_flash_sec["bin_file"].as<std::string>();
+                            passwd      = m3_flash_sec["passwd"].as<int>();
+                            size_byte   = m3_flash_sec["size_byte"].as<int>();
+                            save_as     = bin_path+bin_file+"_pos_"+std::to_string(sPos)+"_id_"+std::to_string(rId)+".bin";
+                            DPRINTF ( "%d %s 0x%04X %d\n", *it, ( bin_file+".bin" ).c_str(), passwd, size_byte );
+                            if ( ! ec_boards_ctrl->upload_flash ( sPos, bin_file+".bin", passwd, size_byte, save_as) ) {
+                                DPRINTF ( "FAIL read %s from M3 MCU pos %d\n" ,( bin_file+".bin" ).c_str(), sPos );
+                            }
                         }
                     }
                     // C28
                     if ( esc_type["c28"] ) {
-                        bin_file    = esc_type["c28"]["bin_file"].as<std::string>();
-                        passwd      = esc_type["c28"]["passwd"].as<int>();
-                        if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "c28" ) ) {
-                            DPRINTF ( "FAIL update slave pos C28 MCU %d\n" ,sPos );
-                        }
+                        DPRINTF ( "No flash on C28 MCU %d\n" ,sPos );
                     }
                 } else {
                     // 
-                    bin_file    = esc_type["bin_file"].as<std::string>();
-                    passwd      = esc_type["passwd"].as<int>();
-                    DPRINTF ( "%d %s 0x%04X \n", *it, ( fw_path+bin_file ).c_str(), passwd );
-                    if ( ! ec_boards_ctrl->update_board_firmware ( sPos, fw_path+bin_file, passwd, "none" ) ) {
-                        DPRINTF ( "FAIL update slave pos %d\n" ,sPos );
-                    }
+                    DPRINTF ( "No flash on MCU %d\n" ,sPos );
                 }
             } else {
                 DPRINTF ( "Unknown esc type %d\n" ,bType );

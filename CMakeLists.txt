@@ -39,8 +39,9 @@ set(COMMON_LIBS
 add_subdirectory(protobuf)
 add_subdirectory(${SHARED_SRC})
 
-optional_build(soem_test 	examples/soem_test  ON)
-optional_build(fw_update 	examples/fw_update  OFF)
+optional_build(soem_test    examples/soem_test  ON)
+optional_build(fw_update    examples/fw_update  OFF)
+optional_build(flash_utils  examples/flash_utils OFF)
 
 optional_build(basic        examples/basic      ON)
 optional_build(sine_joint   examples/sine_joint OFF)
