@@ -46,6 +46,8 @@ protected :
     virtual void init_preOP ( void ) = 0;
     virtual void init_OP ( void ) = 0;
 
+    virtual void stop_motors ( void );
+    
     iit::ecat::stat_t  s_loop;
     uint64_t start_time, tNow, tPre;
 
@@ -116,6 +118,14 @@ private:
 };
 
 
+inline void Ec_Thread_Boards_base::stop_motors ( void )  {
+    iit::ecat::advr::Motor * motor;
+    get_esc_map_byclass ( motors );
+    for ( auto const& item : motors ) {
+        motor = item.second;
+        motor->stop();
+    }
+}
 
 template<typename TK, typename TV>
 std::vector<TK> extract_keys(std::map<TK, TV> const& input_map) {
