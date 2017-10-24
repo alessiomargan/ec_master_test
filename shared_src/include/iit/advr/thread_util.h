@@ -90,7 +90,7 @@ protected:
     
     friend void * periodic_thread ( Thread_hook_Ptr );
     friend void * non_periodic_thread ( Thread_hook_Ptr );
-    friend void * nrt_thread ( Thread_hook_Ptr );
+    //friend void * nrt_thread ( Thread_hook_Ptr );
 
 };
 
@@ -114,7 +114,7 @@ inline void * Thread_hook::th_helper ( void *kls )  {
         return periodic_thread ( ( Thread_hook_Ptr ) kls );
 
     } catch ( std::exception &e ) {
-        DPRINTF ( "In function %s catch ::%s::\n\tThread %s quit\n",
+        DPRINTF ( "In function %s catch %s\n\tThread %s quit\n",
                   __FUNCTION__, e.what(), ( ( Thread_hook_Ptr ) kls )->name );
         return 0;
     }
