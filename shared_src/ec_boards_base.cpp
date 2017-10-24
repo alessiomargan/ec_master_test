@@ -34,9 +34,11 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
 
     // init Ec_Boards_ctrl
     if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
-        throw "something wrong";
+        std::runtime_error("something wrong in Ec_Boards_ctrl::init()");
     }
 
+    // >>> actual ECAT state is PREOP ...
+    
     get_esc_map_byclass ( pows );
     DPRINTF ( "found %lu pows\n", pows.size() );
     get_esc_map_byclass ( powF28M36s );
@@ -58,7 +60,7 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
         sleep(6);
         // init Ec_Boards_ctrl
         if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
-            throw "something wrong";
+            std::runtime_error("something wrong in Ec_Boards_ctrl::init()");
         }
 
     }
@@ -84,8 +86,8 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     
     init_preOP();
 
-    if ( set_operative() <= 0 ) {
-        throw "something else wrong";
+    if ( Ec_Boards_ctrl::set_operative() <= 0 ) {
+        std::runtime_error("something wrong in Ec_Boards_ctrl::set_operative()");;
     }
 
     start_time = iit::ecat::get_time_ns();

@@ -121,7 +121,6 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     } else {
         delete zpub;
     }
-#endif
     ///////////////////////////////////////////////////////////////////////
     // WALKMAN
     ///////////////////////////////////////////////////////////////////////
@@ -141,21 +140,23 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     } else {
         delete zpub;
     }
-    
+#endif    
     ///////////////////////////////////////////////////////////////////////
     // CENTAURO
     ///////////////////////////////////////////////////////////////////////
     base_port = 9600;
+#if 0
     for ( auto const &rid : centauro::robot_mcs_ids ) {
         zpub_factory<McPub>(rid, uri, centauro+motor_prefix, base_port);
     }
+#endif
     for ( auto const& rid : std::initializer_list<int>{1} ) {
         zpub_factory<SkinPub>(rid, uri, norobot+skin_prefix, base_port);
     }
-
     ///////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////
+#if 0
     base_port = 9800;
     for ( auto const& rid : std::initializer_list<int>{1,2,3} ) {
         zpub_factory<McHandPub>(rid, uri, hand_prefix, base_port);
@@ -172,6 +173,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     for ( auto const& rid : std::initializer_list<int>{101,102,103,104} ) {
         zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
     }
+#endif
 
 #if 0
     base_port++;

@@ -6,7 +6,11 @@ include_directories(include)
 
 if ( Xenomai_FOUND )
     add_definitions("-D__XENO_PIPE__")
+    set(LIB_ECAT_MASTER ecat_master_rt)
+else()
+    set(LIB_ECAT_MASTER ecat_master_nrt)
 endif()
+
 
 add_definitions("-std=gnu++11")
 
@@ -16,7 +20,7 @@ add_executable(${PROJECT_NAME}
     lpms_forward.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp LpSensor pdo_pb ec_master_pb protobuf ecat_master_nrt)
+target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp LpSensor pdo_pb ec_master_pb protobuf ${LIB_ECAT_MASTER})
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
