@@ -129,6 +129,10 @@ CentAcESC_X:
     position: [220.0 , 0.0 , 5.0]
 
   NO_upd_params :
+    posRefFilterFreq : 2
+    PDOloopTimeSec : 0.001
+
+  NO_upd_params :
     # A0 
     DOB_filterFrequencyHz : 10
     voltageFeedforward : 1.0

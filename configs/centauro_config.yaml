@@ -128,7 +128,7 @@ CentAcESC_5:
 CentAcESC_6:
   sign: -1
   pos_offset: 0
-  max_current_A: 1.0
+  max_current_A: 10.0
   pid :
     position: [1000.0 , 0.0 , 30.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
