@@ -121,9 +121,11 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     } else {
         delete zpub;
     }
+#endif
     ///////////////////////////////////////////////////////////////////////
     // WALKMAN
     ///////////////////////////////////////////////////////////////////////
+#if 0
     base_port = 9500;
     for ( auto const& rid : walkman::robot_mcs_ids ) {
         zpub_factory<McPub>(rid, uri, walkman+motor_prefix, base_port);

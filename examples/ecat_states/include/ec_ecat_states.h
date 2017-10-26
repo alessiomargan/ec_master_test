@@ -35,6 +35,9 @@ private :
     virtual void init_OP ( void );
 
     XDDP_pipe inXddp;
+    
+    std::map<int, iit::ecat::advr::LXM32iESC*> lxm32i;
+    
 };
 
 

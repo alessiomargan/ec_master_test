@@ -1,8 +1,8 @@
 #
 
 ec_board_ctrl:
-  eth_iface: eth1
-  #eth_iface: enp2s0
+  #eth_iface: eth1
+  eth_iface: enp2s0
   #sync_cycle_time_ns: 500000
   #sync_cycle_time_ns: 1000000
   #sync_cycle_time_ns: 2000000
@@ -50,7 +50,7 @@ firmware_update:
     bin_file: FT6.bin
     passwd: 0xbeef
   cent_AC:
-    m3:
+    NO_m3:
       bin_file: cent_AC_m3.bin
       passwd: 0xA550
     c28:
@@ -60,7 +60,7 @@ firmware_update:
     m3:
       bin_file: pow_m3.bin
       passwd: 0xF2F2
-    c28:
+    N_c28:
       bin_file: pow_c28.bin
       passwd: 0xF3F3
   test_f28m36:
@@ -74,8 +74,8 @@ firmware_update:
 flash_files:
   bin_path: /tmp/
   # all CentAC motor
-  #slave_pos_list: [-4]
-  slave_pos_list: [2]
+  slave_pos_list: [-4]
+  #slave_pos_list: [2]
   
   cent_AC:
     m3:

@@ -120,7 +120,7 @@ void EC_boards_centAC_test::init_preOP ( void ) {
 
         Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         trj_start2home[slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xt_5s, Ys );
-        
+#if 0        
         Ys = std::initializer_list<double> { 
             home[slave_pos],
             DEG2RAD ( centauro::robot_ids_zero_pos_deg.at(pos2Rid(slave_pos)) )
@@ -135,7 +135,7 @@ void EC_boards_centAC_test::init_preOP ( void ) {
             DEG2RAD ( centauro::robot_ids_zero_pos_deg.at(pos2Rid(slave_pos)) ),
         };
         trj_zero2up2extend2zero[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt5_4s, Ys );
-        
+#endif        
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
@@ -147,7 +147,7 @@ void EC_boards_centAC_test::init_preOP ( void ) {
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     trj_queue.clear();
-    trj_queue.push_back ( trj_start2home );
+    //trj_queue.push_back ( trj_start2home );
     //trj_queue.push_back ( trj_home2zero );
     //trj_queue.push_back ( trj_zero2up2extend2zero );
         
@@ -158,7 +158,8 @@ void EC_boards_centAC_test::init_OP ( void ) {
 
     try { advr::reset_trj ( trj_queue.at(0) ); }
     catch ( const std::out_of_range &e ) {
-        throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
+        //throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
+        DPRINTF ("Oh my gosh  ... trj_queue is empty !");
     }    
     
     DPRINTF ( "End Init_OP\n" );
