@@ -69,6 +69,10 @@ enum Robot_IDs : int {
     LFL_A_Y = 75,
     LFL_W   = 76,
 
+    SKIN_1  = 111,
+    SKIN_2  = 112,
+    SKIN_3  = 113,
+    
     // sort of Head
     H101    = 101,
     H102    = 102,

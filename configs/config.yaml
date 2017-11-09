@@ -100,7 +100,10 @@ CentAcESC_X:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
 
-  upd_params :
+  aux_pdo :
+    wrd : [ "ts&&rtt" ]
+
+  NO_upd_params :
     # orange
     #Hardware_config : 0x4236
     #Motor_gear_ratio : 120

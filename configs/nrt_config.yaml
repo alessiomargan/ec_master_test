@@ -5,8 +5,8 @@ ec_board_ctrl:
   eth_iface: enp2s0
   #sync_cycle_time_ns: 500000
   #sync_cycle_time_ns: 1000000
-  #sync_cycle_time_ns: 2000000
-  sync_cycle_time_ns: 5000000
+  sync_cycle_time_ns: 2000000
+  #sync_cycle_time_ns: 5000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 50000000
   #sync_cycle_time_ns: 0
@@ -144,10 +144,11 @@ CentAcESC_X:
     motorTorqueConstant : 0.078
     windingResistance : 0.318
   
-  NO_aux_pdo : # names defined in SDO index 0x8002 
-     rd :  [ pos_ref_fb, iq_ref_fb, id_ref_fb ]
-     wr :  [ ]
-     wrd : [ "iq_offset&&iq_out_fb" ]
+  aux_pdo : # names defined in SDO index 0x8002 
+     _rd :  [ pos_ref_fb, iq_ref_fb, id_ref_fb ]
+     _wr :  [ ]
+     _wrd : [ "iq_offset&&iq_out_fb" ]
+     wrd : [ "ts&&rtt" ]
      
 #############################
 # TEST JOINT
