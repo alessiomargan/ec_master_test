@@ -69,7 +69,16 @@ enum Robot_IDs : int {
     LFL_A_Y = 75,
     LFL_W   = 76,
 
+    // sort of Head
+    H101    = 101,
+    H102    = 102,
+    H103    = 103,
 
+};
+
+const std::vector<int> robot_heads_ids = std::initializer_list<int> {
+    // head
+    H101, H102, H103
 };
 
 const std::vector<int> robot_waist_ids = std::initializer_list<int> {
@@ -147,6 +156,8 @@ const std::vector<int> robot_fts_ids = std::initializer_list<int> {
 };
 
 const std::vector<int> robot_mcs_ids = std::initializer_list<int> {
+    // head
+    H101, H102, H103,
     // waist
     WAIST_Y,
     // right arm
@@ -166,10 +177,12 @@ const std::vector<int> robot_mcs_ids = std::initializer_list<int> {
 
 const std::map<int, float> robot_ids_home_pos_deg = {
 
+    {H101,  0.0}, {H102,  0.0}, {H103,  0.0},
+
     {WAIST_Y,   0.0},
 
     {RA_SH_1,  0.0}, {RA_SH_2, 30.0}, {RA_SH_3, 30.0}, {RA_EL, 45.0},
-    {RA_WR_1,  0.0}, {RA_WR_2, 45.0}, {RA_WR_3,  0.0}, {RA_HA, 0.0},
+    {RA_WR_1,  0.0}, {RA_WR_2, 45.0}, {RA_WR_3,  0.0}, {RA_HA,  0.0},
 
     {LA_SH_1,  0.0}, {LA_SH_2,-30.0}, {LA_SH_3,-30.0}, {LA_EL,-45.0},
     {LA_WR_1,  0.0}, {LA_WR_2,-45.0}, {LA_WR_3,  0.0}, {LA_HA,  0.0},

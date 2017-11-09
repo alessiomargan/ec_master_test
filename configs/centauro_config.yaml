@@ -451,4 +451,26 @@ CentAcESC_56:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [50.0, 0.0, 1.0, 0.003, 0.0]
     
+##############################
+# sort of Head
     
+LpESC_101:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [100000.0 , 0.0 , 1.0]
+    impedance: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+LpESC_102:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [100000.0 , 0.0 , 1.0]
+    impedance: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+LpESC_103:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [0.0 , 0.0 , 0.0]
+    impedance: [0.0, 0.0, 0.0, 0.0, 0.0]
