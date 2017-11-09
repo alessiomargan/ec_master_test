@@ -18,6 +18,7 @@
 #include "iit/ecat/utils.h"
 
 #include <map>
+#include <cmath>
 
 inline double clamp(double d, double min, double max) {
   const double t = d < min ? min : d;
@@ -178,7 +179,6 @@ public :
 class Sine_trajectory : public Trajectory {
 
 public :
-
     Sine_trajectory() {}
     Sine_trajectory( float freq, float A, float teta, const std::vector<double> &x )
     : _freq(freq), _A(A), _teta(teta) { 
@@ -189,7 +189,6 @@ public :
        
         _x = x;
         sT = iit::ecat::get_time_ns();
-        
     }
     
     double get_value ( double x, bool limits=true ) const {
@@ -199,18 +198,92 @@ public :
         if ( x <= _x.front() )     { x = _x.front(); }
         else if ( x >= _x.back() ) { x = _x.back(); }
 
-        fx = _teta + _A * sinf ( 2*M_PI*_freq*x );
+        fx = _teta + _A * std::sin ( 2*M_PI*_freq*x );
         //DPRINTF("Sine_trajectory f(%f) = %f\n", x, fx );
         
         return fx;
-    
     };
     
     virtual double end_point ( void ) {
         assert(0);
     }
-    
+protected:
+    float _freq, _A, _teta;
 
+};
+
+class Cosi_trajectory : public Trajectory {
+
+public :
+    Cosi_trajectory() {}
+    Cosi_trajectory( float freq, float A, float teta, const std::vector<double> &x )
+    : _freq(freq), _A(A), _teta(teta) { 
+        set_points(x,x);
+    }
+
+    virtual void set_points ( const std::vector<double> &x, const std::vector<double> &y ) {
+       
+        _x = x;
+        sT = iit::ecat::get_time_ns();
+    }
+    
+    double get_value ( double x, bool limits=true ) const {
+        
+        double fx;
+        
+        if ( x <= _x.front() )     { x = _x.front(); }
+        else if ( x >= _x.back() ) { x = _x.back(); }
+
+        fx = _teta + _A * std::cos ( 2*M_PI*_freq*x );
+        //DPRINTF("Cosi_trajectory f(%f) = %f\n", x, fx );
+        
+        return fx;
+    };
+    
+    virtual double end_point ( void ) {
+        assert(0);
+    }
+protected:
+    float _freq, _A, _teta;
+
+};
+
+class Steps_trajectory : public Trajectory {
+
+public :
+    Steps_trajectory() {}
+    Steps_trajectory( float freq, float A, float teta, const std::vector<double> &x )
+    : _freq(freq), _A(A), _teta(teta) { 
+        set_points(x,x);
+    }
+
+    virtual void set_points ( const std::vector<double> &x, const std::vector<double> &y ) {
+       
+        _x = x;
+        sT = iit::ecat::get_time_ns();
+    }
+    
+    double get_value ( double x, bool limits=true ) const {
+        
+        double fx;
+        
+        if ( x <= _x.front() )     { x = _x.front(); }
+        else if ( x >= _x.back() ) { x = _x.back(); }
+
+        // Returns whether the sign of x is negative
+        if ( std::signbit(std::sin ( 2*M_PI*_freq*x )) ) {
+            fx = _teta - _A;
+        } else {
+            fx = _teta + _A;
+        }
+        //DPRINTF("Steps_trajectory f(%f) = %f\n", x, fx );
+        
+        return fx;
+    };
+    
+    virtual double end_point ( void ) {
+        assert(0);
+    }
 protected:
     float _freq, _A, _teta;
 
