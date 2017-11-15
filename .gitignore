@@ -2,3 +2,5 @@
 logs/
 
 octave-workspace
+
+*.bin
