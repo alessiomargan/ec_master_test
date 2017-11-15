@@ -6,7 +6,11 @@
 //#include <sys/ioctl.h>
 //#include <net/if.h>
 #ifdef __COBALT__
-#include <rtnet.h>
+    #include <asm/ioctl.h>
+    #include <rtdm/rtdm.h>
+    //#include <rtnet.h>
+    #define RTIOC_TYPE_NETWORK      RTDM_CLASS_NETWORK
+    #define RTNET_RTIOC_TIMEOUT     _IOW(RTIOC_TYPE_NETWORK,  0x11, int64_t)
 #endif
 
 #include <cstring>
@@ -29,7 +33,7 @@ Ati_Sens::Ati_Sens ( bool run_thread ) : run ( run_thread ) {
     }
 
     // set socket timeout option
-#ifdef __COBALT__
+#ifdef NOTUSE__COBALT__
     // This socket control option is used to specify the time-out on the socket before it returns.
     // It is used typically to wait for data on a Read.
     // The time-out specifies the amount of time the function will wait for data before it returns.
@@ -156,9 +160,9 @@ void * Ati_Sens::rx_thread ( void *_ ) {
     kls->start_time = iit::ecat::get_time_ns();
 
 #ifdef __COBALT__
-    pthread_set_mode_np ( 0, PTHREAD_WARNSW );
-    pthread_set_name_np ( pthread_self(), "rx_ati" );
+    pthread_setmode_np ( 0, PTHREAD_WARNSW, 0 );
 #endif
+    pthread_setname_np ( pthread_self(), "rx_ati" );
 
     while ( kls->run ) {
 

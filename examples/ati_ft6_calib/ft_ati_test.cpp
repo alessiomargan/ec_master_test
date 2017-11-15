@@ -25,6 +25,7 @@
 #include <iit/ecat/advr/ec_boards_iface.h>
 #include <ati_iface.h>
 
+extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 
 
 using namespace iit::ecat::advr;
@@ -135,7 +136,7 @@ using namespace iit::ecat;
 Ec_Boards_ctrl * ec_boards_ctrl;
 
 
-int main ( int argc, char **argv ) {
+int main ( int argc, char * const argv[] ) {
     int ret;
 
     boost::circular_buffer<sens_data_t> sens_log;
@@ -143,40 +144,23 @@ int main ( int argc, char **argv ) {
 
     set_signal_handler();
 
-#ifdef __COBALT__
-
-    int policy = SCHED_FIFO;
-    struct sched_param  schedparam;
-    schedparam.sched_priority = sched_get_priority_max ( policy );
-    pthread_setschedparam ( pthread_self(), SCHED_FIFO, &schedparam );
-
-    /* Prevent any memory-swapping for this program */
-    ret = mlockall ( MCL_CURRENT | MCL_FUTURE );
-    if ( ret < 0 ) {
-        printf ( "mlockall failed (ret=%d) %s\n", ret, strerror ( ret ) );
-        return 0;
-    }
-    /*
-     * This is a real-time compatible printf() package from
-     * Xenomai's RT Development Kit (RTDK), that does NOT cause
-     * any transition to secondary (i.e. non real-time) mode when
-     * writing output.
-     */
-    rt_print_auto_init ( 1 );
-#endif
-
     if ( argc != 2 ) {
         printf ( "Usage: %s config.yaml\n", argv[0] );
         return 0;
     }
 
+    main_common (&argc, &argv, 0 );
+    
     ///////////////////////////////////////////////////////////////////////
 
     Ati_Sens * ati = new Ati_Sens ( true );
 
     ///////////////////////////////////////////////////////////////////////
 
-    Ec_Boards_ctrl * ec_boards_ctrl;
+    Ec_Boards_ctrl          * ec_boards_ctrl;
+    Ft6ESC                  * ft; 
+    Ft6EscPdoTypes::pdo_rx  ft_pdo_rx;
+    Ft6EscPdoTypes::pdo_tx  ft_pdo_tx;
 
     ec_boards_ctrl = new Ec_Boards_ctrl ( argv[1] );
 
@@ -193,13 +177,20 @@ int main ( int argc, char **argv ) {
     std::vector<std::vector<float>> cal_matrix;
     int ft_ecat_pos = 0;
     if ( ati_config ) {
+        
         ft_ecat_pos = ati_config["ft_ecat_pos"].as<int>();
-        ec_boards_ctrl->set_flash_cmd ( ft_ecat_pos, CTRL_REMOVE_TORQUE_OFFS );
+        ft = ec_boards_ctrl->slave_as<Ft6ESC>(ft_ecat_pos);
+        if ( ! ft ) {
+            std::cout << "No Ft6ESC at pos " << ft_ecat_pos << std::endl;
+            delete ec_boards_ctrl;
+            return 0;
+        }
+        set_flash_cmd_X ( ft, CTRL_REMOVE_TORQUE_OFFS );
         try {
             std::string calib_file = ati_config["calib_mat_file"].as<std::string>();
             if ( ! load_matrix( calib_file, cal_matrix ) && ati_config["save_calib_matrix"].as<bool>() ) {
-                ec_boards_ctrl->set_cal_matrix ( ft_ecat_pos, cal_matrix );
-                ec_boards_ctrl->set_flash_cmd ( ft_ecat_pos, 0x0012 );
+                ft->set_cal_matrix ( cal_matrix );
+                set_flash_cmd_X ( ft, FLASH_SAVE );
             }
         } catch ( YAML::Exception &e ) {
             DPRINTF ( "Catch Exception ... %s\n", e.what() );
@@ -210,19 +201,9 @@ int main ( int argc, char **argv ) {
     
     ///////////////////////////////////////////////////////////////////////
 
-    Ft6ESC                  * ft; 
-    Ft6EscPdoTypes::pdo_rx  ft_pdo_rx;
-    Ft6EscPdoTypes::pdo_tx  ft_pdo_tx;
-    
+   
     ati_log_t   sample;
     sens_data_t sens_data;
-
-    ft = ec_boards_ctrl->slave_as_FT(ft_ecat_pos);
-    if ( ! ft ) {
-        std::cout << "No Ft6ESC at pos " << ft_ecat_pos << std::endl;
-        delete ec_boards_ctrl;
-        return 0;
-    }
 
     if ( ec_boards_ctrl->set_operative() <= 0 ) {
         std::cout << "Error in boards set_operative()... cannot proceed!" << std::endl;
