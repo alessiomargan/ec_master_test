@@ -28,9 +28,10 @@ extern void set_main_sched_policy ( int );
 class GPIO_poller : public Thread_hook {
 
     std::string             pipe_name;
+    int                     xddp_fd;
     // board handle
     HCGOS                   hCgos;
-    uint32_t                gpioInputValues;
+    uint32_t                gpio_state, prev_gpio_state;
         
 public:
 
@@ -73,17 +74,42 @@ public:
             throw std::runtime_error("Oops ... could not open a board");
         }
         
+        int retry = 10;
+        std::string pipe ( pipe_prefix + pipe_name);
+        while ( retry -- ) {
+            xddp_fd = open ( pipe.c_str(), O_WRONLY|O_NONBLOCK );
+            if ( xddp_fd <= 0 ) {
+                std::cout << retry << ": " << pipe << std::endl;
+                usleep(10000);
+            } else {
+                break;
+            }
+        }
+
+        prev_gpio_state = gpio_state;
+        
     }
 
     virtual void th_loop ( void * ) {
         
-       CgosIORead( hCgos, 0, &gpioInputValues );
-       std::cout << std::showbase 
-                 << std::internal
-                 << std::setfill('0')
-                 << std::hex
-                 << gpioInputValues
+        int nbytes;
+        
+        CgosIORead( hCgos, 0, &gpio_state );
+                 
+        if ( gpio_state != prev_gpio_state ) {
+
+            std::cout << std::showbase 
+                    << std::internal
+                    << std::setfill('0')
+                    << std::hex
+                    << gpio_state
                  << std::endl;
+            if ( xddp_fd > 0 ) {
+                nbytes = write ( xddp_fd, ( void* ) &gpio_state, sizeof ( gpio_state ) );
+            }
+        }
+        
+        prev_gpio_state = gpio_state;
         
     }
 };
@@ -110,7 +136,7 @@ int main ( int argc, char * const argv[] ) try {
     
     main_common (&argc, &argv, 0 );
 
-    threads["GPIO_poller"] = new GPIO_poller(std::string("GPIO_poller"));
+    threads["GPIO_poller"] = new GPIO_poller(std::string("emergency"));
     threads["GPIO_poller"]->create(false);
 
 #ifdef __COBALT__

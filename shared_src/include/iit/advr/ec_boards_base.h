@@ -57,8 +57,11 @@ protected :
     std::deque<advr::Trj_ptr_map> trj_queue;
     //advr::Trj_ptr_map running_trj;
 
-    XDDP_pipe termInXddp;
-    XDDP_pipe debugOutXddp;
+    uint32_t    emergency_active;
+    
+    XDDP_pipe   emergencyInXddp;
+    XDDP_pipe   termInXddp;
+    XDDP_pipe   debugOutXddp;
     
     std::map<int, iit::ecat::advr::Motor*>          motors;
     std::map<int, iit::ecat::advr::Ft6ESC*>         fts;
@@ -113,8 +116,8 @@ protected :
 
 private:
 
-    iit::ecat::ec_timing_t timing;
-    
+    iit::ecat::ec_timing_t  timing;
+
 };
 
 

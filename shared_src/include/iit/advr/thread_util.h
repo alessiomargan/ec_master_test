@@ -106,18 +106,11 @@ inline int Thread_hook::is_non_periodic() {
 
 inline void * Thread_hook::th_helper ( void *kls )  {
 
-    try {
-
         if ( ( ( Thread_hook_Ptr ) kls )->is_non_periodic() ) {
             return non_periodic_thread ( ( Thread_hook_Ptr ) kls );
         }
         return periodic_thread ( ( Thread_hook_Ptr ) kls );
 
-    } catch ( std::exception &e ) {
-        DPRINTF ( "In function %s catch %s\n\tThread %s quit\n",
-                  __FUNCTION__, e.what(), ( ( Thread_hook_Ptr ) kls )->name );
-        return 0;
-    }
 }
 
 

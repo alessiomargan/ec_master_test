@@ -15,6 +15,7 @@
 
 Ec_Thread_Boards_base::Ec_Thread_Boards_base ( const char * config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
     
+    emergencyInXddp.init ( "emergency" );
     termInXddp.init ( "terminal" );
     debugOutXddp.init ( "debugOut" );
 
@@ -34,7 +35,7 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
 
     // init Ec_Boards_ctrl
     if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
-        std::runtime_error("something wrong in Ec_Boards_ctrl::init()");
+        throw std::runtime_error("something wrong in Ec_Boards_ctrl::init()");
     }
 
     // >>> actual ECAT state is PREOP ...
@@ -60,7 +61,7 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
         sleep(6);
         // init Ec_Boards_ctrl
         if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
-            std::runtime_error("something wrong in Ec_Boards_ctrl::init()");
+            throw std::runtime_error("something wrong in Ec_Boards_ctrl::init()");
         }
 
     }
@@ -87,17 +88,21 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     init_preOP();
 
     if ( Ec_Boards_ctrl::set_operative() <= 0 ) {
-        std::runtime_error("something wrong in Ec_Boards_ctrl::set_operative()");;
+        throw std::runtime_error("something wrong in Ec_Boards_ctrl::set_operative()");;
     }
 
     start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;
 
     init_OP();
+    
+    emergency_active = 0;
 
 }
 
 void Ec_Thread_Boards_base::th_loop ( void * ) {
+
+    uint32_t emg = 0;
 
     tNow = iit::ecat::get_time_ns();
     s_loop ( tNow - tPre );
@@ -111,9 +116,21 @@ void Ec_Thread_Boards_base::th_loop ( void * ) {
             return;
         }
 
+        if ( emergencyInXddp.xddp_read ( emg ) > 0 ) {
+            DPRINTF ( "EMG 0x%X\n", emg );
+            emergency_active = (emg == 0xE);
+        }
+        
+        if  ( emergency_active ) {
+            // empty queue
+            while ( ! trj_queue.empty() ) { trj_queue.pop_front(); }
+        }
+        
         user_loop();
-
-        send_to_slaves();
+        
+        // emergency_active DO NOT write tx_pdo
+        // send_to_slaves( false ); DO NOT write
+        send_to_slaves( ! emergency_active );
 
     } catch ( iit::ecat::EscWrpError &e ) {
         std::cout << e.what() << std::endl;
