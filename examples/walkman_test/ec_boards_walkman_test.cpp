@@ -1,5 +1,16 @@
 #include <ec_boards_walkman_test.h>
-#include <iit/advr/walkman_robot_id.h>
+
+#ifdef ROBOT_WALKMAN
+    #include <iit/advr/walkman_robot_id.h>
+    namespace robot = iit::ecat::advr::walkman;
+#else
+#ifdef ROBOT_COGIMON
+    #include <iit/advr/cogimon_robot_id.h>
+    namespace robot = iit::ecat::advr::cogimon; 
+#else
+    #error CAZZO
+#endif
+#endif
 
 #include <linux/joystick.h>
 
@@ -56,25 +67,25 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     int slave_pos, motor_start;
     float pos_ref_fb;
 
-    get_esc_map_byclass ( left_leg, walkman::robot_left_leg_ids );
+    get_esc_map_byclass ( left_leg, robot::robot_left_leg_ids );
     DPRINTF ( "found %lu <Motor> left_leg\n", left_leg.size() );
 
-    get_esc_map_byclass ( left_arm, walkman::robot_left_arm_ids );
+    get_esc_map_byclass ( left_arm, robot::robot_left_arm_ids );
     DPRINTF ( "found %lu <Motor> left_arm\n", left_arm.size() );
 
-    get_esc_map_byclass ( right_leg, walkman::robot_right_leg_ids );
+    get_esc_map_byclass ( right_leg, robot::robot_right_leg_ids );
     DPRINTF ( "found %lu <Motor> right_leg\n", right_leg.size() );
 
-    get_esc_map_byclass ( right_arm, walkman::robot_right_arm_ids );
+    get_esc_map_byclass ( right_arm, robot::robot_right_arm_ids );
     DPRINTF ( "found %lu <Motor> right_arm\n", right_arm.size() );
 
-    get_esc_map_byclass ( waist, walkman::robot_waist_ids );
+    get_esc_map_byclass ( waist, robot::robot_waist_ids );
     DPRINTF ( "found %lu <Motor> waist\n", waist.size() );
 
-    get_esc_map_byclass ( head, walkman::robot_head_ids );
+    get_esc_map_byclass ( head, robot::robot_head_ids );
     DPRINTF ( "found %lu <Motor> head\n", head.size() );
 
-    get_esc_map_byclass ( hands, walkman::robot_hands_ids );
+    get_esc_map_byclass ( hands, robot::robot_hands_ids );
     DPRINTF ( "found %lu <Motor> hands\n", hands.size() );
 
     ///////////////////////////////////////////////////////////////////////////
@@ -101,11 +112,11 @@ void EC_boards_walkman_test::init_preOP ( void ) {
             map_of_ctrlIDs[ctrl_name];
             for ( auto const &g: ctrl_set )  {
                 if ( g[0] == '@' ) {
-                    for ( auto const &ids : walkman::robot_ids_group_names.at(g) ) {
+                    for ( auto const &ids : robot::robot_ids_group_names.at(g) ) {
                         map_of_ctrlIDs[ctrl_name].push_back( ids );
                     }
                 } else {
-                    map_of_ctrlIDs[ctrl_name].push_back( walkman::robot_ids_names.at(g) );
+                    map_of_ctrlIDs[ctrl_name].push_back( robot::robot_ids_names.at(g) );
                 }
             }
         }
@@ -136,12 +147,12 @@ void EC_boards_walkman_test::init_preOP ( void ) {
             for ( auto const &kv : pose_joints ) {
                 auto joint_name = kv.first;
                 auto joint_pose_value = kv.second;
-                joints_pose_deg[pose.first][walkman::robot_ids_names.at(joint_name)] = joint_pose_value;
+                joints_pose_deg[pose.first][robot::robot_ids_names.at(joint_name)] = joint_pose_value;
                 DPRINTF(">> %s %d_%s\t%f\n",
                         pose.first.c_str(),
-                        walkman::robot_ids_names.at(joint_name),
+                        robot::robot_ids_names.at(joint_name),
                         joint_name.c_str(),
-                        joints_pose_deg.at(pose.first).at(walkman::robot_ids_names.at(joint_name)));
+                        joints_pose_deg.at(pose.first).at(robot::robot_ids_names.at(joint_name)));
             }
         }
         ///////////////////////////////////////////////////
@@ -169,7 +180,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         moto->readSDO ( "link_pos", start_pos[slave_pos] );
         // home
         try {
-            home[slave_pos] = DEG2RAD ( joints_pose_deg.at("home").at((walkman::Robot_IDs)pos2Rid(slave_pos)) );
+            home[slave_pos] = DEG2RAD ( joints_pose_deg.at("home").at((robot::Robot_IDs)pos2Rid(slave_pos)) );
         } catch (const std::out_of_range &e ) {
                 continue;
         }
@@ -188,7 +199,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
             vPos.clear();
             for ( auto const & trj_pos_time : trj_map[trj_name] ) {
                 try {
-                    auto pos = joints_pose_deg.at(trj_pos_time.first).at((walkman::Robot_IDs)pos2Rid(slave_pos));
+                    auto pos = joints_pose_deg.at(trj_pos_time.first).at((robot::Robot_IDs)pos2Rid(slave_pos));
                     vPos.push_back( DEG2RAD ( pos ) );
                     auto time = trj_pos_time.second;
                     Xs.push_back( time );
@@ -277,8 +288,8 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     
     trj_queue.clear();
     trj_queue.push_back ( trj_names.at("start@home") );
-    //trj_queue.push_back ( trj_names.at("home@pos1@home") );
-    trj_queue.push_back ( trj_names.at("sineFROMhome") );
+    trj_queue.push_back ( trj_names.at("home2jump2home") );
+    //trj_queue.push_back ( trj_names.at("sineFROMhome") );
 }
 
 
@@ -322,11 +333,14 @@ int EC_boards_walkman_test::user_loop ( void ) {
                 // add trajectory ....
                 //trj_queue.push_back ( trj_names["home@pos1@pos2@pos3@home"] );
                 //trj_queue.push_back ( trj_names["home@pos1@pos2@home"] );
-                //advr::reset_trj ( trj_queue.at(0) );
+                trj_queue.push_back ( trj_names.at("home2spac2home") );
+                trj_queue.push_back ( trj_names.at("home2jump2home") );
+                advr::reset_trj ( trj_queue.at(0) );
             }
         }
     } catch ( const std::out_of_range &e ) {
-        throw std::runtime_error("Ooops ... trj_queue is empty !");
+        //throw std::runtime_error("Ooops ... trj_queue is empty !");
+        //DPRINTF("Ooops ... trj_queue is empty !");
     }
 
 }
@@ -337,14 +351,14 @@ void EC_boards_walkman_test::move_head( float pitch_pos, float roll_pos ) {
     Motor::motor_pdo_rx_t motor_pdo_rx;
     Motor::motor_pdo_tx_t motor_pdo_tx;
     
-    Motor * head_pitch = slave_as_Motor( rid2Pos(walkman::HEAD_P) );
+    Motor * head_pitch = 0; //slave_as_Motor( rid2Pos(robot::HEAD_P) );
     if ( head_pitch ) {
         motor_pdo_rx = head_pitch->getRxPDO();
         //motor_pdo_tx = head_pitch->getTxPDO();
         pitchRef = motor_pdo_rx.link_pos + pitch_pos;
         head_pitch->set_posRef( pitchRef );
     }
-    Motor * head_roll = slave_as_Motor( rid2Pos(walkman::HEAD_R) );
+    Motor * head_roll = 0; //slave_as_Motor( rid2Pos(robot::HEAD_R) );
     if ( head_roll ) {
         motor_pdo_rx = head_roll->getRxPDO();
         //motor_pdo_tx = head_roll->getTxPDO();
@@ -360,14 +374,14 @@ void EC_boards_walkman_test::move_hands( float left_pos, float right_pos ) {
     //Motor::motor_pdo_rx_t motor_pdo_rx;
     //Motor::motor_pdo_tx_t motor_pdo_tx;
     
-    Motor * left_hand = slave_as_Motor( rid2Pos(walkman::LA_HA) );
+    Motor * left_hand = 0; //slave_as_Motor( rid2Pos(robot::LA_HA) );
     if ( left_hand ) {
         //motor_pdo_rx = left_hand->getRxPDO();
         //motor_pdo_tx = left_hand->getTxPDO();
         leftRef = left_pos;
         left_hand->set_posRef( leftRef );
     }
-    Motor * right_hand = slave_as_Motor( rid2Pos(walkman::RA_HA) );
+    Motor * right_hand = 0; //slave_as_Motor( rid2Pos(robot::RA_HA) );
     if ( right_hand ) {
         //motor_pdo_rx = right_hand->getRxPDO();
         //motor_pdo_tx = right_hand->getTxPDO();

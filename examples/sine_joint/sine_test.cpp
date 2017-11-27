@@ -27,14 +27,25 @@ int main ( int argc, char * const argv[] ) try {
         return 0;
     }
 
+    sigset_t set;
+    int sig;
+    sigemptyset(&set);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGTERM);
+    sigaddset(&set, SIGHUP);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
     main_common ( &argc, &argv, shutdown );
     
     threads["boards_ctrl"] = new Ec_Boards_sine ( argv[1] );
     threads["boards_ctrl"]->create ( true );
 
-    while ( main_loop ) {
-        sleep ( 1 );
-    }
+#ifdef __COBALT__
+    // here I want to catch CTRL-C 
+     __real_sigwait(&set, &sig);
+#else
+     sigwait(&set, &sig);  
+#endif
 
     for ( auto const& item : threads ) {
         item.second->stop();

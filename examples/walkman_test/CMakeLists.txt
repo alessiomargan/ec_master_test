@@ -4,7 +4,8 @@ project(${PRJ_DIR})
 
 include_directories(include)
 
-add_definitions("-DUSE_LPMS_IMU")
+#add_definitions("-DUSE_LPMS_IMU")
+add_definitions("-DROBOT_COGIMON")
 
 add_executable(${PROJECT_NAME}
     ec_boards_walkman_test.cpp

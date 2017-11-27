@@ -1,0 +1,87 @@
+
+# #####################################
+# map of sequences of string
+# macro sequences id @robot_mcs  
+
+joint_group_by_controller :
+    position_ctrl :
+        [ '@robot_right_leg','@robot_left_leg' ]
+    impedance_ctrl :
+        [ ]
+    velocity_ctrl :
+        [ ]
+    direct_ctrl :
+        [ ]
+    # always subtract from above sets    
+    NO_ctrl :
+        [ ]
+
+# #####################################
+# map of sequences of pairs
+trjs_map :
+#  start2home :
+#    - [start, 0]
+#    - [home,  5]
+  home2jump2home : 
+    - [home, 0]
+#    - [jump, 1]
+    - [jump, 1.5]
+    - [home, 4]
+  home2spac2home : 
+    - [home, 0]
+    - [spac, 1.5]
+    - [home, 4]
+
+    
+# #####################################
+# position in degrees
+pos_map :
+
+    home :
+        # right leg
+        RL_R :     0.0
+        RL_P :     0.0
+        RL_Y :     0.0
+        RL_K :   -10.0
+        RL_T_DX :  0.0
+        RL_T_SX :  0.0
+        # left leg
+        LL_R :     0.0  
+        LL_P :     0.0 
+        LL_Y :     0.0
+        LL_K :    10.0
+        LL_T_DX :  0.0
+        LL_T_SX :  0.0
+
+    jump :
+        # right leg
+        RL_R :    -90.0
+        RL_Y :     90.0
+        RL_P :     90.0
+        RL_K :   -135.0
+        RL_T_DX : 20.0
+        RL_T_SX : 20.0
+        # left leg
+        LL_R :     90.0  
+        LL_Y :    -90.0 
+        LL_P :    -90.0
+        LL_K :    135.0
+        LL_T_DX : 20.0
+        LL_T_SX : 20.0
+
+    spac :
+        # right leg
+        RL_R :    -90.0
+        RL_Y :     90.0
+        RL_P :      0.0
+        RL_K :     -5.0
+        RL_T_DX :  20.0
+        RL_T_SX :  20.0
+        # left leg
+        LL_R :    90.0  
+        LL_Y :   -90.0 
+        LL_P :     0.0
+        LL_K :     5.0
+        LL_T_DX : 20.0
+        LL_T_SX : 20.0
+  
