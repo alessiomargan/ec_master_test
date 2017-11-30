@@ -4,3 +4,5 @@ logs/
 octave-workspace
 
 *.bin
+
+examples/ati_ft6_calib/data/

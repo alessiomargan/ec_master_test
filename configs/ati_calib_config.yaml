@@ -14,8 +14,10 @@ ec_board_ctrl:
 ati_config:
   ft_ecat_pos: 1
   save_calib_matrix: false 
-  calib_mat_file: ../examples/ati_ft6_calib/ones.txt
-  #calib_mat_file: ../examples/ati_ft6_calib/cent_ft_81.txt
-  #calib_mat_file: ../examples/ati_ft6_calib/cent_ft_80.txt
-  dump_log: false
+  #calib_mat_file: ../examples/ati_ft6_calib/data/ones.txt
+  #calib_mat_file: ../examples/ati_ft6_calib/data/cent_ft_81.txt
+  #calib_mat_file: ../examples/ati_ft6_calib/data/cent_ft_80.txt
+  #calib_mat_file: ../examples/ati_ft6_calib/data/cog_ft_CM_157.txt
+  #calib_mat_file: ../examples/ati_ft6_calib/data/cog_ft_CM_147.txt
+  dump_log: true
 
