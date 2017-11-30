@@ -2,7 +2,8 @@
 
 ec_board_ctrl:
   #eth_iface: eth1
-  eth_iface: enp2s0
+  #eth_iface: enp2s0
+  eth_iface: enp35s0
   #sync_cycle_time_ns: 500000
   #sync_cycle_time_ns: 1000000
   sync_cycle_time_ns: 2000000
@@ -50,7 +51,7 @@ firmware_update:
     bin_file: FT6.bin
     passwd: 0xbeef
   cent_AC:
-    NO_m3:
+    m3:
       bin_file: cent_AC_m3.bin
       passwd: 0xA550
     c28:
@@ -124,13 +125,15 @@ HpESC_X:
 CentAcESC_X:
   sign: 1
   pos_offset: 0
-  max_current_A: 15.0
+  #max_current_A: 15.0
+  enable_sandbox: false
+  enable_pos_filter: false
   pid :
     position: [220.0 , 0.0 , 5.0]
 
-  NO_upd_params :
-    posRefFilterFreq : 2
-    PDOloopTimeSec : 0.001
+  upd_params :
+    posRefFilterFreq : 1
+    #PDOloopTimeSec : 0.001
 
   NO_upd_params :
     # A0 
@@ -144,11 +147,11 @@ CentAcESC_X:
     motorTorqueConstant : 0.078
     windingResistance : 0.318
   
-  aux_pdo : # names defined in SDO index 0x8002 
+  NO_aux_pdo : # names defined in SDO index 0x8002 
      _rd :  [ pos_ref_fb, iq_ref_fb, id_ref_fb ]
      _wr :  [ ]
      _wrd : [ "iq_offset&&iq_out_fb" ]
-     wrd : [ "ts&&rtt" ]
+     _wrd : [ "ts&&rtt" ]
      
 #############################
 # TEST JOINT

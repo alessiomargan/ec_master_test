@@ -28,6 +28,7 @@ Ec_Boards_basic::Ec_Boards_basic ( const char* config_yaml ) : Ec_Thread_Boards_
 }
 
 Ec_Boards_basic::~Ec_Boards_basic() {
+    
     std::cout << "~" << typeid ( this ).name() << std::endl;
 }
 
@@ -64,7 +65,6 @@ void Ec_Boards_basic::init_OP ( void ) {
     int slave_pos;
     Motor * moto;
     for ( auto const& item : motors ) {
-    
         slave_pos = item.first;
         moto = item.second;
         //set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
@@ -88,7 +88,7 @@ int Ec_Boards_basic::user_input ( C &user_cmd ) {
     int         bytes;
     input_t     cmd;
 
-    if ( ( bytes = inXddp.xddp_read ( cmd ) ) <= 0 ) {
+    if ( ( bytes = inXddp.xddp_read ( user_cmd ) ) <= 0 ) {
         return bytes;
     }
 
@@ -101,8 +101,20 @@ int Ec_Boards_basic::user_input ( C &user_cmd ) {
 
 int Ec_Boards_basic::user_loop ( void ) {
 
-    int what;
+    char what = 0;
     user_input ( what );
+    
+    if ( what == 'a' ) {
+
+        int slave_pos;
+        Motor * moto;
+        for ( auto const& item : motors ) {
+            slave_pos = item.first;
+            moto = item.second;
+            set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
+        }
+        
+    }
    
 }
 

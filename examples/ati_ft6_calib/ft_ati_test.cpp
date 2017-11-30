@@ -38,7 +38,7 @@ typedef struct {
     float       iit[6];
     float       dummy[6];
     void sprint ( char *buff, size_t size ) {
-        snprintf ( buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0", ts,
+        snprintf ( buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f", ts,
 // big sensor
 //                   iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
 //                   -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
@@ -47,7 +47,7 @@ typedef struct {
                  ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
     }
     void fprint ( FILE *fp ) {
-        fprintf ( fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t0\t0\t0\t0\t0\t0\n", ts,
+        fprintf ( fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", ts,
 // big sensor
 //                  iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
 //                  -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
@@ -170,8 +170,6 @@ int main ( int argc, char * const argv[] ) {
         return 0;
     }
 
-    ec_boards_ctrl->configure_boards();
-
     const YAML::Node config = YAML::LoadFile ( argv[1] );
     const YAML::Node ati_config = config["ati_config"];
     std::vector<std::vector<float>> cal_matrix;
@@ -248,7 +246,7 @@ int main ( int argc, char * const argv[] ) {
         
         ///////////////////////////////////////////////////////////////////////
 
-        ec_boards_ctrl->send_to_slaves();
+        ec_boards_ctrl->send_to_slaves(true);
 
     }
 

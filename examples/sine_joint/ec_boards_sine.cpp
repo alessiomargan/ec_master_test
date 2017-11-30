@@ -41,6 +41,8 @@ void Ec_Boards_sine::init_preOP ( void ) {
         //103,
         1,
         2,
+        //6,
+        //7,
         
         // front right
         //41,42,43,44,45,
@@ -86,7 +88,7 @@ void Ec_Boards_sine::init_preOP ( void ) {
         trj_map["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );        
         //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.1, 3.0, home[slave_pos], std::initializer_list<double> { 0, 60 } );
         trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.25, 0.3, home[slave_pos], std::initializer_list<double> { 0, 60 } );
-        //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.5, 0.5, home[slave_pos], std::initializer_list<double> { 0, 60 } );
+        //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.3, 2.0, home[slave_pos], std::initializer_list<double> { 0, 60*30 } );
 
         //////////////////////////////////////////////////////////////////////////
         // start controller :
@@ -97,9 +99,9 @@ void Ec_Boards_sine::init_preOP ( void ) {
         //assert ( moto->start ( CTRL_SET_VEL_MODE ) == EC_BOARD_OK );
     }
 
-    DPRINTF ( ">>> wait xddp terminal ....\n" );
-    DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
-    char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
+//     DPRINTF ( ">>> wait xddp terminal ....\n" );
+//     DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
+//     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
     trj_queue.clear();
     trj_queue.push_back ( trj_map.at("start@home") );
@@ -124,9 +126,9 @@ int Ec_Boards_sine::user_loop ( void ) {
     float trj_error = 0.07;
     int what;
     user_input ( what );
-
+   
     if ( ! trj_queue.empty() ) {
-        if ( go_there ( motors_to_start, trj_queue.at(0), trj_error, true) ) {
+        if ( go_there ( motors_to_start, trj_queue.at(0), trj_error, false) ) {
             // running trj has finish ... remove from queue  !!
             DPRINTF ( "running trj has finish ... remove from queue !!\n" );
             trj_queue.pop_front();
