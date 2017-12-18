@@ -16,7 +16,7 @@
 
 
 #ifdef __COBALT__
-#include <rtdk.h>
+    #include <rtdm/rtdm.h>
 #endif
 
 #include <boost/circular_buffer.hpp>

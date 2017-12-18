@@ -95,8 +95,8 @@ HpESC_X:
 CentAcESC_X:
   sign: 1
   pos_offset: 0
-  enable_sandbox: false
-  enable_pos_filter: false
+  enable_sandbox: true
+  enable_pos_filter: true
   pid :
     position: [220.0 , 0.0 , 5.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]

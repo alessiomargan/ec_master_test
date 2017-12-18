@@ -65,8 +65,9 @@ protected :
     
     std::map<int, iit::ecat::advr::Motor*>          motors;
     std::map<int, iit::ecat::advr::Ft6ESC*>         fts;
-    std::map<int, iit::ecat::advr::FootSensorESC*>  foot_sensors;
-    std::map<int, iit::ecat::advr::SkinSensorESC*>  skin_sensors;
+    iit::ecat::advr::FootSensor_16x8_SlavesMap      foot_16x8;
+    iit::ecat::advr::FootSensor_10x5_SlavesMap      foot_10x5;
+    iit::ecat::advr::SkinSensor_8x3_SlavesMap       skin_8x3;
     std::map<int, iit::ecat::advr::PowESC*>         pows;
     std::map<int, iit::ecat::advr::PowF28M36ESC*>   powF28M36s;
     std::map<int, iit::ecat::advr::PowComanESC*>    powCmns;

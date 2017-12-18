@@ -85,9 +85,9 @@ void Ec_Boards_sine::init_preOP ( void ) {
         // trajectory
         auto Xs = std::initializer_list<double> { 0, 5 };
         auto Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        trj_map["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );        
+        trj_map["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
         //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.1, 3.0, home[slave_pos], std::initializer_list<double> { 0, 60 } );
-        trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.25, 0.3, home[slave_pos], std::initializer_list<double> { 0, 60 } );
+        trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.5, 0.5, home[slave_pos], std::initializer_list<double> { 0, 60 } );
         //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 0.3, 2.0, home[slave_pos], std::initializer_list<double> { 0, 60*30 } );
 
         //////////////////////////////////////////////////////////////////////////

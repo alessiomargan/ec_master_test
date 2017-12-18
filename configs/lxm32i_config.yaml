@@ -3,8 +3,8 @@
 ec_board_ctrl:
   #eth_iface: eth1
   #eth_iface: rteth0
-  eth_iface: enp2s0
-  #eth_iface: enp64s0
+  #eth_iface: enp2s0
+  eth_iface: enp35s0
   #sync_cycle_time_ns: 500000
   #sync_cycle_time_ns: 1000000
   #sync_cycle_time_ns: 2000000
@@ -27,6 +27,7 @@ Lxm32i_1:
   sign_dir  : 1
   mmXturn   : 25
   PPv_target: 200
+  PVv_target: 200
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
   #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]
@@ -40,6 +41,7 @@ Lxm32i_2:
   sign_dir  : 1
   mmXturn   : 25
   PPv_target: 200
+  PVv_target: 200
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
   #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]
@@ -53,6 +55,7 @@ Lxm32i_3:
   sign_dir  : -1
   mmXturn   : 32
   PPv_target: 156    # mmXturn_{A,B} / mmXturn_C * PPv_target_{A,B} ... 25/32*100
+  PVv_target: 200
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
   #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]

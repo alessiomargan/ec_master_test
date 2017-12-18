@@ -153,7 +153,7 @@ void ZMQ_Pub_thread::th_init ( void* ) {
     }
 #endif
     for ( auto const& rid : std::initializer_list<int>{1} ) {
-        zpub_factory<SkinPub>(rid, uri, norobot+skin_prefix, base_port);
+        zpub_factory<PressSensPub<8,3>>(rid, uri, norobot+skin_prefix, base_port);
     }
     ///////////////////////////////////////////////////////////////////////
     //

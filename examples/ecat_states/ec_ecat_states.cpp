@@ -68,7 +68,7 @@ void Ec_Ecat_states::init_OP ( void ) {
         auto Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
         //moto->trj = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );        
         //moto->trj = std::make_shared<advr::Sine_trajectory> ( 0.25, 50, 0, std::initializer_list<double> { 0, 60 } );
-        moto->trj = std::make_shared<advr::Steps_trajectory> ( 0.25, 50, 0, std::initializer_list<double> { 0, 10 } );
+        //moto->trj = std::make_shared<advr::Steps_trajectory> ( 0.25, 50, 0, std::initializer_list<double> { 0, 10 } );
     }
         
     DPRINTF ( "End Init_OP\n" );

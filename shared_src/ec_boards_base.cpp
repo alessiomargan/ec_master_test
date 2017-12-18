@@ -70,10 +70,10 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     DPRINTF ( "found %lu motors\n", motors.size() );
     get_esc_map_byclass ( fts );
     DPRINTF ( "found %lu fts\n", fts.size() );
-    get_esc_map_byclass ( foot_sensors );
-    DPRINTF ( "found %lu foot_sensors\n", foot_sensors.size() );
-    get_esc_map_byclass ( skin_sensors );
-    DPRINTF ( "found %lu skin_sensors\n", skin_sensors.size() );
+    get_esc_map_byclass ( foot_10x5 );
+    DPRINTF ( "found %lu foot_10x5\n", foot_10x5.size() );
+    get_esc_map_byclass ( skin_8x3 );
+    DPRINTF ( "found %lu skin_8x3\n", skin_8x3.size() );
     get_esc_map_byclass ( tests );
     DPRINTF ( "found %lu tests\n", tests.size() );
 
