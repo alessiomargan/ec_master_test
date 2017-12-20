@@ -55,7 +55,6 @@ protected :
     std::map<int,float> start_pos;
 
     std::deque<advr::Trj_ptr_map> trj_queue;
-    //advr::Trj_ptr_map running_trj;
 
     uint32_t    emergency_active;
     

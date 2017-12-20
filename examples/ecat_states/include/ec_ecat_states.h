@@ -28,6 +28,10 @@ public:
     template<class C>
     int user_input ( C &user_cmd );
     virtual int user_loop ( void );
+    
+    bool go_there ( const std::map<int, iit::ecat::advr::LXM32iESC*> &motor_set,
+                    const advr::Trj_ptr_map &trj_map,
+                    float eps, bool debug );
 
 private :
 
@@ -37,7 +41,8 @@ private :
     XDDP_pipe inXddp;
     
     std::map<int, iit::ecat::advr::LXM32iESC*> lxm32i;
-    
+    advr::Trj_name_ptr_map trj_map;
+
 };
 
 

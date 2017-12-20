@@ -123,7 +123,9 @@ protected:
 
 };
 
-
+//
+// https://en.wikipedia.org/wiki/Smoothstep
+//
 class Smoother_trajectory : public Trajectory {
 
 public :
