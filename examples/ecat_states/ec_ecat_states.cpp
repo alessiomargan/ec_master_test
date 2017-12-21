@@ -39,12 +39,9 @@ void Ec_Ecat_states::init_preOP ( void ) {
     }
 #endif
 
-    std::vector<int> to_control = std::initializer_list<int> {
-        1,
-        2,
-        3,
-    };
-
+    const YAML::Node config_file = get_config_YAML_Node();
+    std::vector<int> to_control = config_file["ec_boards_base"]["motor_to_control"].as<std::vector<int32_t>>();
+    
     get_esc_map_byclass ( lxm32i, to_control);
     DPRINTF ( "found %lu motors\n", lxm32i.size() );
     
@@ -55,25 +52,14 @@ void Ec_Ecat_states::init_OP ( void ) {
     LXM32iESC * moto;
     int         slave_pos; 
 
+    // set start and home position
     for ( auto const& item : lxm32i ) {
-        
         slave_pos = item.first;
         moto = item.second;
         start_pos[slave_pos] = moto->getRxPDO()._p_act * 25 / 131072;  
         home[slave_pos] = 0;
-        
-        //////////////////////////////////////////////////////////////////////////
-        // trajectory
-        auto Xs = std::initializer_list<double> { 0, 5 };
-        auto Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        trj_map["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
-        Xs = std::initializer_list<double> { 0, 1, 2, 3 };
-        Ys = std::initializer_list<double> { home[slave_pos], 25, 75, home[slave_pos]};
-        trj_map["start@point"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
-        trj_map["sineFROMstart"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 3, 25, home[slave_pos], std::initializer_list<double> { 0, 60 } );
-                
     }
-    
+
     trj_queue.clear();
     DPRINTF ( "End Init_OP\n" );
     
@@ -112,12 +98,31 @@ int Ec_Ecat_states::user_loop ( void ) {
             moto->user_loop(cmd);
         }
         
+        if ( cmd == 'h' ) {
+            
+            for ( auto const& item : lxm32i ) {
+                slave_pos = item.first;
+                moto = item.second;
+                home[slave_pos] = 0;
+            }
+        }
+        
         if ( cmd == 'q' ) {
+
+            //////////////////////////////////////////////////////////////////////////
+            // trajectory
+            auto Xs = std::initializer_list<double> { 0, 5 };
+            auto Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+            trj_map["start2home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
+            Xs = std::initializer_list<double> { 0, 1, 2, 3 };
+            Ys = std::initializer_list<double> { home[slave_pos], 25, 75, home[slave_pos]};
+            trj_map["home2home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
+            trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 1, 50, home[slave_pos], std::initializer_list<double> { 0, 60 } );
  
             trj_queue.clear();
-            trj_queue.push_back ( trj_map.at("start@home") );
-            trj_queue.push_back ( trj_map.at("start@point") );
-            trj_queue.push_back ( trj_map.at("sineFROMstart") );
+            trj_queue.push_back ( trj_map.at("start2home") );
+            trj_queue.push_back ( trj_map.at("home2home") );
+            trj_queue.push_back ( trj_map.at("sineFROMhome") );
     
             try { advr::reset_trj ( trj_queue.at(0) ); }
             catch ( const std::out_of_range &e ) {

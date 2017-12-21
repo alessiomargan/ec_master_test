@@ -3,8 +3,8 @@
 ec_board_ctrl:
   #eth_iface: eth1
   #eth_iface: rteth0
-  #eth_iface: enp2s0
-  eth_iface: enp35s0
+  eth_iface: enp2s0
+  #eth_iface: enp35s0
   #sync_cycle_time_ns: 500000
   #sync_cycle_time_ns: 1000000
   #sync_cycle_time_ns: 2000000
@@ -19,14 +19,15 @@ ec_board_ctrl:
 ec_boards_base:
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
-
+  motor_to_control : [1]
+  
 # motor A position 1
 Lxm32i_1:
   # operation mode : abs_pos, rel_pos 
   OpMode    : abs_pos
   sign_dir  : 1
   mmXturn   : 25
-  PPv_target: 8000
+  PPv_target: 2000
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
   #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]
@@ -40,7 +41,7 @@ Lxm32i_2:
   OpMode    : abs_pos
   sign_dir  : 1
   mmXturn   : 25
-  PPv_target: 8000
+  PPv_target: 2000
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
   #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]
@@ -53,7 +54,7 @@ Lxm32i_3:
   OpMode    : abs_pos
   sign_dir  : -1
   mmXturn   : 32
-  PPv_target: 8000    # mmXturn_{A,B} / mmXturn_C * PPv_target_{A,B} ... 25/32*100
+  PPv_target: 2000    # mmXturn_{A,B} / mmXturn_C * PPv_target_{A,B} ... 25/32*100
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
   #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]
