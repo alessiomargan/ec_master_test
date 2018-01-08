@@ -8,8 +8,8 @@ ec_board_ctrl:
   #sync_cycle_time_ns: 500000
   #sync_cycle_time_ns: 1000000
   #sync_cycle_time_ns: 2000000
-  sync_cycle_time_ns: 5000000
-  #sync_cycle_time_ns: 10000000
+  #sync_cycle_time_ns: 5000000
+  sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 50000000
   #sync_cycle_time_ns: 0
   #sync_cycle_offset_ns: 4000000000
@@ -20,6 +20,7 @@ ec_boards_base:
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
   motor_to_control : [1]
+  #motor_to_control : [1,2,3]
   
 # motor A position 1
 Lxm32i_1:
@@ -30,11 +31,11 @@ Lxm32i_1:
   PPv_target: 2000
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
-  #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]
-  #set_points: [32768,-32768,65536,-65536,131072,-131072,65536,-65536,32768,-32768]
-  #set_points: [32768,-32768]
-  #set_points: [131072,-131072]
   set_points: [50,-50]
+  # sec
+  trj_Xs : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10]    
+  # mm , 0 is home after "homing"
+  trj_Ys : [0,25, 0,50, 0,75, 0,75, 0,75, 0]
   
 # motor B position 2
 Lxm32i_2:
@@ -44,10 +45,11 @@ Lxm32i_2:
   PPv_target: 2000
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
-  #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]
-  #set_points: [32768,-32768,65536,-65536,131072,-131072,65536,-65536,32768,-32768]
-  #set_points: [32768,-32768]
   set_points: [50,-50]
+  # sec
+  trj_Xs : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10]
+  # mm , 0 is home after "homing"
+  trj_Ys : [0,25, 0,50, 0,75, 0,75, 0,75, 0]
 
 # motor C position 3
 Lxm32i_3:
@@ -57,7 +59,8 @@ Lxm32i_3:
   PPv_target: 2000    # mmXturn_{A,B} / mmXturn_C * PPv_target_{A,B} ... 25/32*100
   RAMP_v_acc: 80000
   RAMP_v_dec: 80000
-  #set_points: [0,10000,-10000,20000,-20000,30000,-30000,20000,-20000,10000,-10000]
-  #set_points: [32768,-32768,65536,-65536,131072,-131072,65536,-65536,32768,-32768]
-  #set_points: [32768,-32768]
   set_points: [50,-50]
+  # sec
+  trj_Xs : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10]
+  # mm , 0 is home after "homing"
+  trj_Ys : [0,25, 0,50, 0,75, 0,75, 0,75, 0]

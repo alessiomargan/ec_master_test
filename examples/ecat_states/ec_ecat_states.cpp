@@ -97,7 +97,7 @@ int Ec_Ecat_states::user_loop ( void ) {
             moto =  item.second;
             moto->user_loop(cmd);
         }
-        
+            
         if ( cmd == 'h' ) {
             
             for ( auto const& item : lxm32i ) {
@@ -109,20 +109,23 @@ int Ec_Ecat_states::user_loop ( void ) {
         
         if ( cmd == 'q' ) {
 
-            //////////////////////////////////////////////////////////////////////////
-            // trajectory
-            auto Xs = std::initializer_list<double> { 0, 5 };
-            auto Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-            trj_map["start2home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
-            Xs = std::initializer_list<double> { 0, 1, 2, 3 };
-            Ys = std::initializer_list<double> { home[slave_pos], 25, 75, home[slave_pos]};
-            trj_map["home2home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
-            trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 1, 50, home[slave_pos], std::initializer_list<double> { 0, 60 } );
- 
+            for ( auto const& item : lxm32i ) {
+                slave_pos = item.first;
+                moto = item.second;
+                //////////////////////////////////////////////////////////////////////////
+                // trajectory
+                auto Xs = std::initializer_list<double> { 0, 5 };
+                auto Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+                trj_map["start2home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
+                //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 1, 50, home[slave_pos], std::initializer_list<double> { 0, 60 } );
+                //
+                trj_map["usr_trj"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( moto->trj_Xs, moto->trj_Ys );
+            }
+            
             trj_queue.clear();
             trj_queue.push_back ( trj_map.at("start2home") );
-            trj_queue.push_back ( trj_map.at("home2home") );
-            trj_queue.push_back ( trj_map.at("sineFROMhome") );
+            trj_queue.push_back ( trj_map.at("usr_trj") );
+            //trj_queue.push_back ( trj_map.at("sineFROMhome") );
     
             try { advr::reset_trj ( trj_queue.at(0) ); }
             catch ( const std::out_of_range &e ) {
