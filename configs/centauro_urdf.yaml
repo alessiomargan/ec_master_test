@@ -1,5 +1,5 @@
 #
-urdf_file : ../examples/centAC_urdf/centauro.urdf
+urdf_file : ../configs/centauro.urdf
 
 # robot IDs are stored in motor-controller flash
 # mapping urdf body name and robot id

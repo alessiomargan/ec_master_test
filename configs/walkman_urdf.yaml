@@ -1,0 +1,21 @@
+#
+urdf_file : ../configs/walkman.urdf
+
+# robot IDs are stored in motor-controller flash
+# mapping urdf body name and robot id
+urdf_joints_map :
+
+  # right leg
+  LHipMot       : 41
+  LThighUpLeg   : 42
+  LThighLowLeg  : 43
+  LLowLeg       : 44
+  LFootmot      : 45
+  LFoot         : 46
+  # left leg
+  RHipMot       : 51
+  RThighUpLeg   : 52
+  RThighLowLeg  : 53
+  RLowLeg       : 54
+  RFootmot      : 55
+  RFoot         : 56

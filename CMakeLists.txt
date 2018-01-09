@@ -59,6 +59,7 @@ optional_build(walkman_test examples/walkman_test OFF)
 optional_build(hand_test    examples/hand_test OFF)
 optional_build(impedance_trj_test examples/impedance_trj_test OFF)
 optional_build(ecat_state   examples/ecat_states OFF)
+optional_build(urdf_test    examples/urdf_test OFF)
 
 optional_build(joy_forward      other_bin/joy_forward   OFF)
 optional_build(spnav_forward    other_bin/spnav_forward OFF)
