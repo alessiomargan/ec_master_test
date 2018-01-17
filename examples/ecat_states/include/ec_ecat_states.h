@@ -32,6 +32,9 @@ public:
     bool go_there ( const std::map<int, iit::ecat::advr::LXM32iESC*> &motor_set,
                     const advr::Trj_ptr_map &trj_map,
                     float eps, bool debug );
+    bool go_there ( const std::map<int, iit::ecat::advr::LXM32iESC*> &motor_set,
+                    const std::map<int,float> &target_pos,
+                    float eps, bool debug );
 
 private :
 
@@ -42,7 +45,9 @@ private :
     
     std::map<int, iit::ecat::advr::LXM32iESC*> lxm32i;
     advr::Trj_name_ptr_map trj_map;
-
+    std::vector<std::map<int,float>> trj_points;
+    std::map<int,float> first_pos;
+    std::vector<std::map<int,float>>::iterator tp_it;
 };
 
 

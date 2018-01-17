@@ -19,8 +19,9 @@ ec_board_ctrl:
 ec_boards_base:
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
-  motor_to_control : [1]
-  #motor_to_control : [1,2,3]
+  trj_file : ../examples/ecat_states/test_c.txt
+  #motor_to_control : [1]
+  motor_to_control : [1,2,3]
   
 # motor A position 1
 Lxm32i_1:

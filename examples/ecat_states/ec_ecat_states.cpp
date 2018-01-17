@@ -1,7 +1,66 @@
 #include <ec_ecat_states.h>
 #include <iit/ecat/advr/lxm32i_esc.h>
-
+#include <iostream>
+#include <fstream>
 using namespace iit::ecat::advr;
+
+typedef struct {
+    float t;
+    float a;
+    float b;
+    float c;
+} row_t;
+
+std::istream& operator >> (std::istream &is, row_t &rhs)
+{
+  char delim;
+  is >> rhs.t
+     >> delim
+     >> rhs.a
+     >> delim
+     >> rhs.b
+     >> delim
+     >> rhs.c
+     >> delim;
+     return is;
+}
+
+static void read_csv(const std::string inFile, std::vector<std::map<int,float>> & _trj_points) {
+
+    std::string line;
+    std::ifstream csv_file (inFile);
+    std::map<int,float> kv;
+    row_t row;
+    
+    if ( csv_file.is_open() )
+    {
+        while ( std::getline (csv_file,line) )
+        {
+            // t,1,2,3
+            std::cout << line << '\n';
+            std::stringstream linestr (line);
+            linestr >> row;
+            kv[1] = row.a * 1000;
+            kv[2] = (row.b - 0.09) * 1000;
+            kv[3] = (row.c - 0.285) * 1000;
+            for ( auto const &_kv : kv ) {
+                std::cout << _kv.first << " " << _kv.second << " ";
+            }
+            std::cout << "\n";
+
+            _trj_points.push_back(kv);
+        }
+        csv_file.close();
+    } else std::cout << "*** Unable to open file" << "\n";
+
+//     for ( auto const &item : _trj_points ) {
+//         for ( auto const &_kv : item ) {
+//             std::cout << _kv.first << " " << _kv.second << " ";
+//         }
+//         std::cout << "\n";
+//     }
+    
+}
 
 Ec_Ecat_states::Ec_Ecat_states ( const char* config_yaml ) : Ec_Thread_Boards_base ( config_yaml ) {
 
@@ -45,6 +104,8 @@ void Ec_Ecat_states::init_preOP ( void ) {
     get_esc_map_byclass ( lxm32i, to_control);
     DPRINTF ( "found %lu motors\n", lxm32i.size() );
     
+    std::string csv_file = config_file["ec_boards_base"]["trj_file"].as<std::string>();
+    read_csv( csv_file, trj_points );
 }
 
 void Ec_Ecat_states::init_OP ( void ) {
@@ -56,10 +117,16 @@ void Ec_Ecat_states::init_OP ( void ) {
     for ( auto const& item : lxm32i ) {
         slave_pos = item.first;
         moto = item.second;
-        start_pos[slave_pos] = moto->getRxPDO()._p_act * 25 / 131072;  
+        if ( slave_pos == 3 ) {
+            start_pos[slave_pos] = moto->getRxPDO()._p_act * 32 / 131072;  
+        } else {
+            start_pos[slave_pos] = moto->getRxPDO()._p_act * 25 / 131072;  
+        }
         home[slave_pos] = 0;
     }
-
+        
+    first_pos = trj_points[0];
+    tp_it = trj_points.end();
     trj_queue.clear();
     DPRINTF ( "End Init_OP\n" );
     
@@ -103,37 +170,52 @@ int Ec_Ecat_states::user_loop ( void ) {
             for ( auto const& item : lxm32i ) {
                 slave_pos = item.first;
                 moto = item.second;
+                if ( slave_pos == 3 ) {
+                    start_pos[slave_pos] = moto->getRxPDO()._p_act * 32 / 131072;  
+                } else {
+                    start_pos[slave_pos] = moto->getRxPDO()._p_act * 25 / 131072;  
+                }
                 home[slave_pos] = 0;
             }
         }
         
         if ( cmd == 'q' ) {
 
+            tp_it = trj_points.begin();
+            
             for ( auto const& item : lxm32i ) {
                 slave_pos = item.first;
                 moto = item.second;
+                if ( slave_pos == 3 ) {
+                    start_pos[slave_pos] = moto->getRxPDO()._p_act * 32 / 131072;  
+                } else {
+                    start_pos[slave_pos] = moto->getRxPDO()._p_act * 25 / 131072;  
+                }
+
                 //////////////////////////////////////////////////////////////////////////
                 // trajectory
                 auto Xs = std::initializer_list<double> { 0, 5 };
                 auto Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+                auto Ws = std::initializer_list<double> { home[slave_pos], first_pos[slave_pos] };
                 trj_map["start2home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
-                //trj_map["sineFROMhome"][slave_pos] = std::make_shared<advr::Sine_trajectory> ( 1, 50, home[slave_pos], std::initializer_list<double> { 0, 60 } );
-                //
-                trj_map["usr_trj"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( moto->trj_Xs, moto->trj_Ys );
+                //trj_map["usr_trj"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( moto->trj_Xs, moto->trj_Ys );
+                trj_map["first_pos"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ws  );
             }
             
             trj_queue.clear();
             trj_queue.push_back ( trj_map.at("start2home") );
-            trj_queue.push_back ( trj_map.at("usr_trj") );
-            //trj_queue.push_back ( trj_map.at("sineFROMhome") );
-    
+            //trj_queue.push_back ( trj_map.at("usr_trj") );
+            trj_queue.push_back ( trj_map.at("first_pos") );
+            
             try { advr::reset_trj ( trj_queue.at(0) ); }
             catch ( const std::out_of_range &e ) {
                 throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
             } 
  
         }
-    }
+    }    
+    
+    //////////////////////////////////////////////////
     
     
     if ( ! trj_queue.empty() ) {
@@ -144,13 +226,26 @@ int Ec_Ecat_states::user_loop ( void ) {
             try { advr::reset_trj ( trj_queue.at(0) ); }
             catch ( const std::out_of_range &e ) {
                 // add trajectory ....
-                //advr::reset_trj ( trj_queue.at(0) );
             }
         }
+    } else {
+        
+        if ( tp_it != trj_points.end() ) {
+            go_there ( lxm32i, *tp_it, 0, false);
+//             for ( auto const &_kv : *tp_it ) {
+//                 std::cout << _kv.first << " " << _kv.second << " ";
+//             }
+//             std::cout << "\n";
+            tp_it ++;
+        } else {
+            tp_it = trj_points.begin();
+        }
+        
     }
     
     
 }
+
 
 
 bool Ec_Ecat_states::go_there ( const std::map<int, LXM32iESC*> &motor_set,
@@ -190,6 +285,67 @@ bool Ec_Ecat_states::go_there ( const std::map<int, LXM32iESC*> &motor_set,
         motor_link_err = 0;   // fabs ( motor_pdo_rx.motor_pos - motor_pdo_rx.link_pos );
 
         cond = ( ( link_err <= eps || motor_err <= eps ) && trj->ended() ) ? 1 : 0;
+        cond_cnt++;
+        cond_sum += cond;
+
+        if ( debug ) {
+            truth_vect.push_back ( cond );
+            if ( ! cond ) {
+//                 DPRINTF ( "rId %d\tposRef %f \t link %f{%f} \t motor %f{%f} \t |motor-link|{%f}\n",
+//                           pos2Rid ( slave_pos ), pos_ref,
+//                           motor_pdo_rx.link_pos, link_err,
+//                           motor_pdo_rx.motor_pos, motor_err,
+//                           motor_link_err );
+            }
+        }
+    }
+
+    if ( debug ) {
+        DPRINTF ( "---\n" );
+        for ( auto b : truth_vect ) {
+            DPRINTF ( "%d ",b );
+        }
+        DPRINTF ( "\n=^=\n" );
+    }
+
+    return ( cond_cnt == cond_sum );
+}
+
+
+bool Ec_Ecat_states::go_there ( const std::map<int, iit::ecat::advr::LXM32iESC*> &motor_set,
+                                const std::map<int,float> &target_pos,
+                                float eps, bool debug )
+{
+    int cond, cond_cnt, cond_sum;
+    float pos_ref, motor_err, link_err, motor_link_err;
+    int slave_pos;
+    //iit::ecat::advr::Motor * moto;
+    //iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
+    LXM32iESC               * moto;
+    LXM32iESC::pdo_rx_t     motor_pdo_rx;
+    std::vector<int> truth_vect;
+
+    cond = cond_cnt = cond_sum = 0;
+
+    for ( auto const& item : motor_set ) {
+        slave_pos = item.first;
+        moto =  item.second;
+
+        // check in the target_pos map if the current slave_pos exist
+        try {
+            pos_ref = target_pos.at ( slave_pos );
+        } catch ( const std::out_of_range& oor ) {
+            continue;
+        }
+
+        motor_pdo_rx = moto->getRxPDO();
+        moto->set_pos_target ( pos_ref );
+
+        link_err = 0;           //fabs ( motor_pdo_rx.link_pos  - pos_ref );
+        motor_err = 0;          //fabs ( motor_pdo_rx.motor_pos - pos_ref );
+        motor_link_err = 0;     //fabs ( motor_pdo_rx.motor_pos - motor_pdo_rx.link_pos );
+
+        cond = ( link_err <= eps || motor_err <= eps ) ? 1 : 0;
         cond_cnt++;
         cond_sum += cond;
 
