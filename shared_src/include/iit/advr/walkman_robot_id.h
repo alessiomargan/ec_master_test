@@ -9,8 +9,8 @@ namespace walkman {
 
 enum Robot_IDs {
     // neck
-    HEAD_R = 1,
-    HEAD_P,
+    HEAD_P = 1,
+    HEAD_Y,
     // right arm
     RA_SH_1 = 11,
     RA_SH_2,
@@ -33,7 +33,7 @@ enum Robot_IDs {
     LA_HA,
     // waist
     WAIST_Y = 31,
-    WAIST_P,
+    //WAIST_P,
     WAIST_R,
     // right leg
     RL_H_R = 41,
@@ -65,8 +65,8 @@ typedef enum Robot_IDs Robot_IDs_t;
 
 const std::map<std::string, Robot_IDs_t > robot_ids_names = {
     // neck
-    _MKS_(HEAD_R),
     _MKS_(HEAD_P),
+    _MKS_(HEAD_Y),
     // right arm
     _MKS_(RA_SH_1),
     _MKS_(RA_SH_2),
@@ -89,7 +89,7 @@ const std::map<std::string, Robot_IDs_t > robot_ids_names = {
     _MKS_(LA_HA),
     // waist
     _MKS_(WAIST_Y),
-    _MKS_(WAIST_P),
+    //_MKS_(WAIST_P),
     _MKS_(WAIST_R),
     // right leg
     _MKS_(RL_H_R),
@@ -119,12 +119,12 @@ const std::map<std::string, Robot_IDs_t > robot_ids_names = {
 
 const std::vector<int> robot_head_ids = std::initializer_list<int> {
     // head
-    HEAD_R, HEAD_P
+    HEAD_P, HEAD_Y
 };
 
 const std::vector<int> robot_waist_ids = std::initializer_list<int> {
     // waist
-    WAIST_Y, WAIST_P, WAIST_R
+    WAIST_Y, WAIST_R
 };
 
 const std::vector<int> robot_right_leg_ids = std::initializer_list<int> {
@@ -184,9 +184,9 @@ const std::vector<int> robot_foot_ids = std::initializer_list<int> {
 
 const std::vector<int> robot_mcs_ids = std::initializer_list<int> {
     // head
-    HEAD_R, HEAD_P,
+    HEAD_P, HEAD_Y,
     // waist
-    WAIST_Y, WAIST_P, WAIST_R,
+    WAIST_Y, WAIST_R,
     // right leg
     RL_H_R, RL_H_Y, RL_H_P, RL_K, RL_A_P, RL_A_R,
     // left leg
@@ -200,7 +200,7 @@ const std::vector<int> robot_mcs_ids = std::initializer_list<int> {
 
 const std::vector<int> robot_mcs_upg_ids = std::initializer_list<int> {
     // torso roll & pitch
-    WAIST_R, WAIST_P,
+    WAIST_R,
     // right leg
     RL_H_R, RL_H_Y, RL_H_P, RL_K, RL_A_P, RL_A_R,
     // left leg
@@ -227,9 +227,9 @@ const std::map<const std::string, const std::vector<int>> robot_ids_group_names 
 
 const std::map<int, float> robot_ids_home_pos_deg = {
 
-    {HEAD_R, 0.0}, {HEAD_P, 0.0},
+    {HEAD_P, 0.0}, {HEAD_Y, 0.0},
     
-    {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
+    {WAIST_Y, 0.0}, {WAIST_R, 0.0},
     // right leg
     {RL_H_R, 2.2}, {RL_H_Y,  0.15}, {RL_H_P, -17.0},
     {RL_K,  33.0}, {RL_A_P, 16.0},  {RL_A_R,  -2.0},
@@ -247,9 +247,9 @@ const std::map<int, float> robot_ids_home_pos_deg = {
 
 const std::map<int, float> robot_ids_test_pos_deg = {
 
-    {HEAD_R, 0.0}, {HEAD_P, 0.0},
+    {HEAD_P, 0.0}, {HEAD_Y, 0.0},
     
-    {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
+    {WAIST_Y, 0.0}, {WAIST_R, 0.0},
 
     {RL_H_R, -15}, {RL_H_Y, -35},   {RL_H_P, -80.0},
     {RL_K,  80.0}, {RL_A_P, -20.0}, {RL_A_R,  20.0},
@@ -267,9 +267,9 @@ const std::map<int, float> robot_ids_test_pos_deg = {
 
 const std::map<int, float> robot_ids_arm_back_pos_deg = {
 
-    {HEAD_R, 0.0}, {HEAD_P, 0.0},
+    {HEAD_P, 0.0}, {HEAD_Y, 0.0},
     
-    {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
+    {WAIST_Y, 0.0}, {WAIST_R, 0.0},
     // right leg
     {RL_H_R, -15}, {RL_H_Y,   0.2}, {RL_H_P, -90.0},
     {RL_K,  90.0}, {RL_A_P, -20.0}, {RL_A_R,  20.0},
@@ -287,9 +287,9 @@ const std::map<int, float> robot_ids_arm_back_pos_deg = {
 
 const std::map<int, float> robot_ids_arm_front_pos_deg = {
 
-    {HEAD_R, 0.0}, {HEAD_P, 0.0},
+    {HEAD_P, 0.0}, {HEAD_Y, 0.0},
     
-    {WAIST_Y, 0.0}, {WAIST_P, 0.0}, {WAIST_R, 0.0},
+    {WAIST_Y, 0.0}, {WAIST_R, 0.0},
     // right leg
     {RL_H_R, 2.2}, {RL_H_Y,  0.15}, {RL_H_P, -17.0},
     {RL_K,  33.0}, {RL_A_P, 16.0},  {RL_A_R,  -2.0},

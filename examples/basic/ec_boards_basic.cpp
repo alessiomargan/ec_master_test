@@ -67,8 +67,12 @@ void Ec_Boards_basic::init_OP ( void ) {
     for ( auto const& item : motors ) {
         slave_pos = item.first;
         moto = item.second;
-        //set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
-        set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_FAN_ON );
+        // avoid segfault if no CentAcESC
+        if ( dynamic_cast<CentAcESC*>(moto) ) {
+            set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
+            set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_FAN_ON );
+        }
+        
     }
 
 #if 0

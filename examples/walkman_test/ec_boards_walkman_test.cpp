@@ -288,7 +288,6 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     
     trj_queue.clear();
     trj_queue.push_back ( trj_names.at("start@home") );
-    trj_queue.push_back ( trj_names.at("home2jump2home") );
     //trj_queue.push_back ( trj_names.at("sineFROMhome") );
 }
 
@@ -331,10 +330,11 @@ int EC_boards_walkman_test::user_loop ( void ) {
             try { advr::reset_trj ( trj_queue.at(0) ); }
             catch ( const std::out_of_range &e ) {
                 // add trajectory ....
+                trj_queue.push_back ( trj_names.at("home2fw2back2fw2home") );
                 //trj_queue.push_back ( trj_names["home@pos1@pos2@pos3@home"] );
                 //trj_queue.push_back ( trj_names["home@pos1@pos2@home"] );
-                trj_queue.push_back ( trj_names.at("home2spac2home") );
-                trj_queue.push_back ( trj_names.at("home2jump2home") );
+                //trj_queue.push_back ( trj_names.at("home2spac2home") );
+                //trj_queue.push_back ( trj_names.at("home2jump2home") );
                 advr::reset_trj ( trj_queue.at(0) );
             }
         }
