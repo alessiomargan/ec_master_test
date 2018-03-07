@@ -10,10 +10,9 @@
  *
  * @author Alessio Margan (2015-, alessio.margan@iit.it)
 */
-
 #include <iit/advr/ec_boards_base.h>
 
-Ec_Thread_Boards_base::Ec_Thread_Boards_base ( const char * config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
+Ec_Thread_Boards_base::Ec_Thread_Boards_base ( std::string config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
     
     emergencyInXddp.init ( "emergency" );
     termInXddp.init ( "terminal" );
@@ -35,9 +34,10 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
 
     // init Ec_Boards_ctrl
     if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
-        throw std::runtime_error("something wrong in Ec_Boards_ctrl::init()");
+        throw iit::ecat::advr::EcBoardsError(1,"something wrong in Ec_Boards_ctrl::init()");
     }
 
+    pthread_barrier_wait(&threads_barrier);
     // >>> actual ECAT state is PREOP ...
     
     get_esc_map_byclass ( pows );
@@ -61,7 +61,7 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
         sleep(6);
         // init Ec_Boards_ctrl
         if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
-            throw std::runtime_error("something wrong in Ec_Boards_ctrl::init()");
+            throw iit::ecat::advr::EcBoardsError(2,"something wrong in Ec_Boards_ctrl::init()");
         }
 
     }
@@ -88,7 +88,7 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     init_preOP();
 
     if ( Ec_Boards_ctrl::set_operative() <= 0 ) {
-        throw std::runtime_error("something wrong in Ec_Boards_ctrl::set_operative()");;
+        throw iit::ecat::advr::EcBoardsError(3,"something wrong in Ec_Boards_ctrl::set_operative()");;
     }
 
     start_time = iit::ecat::get_time_ns();

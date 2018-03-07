@@ -34,7 +34,7 @@ class Ec_Thread_Boards_base :
 public:
 
     virtual ~Ec_Thread_Boards_base();
-    Ec_Thread_Boards_base ( const char * config_yaml );
+    Ec_Thread_Boards_base ( std::string config_yaml );
 
     virtual void th_init ( void * );
     virtual void th_loop ( void * );

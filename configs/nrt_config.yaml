@@ -5,8 +5,8 @@ ec_board_ctrl:
   #eth_iface: enp2s0
   eth_iface: enp35s0
   #sync_cycle_time_ns: 500000
-  #sync_cycle_time_ns: 1000000
-  sync_cycle_time_ns: 2000000
+  sync_cycle_time_ns: 1000000
+  #sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 5000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 50000000
@@ -16,8 +16,13 @@ ec_board_ctrl:
   power_off_boards: false
  
 ec_boards_base:
+  robot_name : NoNe
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
+
+zmq_pub :
+  base_port : 9000
+  uri: "tcp://*:"
 
 firmware_update:
   #fw_path: ../firmware/
@@ -33,7 +38,7 @@ firmware_update:
   #slave_pos_list: [-3]
   # all CentAC motor
   slave_pos_list: [-4]
-  #slave_pos_list: [1]
+  #slave_pos_list: [2]
   
   big_motor:
     bin_file: BigMotor.bin
@@ -125,13 +130,13 @@ HpESC_X:
 CentAcESC_X:
   sign: 1
   pos_offset: 0
-  #max_current_A: 15.0
+  max_current_A: 5.0
   enable_sandbox: false
   enable_pos_filter: false
   pid :
     position: [220.0 , 0.0 , 5.0]
 
-  upd_params :
+  NO_upd_params :
     posRefFilterFreq : 1
     #PDOloopTimeSec : 0.001
 

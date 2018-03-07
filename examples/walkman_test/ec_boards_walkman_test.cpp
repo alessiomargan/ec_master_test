@@ -259,7 +259,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
                 motor_start = moto->start ( CTRL_SET_POS_MODE );
                 
             } else if ( (moto->get_ESC_type() == HI_PWR_AC_MC) || (moto->get_ESC_type() == HI_PWR_DC_MC) ) {
-                motor_start = moto->start ( CTRL_SET_MIX_POS_MODE );
+                motor_start = moto->start ( CTRL_SET_POS_MODE );
                 
             } else if ( moto->get_ESC_type() == CENT_AC ) {
                 motor_start = moto->start ( CTRL_SET_POS_MODE );

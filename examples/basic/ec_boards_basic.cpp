@@ -17,9 +17,9 @@ Ec_Boards_basic::Ec_Boards_basic ( const char* config_yaml ) : Ec_Thread_Boards_
 #ifdef __COBALT__
     schedpolicy = SCHED_FIFO;
 #else
-    schedpolicy = SCHED_OTHER;
+    schedpolicy = SCHED_RR;
 #endif
-    priority = sched_get_priority_max ( schedpolicy ) - 10 ;
+    priority = sched_get_priority_max ( schedpolicy );
     stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
 
     // open pipe ... xeno xddp or fifo

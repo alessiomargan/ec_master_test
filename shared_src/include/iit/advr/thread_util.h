@@ -23,20 +23,14 @@
 
 #include <iit/ecat/utils.h>
 
+#define handle_error_en(en, msg) \
+    do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+
 typedef struct {
     struct timeval task_time;
     struct timeval period;
 } task_period_t;
 
-
-typedef struct {
-    char                thread_name[8];
-    unsigned long long  start_time_ns;
-    unsigned long long  loop_time_ns;
-    unsigned long long  elapsed_time_ns;
-    unsigned long long  _prev;
-    unsigned long        overruns;
-} task_time_stat_t;
 
 class Thread_hook;
 
@@ -54,6 +48,7 @@ inline void tsnorm ( struct timespec *ts ) {
     }
 }
 
+extern pthread_barrier_t threads_barrier;
 
 class Thread_hook {
 
@@ -123,7 +118,7 @@ inline void Thread_hook::join() {
     pthread_join ( thread_id, 0 );
 }
 
-inline void Thread_hook::create ( int rt=true, int cpu_nr=0 ) {
+inline void Thread_hook::create ( int rt=true, int cpu_nr=-1 ) {
 
     int ret;
     pthread_attr_t      attr;
@@ -135,29 +130,42 @@ inline void Thread_hook::create ( int rt=true, int cpu_nr=0 ) {
     CPU_ZERO ( &cpu_set );
     CPU_SET ( cpu_nr,&cpu_set );
 
-    pthread_attr_init ( &attr );
-    pthread_attr_setinheritsched ( &attr, PTHREAD_EXPLICIT_SCHED );
-    pthread_attr_setschedpolicy ( &attr, schedpolicy );
+    ret = pthread_attr_init(&attr);
+    if (ret != 0) handle_error_en(ret, "pthread_attr_init");
+    
+    ret = pthread_attr_setinheritsched ( &attr, PTHREAD_EXPLICIT_SCHED );
+    if (ret != 0) handle_error_en(ret, "pthread_attr_setinheritsched");
+
+    ret = pthread_attr_setschedpolicy ( &attr, schedpolicy );
+    if (ret != 0) handle_error_en(ret, "pthread_attr_setschedpolicy");
+
     schedparam.sched_priority = priority;
-    pthread_attr_setschedparam ( &attr, &schedparam );
+    ret = pthread_attr_setschedparam ( &attr, &schedparam );
+    if (ret != 0) handle_error_en(ret, "pthread_attr_setschedparam");
 
     pthread_attr_getstacksize ( &attr, &dflt_stacksize );
     DPRINTF ( "default stack size %ld\n", dflt_stacksize );
     if ( stacksize > 0 ) {
-        pthread_attr_setstacksize ( &attr, stacksize );
+        ret = pthread_attr_setstacksize ( &attr, stacksize );
+        if (ret != 0) handle_error_en(ret, "pthread_attr_setstacksize");
+    
     }
-    pthread_attr_setdetachstate ( &attr, PTHREAD_CREATE_JOINABLE );
-    pthread_attr_setaffinity_np ( &attr, sizeof ( cpu_set ), &cpu_set );
+    
+    ret = pthread_attr_setdetachstate ( &attr, PTHREAD_CREATE_JOINABLE );
+    if (ret != 0) handle_error_en(ret, "pthread_attr_setdetachstate");
 
+    if ( cpu_nr >= 0 ) {
+        ret = pthread_attr_setaffinity_np ( &attr, sizeof ( cpu_set ), &cpu_set );
+        if (ret != 0) handle_error_en(ret, "pthread_attr_setaffinity_np");
+    }
+    
     ret = pthread_create ( &thread_id, &attr, &th_helper, this );
 
     pthread_attr_destroy ( &attr );
 
-    if ( ret ) {
+    if ( ret != 0 ) {
         DPRINTF ( "%s %d %s", __FILE__, __LINE__, name );
-        perror ( "pthread_create fail" );
-
-        exit ( 1 );
+        handle_error_en(ret, "pthread_create");
     }
 
 }

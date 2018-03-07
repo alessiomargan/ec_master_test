@@ -155,7 +155,7 @@ void ImuHandler::setup ( std::string pipe_name, bool use_cb ) {
 
     /////////////////////////////////////////////////////////////////
     //
-    imuPub = new ImuPub ( std::string ( "tcp://*:10101" ) );
+    imuPub = new ImuPub ( std::string("tcp://*:10101"), std::string("Imu") );
 
     if ( use_cb ) {
         lpms->setCallback ( cb_hook );

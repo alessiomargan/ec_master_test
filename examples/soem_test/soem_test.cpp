@@ -13,14 +13,16 @@
 #include <iit/advr/thread_util.h>
 
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
-extern void set_main_sched_policy ( int );
 
 static int main_loop = 1;
 
 void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
     main_loop = 0;
-    DPRINTF ( "got signal .... Shutdown\n" );
+    printf ( "got signal .... Shutdown\n" );
 }
+
+uint32_t sync_cycle_time_ns = 1e6;
+uint32_t sync_cycle_offset_ns = 1e9;
 
 
 ////////////////////////////////////////////////////
@@ -39,10 +41,10 @@ public:
 
         name = "UI_thread";
         // periodic
-        period.period = {0,100};
+        period.period = {0,500};
 
         schedpolicy = SCHED_OTHER;
-        priority = sched_get_priority_max ( schedpolicy ) /2;
+        priority = sched_get_priority_max ( schedpolicy );
         stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
 
     }
@@ -53,20 +55,18 @@ public:
     }
 
     virtual void th_init ( void * ) {
-        int retry = 10;
         std::string pipe ( pipe_prefix + pipe_name );
-        while ( retry-- && xddp_fd <= 0 ) {
-            sleep(1);
-            std::cout << "... try opening " << pipe << std::endl;
-            xddp_fd = open ( pipe.c_str(), O_RDONLY |O_NONBLOCK );
-        }
+        std::cout << "... try opening " << pipe << std::endl;
+        xddp_fd = open ( pipe.c_str(), O_RDONLY |O_NONBLOCK );
         if (xddp_fd <= 0) { exit(0); }
     }
     virtual void th_loop ( void * ) {
         
         int nbytes = read ( xddp_fd, ( void* ) &timing, sizeof ( timing ) );
         if ( nbytes > 0 ) {
-            std::cout << "[UI] ec_timing_t " <<  timing.loop_time <<" "<< timing.offset <<" "<< timing.recv_dc_time << std::endl;
+            if ( timing.loop_time > sync_cycle_time_ns *2 ) {
+                std::cout << "[UI] ec_timing_t\t" <<  timing.loop_time <<"\t"<< timing.offset <<"\t"<< timing.recv_dc_time << std::endl;
+            }
         } else {
             //printf ( "Nothing from pipe\n");
         }
@@ -98,7 +98,7 @@ public:
 #ifdef __COBALT__
         schedpolicy = SCHED_FIFO;
 #else
-        schedpolicy = SCHED_OTHER;
+        schedpolicy = SCHED_FIFO;
 #endif
         priority = sched_get_priority_max ( schedpolicy );
         stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
@@ -110,16 +110,14 @@ public:
         iit::ecat::print_stat ( loop_time );
     }
 
-    virtual void th_init ( void * ) {
-        uint32_t sync_cycle_time_ns = 1e6;
-        uint32_t sync_cycle_offset_ns = 1e9;
-        
+    virtual void th_init ( void * ) {       
         OutXddp.init(pipe_name);
         iit::ecat::initialize ( ecat_iface.c_str() );
+        pthread_barrier_wait(&threads_barrier);
         expected_wkc = iit::ecat::operational ( sync_cycle_time_ns, sync_cycle_offset_ns );
     }
     virtual void th_loop ( void * ) {
-        int wkc = iit::ecat::recv_from_slaves ( &timing );
+        int wkc = iit::ecat::recv_from_slaves ( timing );
         if ( wkc == expected_wkc ) {
             //printf ( "{EC} loop_time %ld\toffset %ld\trecv_dc_time %ld\n", timing.loop_time, timing.offset, timing.recv_dc_time );
             OutXddp.xddp_write( timing );
@@ -150,18 +148,31 @@ int main ( int argc, char * const argv[] ) try {
 
     std::string iface = argv[1]; 
 
+    sigset_t set;
+    int sig;
+    sigemptyset(&set);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGTERM);
+    sigaddset(&set, SIGHUP);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
     main_common ( &argc, &argv, shutdown );
     
     threads["UI_thread"] = new UI_thread(std::string("ec_timing"));
     threads["EC_thread"] = new EC_thread(iface, std::string("ec_timing"));
-    
-    threads["EC_thread"]->create();
-    threads["UI_thread"]->create();
 
-    while ( main_loop ) {
+    pthread_barrier_init(&threads_barrier, NULL, threads.size());
 
-        sleep(1);
-    }
+    threads["EC_thread"]->create(true);
+    pthread_barrier_wait(&threads_barrier);
+    threads["UI_thread"]->create(false,3);
+
+#ifdef __COBALT__
+    // here I want to catch CTRL-C 
+     __real_sigwait(&set, &sig);
+#else
+     sigwait(&set, &sig);  
+#endif
 
     for ( auto const &t : threads) {
         t.second->stop();

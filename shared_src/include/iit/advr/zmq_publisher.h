@@ -19,10 +19,10 @@
 #include <iostream>
 #include <map>
 
+#include <yaml-cpp/yaml.h>
 #include <jsoncpp/json/json.h>
+
 #include <zmq.hpp>
-//#include <zmq.h>
-//#include <zmq_utils.h>
 
 #ifndef ZMQ_DONTWAIT
 #define ZMQ_DONTWAIT ZMQ_NOBLOCK
@@ -41,6 +41,7 @@
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/pressure_sensor_esc.h>
+#include <iit/ecat/advr/imu_Vn_esc.h>
 #include <iit/ecat/advr/power_board.h>
 #include <iit/ecat/advr/power_coman_board.h>
 #include <iit/ecat/advr/mc_hand_esc.h>
@@ -52,8 +53,9 @@
 
 
 class Abs_Publisher;
-typedef std::map<int, Abs_Publisher*>  PubMap_t;
+typedef std::map<std::string, Abs_Publisher*>   PubMap_t;
 typedef std::map<std::string, std::string> jmap_t;
+
 
 
 //extern zmq::context_t zmq_ctx;
@@ -68,7 +70,7 @@ typedef std::map<std::string, std::string> jmap_t;
 class Abs_Publisher {
 
 public:
-    Abs_Publisher ( std::string uri );
+    Abs_Publisher ( std::string uri, std::string zkey );
     virtual ~Abs_Publisher();
 
     virtual int open_pipe ( std::string pipe_name );
@@ -87,7 +89,7 @@ protected:
     zmq::message_t  _msg;
 
     std::string uri;
-    std::string pipe;
+    std::string zmsg_id;
     int xddp_sock;
 
     char zbuffer[8192];
@@ -149,7 +151,7 @@ private:
     
 public:    
 
-    Publisher ( std::string uri ) : Abs_Publisher ( uri ) { }
+    Publisher ( std::string uri, std::string zkey ) : Abs_Publisher ( uri, zkey ) { }
     virtual ~Publisher() {
         std::cout << "~" << typeid ( this ).name() << std::endl;
     }
@@ -169,8 +171,8 @@ public:
         std::string sz_string;
         
         // prepare _msg_id just once
-        _msg_id.rebuild ( pipe.length() );
-        memcpy ( ( void* ) _msg_id.data(),pipe.data(), pipe.length() );
+        _msg_id.rebuild ( zmsg_id.length() );
+        memcpy ( ( void* ) _msg_id.data(),zmsg_id.data(), zmsg_id.length() );
 
         //////////////////////////////////////////////////////////
         // prepare _msg
@@ -210,6 +212,7 @@ public:
 class ZMQ_Pub_thread : public Thread_hook {
 
     typedef Publisher<iit::ecat::advr::TestEscPdoTypes::pdo_rx> TestPub;
+    typedef Publisher<iit::ecat::advr::ImuEscPdoTypes::pdo_rx> ImuPub;
     typedef Publisher<iit::ecat::advr::Ft6EscPdoTypes::pdo_rx> FtPub;
     typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx> McPub;
     typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
@@ -224,10 +227,12 @@ class ZMQ_Pub_thread : public Thread_hook {
     iit::ecat::stat_t loop_time;
     uint64_t    tNow, dt;
     PubMap_t    zmap;
+    
+    YAML::Node  yaml_cfg;
 
 public:
 
-    ZMQ_Pub_thread() {
+    ZMQ_Pub_thread( std::string config ) {
 
         name = "ZMQ_Pub_thread";
         // non periodic
@@ -236,6 +241,15 @@ public:
         schedpolicy = SCHED_OTHER;
         priority = sched_get_priority_max ( schedpolicy ) /2;
         stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
+       
+        std::ifstream fin ( config );
+        if ( fin.fail() ) {
+            DPRINTF ( "Can not open %s\n", config.c_str() );
+            assert ( 0 );
+        }
+
+        yaml_cfg = YAML::LoadFile ( config );
+
 
     }
 
@@ -254,11 +268,11 @@ public:
 private:
     
     template <typename T>
-    void zpub_factory(const int rid, const std::string uri_prefix, const std::string pipe_prefix, int base_port ) {
+    void zpub_factory(const std::string uri, const std::string pipe_path, const std::string zkey ) {
 
-        Abs_Publisher * zpub = new T ( uri_prefix+std::to_string ( base_port+rid ) );
-        if ( zpub->open_pipe ( pipe_prefix+std::to_string ( rid ) ) == 0 ) {
-            zmap[base_port+rid] = zpub;
+        Abs_Publisher * zpub = new T ( uri, zkey );
+        if ( zpub->open_pipe ( pipe_path ) == 0 ) {
+            zmap[zkey] = zpub;
         } else {
             delete zpub;
         }

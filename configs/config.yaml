@@ -15,6 +15,10 @@ ec_board_ctrl :
 ec_boards_base :
   joints_poses_file : ../configs/test_poses.yaml
 
+zmq_pub :
+  base_port : 9000
+  uri: "tcp://*:"
+
   
 firmware_update:
   #fw_path: ../firmware/
@@ -31,7 +35,7 @@ firmware_update:
   #slave_pos_list: [-3]
   # all CentAC motor
   #slave_pos_list: [-4]
-  slave_pos_list: [1]
+  slave_pos_list: [4]
 
   big_motor:
     bin_file: BigMotor.bin
@@ -95,16 +99,17 @@ HpESC_X:
 CentAcESC_X:
   sign: 1
   pos_offset: 0
-  enable_sandbox: true
-  enable_pos_filter: true
+  max_current_A: 2.0
+  enable_sandbox: false
+  enable_pos_filter: false
   pid :
     position: [220.0 , 0.0 , 5.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
 
-  NO_aux_pdo :
-    wrd : [ "ts&&rtt" ]
-
+  aux_pdo :
+    rd :  [ pos_ref_fb ]
+  
   NO_upd_params :
     # orange
     #Hardware_config : 0x4236

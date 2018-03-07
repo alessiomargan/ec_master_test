@@ -53,7 +53,8 @@ void EC_boards_joint_joy::init_preOP ( void ) {
     float min_pos, max_pos;
 
     std::vector<double> Ys;
-
+    std::vector<double> Xs;
+    
     std::vector<int> test_rid = std::initializer_list<int> {
 
     };
@@ -78,17 +79,16 @@ void EC_boards_joint_joy::init_preOP ( void ) {
         step_2[slave_pos] = home[slave_pos] - 1.0;
         DPRINTF ( "%d home %f mid %f step %f\n", pos2Rid ( slave_pos ), home[slave_pos],step_1[slave_pos],step_2[slave_pos] );
 
-        Ys = std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
-        trj_start2home[slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xt_5s, Ys );
+        Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+        Xs = std::initializer_list<double> { 0, 5 };
+        trj_names["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xs, Ys );
+        
+        Ys = std::initializer_list<double> { home[slave_pos], 1.5, 2.5, 1.0, 2.2, 1.0 , 2.0, home[slave_pos] };
+        trj_names["trj_1"][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt10_10s,Ys );
 
-        Ys = std::initializer_list<double> { step_2[slave_pos], 1.5, 2.5, 1.0, 2.2, 1.0 , 2.0, home[slave_pos] };
-        trj_1[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt10_10s,Ys );
+        Ys = std::initializer_list<double> { home[slave_pos], 5.0, 3.5, 4.5, 4.0, 3.0 , 3.5, home[slave_pos] };
+        trj_names["trj_2"][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt10_10s,Ys );
 
-        Ys = std::initializer_list<double> { home[slave_pos], 5.0, 3.5, 4.5, 4.0, 3.0 , 3.5, step_1[slave_pos] };
-        //spline2_trj[slave_pos] = new advr::Spline_Trj();
-        trj_2[slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt10_10s,Ys );
-
-        //spline_any2home[slave_pos] = new advr::Spline_Trj();
 
         //////////////////////////////////////////////////////////////////////////
         // start controller :
@@ -99,6 +99,8 @@ void EC_boards_joint_joy::init_preOP ( void ) {
 
     user_state = HOMING;
 
+    trj_queue.clear();
+    trj_queue.push_back ( trj_names.at("start@home") );
 }
 
 
@@ -113,6 +115,7 @@ void EC_boards_joint_joy::init_OP ( void ) {
 
 int EC_boards_joint_joy::user_loop ( void ) {
 
+    const float spline_error = 0.05;
     int slave_pos;
     iit::ecat::advr::Motor * moto;
     iit::ecat::advr::Motor::motor_pdo_rx_t motor_pdo_rx;
@@ -123,6 +126,24 @@ int EC_boards_joint_joy::user_loop ( void ) {
         DPRINTF ( ">> %f\n", ds );
     }
 
+    try { 
+        if ( go_there ( motors, trj_queue.at(0), spline_error, false) ) {
+            // running trj has finish ... remove from queue  !!
+            DPRINTF ( "running trj has finish ... remove from queue !!\n" );
+            trj_queue.pop_front();
+            try { advr::reset_trj ( trj_queue.at(0) ); }
+            catch ( const std::out_of_range &e ) {
+                // add trajectory ....
+                trj_queue.push_back ( trj_names.at("trj_1") );
+                advr::reset_trj ( trj_queue.at(0) );
+            }
+        }
+    } catch ( const std::out_of_range &e ) {
+        //throw std::runtime_error("Ooops ... trj_queue is empty !");
+        //DPRINTF("Ooops ... trj_queue is empty !");
+    }
+
+    
     //
     switch ( user_state ) {
 
@@ -130,51 +151,6 @@ int EC_boards_joint_joy::user_loop ( void ) {
         break;
 
     case HOMING :
-        if ( go_there ( motors, trj_start2home, 0.05, true ) ) {
-            user_state = STEP_1;
-            DPRINTF ( "At Home ....\n" );
-        }
-        break;
-
-    case STEP_1 :
-        if ( go_there ( motors, step_1, 0.05 ) ) {
-            user_state = STEP_2;
-            DPRINTF ( "At Step 1 ....\n" );
-        }
-        break;
-
-    case STEP_2 :
-        if ( go_there ( motors, step_2, 0.05 ) ) {
-            user_state = TRJ_1;
-            //user_state = HOMING;
-            DPRINTF ( "At Step 2 ....\n" );
-            advr::reset_trj ( trj_1 );
-        }
-        break;
-
-    case TRJ_1 :
-        if ( go_there ( motors, trj_1, 0.05 ) ) {
-            user_state = TRJ_2;
-            DPRINTF ( "At trj_1 end ....\n" );
-            advr::reset_trj ( trj_2 );
-        }
-        break;
-
-    case TRJ_2 :
-        if ( go_there ( motors, trj_2, 0.05 ) ) {
-            //user_state = IDLE;
-            /////////////////////////////
-            user_state = ANY2HOME;
-            set_any2home ( motors, trj_any2home, trj_2 );
-            DPRINTF ( "At trj_2 end ....\n" );
-        }
-        break;
-
-    case ANY2HOME :
-        if ( go_there ( motors, trj_any2home, 0.05 ) ) {
-            user_state = STEP_1;
-            DPRINTF ( "At Home ....\n" );
-        }
         break;
 
     case MOVING :
@@ -209,7 +185,8 @@ int EC_boards_joint_joy::user_input ( C &user_cmd ) {
             //user_cmd = process_spnav_input(nav_cmd);
             // [-1.0 .. 1.0] / 200 ==> 0.005 rad/ms
             if ( nav_cmd.type == SPNAV_EVENT_MOTION ) {
-                user_cmd = ( ( float ) nav_cmd.motion.ry / ( 350.0 ) ) / 200 ;
+                user_cmd = ( ( float ) nav_cmd.motion.ry / ( 500.0 ) ) / 10 ;
+                DPRINTF ( "%f\n", user_cmd);
             } else if ( nav_cmd.type == SPNAV_EVENT_BUTTON ) {
                 if ( nav_cmd.button.press ) {
                     switch ( nav_cmd.button.bnum ) {
@@ -217,10 +194,12 @@ int EC_boards_joint_joy::user_input ( C &user_cmd ) {
                         user_state = ANY2HOME;
                         //set_any2home ( motors, trj_any2home, trj_queue.at(0) );
                         DPRINTF ( "ANY2HOME ....\n" );
+                        trj_queue.clear();
                         break;
                     case 0 :
                         user_state = MOVING;
                         DPRINTF ( "Moving ....\n" );
+                        trj_queue.clear();
                         break;
                     default :
                         break;
@@ -236,7 +215,7 @@ int EC_boards_joint_joy::user_input ( C &user_cmd ) {
     
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
-    
+#if 0    
     ///////////////////////////////////////////////////////////////////////////
     //
     {
@@ -271,7 +250,8 @@ int EC_boards_joint_joy::user_input ( C &user_cmd ) {
     
     bytes_cnt += bytes;
     //DPRINTF(">> %d %d\n",bytes, bytes_cnt);
-
+#endif
+    
 #if 0
     //////////////////////////////////////////////////////////////////////
     float ax_value = 0;

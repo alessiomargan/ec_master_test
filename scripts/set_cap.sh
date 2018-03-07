@@ -1,3 +1,3 @@
 #! /bin/sh
-sudo setcap cap_net_raw,cap_net_admin=eip $1
+sudo setcap cap_net_raw,cap_net_admin,cap_sys_nice=eip $1
 getcap $1

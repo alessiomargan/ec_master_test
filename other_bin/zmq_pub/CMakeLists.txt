@@ -4,20 +4,21 @@ project(${PRJ_DIR})
 
 include_directories(include)
 
-if ( Xenomai_FOUND )
-    add_definitions("-D__XENO_PIPE__")
-    set(LIB_ECAT_MASTER ecat_master_rt)
-else()
-    set(LIB_ECAT_MASTER ecat_master_nrt)
-endif()
-
 add_executable(${PROJECT_NAME}
-    ${SHARED_SRC}/test_common.cpp
-    ${SHARED_SRC}/wrap_thread.cpp
-    ${SHARED_SRC}/zmq_publisher.cpp    
     zmq_pub_thread.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} pthread zmq jsoncpp pdo_pb protobuf ${LIB_ECAT_MASTER})
+if ( Xenomai_FOUND )
+    set_xeno_flags(${PROJECT_NAME})
+endif()
+
+target_link_libraries(${PROJECT_NAME} ${COMMON_LIBS})
+
+if(NOT Xenomai_FOUND)
+    set_cap_build(${PROJECT_NAME})
+endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+if(NOT Xenomai_FOUND)
+    set_cap_install(${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME})
+endif()

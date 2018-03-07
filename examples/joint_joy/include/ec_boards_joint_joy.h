@@ -49,10 +49,7 @@ private :
     std::map<int,float> step_1;
     std::map<int,float> step_2;
 
-    advr::Trj_ptr_map trj_1;
-    advr::Trj_ptr_map trj_2;
-    advr::Trj_ptr_map trj_start2home;
-    advr::Trj_ptr_map trj_any2home;
+    advr::Trj_name_ptr_map trj_names;
 
     XDDP_pipe jsInXddp, navInXddp;
 

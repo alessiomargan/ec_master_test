@@ -27,7 +27,7 @@ int main ( int argc, char * const argv[] ) try {
     
     main_common (&argc, &argv, 0 );
     
-    threads["ZMQ_pub"] = new ZMQ_Pub_thread();
+    threads["ZMQ_pub"] = new ZMQ_Pub_thread( argv[1]);
     threads["ZMQ_pub"]->create ( false,3 );
 
 #ifdef __COBALT__
