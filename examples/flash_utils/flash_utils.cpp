@@ -96,7 +96,7 @@ int main ( int argc, char * const argv[] ) try {
     uint32_t passwd;
     uint32_t size_byte;
     EscWrapper * esc;
-    uint16_t   bType;
+    uint32_t   bType;
     int sPos, rId = -1;
 
     bin_path = flash_files["bin_path"].as<std::string>();

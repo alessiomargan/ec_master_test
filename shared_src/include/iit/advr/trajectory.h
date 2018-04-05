@@ -295,6 +295,7 @@ protected:
 typedef std::shared_ptr<Trajectory> Trj_ptr;
 typedef std::map<int, Trj_ptr> Trj_ptr_map;
 typedef std::map<std::string, Trj_ptr_map> Trj_name_ptr_map;
+typedef std::vector<Trj_ptr_map> Trj_vector_ptr_map;
 
 typedef std::map<int, std::array< Trj_ptr, 3>> ImpTrj_ptr_map;
 

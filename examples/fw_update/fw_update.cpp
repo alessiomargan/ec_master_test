@@ -142,7 +142,7 @@ int main ( int argc, char * const argv[] ) try {
     std::string bin_file;
     int passwd;
     EscWrapper * esc;
-    uint16_t   bType;
+    uint32_t   bType;
     int sPos;
 
     fw_path = firmware_update["fw_path"].as<std::string>();

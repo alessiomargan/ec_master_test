@@ -1,5 +1,4 @@
 #
-
 ec_board_ctrl:
   #eth_iface: eth1
   #eth_iface: enp2s0
@@ -17,6 +16,7 @@ ec_board_ctrl:
  
 ec_boards_base:
   robot_name : NoNe
+  read_SDOs : true
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
 
@@ -66,7 +66,7 @@ firmware_update:
     m3:
       bin_file: pow_m3.bin
       passwd: 0xF2F2
-    N_c28:
+    c28:
       bin_file: pow_c28.bin
       passwd: 0xF3F3
   test_f28m36:
@@ -135,10 +135,15 @@ CentAcESC_X:
   enable_pos_filter: false
   pid :
     position: [220.0 , 0.0 , 5.0]
-
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    #impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
+    impedance:  [30.0, 5, 5.0, 0.01, 0.8]
+    
   NO_upd_params :
     posRefFilterFreq : 1
-    #PDOloopTimeSec : 0.001
+    motorDirectInductance : 0
+    motorQuadratureInductance : 0
+    crossTermCCGain : 0
 
   NO_upd_params :
     # A0 
@@ -152,11 +157,11 @@ CentAcESC_X:
     motorTorqueConstant : 0.078
     windingResistance : 0.318
   
-  NO_aux_pdo : # names defined in SDO index 0x8002 
+  aux_pdo : # names defined in SDO index 0x8002 
      _rd :  [ pos_ref_fb, iq_ref_fb, id_ref_fb ]
      _wr :  [ ]
      _wrd : [ "iq_offset&&iq_out_fb" ]
-     _wrd : [ "ts&&rtt" ]
+     wrd : [ "ts&&rtt" ]
      
 #############################
 # TEST JOINT

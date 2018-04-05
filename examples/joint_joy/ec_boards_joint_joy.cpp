@@ -1,5 +1,7 @@
 #include <ec_boards_joint_joy.h>
 #include <iit/advr/coman_robot_id.h>
+#include <iit/advr/walkman_robot_id.h>
+#include <iit/advr/centauro_robot_id.h>
 
 #include <linux/joystick.h>
 #include <spnav_config.h>
@@ -9,6 +11,8 @@
 #include <spnav.h>
 
 #define MID_POS(m,M)    (m+(M-m)/2)
+
+using namespace iit::ecat::advr;
 
 typedef struct js_event js_input_t;
 typedef spnav_event     spnav_input_t;
@@ -50,7 +54,7 @@ void EC_boards_joint_joy::init_preOP ( void ) {
 
     iit::ecat::advr::Motor * moto;
     int slave_pos;
-    float min_pos, max_pos;
+    float min_pos, max_pos, motor_pos, link_pos;
 
     std::vector<double> Ys;
     std::vector<double> Xs;
@@ -69,12 +73,15 @@ void EC_boards_joint_joy::init_preOP ( void ) {
     for ( auto const& item : motors ) {
         slave_pos = item.first;
         moto = item.second;
-        moto->readSDO ( "Min_pos", min_pos );
-        moto->readSDO ( "Max_pos", max_pos );
-        moto->readSDO ( "link_pos", start_pos[slave_pos] );
-        // home
-        //home[slave_pos] = DEG2RAD(iit::ecat::advr::coman::robot_ids_home_pos_deg[pos2Rid(slave_pos)]);
+        assert ( EC_WRP_OK == moto->readSDO ( "Min_pos", min_pos ));
+        assert ( EC_WRP_OK == moto->readSDO ( "Max_pos", max_pos ));
+        assert ( EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ));
+        assert ( EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
+
+        start_pos[slave_pos] = motor_pos; 
+        // set home pos
         home[slave_pos] = MID_POS ( min_pos,max_pos );
+        //home[slave_pos] = DEG2RAD(iit::ecat::advr::coman::robot_ids_home_pos_deg[pos2Rid(slave_pos)]);
         step_1[slave_pos] = home[slave_pos] + 1.0;
         step_2[slave_pos] = home[slave_pos] - 1.0;
         DPRINTF ( "%d home %f mid %f step %f\n", pos2Rid ( slave_pos ), home[slave_pos],step_1[slave_pos],step_2[slave_pos] );
@@ -85,7 +92,6 @@ void EC_boards_joint_joy::init_preOP ( void ) {
         
         Ys = std::initializer_list<double> { home[slave_pos], 1.5, 2.5, 1.0, 2.2, 1.0 , 2.0, home[slave_pos] };
         trj_names["trj_1"][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt10_10s,Ys );
-
         Ys = std::initializer_list<double> { home[slave_pos], 5.0, 3.5, 4.5, 4.0, 3.0 , 3.5, home[slave_pos] };
         trj_names["trj_2"][slave_pos] = std::make_shared<advr::Smoother_trajectory> ( Xt10_10s,Ys );
 
@@ -93,7 +99,8 @@ void EC_boards_joint_joy::init_preOP ( void ) {
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
-        moto->start ( CTRL_SET_POS_MODE );
+        //assert ( moto->start ( CTRL_SET_POS_MOTOR_MODE ) == EC_BOARD_OK );
+        assert ( moto->start ( ) == EC_BOARD_OK );
 
     }
 
@@ -134,8 +141,8 @@ int EC_boards_joint_joy::user_loop ( void ) {
             try { advr::reset_trj ( trj_queue.at(0) ); }
             catch ( const std::out_of_range &e ) {
                 // add trajectory ....
-                trj_queue.push_back ( trj_names.at("trj_1") );
-                advr::reset_trj ( trj_queue.at(0) );
+                //trj_queue.push_back ( trj_names.at("trj_1") );
+                //advr::reset_trj ( trj_queue.at(0) );
             }
         }
     } catch ( const std::out_of_range &e ) {

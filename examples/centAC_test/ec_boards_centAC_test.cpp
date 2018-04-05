@@ -139,7 +139,7 @@ void EC_boards_centAC_test::init_preOP ( void ) {
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref
-        motor_start = moto->start ( CTRL_SET_POS_MODE );
+        motor_start = moto->start ( CTRL_SET_POS_MOTOR_MODE );
     }
 
     DPRINTF ( ">>> wait xddp terminal ....\n" );

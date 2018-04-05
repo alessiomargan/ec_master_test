@@ -34,6 +34,19 @@ Ec_Boards_basic::~Ec_Boards_basic() {
 
 void Ec_Boards_basic::init_preOP ( void ) {
 
+#if 0
+    // get first motor ....
+    CentAcESC * treeAct = slave_as<CentAcESC>(rid2Pos(1)); 
+    if ( treeAct ) {
+        
+        if ( treeAct->run_torque_calibration( ) ) {
+            DPRINTF ( ">> [%d] Fail torque calibration\n",rid2Pos(1) );
+        }
+        
+        //treeAct->set_zero_position(M_PI);
+    } 
+#endif
+
     
 }
 
@@ -60,28 +73,27 @@ void Ec_Boards_basic::init_OP ( void ) {
         centauro::LA_WR_3,
     };
 #endif
-    get_esc_map_byclass ( motors,  motor_rid );
+    //get_esc_map_byclass ( motors,  motor_rid );
 
     int slave_pos;
     Motor * moto;
+    float pos_ref;
     for ( auto const& item : motors ) {
         slave_pos = item.first;
         moto = item.second;
+        
+        //auto motor_pdo_rx = moto->getRxPDO();
+        //pos_ref = motor_pdo_rx.link_pos + 0.01;
+        //moto->set_posRef( pos_ref );
+            
         // avoid segfault if no CentAcESC
-        if ( dynamic_cast<CentAcESC*>(moto) ) {
+        if ( dynamic_cast<CentAcESC*>(moto) ) { 
             set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
             set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_FAN_ON );
         }
         
+        
     }
-
-#if 0
-    // get first motor ....
-    CentAcESC * moto = slave_as<CentAcESC>(1); 
-    if ( moto ) {
-        moto->run_torque_calibration( );
-    }
-#endif
 
 }
 
@@ -98,28 +110,43 @@ int Ec_Boards_basic::user_input ( C &user_cmd ) {
 
     bytes_cnt += bytes;
     DPRINTF ( ">> %d %d\n",bytes, bytes_cnt );
-    //DPRINTF(">> %d\n",cmd.value);
 
     return bytes;
 }
 
 int Ec_Boards_basic::user_loop ( void ) {
 
+    //auto const rd_sdos = { "motorEncBadReadPPM","linkEncBadReadPPM","torque_read" };
+    auto const rd_sdos = { "torque_read" };
+    std::vector<float> rd_sdo_values(rd_sdos.size());     
+    
     char what = 0;
     user_input ( what );
     
     if ( what == 'a' ) {
-
         int slave_pos;
         Motor * moto;
         for ( auto const& item : motors ) {
             slave_pos = item.first;
             moto = item.second;
-            set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
+            auto cm = dynamic_cast<CentAcESC*>(moto);
+            if ( ! cm )
+                continue;
+            
+            if ( cm ) { 
+                //set_ctrl_status_X ( cm, CTRL_POWER_MOD_ON );
+            }
+            
+            auto tmp_it = rd_sdo_values.begin();
+            for ( auto const sdo_name :  rd_sdos ) {
+                cm->readSDO_byname ( sdo_name, *tmp_it );
+                tmp_it++;
+            }
+            DPRINTF ( ">> [%d] %f %f %f\n", pos2Rid( slave_pos ), rd_sdo_values[0], rd_sdo_values[1], rd_sdo_values[2] );
         }
-        
-    }
-   
+    }        
 }
+   
+
 
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on

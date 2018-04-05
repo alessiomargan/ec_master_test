@@ -42,7 +42,8 @@ private :
     
     std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
     advr::Trj_name_ptr_map trj_map;
-
+    advr::Trj_vector_ptr_map ptr_map_vec;
+    
 };
 
 

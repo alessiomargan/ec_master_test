@@ -43,9 +43,9 @@ EC_boards_walkman_test::EC_boards_walkman_test(const char* config_yaml) :
 #ifdef __COBALT__
     schedpolicy = SCHED_FIFO;
 #else
-    schedpolicy = SCHED_OTHER;
+    schedpolicy = SCHED_RR;
 #endif
-    priority = sched_get_priority_max ( schedpolicy )-10;
+    priority = sched_get_priority_max ( schedpolicy );
     stacksize = ECAT_PTHREAD_STACK_SIZE;
 
     // open pipe ... xeno xddp or fifo
@@ -256,13 +256,13 @@ void EC_boards_walkman_test::init_preOP ( void ) {
         if ( std::find( ids_pos.begin(), ids_pos.end(), rId ) != ids_pos.end() ) {
 
             if (moto->get_ESC_type() == LO_PWR_DC_MC ) {
-                motor_start = moto->start ( CTRL_SET_POS_MODE );
+                motor_start = moto->start ( CTRL_SET_POS_MOTOR_MODE );
                 
             } else if ( (moto->get_ESC_type() == HI_PWR_AC_MC) || (moto->get_ESC_type() == HI_PWR_DC_MC) ) {
-                motor_start = moto->start ( CTRL_SET_POS_MODE );
+                motor_start = moto->start ( CTRL_SET_POS_MOTOR_MODE );
                 
             } else if ( moto->get_ESC_type() == CENT_AC ) {
-                motor_start = moto->start ( CTRL_SET_POS_MODE );
+                motor_start = moto->start ( CTRL_SET_POS_MOTOR_MODE );
                 
             } else {
                 // fall in assert ...

@@ -64,9 +64,14 @@ public:
         
         int nbytes = read ( xddp_fd, ( void* ) &timing, sizeof ( timing ) );
         if ( nbytes > 0 ) {
-            if ( timing.loop_time > sync_cycle_time_ns *2 ) {
-                std::cout << "[UI] ec_timing_t\t" <<  timing.loop_time <<"\t"<< timing.offset <<"\t"<< timing.recv_dc_time << std::endl;
-            }
+            //if ( timing.loop_time > sync_cycle_time_ns *2 ) {
+                std::cout << "[UI] ec_timing_t " \
+                          << timing.recv_dc_time <<"\t" \
+                          << timing.loop_time <<"\t" \
+                          << timing.offset <<"\t" \
+                          << timing.delta <<"\t" \
+                          << timing.ecat_cycle_time << std::endl;
+            //}
         } else {
             //printf ( "Nothing from pipe\n");
         }

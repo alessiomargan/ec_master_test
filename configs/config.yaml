@@ -13,6 +13,9 @@ ec_board_ctrl :
   power_off_boards: false
 
 ec_boards_base :
+  robot_name : NoNe
+  read_SDOs : false
+  urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
 
 zmq_pub :
@@ -34,8 +37,8 @@ firmware_update:
   # all LowPower motor
   #slave_pos_list: [-3]
   # all CentAC motor
-  #slave_pos_list: [-4]
-  slave_pos_list: [4]
+  slave_pos_list: [-4]
+  #slave_pos_list: [4]
 
   big_motor:
     bin_file: BigMotor.bin
@@ -87,7 +90,7 @@ LpHandESC_X:
   pid :
     position: [20.0 , 0.0 , 1.0]
 
-HpESC_X:
+HpESC_X: &HpESC_X
   sign: 1
   pos_offset: 0
   pid :
@@ -96,19 +99,28 @@ HpESC_X:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
     
-CentAcESC_X:
+CentAcESC_X: &CentAcESC_X
   sign: 1
   pos_offset: 0
-  max_current_A: 2.0
+  #max_current_A: 20.0
   enable_sandbox: false
   enable_pos_filter: false
+  #control_mode : 00_idle_ctrl
+  #control_mode : 3B_motor_pos_ctrl
+  control_mode : D4_impedance_ctrl
   pid :
     position: [220.0 , 0.0 , 5.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
+    #impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
+    impedance:   [250.0, 5.0, 2.0, 0.01, 0.8]
 
-  aux_pdo :
-    rd :  [ pos_ref_fb ]
+  aux_pdo : # names defined in SDO index 0x8002 
+     _rd :  [ pos_ref_fb ]
+     rd :  [ pos_ref_fb, motor_enc_warn, motor_enc_err, link_enc_warn, link_enc_err ]
+     _rd :  [ pos_ref_fb, iq_ref_fb, id_ref_fb ]
+     _wr :  [ ]
+     _wrd : [ "iq_offset&&iq_out_fb" ]
+     wrd : [ "ts&&rtt" ]
   
   NO_upd_params :
     # orange
@@ -129,26 +141,40 @@ CentAcESC_X:
 # TEST JOINT
 #############################
 
-# B14
-HpESC_101:
+CentAcESC_123:
+  #<<: *CentAcESC_X
   sign: 1
   pos_offset: 0
+  #max_current_A: 20.0
+  enable_sandbox: false
+  enable_pos_filter: false
+  #control_mode : 00_idle_ctrl
+  #control_mode : 3B_motor_pos_ctrl
+  control_mode : D4_impedance_ctrl
   pid :
-    position: [100.0 , 0.0 , 1.0]
-    mix_position: [800.0, 0.0, 5.0]
+    position: [220.0 , 0.0 , 5.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance:  [200.0, 20.0, 5.0, 0.01, 0.8]
-    #impedance:  [0.0, 0.0, 4.0, 0.01, 0.8]
+    #impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
+    impedance:   [250.0, 5.0, 2.0, 0.01, 0.8]
+
+__CentAcESC_1:
+  sign: 1
+  pos_offset: 0
+  #<<: *CentAcESC_X
+  control_mode : D4_impedance_ctrl
+  pid :
+    # torque control
+    #impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
+    impedance:   [250.0, 5.0, 2.0, 0.01, 0.8]
+
+# B14
+HpESC_101:
+  <<: *HpESC_X
   gear_ratio: GR_120
 
 # M17
 HpESC_102:
-  sign: 1
-  pos_offset: 0
+  <<: *HpESC_X
   pid :
     position: [100.0 , 0.0 , 1.0]
-    mix_position: [800.0, 0.0, 5.0]
-    #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    #impedance:  [200.0, 20.0, 5.0, 0.01, 0.8]
-    impedance:  [0.0, 0.0, 4.0, 0.01, 0.8]
   gear_ratio: GR_100
