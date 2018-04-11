@@ -11,7 +11,8 @@ ec_board_ctrl :
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 1000000000
   power_off_boards: false
-
+  reset_micro : true
+  
 ec_boards_base :
   robot_name : NoNe
   read_SDOs : false
@@ -136,7 +137,13 @@ CentAcESC_X: &CentAcESC_X
     gearedMotorInertia : 1.181
     motorTorqueConstant : 0.078
     windingResistance : 0.318
-    
+
+  NO_upd_params :
+    posRefFilterFreq : 1
+    motorDirectInductance : 0
+    motorQuadratureInductance : 0
+    crossTermCCGain : 0
+
 #############################
 # TEST JOINT
 #############################

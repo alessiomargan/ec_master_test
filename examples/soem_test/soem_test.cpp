@@ -117,7 +117,7 @@ public:
 
     virtual void th_init ( void * ) {       
         OutXddp.init(pipe_name);
-        iit::ecat::initialize ( ecat_iface.c_str() );
+        iit::ecat::initialize ( ecat_iface.c_str(), true );
         pthread_barrier_wait(&threads_barrier);
         expected_wkc = iit::ecat::operational ( sync_cycle_time_ns, sync_cycle_offset_ns );
     }
