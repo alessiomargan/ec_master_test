@@ -7,6 +7,7 @@
 
 #include <exception>
 #include <iostream>
+#include <yaml-cpp/yaml.h>
 
 #include <iit/ecat/ec_master_iface.h>
 #include <iit/ecat/advr/pipes.h>
@@ -21,10 +22,8 @@ void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
     printf ( "got signal .... Shutdown\n" );
 }
 
-uint32_t sync_cycle_time_ns = 1e6;
-uint32_t sync_cycle_offset_ns = 1e9;
-
-
+#define PIPE_NAME "ec_timing"
+    
 ////////////////////////////////////////////////////
 // 
 ////////////////////////////////////////////////////
@@ -37,7 +36,7 @@ class UI_thread : public Thread_hook {
     std::string         pipe_name;
 public:
 
-    UI_thread(std::string _pipe_name):pipe_name(_pipe_name) {
+    UI_thread() {
 
         name = "UI_thread";
         // periodic
@@ -47,6 +46,7 @@ public:
         priority = sched_get_priority_max ( schedpolicy );
         stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
 
+        pipe_name = PIPE_NAME;
     }
 
     ~UI_thread() {
@@ -69,8 +69,7 @@ public:
                           << timing.recv_dc_time <<"\t" \
                           << timing.loop_time <<"\t" \
                           << timing.offset <<"\t" \
-                          << timing.delta <<"\t" \
-                          << timing.ecat_cycle_time << std::endl;
+                          << timing.delta <<"\t" << std::endl;
             //}
         } else {
             //printf ( "Nothing from pipe\n");
@@ -91,10 +90,12 @@ class EC_thread : public Thread_hook {
     XDDP_pipe               OutXddp;
     std::string             ecat_iface;
     std::string             pipe_name;
+    
+    iit::ecat::ec_thread_arg_t ec_thread_arg;
+
 public:
 
-    EC_thread(std::string _ecat_iface, std::string _pipe_name)
-    :ecat_iface(_ecat_iface),pipe_name(_pipe_name) {
+    EC_thread(std::string config_file) {
 
         name = "EC_thread";
         // non periodic
@@ -108,6 +109,14 @@ public:
         priority = sched_get_priority_max ( schedpolicy );
         stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
 
+        YAML::Node  root_cfg = YAML::LoadFile ( config_file );
+        YAML::Node  board_ctrl = root_cfg["ec_board_ctrl"];
+        ecat_iface = board_ctrl["eth_iface"].as<std::string>();
+        ec_thread_arg.ecat_cycle_ns = board_ctrl["sync_cycle_time_ns"].as<uint32_t>();
+        ec_thread_arg.ecat_cycle_shift_ns = board_ctrl["sync_cycle_offset_ns"].as<uint32_t>();
+        ec_thread_arg.sync_point_ns = board_ctrl["sync_point_ns"].as<uint32_t>();
+
+        pipe_name = PIPE_NAME;
     }
 
     ~EC_thread() {
@@ -119,7 +128,7 @@ public:
         OutXddp.init(pipe_name);
         iit::ecat::initialize ( ecat_iface.c_str(), true );
         pthread_barrier_wait(&threads_barrier);
-        expected_wkc = iit::ecat::operational ( sync_cycle_time_ns, sync_cycle_offset_ns );
+        expected_wkc = iit::ecat::operational ( ec_thread_arg );
     }
     virtual void th_loop ( void * ) {
         int wkc = iit::ecat::recv_from_slaves ( timing );
@@ -147,11 +156,17 @@ int main ( int argc, char * const argv[] ) try {
     std::map<std::string, Thread_hook*> threads;
     
     if ( argc != 2 ) {
-        DPRINTF ( "Usage: %s eth_name\n", argv[0] );
+        DPRINTF ( "Usage: %s yaml file\n", argv[0] );
         return 0;
     }
 
-    std::string iface = argv[1]; 
+    std::string config_file(argv[1]);
+    std::ifstream fin ( config_file );
+    if ( fin.fail() ) {
+        DPRINTF ( "Can not open %s\n", config_file.c_str() );
+        assert ( 0 );
+    }
+
 
     sigset_t set;
     int sig;
@@ -163,8 +178,8 @@ int main ( int argc, char * const argv[] ) try {
 
     main_common ( &argc, &argv, shutdown );
     
-    threads["UI_thread"] = new UI_thread(std::string("ec_timing"));
-    threads["EC_thread"] = new EC_thread(iface, std::string("ec_timing"));
+    threads["UI_thread"] = new UI_thread();
+    threads["EC_thread"] = new EC_thread(config_file);
 
     pthread_barrier_init(&threads_barrier, NULL, threads.size());
 
