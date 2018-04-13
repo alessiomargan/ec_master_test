@@ -31,6 +31,8 @@ namespace rbd = RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
 /**
+ * Unified Robot Description Format (URDF)
+ * Semantic Robot Description Format (SRDF)
  */
 
 class URDF_adapter {
@@ -152,14 +154,13 @@ private :
 
     XDDP_pipe jsInXddp, navInXddp;
 
-    advr::Trj_ptr_map spline_start2home;
-
     std::map<int, iit::ecat::advr::Motor*>  left_arm;;
     std::map<int, iit::ecat::advr::Motor*>  right_arm;
     std::map<int, iit::ecat::advr::Motor*>  waist;
-
     std::map<int, iit::ecat::advr::Motor*>  motors_to_start;
     
+    advr::Trj_name_ptr_map trj_map;
+
     // store reference to feed set_pos
     std::map<std::string, double> q_map;
 };

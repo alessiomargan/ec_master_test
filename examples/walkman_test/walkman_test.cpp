@@ -5,7 +5,7 @@
 #include <exception>
 
 #include <ec_boards_walkman_test.h>
-//#include <iit/advr/zmq_publisher.h>
+#include <iit/advr/zmq_publisher.h>
 
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 
@@ -29,30 +29,36 @@ int main ( int argc, char * const argv[] ) try {
         return 0;
     }
 
-    main_common ( &argc, & argv, shutdown );
+    sigset_t set, zmq_start_set;
+    int sig;
+    sigemptyset(&set);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGTERM);
+    sigaddset(&set, SIGHUP);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+        
+    main_common (&argc, &argv, 0 );
+
+    pthread_barrier_init(&threads_barrier, NULL, 2);
 
     threads["Walkman_test"] = new EC_boards_walkman_test ( argv[1] );
     threads["Walkman_test"]->create ( true, 2 );
 
-#if 0
-    // ZMQ_pub wait for pipe creation
-    while ( ! dynamic_cast<Ec_Thread_Boards_base*> ( threads["EC_boards_joint_joy"] )->init_OK() ) {
-        sleep ( 1 );
-    }
-    threads["ZMQ_pub"] = new iit::ZMQ_Pub_thread();
+    pthread_barrier_wait(&threads_barrier);
+    threads["ZMQ_pub"] = new ZMQ_Pub_thread( argv[1] );
     threads["ZMQ_pub"]->create ( false,3 );
+    
+#ifdef __COBALT__
+    __real_sigwait(&set, &sig);
+#else
+    sigwait(&set, &sig);  
 #endif
-
-    while ( main_loop ) {
-        sleep ( 1 );
+     
+    for ( auto const& item : threads ) {
+        item.second->stop();
+        item.second->join();
+        delete item.second;
     }
-
-    for ( auto const &t : threads) {
-        t.second->stop();
-        t.second->join();
-        delete t.second;
-    }
-
 
     std::cout << "Exit main" << std::endl;
 

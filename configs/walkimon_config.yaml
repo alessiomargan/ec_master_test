@@ -1,8 +1,8 @@
 #
 ec_board_ctrl:
-  eth_iface: rteth0
+  #eth_iface: rteth0
   #eth_iface: eth1
-  #eth_iface: enp35s0
+  eth_iface: enp35s0
   #eth_iface: eth0
   #sync_cycle_time_ns: 500000
   sync_cycle_time_ns: 1000000
@@ -17,7 +17,7 @@ ec_boards_base :
   robot_name : Walkimon
   read_SDOs : false
   urdf_config_file: ../configs/centauro_urdf.yaml
-  joints_poses_file : ../configs/test_poses.yaml
+  joints_poses_file : ../configs/walkimon_poses.yaml
 
 zmq_pub :
   base_port : 9000

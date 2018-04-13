@@ -20,13 +20,6 @@ typedef struct js_event	js_input_t;
 typedef spnav_event	spnav_input_t;
 
 
-static const std::vector<double> Xt_2s = std::initializer_list<double> { 0, 2 };
-static const std::vector<double> Xt_3s = std::initializer_list<double> { 0, 3 };
-static const std::vector<double> Xt_4s = std::initializer_list<double> { 0, 4 };
-static const std::vector<double> Xt_5s = std::initializer_list<double> { 0, 5 };
-static const std::vector<double> Xt_9s = std::initializer_list<double> { 0, 9 };
-static const std::vector<double> Xt3_6s = std::initializer_list<double> { 0, 4, 6 };
-
 using namespace iit::ecat::advr;
 
 EC_boards_urdf::EC_boards_urdf ( const char* config_yaml ) :
@@ -39,9 +32,9 @@ EC_boards_urdf::EC_boards_urdf ( const char* config_yaml ) :
 #ifdef __COBALT__
     schedpolicy = SCHED_FIFO;
 #else
-    schedpolicy = SCHED_OTHER;
+    schedpolicy = SCHED_RR;
 #endif
-    priority = sched_get_priority_max ( schedpolicy )-10;
+    priority = sched_get_priority_max ( schedpolicy );
     stacksize = ECAT_PTHREAD_STACK_SIZE;
 
     // open pipe ... xeno xddp or fifo
@@ -67,10 +60,8 @@ void EC_boards_urdf::init_preOP ( void ) {
    
     //std::vector<int> pos_rid = centauro::robot_mcs_ids;
     std::vector<int> pos_rid = get_urdf_rId();
-    std::vector<int> no_control = std::initializer_list<int> {
-        centauro::RA_HA,
-        centauro::LA_HA,
-    };
+    //std::vector<int> pos_rid = std::initializer_list<int> {   };
+    std::vector<int> no_control = std::initializer_list<int> {   };
        
     remove_rids_intersection(pos_rid, no_control);
 
@@ -78,10 +69,6 @@ void EC_boards_urdf::init_preOP ( void ) {
     get_esc_map_byclass ( motors_to_start,  pos_rid );
     DPRINTF ( "found %lu <Motor> to_start >> %lu in urdf model\n", motors_to_start.size(), pos_rid.size() );
 
-    std::vector<double> Ys;
-    std::vector<double> Xs;
-
-    
     for ( auto const& item : motors_to_start ) {
     
         slave_pos = item.first;
@@ -98,24 +85,23 @@ void EC_boards_urdf::init_preOP ( void ) {
         // home
         home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );
 
-        Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos], home[slave_pos] };
-        spline_start2home[slave_pos] = std::make_shared<advr::Spline_trajectory> ( Xt3_6s, Ys );
+        auto Xs = std::initializer_list<double> { 0, 5 };
+        auto Ys =  std::initializer_list<double> { start_pos[slave_pos], home[slave_pos] };
+        trj_map["start@home"][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
 
         //////////////////////////////////////////////////////////////////////////
         // start controller :
-        // - read actual joint position and set as pos_ref
-        moto->start ( CTRL_SET_POS_MODE );
-    }
+        assert ( moto->start ( ) == EC_BOARD_OK );
 
+    }
     
     DPRINTF ( ">>> wait xddp terminal ....\n" );
     DPRINTF ( ">>> from another terminal run ec_master_test/scripts/xddp_term.py\n" );
     char c; while ( termInXddp.xddp_read ( c ) <= 0 ) { osal_usleep(100); }  
     
-    if ( motors_to_start.size() > 0 ) {
-        //
-        trj_queue.push_back ( spline_start2home );
-    }
+    trj_queue.clear();
+    //trj_queue.push_back ( trj_map.at("start@home") );
+    
 }
 
 
@@ -124,9 +110,8 @@ void EC_boards_urdf::init_OP ( void ) {
 
     try { advr::reset_trj ( trj_queue.at(0) ); }
     catch ( const std::out_of_range &e ) {
-        throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
+        //throw std::runtime_error("Oh my gosh  ... trj_queue is empty !");
     }    
-
     
     DPRINTF ( "End Init_OP\n" );
     
