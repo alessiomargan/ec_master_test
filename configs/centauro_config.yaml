@@ -18,31 +18,8 @@ ec_boards_base:
   urdf_config_file : ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
 
-firmware_update:
-  #
-  fw_path: ../examples/fw_update/fw_test/
-  # all esc
-  #slave_pos_list: [1]
-  # all CentAC motor
-  #slave_pos_list: [-4]
-  #slave_pos_list: [7]
-  #slave_rId_list: [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-  slave_pos_list: [12,13,14,15,16,17,18,19,20,21,22,23,24,25]
+microCTRL_stuff: ../configs/microCTRL_config.yaml
   
- cent_AC:
-    m3:
-      bin_file: cent_AC_m3.bin
-      passwd: 0xA550
-    c28:
-      bin_file: cent_AC_c28.bin
-      passwd: 0xDAD0
-  power_f28m36:
-    m3:
-      bin_file: pow_m3.bin
-      passwd: 0xF2F2
-    c28:
-      bin_file: pow_c28.bin
-      passwd: 0xF3F3    
 
 #############################
 # GENERIC ESC config

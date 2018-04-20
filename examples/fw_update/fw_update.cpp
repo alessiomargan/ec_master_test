@@ -56,7 +56,7 @@ int main ( int argc, char * const argv[] ) try {
 
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
-    const YAML::Node doc = ec_boards_ctrl->get_config_YAML_Node();
+    const YAML::Node doc = YAML::LoadFile(ec_boards_ctrl->get_config_YAML_Node()["microCTRL_stuff"].as<std::string>());
     const YAML::Node firmware_update = doc["firmware_update"];
 
     std::vector<int> slave_list;

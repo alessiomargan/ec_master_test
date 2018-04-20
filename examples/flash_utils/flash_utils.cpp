@@ -56,7 +56,7 @@ int main ( int argc, char * const argv[] ) try {
 
     Rid2PosMap  rid2pos = ec_boards_ctrl->get_Rid2PosMap();
 
-    const YAML::Node doc = ec_boards_ctrl->get_config_YAML_Node();
+    const YAML::Node doc = YAML::LoadFile(ec_boards_ctrl->get_config_YAML_Node()["microCTRL_stuff"].as<std::string>());
     const YAML::Node flash_files = doc["flash_files"];
 
     std::vector<int> slave_list;
@@ -125,26 +125,6 @@ int main ( int argc, char * const argv[] ) try {
             YAML::Node esc_type;
             bType = esc->get_ESC_type();
             switch ( bType ) {
-/*
-            case HI_PWR_AC_MC :
-                esc_type = firmware_update["big_motor"];
-                break;
-            case HI_PWR_DC_MC :
-                esc_type = firmware_update["medium_motor"];
-                break;
-            case LO_PWR_DC_MC :
-                esc_type = firmware_update["small_motor"];
-                break;
-            case FT6 :
-                esc_type = firmware_update["force_torque_6"];
-                break;
-            case POW_BOARD  :
-                esc_type = firmware_update["power_hub"];
-                break;
-            case POW_F28M36_BOARD  :
-                esc_type = firmware_update["power_f28m36"];
-                break;
-*/
             case CENT_AC :
                 esc_type = flash_files["cent_AC"];
                 break;
