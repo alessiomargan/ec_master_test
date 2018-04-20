@@ -34,6 +34,27 @@ Ec_Boards_basic::~Ec_Boards_basic() {
 
 void Ec_Boards_basic::init_preOP ( void ) {
 
+    int slave_pos, rId;
+    Motor * moto;
+
+#if 0    
+    for ( auto const& item : motors ) {
+        slave_pos = item.first;
+        rId = pos2Rid(slave_pos);
+        moto = item.second;
+
+        if ( dynamic_cast<CentAcESC*>(moto) ) {
+            if ( std::set<int>({11,12}).count(rId) == 1 ) {
+                dynamic_cast<CentAcESC*>(moto)->set_zero_position(M_PI+DEG2RAD(-45) );
+            } else if ( std::set<int>({21,22}).count(rId) == 1 ) {
+                dynamic_cast<CentAcESC*>(moto)->set_zero_position(M_PI+DEG2RAD(+45) );             
+            } else {
+                dynamic_cast<CentAcESC*>(moto)->set_zero_position(M_PI);
+            }
+            
+        }
+    }
+#endif
 #if 0
     // get first motor ....
     CentAcESC * treeAct = slave_as<CentAcESC>(rid2Pos(1)); 
@@ -41,9 +62,7 @@ void Ec_Boards_basic::init_preOP ( void ) {
         
         if ( treeAct->run_torque_calibration( ) ) {
             DPRINTF ( ">> [%d] Fail torque calibration\n",rid2Pos(1) );
-        }
-        
-        //treeAct->set_zero_position(M_PI);
+        }    
     } 
 #endif
 

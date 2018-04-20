@@ -11,12 +11,14 @@ ec_board_ctrl:
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 0
   power_off_boards: false
+  reset_micro : true
 
 ec_boards_base :
-  robot_name : walkimon
-  urdf_config_file : ../configs/walkman_urdf.yaml
-  joints_poses_file : ../configs/walkimon_poses.yaml
-  
+  robot_name : Walkimon
+  read_SDOs : false
+  urdf_config_file: ../configs/centauro_urdf.yaml
+  joints_poses_file : ../configs/test_poses.yaml
+
 zmq_pub :
   base_port : 9000
   uri: "tcp://*:"

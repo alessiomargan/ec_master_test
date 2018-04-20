@@ -7,6 +7,7 @@
 
 */
 #include <experimental/filesystem>
+#include <boost/algorithm/string.hpp>
 
 #include <iit/advr/zmq_publisher.h>
 #include <iit/advr/coman_robot_id.h>
@@ -98,10 +99,10 @@ void ZMQ_Pub_thread::th_init ( void * ) {
     std::string robot_prefix ( "void@" );
 
     try {
-        base_port = yaml_cfg["zmq"]["base_port"].as<int>();
+        base_port = yaml_cfg["zmq_pub"]["base_port"].as<int>();
     } catch ( YAML::Exception ) {  }
     try {
-        uri = yaml_cfg["zmq"]["uri"].as<std::string>();
+        uri = yaml_cfg["zmq_pub"]["uri"].as<std::string>();
     } catch ( YAML::Exception ) { }
     try {
         robot_prefix = yaml_cfg["ec_boards_base"]["robot_name"].as<std::string>() + "@";
@@ -123,80 +124,26 @@ void ZMQ_Pub_thread::th_init ( void * ) {
         std::string path = p.path().u8string();
         std::string filename = p.path().filename().u8string();
         //std::cout << path << '\n';
+        std::vector<std::string> filename_tokens;
+        int id;
+        boost::split(filename_tokens, filename, boost::is_any_of("_"));
+        id = std::atoi(filename_tokens.back().c_str());
+        if ( ! id ) {
+            // 0 ==> atoi error
+            continue;
+        } 
         
         if ( path.find(motor_prefix) != std::string::npos ) {
-            zpub_factory<McPub>(uri+std::to_string(base_port++), path, filename);
+            zpub_factory<McPub>(uri+std::to_string(base_port+id), path, filename);
         } else if ( path.find(ft_prefix) != std::string::npos )  {
-            zpub_factory<FtPub>(uri+std::to_string(base_port++), path, filename);
+            zpub_factory<FtPub>(uri+std::to_string(base_port+id), path, filename);
         } else if ( path.find(psens_prefix) != std::string::npos )  {
-            zpub_factory<PressSensPub<10,5>>(uri+std::to_string(base_port++), path, filename);
+            zpub_factory<PressSensPub<10,5>>(uri+std::to_string(base_port+id), path, filename);
         } else if ( path.find(imu_prefix) != std::string::npos )  {
-            zpub_factory<ImuPub>(uri+std::to_string(base_port++), path, filename);
+            zpub_factory<ImuPub>(uri+std::to_string(base_port+id), path, filename);
         }
         
     }
-    
-    ///////////////////////////////////////////////////////////////////////
-    // COMAN
-    ///////////////////////////////////////////////////////////////////////
-#if 0
-    base_port = 9000;
-    for ( auto const& rid : coman::robot_mcs_ids ) { 
-        zpub_factory<McPub>(rid, uri, motor_prefix, base_port);
-    }
-    for ( auto const& rid : coman::robot_fts_ids ) {
-        zpub_factory<FtPub>(rid, uri, ft_prefix, base_port);
-    }
-    zpub = new PwCmnPub ( uri+std::to_string ( 10000 ) );
-    if ( zpub->open_pipe ( "PowCmn_pos_1" ) == 0 ) {
-        zmap[10000] = zpub;
-    } else {
-        delete zpub;
-    }
-#endif
-    ///////////////////////////////////////////////////////////////////////
-    // WALKMAN
-    ///////////////////////////////////////////////////////////////////////
-#if 0
-    base_port = 9500;
-    for ( auto const& rid : walkman::robot_mcs_ids ) {
-        zpub_factory<McPub>(rid, uri, walkman+motor_prefix, base_port);
-    }
-    for ( auto const& rid : walkman::robot_fts_ids ) {
-        zpub_factory<FtPub>(rid, uri, ft_prefix, base_port);
-    }
-    for ( auto const& rid : walkman::robot_foot_ids ) {
-        zpub_factory<PressSensPub<10,5>>(rid, uri, walkman+foot_prefix, base_port);
-    }
-    zpub = new PwPub ( uri+std::to_string ( 10001 ) );
-    if ( zpub->open_pipe ( "PowWkm_pos_1" ) == 0 ) {
-        zmap[10001] = zpub;
-    } else {
-        delete zpub;
-    }
-#endif    
-    ///////////////////////////////////////////////////////////////////////
-    // CENTAURO
-    ///////////////////////////////////////////////////////////////////////
-#if 0
-    base_port = 9600;
-    for ( auto const &rid : centauro::robot_mcs_ids ) {
-        zpub_factory<McPub>(rid, uri, centauro+motor_prefix, base_port);
-    }
-    for ( auto const& rid : std::initializer_list<int>{1} ) {
-        zpub_factory<PressSensPub<8,3>>(rid, uri, norobot+skin_prefix, base_port);
-    }
-#endif
-    ///////////////////////////////////////////////////////////////////////
-    //
-    ///////////////////////////////////////////////////////////////////////
-#if 0
-    base_port = 9800;
-    for ( auto const& rid : std::initializer_list<int>{1,2,3} ) {
-        zpub_factory<McHandPub>(rid, uri, hand_prefix, base_port);
-    }
-#endif
-    
 
 }
 
