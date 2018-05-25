@@ -40,11 +40,14 @@ typedef struct {
     void sprint ( char *buff, size_t size ) {
         snprintf ( buff, size, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f", ts,
 // big sensor
-//                   iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                   -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
+//                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
+//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
 // small sensor
-                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+// cogimon foot
+//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                 -ati[1],ati[0],ati[2],-ati[4],ati[3],ati[5]);
     }
     void fprint ( FILE *fp ) {
         fprintf ( fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", ts,
@@ -54,6 +57,9 @@ typedef struct {
 // small sensor
                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+// cogimon foot
+//                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+//                 -ati[1],ati[0],ati[2],-ati[4],ati[3],ati[5]);
     }
 } sens_data_t ;
 

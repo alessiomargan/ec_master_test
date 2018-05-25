@@ -45,6 +45,7 @@
 #include <iit/ecat/advr/power_board.h>
 #include <iit/ecat/advr/power_coman_board.h>
 #include <iit/ecat/advr/mc_hand_esc.h>
+#include <iit/ecat/advr/heri_hand_esc.h>
 #include <iit/ecat/advr/test_esc.h>
 
 #include <iit/advr/thread_util.h>
@@ -218,6 +219,7 @@ class ZMQ_Pub_thread : public Thread_hook {
     typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
     typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
     typedef Publisher<iit::ecat::advr::McHandEscPdoTypes::pdo_rx> McHandPub;
+    typedef Publisher<iit::ecat::advr::HeriHandEscPdoTypes::pdo_rx> HeriHandPub;
     
     typedef Publisher<iit::advr::Ec_slave_pdo> EcSlavePub;
 
@@ -247,10 +249,8 @@ public:
             DPRINTF ( "Can not open %s\n", config.c_str() );
             assert ( 0 );
         }
-
+        
         yaml_cfg = YAML::LoadFile ( config );
-
-
     }
 
     ~ZMQ_Pub_thread() {

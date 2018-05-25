@@ -16,7 +16,7 @@ ec_board_ctrl :
   
 ec_boards_base :
   robot_name : NoNe
-  read_SDOs : false
+  read_SDOs : true
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
 

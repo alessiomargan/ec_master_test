@@ -13,7 +13,7 @@ ec_board_ctrl:
   #sync_cycle_offset_ns: 4000000000
   sync_cycle_offset_ns: 1000000000
   power_off_boards: false
-  reset_micro : false
+  reset_micro : true
   
 ec_boards_base:
   robot_name : NoNe
@@ -39,6 +39,12 @@ LpESC_X:
     position: [20.0 , 0.0 , 1.0]
 
 LpHandESC_X:
+  sign: 1
+  pos_offset: 0
+  pid :
+    position: [20.0 , 0.0 , 1.0]
+
+HeriHandESC_X:
   sign: 1
   pos_offset: 0
   pid :

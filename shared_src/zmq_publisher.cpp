@@ -113,6 +113,7 @@ void ZMQ_Pub_thread::th_init ( void * ) {
     const std::string psens_prefix  ( "PressSens_id_" );
     const std::string imu_prefix    ( "Imu_id_" );
     const std::string hand_prefix   ( "Hand_id_" );
+    const std::string heri_prefix   ( "Heri_id_" );
 
     
     ///////////////////////////////////////////////////////////////////////
@@ -141,6 +142,8 @@ void ZMQ_Pub_thread::th_init ( void * ) {
             zpub_factory<PressSensPub<10,5>>(uri+std::to_string(base_port+id), path, filename);
         } else if ( path.find(imu_prefix) != std::string::npos )  {
             zpub_factory<ImuPub>(uri+std::to_string(base_port+id), path, filename);
+        } else if ( path.find(heri_prefix) != std::string::npos )  {
+            zpub_factory<HeriHandPub>(uri+std::to_string(base_port+id), path, filename);
         }
         
     }
