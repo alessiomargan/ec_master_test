@@ -212,13 +212,13 @@ public:
 
 class ZMQ_Pub_thread : public Thread_hook {
 
-    typedef Publisher<iit::ecat::advr::TestEscPdoTypes::pdo_rx> TestPub;
-    typedef Publisher<iit::ecat::advr::ImuEscPdoTypes::pdo_rx> ImuPub;
-    typedef Publisher<iit::ecat::advr::Ft6EscPdoTypes::pdo_rx> FtPub;
-    typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx> McPub;
-    typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx> PwPub;
-    typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx> PwCmnPub;
-    typedef Publisher<iit::ecat::advr::McHandEscPdoTypes::pdo_rx> McHandPub;
+    typedef Publisher<iit::ecat::advr::TestEscPdoTypes::pdo_rx>     TestPub;
+    typedef Publisher<iit::ecat::advr::ImuEscPdoTypes::pdo_rx>      ImuPub;
+    typedef Publisher<iit::ecat::advr::Ft6EscPdoTypes::pdo_rx>      FtPub;
+    typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx>       McPub;
+    typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx>      PwPub;
+    typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx>   PwCmnPub;
+    typedef Publisher<iit::ecat::advr::McHandEscPdoTypes::pdo_rx>   McHandPub;
     typedef Publisher<iit::ecat::advr::HeriHandEscPdoTypes::pdo_rx> HeriHandPub;
     
     typedef Publisher<iit::advr::Ec_slave_pdo> EcSlavePub;

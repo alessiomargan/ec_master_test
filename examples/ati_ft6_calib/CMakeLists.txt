@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 2.8.3)
 get_filename_component(PRJ_DIR ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${PRJ_DIR})
 
-include_directories(.)
+include_directories(include)
 
 add_executable(${PROJECT_NAME}
     ati_iface.cpp
+    ec_boards_ft_ati.cpp
     ft_ati_test.cpp
 )
 

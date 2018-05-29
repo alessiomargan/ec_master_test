@@ -33,14 +33,14 @@ int main ( int argc, char * const argv[] ) try {
         
     main_common (&argc, &argv, 0 );
 
-    pthread_barrier_init(&threads_barrier, NULL, 2);
-    
     threads["boards_basic"] = new Ec_Boards_basic ( argv[1] );
-    threads["boards_basic"]->create ( true );
+    threads["ZMQ_pub"] =      new ZMQ_Pub_thread( argv[1] );
     
+    pthread_barrier_init(&threads_barrier, NULL, threads.size());
+    
+    threads["boards_basic"]->create ( true );
     pthread_barrier_wait(&threads_barrier);
-    threads["ZMQ_pub"] = new ZMQ_Pub_thread( argv[1] );
-    threads["ZMQ_pub"]->create ( false,3 );
+    threads["ZMQ_pub"]->create ( false, 3 );
     
 #ifdef __COBALT__
     __real_sigwait(&set, &sig);
