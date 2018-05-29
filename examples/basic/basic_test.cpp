@@ -1,4 +1,3 @@
-//#include <stdio.h>
 #include <cerrno>
 #include <cassert>
 #include <csignal>
@@ -24,7 +23,7 @@ int main ( int argc, char * const argv[] ) try {
         return 0;
     }
 
-    sigset_t set, zmq_start_set;
+    sigset_t set;
     int sig;
     sigemptyset(&set);
     sigaddset(&set, SIGINT);

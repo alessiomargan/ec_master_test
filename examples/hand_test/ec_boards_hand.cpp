@@ -35,7 +35,7 @@ std::map<int, float> hand_close_pos_rad = {
 
 Ec_Boards_hand::Ec_Boards_hand ( const char* config_yaml ) : Ec_Thread_Boards_base ( config_yaml ) {
 
-    name = "EC_boards_sine";
+    name = "EC_boards_hand";
     // do not go above ....
     period.period = {0,1};
 
@@ -58,14 +58,14 @@ Ec_Boards_hand::~Ec_Boards_hand() {
 
 void Ec_Boards_hand::init_preOP ( void ) {
 
-    iit::ecat::advr::LpHandESC * moto;
+    iit::ecat::advr::HeriHandESC * moto;
     int slave_pos;
-    float min_pos, max_pos, link_pos, motor_pos;
+    float motor_pos, motor_pos_2;
 
     std::vector<int> test_rid = std::initializer_list<int> {
 
-        FING_1,FING_2,FING_3
-        
+        FING_1,
+        FING_2        
     };
     
 
@@ -75,20 +75,18 @@ void Ec_Boards_hand::init_preOP ( void ) {
     for ( auto const& item : fingers ) {
         slave_pos = item.first;
         moto = item.second;
-        moto->readSDO_byname ( "Min_pos", min_pos );
-        moto->readSDO_byname ( "Max_pos", max_pos );
         moto->readSDO_byname ( "motor_pos", motor_pos );
-        moto->readSDO_byname ( "link_pos", link_pos );
+        moto->readSDO_byname ( "motor_pos_2", motor_pos_2 );
         start_pos[slave_pos] = motor_pos; 
         home[slave_pos] = hand_open_pos_rad[pos2Rid(slave_pos)];
         
-        DPRINTF ( ">> Joint_id %d motor %f link %f start %f home %f\n",
-                  pos2Rid ( slave_pos ), motor_pos, link_pos, start_pos[slave_pos], home[slave_pos]);
+        DPRINTF ( ">> Joint_id %d motor %f motor_2 %f start %f home %f\n",
+                  pos2Rid ( slave_pos ), motor_pos, motor_pos_2, start_pos[slave_pos], home[slave_pos]);
         
         //////////////////////////////////////////////////////////////////////////
         // start controller :
         // - read actual joint position and set as pos_ref  
-        assert ( moto->start ( CTRL_SET_POS_MODE ) == EC_BOARD_OK );
+        assert ( moto->start ( CTRL_SET_POS_MOTOR_MODE ) == EC_BOARD_OK );
     }
 
     
@@ -126,7 +124,8 @@ int Ec_Boards_hand::user_input ( C &user_cmd ) {
 
 int Ec_Boards_hand::user_loop ( void ) {
 
-    iit::ecat::advr::LpHandESC * finger;
+    //iit::ecat::advr::LpHandESC * finger;
+    iit::ecat::advr::HeriHandESC * finger;
     int slave_pos;
     char what = 0;
     static int hand_status;
@@ -181,24 +180,21 @@ int Ec_Boards_hand::user_loop ( void ) {
 int Ec_Boards_hand::check_force_finger( void ) {
 
     int contact = 0;
-    McHandEscPdoTypes::pdo_rx hand_pdo_rx;
-    McHandEscPdoTypes::pdo_tx hand_pdo_tx;
-    iit::ecat::advr::LpHandESC * finger;
-    
+    iit::ecat::advr::HeriHandESC * finger;
     
     // for each finger ....
     for ( auto const& item : fingers ) { 
         finger = item.second;
-        hand_pdo_rx = finger->getRxPDO();
+        auto hand_pdo_rx = finger->getRxPDO();
         // for each sensor ....
-        if ( hand_pdo_rx.analog1 > MAX_FORCE_FINGER ||
-             hand_pdo_rx.analog2 > MAX_FORCE_FINGER ||
-             hand_pdo_rx.analog3 > MAX_FORCE_FINGER   ) {
+        if ( hand_pdo_rx.m1_an_1 > MAX_FORCE_FINGER ||
+             hand_pdo_rx.m1_an_2 > MAX_FORCE_FINGER ||
+             hand_pdo_rx.m1_an_3 > MAX_FORCE_FINGER   ) {
         
-            DPRINTF ( "[%d] %d %d %d\n", item.first, hand_pdo_rx.analog1, hand_pdo_rx.analog2, hand_pdo_rx.analog3 );
+            DPRINTF ( "[%d] %d %d %d\n", item.first, hand_pdo_rx.m1_an_1, hand_pdo_rx.m1_an_2, hand_pdo_rx.m1_an_3 );
     
             //
-            finger->set_posRef(hand_pdo_rx.link_pos);
+            finger->set_posRef(hand_pdo_rx.motor_pos);
             contact = 1;
         }
     } 

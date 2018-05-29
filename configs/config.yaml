@@ -34,15 +34,25 @@ microCTRL_stuff: ../configs/microCTRL_config.yaml
 LpESC_X:
   sign: 1
   pos_offset: 0
+  control_mode : 3B_motor_pos_ctrl
   pid :
-    position: [20.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 1.0]
 
 LpHandESC_X:
   sign: 1
   pos_offset: 0
+  control_mode : 3B_motor_pos_ctrl
   pid :
-    position: [20.0 , 0.0 , 1.0]
+    position: [100000.0 , 0.0 , 1.0]
 
+HeriHandESC_X:
+  sign: 1
+  pos_offset: 0
+  control_mode : 3B_motor_pos_ctrl
+  pid :
+    position: [100000.0 , 0.0 , 1.0]
+    
+    
 HpESC_X: &HpESC_X
   sign: 1
   pos_offset: 0

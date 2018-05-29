@@ -37,7 +37,8 @@ private :
     virtual void init_OP ( void );
     int check_force_finger( void );
     
-    std::map<int, iit::ecat::advr::LpHandESC*>  fingers;
+    //std::map<int, iit::ecat::advr::LpHandESC*>  fingers;
+    std::map<int, iit::ecat::advr::HeriHandESC*>  fingers;
     
     XDDP_pipe inXddp;
 };
