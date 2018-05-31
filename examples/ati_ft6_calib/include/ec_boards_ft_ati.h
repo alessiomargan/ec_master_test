@@ -15,9 +15,7 @@
 #define __EC_BOARDS_FT_ATI_H__
 
 #include <iit/advr/ec_boards_base.h>
-#include <ati_iface.h>
-
-#include <protobuf/ecat_pdo.pb.h>
+#include <iit/advr/ati_iface.h>
 
 #include <boost/circular_buffer.hpp>
 #include <boost/tokenizer.hpp>
@@ -127,50 +125,33 @@ private :
     virtual void init_OP ( void );
 
     iit::ecat::advr::Ft6ESC* ft;
-    Ati_Sens * ati;
+    iit::advr::Ati_Sens * ati;
     
     YAML::Node ati_config;
     
     boost::circular_buffer<sens_data_t> sens_log;
-    ati_log_t   sample;
+    iit::advr::ati_log_t   sample;
     sens_data_t sens_data;
 
     uint64_t    start;
 
-    int serializeToXddp( const sens_data_t &ati_rx );
+    int serializeToXddp( const iit::advr::ati_log_t &ati_rx );
     XDDP_pipe   ftAtiOutXddp;
-            
     std::string pb_str;
     
 };
 
 
-inline int Ec_Boards_ft_ati::serializeToXddp( const sens_data_t &sens ) {
+inline int Ec_Boards_ft_ati::serializeToXddp( const iit::advr::ati_log_t &ati ) {
          
-    static iit::advr::Ec_slave_pdo pb_ati;
-    static struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    // Header
-    pb_ati.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
-    pb_ati.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
-    // Type
-    pb_ati.set_type(iit::advr::Ec_slave_pdo::RX_FT6);
-    // FT6_rx_pdo
-    pb_ati.mutable_ft6_rx_pdo()->set_force_x(sens.iit[0]);
-    pb_ati.mutable_ft6_rx_pdo()->set_force_y(sens.iit[1]);
-    pb_ati.mutable_ft6_rx_pdo()->set_force_z(sens.iit[2]);
-    pb_ati.mutable_ft6_rx_pdo()->set_torque_x(sens.iit[3]);
-    pb_ati.mutable_ft6_rx_pdo()->set_torque_y(sens.iit[4]);
-    pb_ati.mutable_ft6_rx_pdo()->set_torque_z(sens.iit[5]);
-    pb_ati.mutable_ft6_rx_pdo()->set_fault(0);
-    pb_ati.mutable_ft6_rx_pdo()->set_rtt(0);
+    static iit::advr::FT_ati_rx pb_ati;
     //
-    pb_ati.mutable_ft6_rx_pdo()->set_aforce_x (sens.ati[0]);
-    pb_ati.mutable_ft6_rx_pdo()->set_aforce_y (sens.ati[1]);
-    pb_ati.mutable_ft6_rx_pdo()->set_aforce_z (sens.ati[2]);
-    pb_ati.mutable_ft6_rx_pdo()->set_atorque_x(sens.ati[3]);
-    pb_ati.mutable_ft6_rx_pdo()->set_atorque_y(sens.ati[4]);
-    pb_ati.mutable_ft6_rx_pdo()->set_atorque_z(sens.ati[5]);
+    pb_ati.set_aforce_x (ati.ft[0]);
+    pb_ati.set_aforce_y (ati.ft[1]);
+    pb_ati.set_aforce_z (ati.ft[2]);
+    pb_ati.set_atorque_x(ati.ft[3]);
+    pb_ati.set_atorque_y(ati.ft[4]);
+    pb_ati.set_atorque_z(ati.ft[5]);
     pb_ati.SerializeToString(&pb_str);
     auto msg_size = pb_str.length();
     auto nbytes = write ( ftAtiOutXddp.get_fd(), ( void* ) &msg_size, sizeof( msg_size ) );

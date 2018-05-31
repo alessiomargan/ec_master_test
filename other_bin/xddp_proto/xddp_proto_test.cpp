@@ -47,8 +47,8 @@ public:
     {
 
         name = "RT_thread";
-        // non periodic
-        period.period = {0,99999};
+        // periodic
+        period.period = {0,10000};
 
 #ifdef __COBALT__
         schedpolicy = SCHED_FIFO;
@@ -73,23 +73,24 @@ public:
     virtual void th_loop ( void * ) {
     
         int msg_size, nbytes;
-        
+        static uint16_t cnt;
+        cnt++;
         ///////////////////////////////////////////////////////////////////////
-        // read from NRT
-        nbytes = inXddp.xddp_read( msg_size );
-        if ( nbytes > 0 ) {
-            nbytes = inXddp.xddp_read ( pb_buf, msg_size );
-            pb_msg.ParseFromArray(pb_buf, msg_size);
-            std::cout << pb_msg.type() << std::endl;
-        }
+//         // read from NRT
+//         nbytes = inXddp.xddp_read( msg_size );
+//         if ( nbytes > 0 ) {
+//             nbytes = inXddp.xddp_read ( pb_buf, msg_size );
+//             pb_msg.ParseFromArray(pb_buf, msg_size);
+//             std::cout << pb_msg.type() << std::endl;
+//         }
         
         ///////////////////////////////////////////////////////////////////////
         // write to NRT
         pb_msg.set_type(iit::advr::Ec_board_base_input_Type_SET_GAINS);
         pb_msg.mutable_gains()->set_type(iit::advr::Gains_Type_POSITION);
-        pb_msg.mutable_gains()->set_kp(1);
-        pb_msg.mutable_gains()->set_ki(2);
-        pb_msg.mutable_gains()->set_kd(3);
+        pb_msg.mutable_gains()->set_kp(cnt);
+        pb_msg.mutable_gains()->set_ki(cnt);
+        pb_msg.mutable_gains()->set_kd(cnt);
         pb_msg.SerializeToString( &pb_str);
         msg_size = pb_str.length();
         nbytes = write ( outXddp.get_fd(), ( void* ) &msg_size, sizeof( msg_size ) );
@@ -118,8 +119,8 @@ public:
     UI_thread(std::string _pipe_name):pipe_name(_pipe_name) {
 
         name = "UI_thread";
-        // periodic
-        period.period = {0,100};
+        // non periodic
+        period.period = {0,1};
 
         schedpolicy = SCHED_OTHER;
         priority = sched_get_priority_max ( schedpolicy ) /2;

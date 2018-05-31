@@ -1,4 +1,4 @@
-#include <ati_iface.h>
+#include <iit/advr/ati_iface.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -19,10 +19,7 @@
 #define ATI_IFACE_IP    "192.168.1.1"
 //#define ATI_IFACE_IP    "169.254.89.61"
 
-////////////////////
-//#undef __COBALT__
-////////////////////
-
+using namespace iit::advr;
 
 Ati_Sens::Ati_Sens ( bool run_thread ) : run ( run_thread ) {
 

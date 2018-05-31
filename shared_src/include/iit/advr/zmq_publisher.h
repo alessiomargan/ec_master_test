@@ -49,6 +49,8 @@
 #include <iit/ecat/advr/test_esc.h>
 
 #include <iit/advr/thread_util.h>
+#include <iit/advr/ati_iface.h>
+
 #include <protobuf/ecat_pdo.pb.h>
 
 
@@ -160,7 +162,7 @@ public:
     int publish ( void ) {
         
         if ( read_pipe ( pub_data ) <= 0 ) {
-            //std::cout << "Error read from pipe" << std::endl;
+            std::cout << "[0Q] Error read from pipe" << std::endl;
             return -1;
         }
         return publish ( pub_data );
@@ -220,6 +222,7 @@ class ZMQ_Pub_thread : public Thread_hook {
     typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx>   PwCmnPub;
     typedef Publisher<iit::ecat::advr::McHandEscPdoTypes::pdo_rx>   McHandPub;
     typedef Publisher<iit::ecat::advr::HeriHandEscPdoTypes::pdo_rx> HeriHandPub;
+    typedef Publisher<iit::advr::ati_log_t> FtAtiPub;
     
     typedef Publisher<iit::advr::Ec_slave_pdo> EcSlavePub;
 

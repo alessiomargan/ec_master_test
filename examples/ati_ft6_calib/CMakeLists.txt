@@ -5,7 +5,6 @@ project(${PRJ_DIR})
 include_directories(include)
 
 add_executable(${PROJECT_NAME}
-    ati_iface.cpp
     ec_boards_ft_ati.cpp
     ft_ati_test.cpp
 )

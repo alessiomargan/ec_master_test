@@ -44,7 +44,7 @@ Abs_Publisher::Abs_Publisher ( std::string _uri, std::string _zkey ) : uri ( _ur
     _z->setsockopt ( ZMQ_SNDHWM, &opt_hwm, sizeof ( opt_hwm ) );
     _z->bind ( uri.c_str() );
 
-    std::cout << "publisher bind to " << uri << std::endl;
+    std::cout << "[0Q] publisher bind to " << uri << std::endl;
 
 }
 
@@ -59,7 +59,7 @@ int Abs_Publisher::open_pipe ( std::string pipe_name ) {
     //pipe = pipe_name;
     std::string pipe_path = pipe_name;
 
-    std::cout << "Opening xddp_socket " << pipe_path << std::endl;
+    std::cout << "[0Q] Opening xddp_socket " << pipe_path << std::endl;
     xddp_sock = open ( pipe_path.c_str(), O_RDONLY );
 
     if ( xddp_sock < 0 ) {
@@ -114,6 +114,7 @@ void ZMQ_Pub_thread::th_init ( void * ) {
     const std::string imu_prefix    ( "Imu_id_" );
     const std::string hand_prefix   ( "Hand_id_" );
     const std::string heri_prefix   ( "Heri_id_" );
+    const std::string ati_prefix    ( "Ati_" );
 
     
     ///////////////////////////////////////////////////////////////////////
@@ -144,6 +145,10 @@ void ZMQ_Pub_thread::th_init ( void * ) {
             zpub_factory<ImuPub>(uri+std::to_string(base_port+id), path, filename);
         } else if ( path.find(heri_prefix) != std::string::npos )  {
             zpub_factory<HeriHandPub>(uri+std::to_string(base_port+id), path, filename);
+        } else if ( path.find(ati_prefix) != std::string::npos )  {
+            zpub_factory<FtAtiPub>(uri+std::to_string(base_port+id), path, filename);
+        } else {
+            //
         }
         
     }

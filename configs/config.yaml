@@ -13,7 +13,7 @@ ec_board_ctrl :
   sync_point_ns : 300000
   power_off_boards: false
   reset_micro : true
-  use_pipes: false
+  use_pipes: true
   
 ec_boards_base :
   robot_name : NoNe
@@ -32,7 +32,7 @@ ati_config:
   save_calib_matrix: false
   #calib_mat_file: ../examples/ati_ft6_calib/data/ones.txt
   calib_mat_file: ../examples/ati_ft6_calib/data/Calib_matrix_Centauro_Right_wirst_ft_80_sens7.txt
-  dump_log: true
+  dump_log: false
 
 
 #############################

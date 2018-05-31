@@ -16,6 +16,7 @@ add_library(${LIB_NAME} SHARED
     ${SHARED_SRC}/ec_boards_base.cpp
     ${SHARED_SRC}/test_common.cpp
     ${SHARED_SRC}/spline.cpp
+    ${SHARED_SRC}/ati_iface.cpp
     ${SHARED_SRC}/zmq_publisher.cpp    
 )
 
