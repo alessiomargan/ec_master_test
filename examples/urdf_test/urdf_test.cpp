@@ -22,7 +22,7 @@ void shutdown ( int sig __attribute__ ( ( unused ) ) ) {
 
 int main ( int argc, char * const argv[] ) try {
 
-    
+
     std::map<std::string, Thread_hook*> threads;
 
     if ( argc != 2 ) {
@@ -32,28 +32,28 @@ int main ( int argc, char * const argv[] ) try {
 
     sigset_t set;
     int sig;
-    sigemptyset(&set);
-    sigaddset(&set, SIGINT);
-    sigaddset(&set, SIGTERM);
-    sigaddset(&set, SIGHUP);
-    pthread_sigmask(SIG_BLOCK, &set, NULL);
+    sigemptyset ( &set );
+    sigaddset ( &set, SIGINT );
+    sigaddset ( &set, SIGTERM );
+    sigaddset ( &set, SIGHUP );
+    pthread_sigmask ( SIG_BLOCK, &set, NULL );
 
     main_common ( &argc, &argv, shutdown );
-    
+
     threads["urdf_test"] = new EC_boards_urdf ( argv[1] );
-    threads["ZMQ_pub"] = new ZMQ_Pub_thread( argv[1] );
-    
-    pthread_barrier_init(&threads_barrier, NULL, threads.size());
+    threads["ZMQ_pub"] = new ZMQ_Pub_thread ( argv[1] );
+
+    pthread_barrier_init ( &threads_barrier, NULL, threads.size() );
 
     threads["urdf_test"]->create ( true, 2 );
-    pthread_barrier_wait(&threads_barrier);
+    pthread_barrier_wait ( &threads_barrier );
     threads["ZMQ_pub"]->create ( false,3 );
 
 #ifdef __COBALT__
-    // here I want to catch CTRL-C 
-     __real_sigwait(&set, &sig);
+    // here I want to catch CTRL-C
+    __real_sigwait ( &set, &sig );
 #else
-     sigwait(&set, &sig);  
+    sigwait ( &set, &sig );
 #endif
 
     for ( auto const& item : threads ) {

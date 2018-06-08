@@ -49,7 +49,7 @@ void Ec_Boards_ft_ati::init_preOP ( void ) {
             throw iit::ecat::advr::EcBoardsError(0,"No Ft6ESC at pos " + std::to_string(ft_ecat_pos));
         }
         
-        ftAtiOutXddp.init( "NoNe@Ati_1" );
+        ftAtiOutXddp.init( "NoNe@Ft_id_"+std::to_string ( ft->get_robot_id() ) );
         
         set_flash_cmd_X ( ft, CTRL_REMOVE_TORQUE_OFFS );
         try {
@@ -80,10 +80,6 @@ int Ec_Boards_ft_ati::user_loop ( void ) {
     // get ati data
     ati->get_last_sample ( sample );
     for ( int i=0; i < 6; i++ ) sample.ft[i] = sample.ft[i] / 1000 ;
-    // serialize ati 
-    ftAtiOutXddp.xddp_write(sample);
-    //serializeToXddp(sample);
-
     // get ft data
     auto ft_pdo_rx = ft->getRxPDO();
     
@@ -93,7 +89,7 @@ int Ec_Boards_ft_ati::user_loop ( void ) {
     memcpy ( ( void* ) &sens_data.iit, &ft_pdo_rx.force_X, sizeof ( float ) * 6 );
     sens_log.push_back ( sens_data );
 
-
+    serializeToXddp(&sens_data);
     
 #if 0
     if ( fabs(sample.ft[0]) > 300 || 

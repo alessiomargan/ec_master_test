@@ -48,7 +48,7 @@ public:
 
         name = "RT_thread";
         // periodic
-        period.period = {0,10000};
+        period.period = {0,50000};
 
 #ifdef __COBALT__
         schedpolicy = SCHED_FIFO;
@@ -93,8 +93,8 @@ public:
         pb_msg.mutable_gains()->set_kd(cnt);
         pb_msg.SerializeToString( &pb_str);
         msg_size = pb_str.length();
-        nbytes = write ( outXddp.get_fd(), ( void* ) &msg_size, sizeof( msg_size ) );
-        nbytes += write ( outXddp.get_fd(), ( void* ) pb_str.c_str() , pb_str.length() );
+        nbytes  = outXddp.xddp_write ( ( void* )&msg_size, sizeof( msg_size ) );
+        nbytes += outXddp.xddp_write ( ( void* )pb_str.c_str(), pb_str.length() );
         
         DPRINTF("[RT] write %d bytes to NRT %s%s\n", nbytes, pipe_name.c_str(), "_OUT");
     }

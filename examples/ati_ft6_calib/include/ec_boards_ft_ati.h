@@ -41,11 +41,11 @@ typedef struct {
 //                 -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
 //                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
 // small sensor
-                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
-// cogimon foot
 //                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                 -ati[1],ati[0],ati[2],-ati[4],ati[3],ati[5]);
+//                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+// cogimon foot
+                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+                -ati[1],ati[0],ati[2],-ati[4],ati[3],ati[5]);
     }
     void fprint ( FILE *fp ) {
         fprintf ( fp, "%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", ts,
@@ -53,11 +53,11 @@ typedef struct {
 //                  iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
 //                  -ati[0],ati[1],ati[2],-ati[3],ati[4],ati[5] );
 // small sensor
-                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-                ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
-// cogimon foot
 //                 iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
-//                 -ati[1],ati[0],ati[2],-ati[4],ati[3],ati[5]);
+//                 ati[0],ati[1],ati[2],ati[3],ati[4],ati[5]);
+// cogimon foot
+                iit[0],iit[1],iit[2],iit[3],iit[4],iit[5],
+                -ati[1],ati[0],ati[2],-ati[4],ati[3],ati[5]);
     }
     
 } sens_data_t ;
@@ -135,27 +135,43 @@ private :
 
     uint64_t    start;
 
-    int serializeToXddp( const iit::advr::ati_log_t &ati_rx );
+    int serializeToXddp( sens_data_t* sens_data );
     XDDP_pipe   ftAtiOutXddp;
     std::string pb_str;
+    iit::advr::Ec_slave_pdo pb_ft_ati;
     
 };
 
 
-inline int Ec_Boards_ft_ati::serializeToXddp( const iit::advr::ati_log_t &ati ) {
+inline int Ec_Boards_ft_ati::serializeToXddp( sens_data_t* sens_data ) {
          
-    static iit::advr::FT_ati_rx pb_ati;
-    //
-    pb_ati.set_aforce_x (ati.ft[0]);
-    pb_ati.set_aforce_y (ati.ft[1]);
-    pb_ati.set_aforce_z (ati.ft[2]);
-    pb_ati.set_atorque_x(ati.ft[3]);
-    pb_ati.set_atorque_y(ati.ft[4]);
-    pb_ati.set_atorque_z(ati.ft[5]);
-    pb_ati.SerializeToString(&pb_str);
-    auto msg_size = pb_str.length();
-    auto nbytes = write ( ftAtiOutXddp.get_fd(), ( void* ) &msg_size, sizeof( msg_size ) );
-    nbytes += write ( ftAtiOutXddp.get_fd(), ( void* ) pb_str.c_str() , pb_str.length() );
+    static struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    // Header
+    pb_ft_ati.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
+    pb_ft_ati.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
+    // Type
+    pb_ft_ati.set_type(iit::advr::Ec_slave_pdo::RX_FT6);
+    // iit
+    pb_ft_ati.mutable_ft6_rx_pdo()->set_force_x (sens_data->iit[0]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->set_force_y (sens_data->iit[1]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->set_force_z (sens_data->iit[2]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->set_torque_x(sens_data->iit[3]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->set_torque_y(sens_data->iit[4]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->set_torque_z(sens_data->iit[5]);
+    // ati   -ati[1],ati[0],ati[2],-ati[4],ati[3],ati[5]
+    pb_ft_ati.mutable_ft6_rx_pdo()->mutable_ft_ati_rx()->set_aforce_x (-sens_data->ati[1]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->mutable_ft_ati_rx()->set_aforce_y (sens_data->ati[0]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->mutable_ft_ati_rx()->set_aforce_z (sens_data->ati[2]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->mutable_ft_ati_rx()->set_atorque_x(-sens_data->ati[4]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->mutable_ft_ati_rx()->set_atorque_y(sens_data->ati[3]);
+    pb_ft_ati.mutable_ft6_rx_pdo()->mutable_ft_ati_rx()->set_atorque_z(sens_data->ati[5]);
+    
+    pb_ft_ati.SerializeToString(&pb_str);
+
+    uint32_t msg_size = pb_str.length();
+    uint32_t nbytes = ftAtiOutXddp.xddp_write( (void*) &msg_size, sizeof(msg_size) );
+    nbytes += ftAtiOutXddp.xddp_write( (void*)pb_str.c_str(), pb_str.length() );
     
     return nbytes;
 

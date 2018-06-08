@@ -10,14 +10,14 @@ ec_board_ctrl :
   #sync_cycle_time_ns: 100000000
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 1000000000
-  sync_point_ns : 300000
+  sync_point_ns : 500000
   power_off_boards: false
   reset_micro : true
   use_pipes: true
   
 ec_boards_base :
   robot_name : NoNe
-  read_SDOs : true
+  read_SDOs : false
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
 
@@ -31,8 +31,8 @@ ati_config:
   ft_ecat_pos: 1
   save_calib_matrix: false
   #calib_mat_file: ../examples/ati_ft6_calib/data/ones.txt
-  calib_mat_file: ../examples/ati_ft6_calib/data/Calib_matrix_Centauro_Right_wirst_ft_80_sens7.txt
-  dump_log: false
+  calib_mat_file: ../examples/ati_ft6_calib/data/Calib_matrix_Cogimon_right_Foot_ft_147_sens8.txt
+  dump_log: true
 
 
 #############################

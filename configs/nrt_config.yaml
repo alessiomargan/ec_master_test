@@ -14,6 +14,7 @@ ec_board_ctrl:
   sync_cycle_offset_ns: 1000000000
   power_off_boards: false
   reset_micro : true
+  use_pipes: true
   
 ec_boards_base:
   robot_name : NoNe

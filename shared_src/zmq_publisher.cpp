@@ -23,7 +23,7 @@ zmq::context_t zmq_ctx ( 1 );
 #ifdef __XENO_PIPE__
 static const std::string __pipe_prefix( "/proc/xenomai/registry/rtipc/xddp/" );
 #else
-static const std::string __pipe_prefix ( "/tmp/" );
+static const std::string __pipe_prefix ( "/tmp/nrt_pipes" );
 #endif
 
 ///////////////////////////////////////////////////////////////////////
@@ -114,7 +114,7 @@ void ZMQ_Pub_thread::th_init ( void * ) {
     const std::string imu_prefix    ( "Imu_id_" );
     const std::string hand_prefix   ( "Hand_id_" );
     const std::string heri_prefix   ( "Heri_id_" );
-    const std::string ati_prefix    ( "Ati_" );
+    const std::string pow_prefix    ( "PowF28M36Esc_" );
 
     
     ///////////////////////////////////////////////////////////////////////
@@ -134,7 +134,10 @@ void ZMQ_Pub_thread::th_init ( void * ) {
             // 0 ==> atoi error
             continue;
         } 
-        
+ 
+#if 1
+        zpub_factory(new SimplePublisher(uri+std::to_string(base_port+id), filename), path, filename);           
+#else        
         if ( path.find(motor_prefix) != std::string::npos ) {
             zpub_factory<McPub>(uri+std::to_string(base_port+id), path, filename);
         } else if ( path.find(ft_prefix) != std::string::npos )  {
@@ -150,7 +153,7 @@ void ZMQ_Pub_thread::th_init ( void * ) {
         } else {
             //
         }
-        
+#endif        
     }
 
 }

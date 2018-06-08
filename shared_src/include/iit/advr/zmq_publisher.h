@@ -105,7 +105,6 @@ inline int Abs_Publisher::read_pipe ( T &t ) {
     int expected_bytes = sizeof ( t );
     fd_set rfds;
     struct timeval tv;
-    int retval;
 
     FD_ZERO ( &rfds );
     FD_SET ( xddp_sock, &rfds );
@@ -129,9 +128,10 @@ inline int Abs_Publisher::read_pipe ( T &t ) {
 
 ///////////////////////////////////////////////////////////////////////
 ///
-/// Publisher
+/// Templete Publisher
 ///
 ///////////////////////////////////////////////////////////////////////
+
 template<typename T>
 std::string json_serializer ( T &t ) {
     Json::FastWriter writer;
@@ -154,12 +154,17 @@ private:
     
 public:    
 
-    Publisher ( std::string uri, std::string zkey ) : Abs_Publisher ( uri, zkey ) { }
+    Publisher ( std::string uri, std::string zkey ) : Abs_Publisher ( uri, zkey ) {
+         // prepare _msg_id just once
+        _msg_id.rebuild ( zmsg_id.length() );
+        memcpy ( ( void* ) _msg_id.data(),zmsg_id.data(), zmsg_id.length() );
+    }
+    
     virtual ~Publisher() {
         std::cout << "~" << typeid ( this ).name() << std::endl;
     }
 
-    int publish ( void ) {
+    virtual int publish ( void ) {
         
         if ( read_pipe ( pub_data ) <= 0 ) {
             std::cout << "[0Q] Error read from pipe" << std::endl;
@@ -172,28 +177,19 @@ public:
 
         int msg_data_size;
         std::string sz_string;
-        
-        // prepare _msg_id just once
-        _msg_id.rebuild ( zmsg_id.length() );
-        memcpy ( ( void* ) _msg_id.data(),zmsg_id.data(), zmsg_id.length() );
-
-        //////////////////////////////////////////////////////////
-        // prepare _msg
-        
+               
         //////////////////////////////////////////////////////////
         // -- text format
         //msg_data_size = pub_data.sprint ( zbuffer,sizeof ( zbuffer ) );
-
         //////////////////////////////////////////////////////////
         // -- json format
         //sz_string = json_serializer ( pub_data );
-        //msg_data_size = sz_string.length();
-        //_msg.rebuild ( msg_data_size );
-        //memcpy ( ( void* ) _msg.data(), sz_string.c_str(), msg_data_size );
-
         //////////////////////////////////////////////////////////
         // -- protobuf
         pub_data.pb_toString(&sz_string);
+
+        //////////////////////////////////////////////////////////
+        // prepare _msg
         msg_data_size = sz_string.length();
         _msg.rebuild ( msg_data_size );
         memcpy ( ( void* ) _msg.data(), sz_string.c_str(), msg_data_size );
@@ -205,6 +201,74 @@ public:
     }
 
 };
+
+
+class SimplePublisher : public Abs_Publisher {
+
+private:
+
+    uint32_t                pb_size;
+    uint8_t                 pb_buf[1024];     
+    std::string             pb_str;
+    iit::advr::Ec_slave_pdo pb_msg;
+    
+public:    
+
+    SimplePublisher ( std::string uri, std::string zkey ) : Abs_Publisher ( uri, zkey ) {
+    }
+
+    virtual ~SimplePublisher() {
+        std::cout << "~" << typeid ( this ).name() << std::endl;
+    }
+
+    int read_pipe ( void ) {
+
+        int nbytes = 0;
+        fd_set rfds;
+        struct timeval tv;
+        
+        FD_ZERO ( &rfds );
+        FD_SET ( xddp_sock, &rfds );
+        tv.tv_sec = 3;
+        tv.tv_usec = 0;
+
+        if ( select ( xddp_sock+1, &rfds, NULL, NULL, &tv ) > 0 ) {
+
+            nbytes = read ( xddp_sock, (void*)&pb_size, sizeof ( pb_size ) );
+            if ( nbytes > 0 ) {
+                nbytes = read ( xddp_sock, (void*)pb_buf, pb_size );
+                //pb_msg.ParseFromArray(pb_buf, pb_size);
+                //std::cout << pb_msg.DebugString() <<  std::endl;
+            }
+        } else {
+            return -ETIMEDOUT;
+        }
+
+        return nbytes;
+    }
+
+    int publish ( void ) {
+
+        if ( read_pipe() <= 0 ) {
+            std::cout << "[0Q] Error read from pipe " << zmsg_id << std::endl;
+            return -1;
+        }
+
+        // prepare _msg_id just once
+        _msg_id.rebuild ( zmsg_id.length() );
+        memcpy ( ( void* ) _msg_id.data(),zmsg_id.data(), zmsg_id.length() );
+
+        //////////////////////////////////////////////////////////
+        // prepare _msg
+        _msg.rebuild ( pb_size );
+        memcpy ( ( void* ) _msg.data(), pb_buf, pb_size );
+        
+        return publish_msg();
+    }
+
+
+};
+
 
 ///////////////////////////////////////////////////////////////////////
 ///
@@ -223,9 +287,6 @@ class ZMQ_Pub_thread : public Thread_hook {
     typedef Publisher<iit::ecat::advr::McHandEscPdoTypes::pdo_rx>   McHandPub;
     typedef Publisher<iit::ecat::advr::HeriHandEscPdoTypes::pdo_rx> HeriHandPub;
     typedef Publisher<iit::advr::ati_log_t> FtAtiPub;
-    
-    typedef Publisher<iit::advr::Ec_slave_pdo> EcSlavePub;
-
     template <int _Rows, int _Cols>
     using PressSensPub = Publisher<typename iit::ecat::advr::PressSensEscPdoTypes<_Rows,_Cols>::pdo_rx>;
 
@@ -244,7 +305,7 @@ public:
         period.period = {0,1};
 
         schedpolicy = SCHED_OTHER;
-        priority = sched_get_priority_max ( schedpolicy ) /2;
+        priority = sched_get_priority_max ( schedpolicy );
         stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
        
         std::ifstream fin ( config );
@@ -269,18 +330,21 @@ public:
     virtual void th_loop ( void * );
 
 private:
-    
-    template <typename T>
-    void zpub_factory(const std::string uri, const std::string pipe_path, const std::string zkey ) {
 
-        Abs_Publisher * zpub = new T ( uri, zkey );
+    void zpub_factory(Abs_Publisher * zpub, const std::string pipe_path, const std::string zkey ) {
         if ( zpub->open_pipe ( pipe_path ) == 0 ) {
             zmap[zkey] = zpub;
         } else {
             delete zpub;
         }
-
     }
+    
+    template <typename T>
+    void zpub_factory(const std::string uri, const std::string pipe_path, const std::string zkey ) {
+        Abs_Publisher * zpub = new T ( uri, zkey );
+        zpub_factory(zpub, pipe_path, zkey);
+    }
+
 
 };
 
