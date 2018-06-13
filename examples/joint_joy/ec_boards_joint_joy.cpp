@@ -73,10 +73,10 @@ void EC_boards_joint_joy::init_preOP ( void ) {
     for ( auto const& item : motors ) {
         slave_pos = item.first;
         moto = item.second;
-        assert ( EC_WRP_OK == moto->readSDO ( "Min_pos", min_pos ));
-        assert ( EC_WRP_OK == moto->readSDO ( "Max_pos", max_pos ));
-        assert ( EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ));
-        assert ( EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
+        assert ( iit::ecat::EC_WRP_OK == moto->readSDO ( "Min_pos", min_pos ));
+        assert ( iit::ecat::EC_WRP_OK == moto->readSDO ( "Max_pos", max_pos ));
+        assert ( iit::ecat::EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ));
+        assert ( iit::ecat::EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
 
         start_pos[slave_pos] = motor_pos; 
         // set home pos

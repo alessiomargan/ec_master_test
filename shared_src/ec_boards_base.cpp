@@ -30,11 +30,13 @@ Ec_Thread_Boards_base::~Ec_Thread_Boards_base() {
 
 void Ec_Thread_Boards_base::th_init ( void * ) {
 
+    int retval;
     const YAML::Node config = get_config_YAML_Node();
 
     // init Ec_Boards_ctrl
-    if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
-        throw iit::ecat::advr::EcBoardsError(1,"something wrong in Ec_Boards_ctrl::init()");
+    retval = Ec_Boards_ctrl::init();
+    if ( retval != iit::ecat::advr::EC_BOARD_OK ) {
+        throw iit::ecat::advr::EcBoardsError(retval,"something wrong in Ec_Boards_ctrl::init()");
     }
 
     pthread_barrier_wait(&threads_barrier);
@@ -60,8 +62,9 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
         // wait boards boot up
         sleep(6);
         // init Ec_Boards_ctrl
-        if ( Ec_Boards_ctrl::init() != iit::ecat::advr::EC_BOARD_OK ) {
-            throw iit::ecat::advr::EcBoardsError(2,"something wrong in Ec_Boards_ctrl::init()");
+        retval = Ec_Boards_ctrl::init();
+        if ( retval != iit::ecat::advr::EC_BOARD_OK ) {
+            throw iit::ecat::advr::EcBoardsError(retval,"something wrong in Ec_Boards_ctrl::init()");
         }
 
     }
@@ -88,7 +91,7 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     init_preOP();
 
     if ( Ec_Boards_ctrl::set_operative() <= 0 ) {
-        throw iit::ecat::advr::EcBoardsError(3,"something wrong in Ec_Boards_ctrl::set_operative()");;
+        throw iit::ecat::advr::EcBoardsError(iit::ecat::advr::EC_BOARD_NOK,"something wrong in Ec_Boards_ctrl::set_operative()");;
     }
 
     start_time = iit::ecat::get_time_ns();

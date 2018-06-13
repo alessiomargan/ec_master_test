@@ -14,11 +14,14 @@ ec_board_ctrl:
   sync_cycle_offset_ns: 1000000000
   power_off_boards: false
   reset_micro : true
-  use_pipes: true
-  
-ec_boards_base:
+
+ec_boards_base :
   robot_name : NoNe
   read_SDOs : false
+  use_pipes : true
+  log_level : 1
+  fault_power_off : true
+  #
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
 

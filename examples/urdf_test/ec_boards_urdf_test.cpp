@@ -75,8 +75,8 @@ void EC_boards_urdf::init_preOP ( void ) {
         moto = item.second;
         moto->readSDO ( "Min_pos", min_pos );
         moto->readSDO ( "Max_pos", max_pos );
-        assert ( EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ) );
-        assert ( EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ) );
+        assert ( iit::ecat::EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ) );
+        assert ( iit::ecat::EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ) );
         start_pos[slave_pos] = motor_pos;
 
         //

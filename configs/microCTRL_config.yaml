@@ -12,8 +12,8 @@ firmware_update:
   # all LowPower motor
   #slave_pos_list: [-3]
   # all CentAC motor
-  #slave_pos_list: [-4]
-  slave_pos_list: [1]
+  slave_pos_list: [-4]
+  #slave_pos_list: [1]
   
   big_motor:
     bin_file: BigMotor.bin

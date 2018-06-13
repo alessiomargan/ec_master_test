@@ -109,8 +109,8 @@ void EC_boards_centAC_test::init_preOP ( void ) {
         moto = item.second;
         moto->readSDO ( "Min_pos", min_pos );
         moto->readSDO ( "Max_pos", max_pos );
-        assert ( EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ));
-        assert ( EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
+        assert ( iit::ecat::EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ));
+        assert ( iit::ecat::EC_WRP_OK == moto->readSDO ( "link_pos", link_pos ));
 
         start_pos[slave_pos] = motor_pos; 
         home[slave_pos] = DEG2RAD ( centauro::robot_ids_home_pos_deg.at(pos2Rid(slave_pos)) );

@@ -110,13 +110,13 @@ protected:
     int rid2Urdf ( int rId ) {
         //return rid2urdf.find ( rId ) != rid2urdf.end() ? rid2urdf[rId] : 0;
         try { return rid2urdf.at(rId); } catch ( std::out_of_range &e ) {
-            throw iit::ecat::advr::EcBoardsError( iit::ecat::advr::EC_WRP_NOK, std::string("wrong robot Id ")+std::to_string(rId) );
+            throw iit::ecat::advr::EcBoardsError( iit::ecat::advr::EC_BOARD_NOK, std::string("wrong robot Id ")+std::to_string(rId) );
         }   
     }
     int urdf2Rid ( int uId ) {
         //return urdf2rid.find ( uId ) != urdf2rid.end() ? urdf2rid[uId] : 0;
         try { return urdf2rid.at(uId); } catch ( std::out_of_range &e ) {
-            throw iit::ecat::advr::EcBoardsError( iit::ecat::advr::EC_WRP_NOK, std::string("wrong urdf Id ")+std::to_string(uId) );
+            throw iit::ecat::advr::EcBoardsError( iit::ecat::advr::EC_BOARD_NOK, std::string("wrong urdf Id ")+std::to_string(uId) );
         }   
     }
     
