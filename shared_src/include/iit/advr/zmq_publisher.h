@@ -20,7 +20,7 @@
 #include <map>
 
 #include <yaml-cpp/yaml.h>
-#include <jsoncpp/json/json.h>
+//#include <jsoncpp/json/json.h>
 
 #include <zmq.hpp>
 
@@ -38,6 +38,8 @@
 #define ZMQ_POLL_MSEC 1 // zmq_poll is msec
 #endif
 
+#define PB_BUFF_SIZE    2048
+/*
 #include <iit/ecat/advr/esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/pressure_sensor_esc.h>
@@ -47,6 +49,7 @@
 #include <iit/ecat/advr/mc_hand_esc.h>
 #include <iit/ecat/advr/heri_hand_esc.h>
 #include <iit/ecat/advr/test_esc.h>
+*/
 
 #include <iit/advr/thread_util.h>
 #include <iit/advr/ati_iface.h>
@@ -57,8 +60,7 @@
 
 class Abs_Publisher;
 typedef std::map<std::string, Abs_Publisher*>   PubMap_t;
-typedef std::map<std::string, std::string> jmap_t;
-
+typedef std::map<std::string, std::string>      jmap_t;
 
 
 //extern zmq::context_t zmq_ctx;
@@ -78,14 +80,10 @@ public:
 
     virtual int open_pipe ( std::string pipe_name );
     virtual int publish ( void ) = 0;
-
+   
 protected:
 
-    template<typename T>
-    int read_pipe ( T &t );
     int publish_msg( void );
-    
-protected:
 
     zmq::socket_t * _z;
     zmq::message_t  _msg_id;
@@ -95,35 +93,20 @@ protected:
     std::string zmsg_id;
     int xddp_sock;
 
-    char zbuffer[8192];
 };
 
-template<typename T>
-inline int Abs_Publisher::read_pipe ( T &t ) {
 
-    int nbytes = 0;
-    int expected_bytes = sizeof ( t );
-    fd_set rfds;
-    struct timeval tv;
-
-    FD_ZERO ( &rfds );
-    FD_SET ( xddp_sock, &rfds );
-    tv.tv_sec = 3;
-    tv.tv_usec = 0;
-
-    if ( select ( xddp_sock+1, &rfds, NULL, NULL, &tv ) > 0 ) {
-
-        nbytes = read ( xddp_sock, ( void* ) &t, expected_bytes );
-        if ( nbytes != expected_bytes ) {
-            //printf("zmq rx %d expected %d\n", nbytes, expected_bytes);
-            return -1;
-        }
-    } else {
-        return -ETIMEDOUT;
-    }
-
-    return nbytes;
-}
+// template<typename T>
+// std::string json_serializer ( T &t ) {
+//     Json::FastWriter writer;
+//     Json::Value      root;
+//     jmap_t           jmap;
+//     t.to_map ( jmap );
+//     for ( auto const& item : jmap ) {
+//         root[item.first] = ::atof ( item.second.c_str() );
+//     }
+//     return std::string ( writer.write ( root ) );
+// }
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -131,19 +114,6 @@ inline int Abs_Publisher::read_pipe ( T &t ) {
 /// Templete Publisher
 ///
 ///////////////////////////////////////////////////////////////////////
-
-template<typename T>
-std::string json_serializer ( T &t ) {
-    Json::FastWriter writer;
-    Json::Value      root;
-    jmap_t           jmap;
-    t.to_map ( jmap );
-    for ( auto const& item : jmap ) {
-        root[item.first] = ::atof ( item.second.c_str() );
-    }
-    return std::string ( writer.write ( root ) );
-}
-
 template<typename PubDataTypes>
 class Publisher : public Abs_Publisher {
 
@@ -154,14 +124,36 @@ private:
     
 public:    
 
-    Publisher ( std::string uri, std::string zkey ) : Abs_Publisher ( uri, zkey ) {
-         // prepare _msg_id just once
-        _msg_id.rebuild ( zmsg_id.length() );
-        memcpy ( ( void* ) _msg_id.data(),zmsg_id.data(), zmsg_id.length() );
-    }
-    
+    Publisher ( std::string uri, std::string zkey ) : Abs_Publisher ( uri, zkey ) { }
     virtual ~Publisher() {
         std::cout << "~" << typeid ( this ).name() << std::endl;
+    }
+
+    template<typename T>
+    int read_pipe ( T &t ) {
+
+        int nbytes = 0;
+        int expected_bytes = sizeof ( t );
+        fd_set rfds;
+        struct timeval tv;
+
+        FD_ZERO ( &rfds );
+        FD_SET ( xddp_sock, &rfds );
+        tv.tv_sec = 3;
+        tv.tv_usec = 0;
+
+        if ( select ( xddp_sock+1, &rfds, NULL, NULL, &tv ) > 0 ) {
+
+            nbytes = read ( xddp_sock, ( void* ) &t, expected_bytes );
+            if ( nbytes != expected_bytes ) {
+                printf("[0MQ] rx %d expected %d\n", nbytes, expected_bytes);
+                return -1;
+            }
+        } else {
+            return -ETIMEDOUT;
+        }
+
+        return nbytes;
     }
 
     virtual int publish ( void ) {
@@ -177,7 +169,11 @@ public:
 
         int msg_data_size;
         std::string sz_string;
-               
+
+        // prepare _msg_id
+        _msg_id.rebuild ( zmsg_id.length() );
+        memcpy ( ( void* ) _msg_id.data(),zmsg_id.data(), zmsg_id.length() );
+
         //////////////////////////////////////////////////////////
         // -- text format
         //msg_data_size = pub_data.sprint ( zbuffer,sizeof ( zbuffer ) );
@@ -195,9 +191,7 @@ public:
         memcpy ( ( void* ) _msg.data(), sz_string.c_str(), msg_data_size );
         
         //printf("%s", (char*)_msg.data());
-
         return publish_msg();
-
     }
 
 };
@@ -208,7 +202,7 @@ class SimplePublisher : public Abs_Publisher {
 private:
 
     uint32_t                pb_size;
-    uint8_t                 pb_buf[1024];     
+    uint8_t                 pb_buf[PB_BUFF_SIZE];     
     std::string             pb_str;
     iit::advr::Ec_slave_pdo pb_msg;
     
@@ -235,11 +229,17 @@ public:
         if ( select ( xddp_sock+1, &rfds, NULL, NULL, &tv ) > 0 ) {
 
             nbytes = read ( xddp_sock, (void*)&pb_size, sizeof ( pb_size ) );
-            if ( nbytes > 0 ) {
-                nbytes = read ( xddp_sock, (void*)pb_buf, pb_size );
-                //pb_msg.ParseFromArray(pb_buf, pb_size);
-                //std::cout << pb_msg.DebugString() <<  std::endl;
+            if ( nbytes <= 0 ) {
+                return -ENODATA;
             }
+            if ( nbytes > PB_BUFF_SIZE ) { 
+                return -ENOBUFS;
+            }
+            
+            nbytes = read ( xddp_sock, (void*)pb_buf, pb_size );
+            //pb_msg.ParseFromArray(pb_buf, pb_size);
+            //std::cout << pb_msg.DebugString() <<  std::endl;
+            
         } else {
             return -ETIMEDOUT;
         }
@@ -248,9 +248,9 @@ public:
     }
 
     int publish ( void ) {
-
-        if ( read_pipe() <= 0 ) {
-            std::cout << "[0Q] Error read from pipe " << zmsg_id << std::endl;
+        int retval = read_pipe();
+        if ( retval <= 0 ) {
+            std::cout << "[0MQ] Error " << retval << " read from pipe " << zmsg_id << std::endl;
             return -1;
         }
 
@@ -278,17 +278,17 @@ public:
 
 class ZMQ_Pub_thread : public Thread_hook {
 
-    typedef Publisher<iit::ecat::advr::TestEscPdoTypes::pdo_rx>     TestPub;
-    typedef Publisher<iit::ecat::advr::ImuEscPdoTypes::pdo_rx>      ImuPub;
-    typedef Publisher<iit::ecat::advr::Ft6EscPdoTypes::pdo_rx>      FtPub;
-    typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx>       McPub;
-    typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx>      PwPub;
-    typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx>   PwCmnPub;
-    typedef Publisher<iit::ecat::advr::McHandEscPdoTypes::pdo_rx>   McHandPub;
-    typedef Publisher<iit::ecat::advr::HeriHandEscPdoTypes::pdo_rx> HeriHandPub;
-    typedef Publisher<iit::advr::ati_log_t> FtAtiPub;
-    template <int _Rows, int _Cols>
-    using PressSensPub = Publisher<typename iit::ecat::advr::PressSensEscPdoTypes<_Rows,_Cols>::pdo_rx>;
+//     typedef Publisher<iit::ecat::advr::TestEscPdoTypes::pdo_rx>     TestPub;
+//     typedef Publisher<iit::ecat::advr::ImuEscPdoTypes::pdo_rx>      ImuPub;
+//     typedef Publisher<iit::ecat::advr::Ft6EscPdoTypes::pdo_rx>      FtPub;
+//     typedef Publisher<iit::ecat::advr::McEscPdoTypes::pdo_rx>       McPub;
+//     typedef Publisher<iit::ecat::advr::PowEscPdoTypes::pdo_rx>      PwPub;
+//     typedef Publisher<iit::ecat::advr::PowCmnEscPdoTypes::pdo_rx>   PwCmnPub;
+//     typedef Publisher<iit::ecat::advr::McHandEscPdoTypes::pdo_rx>   McHandPub;
+//     typedef Publisher<iit::ecat::advr::HeriHandEscPdoTypes::pdo_rx> HeriHandPub;
+//     typedef Publisher<iit::advr::ati_log_t> FtAtiPub;
+//     template <int _Rows, int _Cols>
+//     using PressSensPub = Publisher<typename iit::ecat::advr::PressSensEscPdoTypes<_Rows,_Cols>::pdo_rx>;
 
     iit::ecat::stat_t loop_time;
     uint64_t    tNow, dt;
@@ -310,11 +310,12 @@ public:
        
         std::ifstream fin ( config );
         if ( fin.fail() ) {
-            DPRINTF ( "Can not open %s\n", config.c_str() );
+            DPRINTF ( "[0MQ] Can not open %s\n", config.c_str() );
             assert ( 0 );
         }
-        
         yaml_cfg = YAML::LoadFile ( config );
+        
+        
     }
 
     ~ZMQ_Pub_thread() {

@@ -10,11 +10,10 @@
 #include <boost/algorithm/string.hpp>
 
 #include <iit/advr/zmq_publisher.h>
-#include <iit/advr/coman_robot_id.h>
-#include <iit/advr/walkman_robot_id.h>
-#include <iit/advr/centauro_robot_id.h>
-
-using namespace iit::ecat::advr;
+//#include <iit/advr/coman_robot_id.h>
+//#include <iit/advr/walkman_robot_id.h>
+//#include <iit/advr/centauro_robot_id.h>
+//using namespace iit::ecat::advr;
 
 namespace fs = std::experimental::filesystem;
 
@@ -49,8 +48,6 @@ Abs_Publisher::Abs_Publisher ( std::string _uri, std::string _zkey ) : uri ( _ur
 }
 
 Abs_Publisher::~Abs_Publisher() {
-    //if ( xddp_sock > 0) { _z->unbind(uri.c_str()); }
-    //_z->unbind(uri.c_str());
     delete _z;
 }
 
@@ -135,9 +132,8 @@ void ZMQ_Pub_thread::th_init ( void * ) {
             continue;
         } 
  
-#if 1
         zpub_factory(new SimplePublisher(uri+std::to_string(base_port+id), filename), path, filename);           
-#else        
+/*
         if ( path.find(motor_prefix) != std::string::npos ) {
             zpub_factory<McPub>(uri+std::to_string(base_port+id), path, filename);
         } else if ( path.find(ft_prefix) != std::string::npos )  {
@@ -153,7 +149,7 @@ void ZMQ_Pub_thread::th_init ( void * ) {
         } else {
             //
         }
-#endif        
+*/
     }
 
 }
