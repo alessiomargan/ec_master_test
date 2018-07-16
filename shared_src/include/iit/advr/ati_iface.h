@@ -13,7 +13,8 @@
 #include <iit/ecat/utils.h>
 #include <protobuf/ecat_pdo.pb.h>
 
-#define LOG_SIZE   10000000
+#define LOG_SIZE        10000000
+#define ATI_IFACE_IP    "192.168.1.1"
 
 namespace iit {
 namespace advr {
@@ -55,20 +56,29 @@ private:
 
     std::mutex  mtx;
     ati_log_t   last_sample;
+    float       countsPerUnit;
 
     int recv_data();
     int send_cmd ( cmd_t & );
 
 public:
 
-    Ati_Sens ( bool run = false );
+    Ati_Sens( ) { };
     virtual ~Ati_Sens ( void );
+    
+    void config( bool run = false,
+                float _countsPerUnit = 1000.0,
+                const std::string& _ip = ATI_IFACE_IP);
 
+
+    void start_thread ( void );
     void get_last_sample ( ati_log_t &sample );
+
+    float getCountsPerUnit() const;
+    void setCountsPerUnit(float value);
 
 protected:
 
-    void start_thread ( void );
     static void * rx_thread ( void * );
 
     int udp_sock;
@@ -77,6 +87,8 @@ protected:
 
     uint64_t    start_time;
     boost::circular_buffer<ati_log_t> ati_log;
+    std::string ati_iface_ip;
+
 
 };
 

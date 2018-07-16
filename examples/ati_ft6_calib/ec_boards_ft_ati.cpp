@@ -19,7 +19,8 @@ Ec_Boards_ft_ati::Ec_Boards_ft_ati ( const char* config_yaml ) : Ec_Thread_Board
 
     sens_log.set_capacity ( LOG_SIZE );
     
-    ati = new iit::advr::Ati_Sens ( true );
+    ati = new iit::advr::Ati_Sens ( );
+    ati->config( true );
 
 }
 

@@ -33,12 +33,12 @@ int main ( int argc, char * const argv[] ) try {
         
     main_common (&argc, &argv, 0 );
 
-    threads["boards_basic"] = new Ec_Boards_ft_ati ( argv[1] );
+    threads["ati_ft6_test"] = new Ec_Boards_ft_ati ( argv[1] );
     threads["ZMQ_pub"] =      new ZMQ_Pub_thread( argv[1] );
     
     pthread_barrier_init(&threads_barrier, NULL, threads.size());
     
-    threads["boards_basic"]->create ( true );
+    threads["ati_ft6_test"]->create ( true );
     pthread_barrier_wait(&threads_barrier);
     threads["ZMQ_pub"]->create ( false, 3 );
     

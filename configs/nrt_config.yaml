@@ -32,6 +32,13 @@ zmq_pub :
 
 microCTRL_stuff: ../configs/microCTRL_config.yaml
       
+ati_config :
+  ati_ip_addr : 192.168.1.1
+  ft_ecat_pos : 1
+  save_calib_matrix : false
+  #calib_mat_file : ../examples/ati_ft6_calib/data/ones.txt
+  calib_mat_file : ../examples/ati_ft6_calib/data/Calib_matrix_Cogimon_right_Foot_ft_147_sens8.txt
+  dump_log : true
 
 #############################
 ## GENERIC config

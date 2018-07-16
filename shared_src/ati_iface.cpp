@@ -16,12 +16,17 @@
 #include <cstring>
 #include <fstream>
 
-#define ATI_IFACE_IP    "192.168.1.1"
-//#define ATI_IFACE_IP    "169.254.89.61"
 
 using namespace iit::advr;
 
-Ati_Sens::Ati_Sens ( bool run_thread ) : run ( run_thread ) {
+void Ati_Sens::config ( bool _run_thread,
+                     float _countsPerUnit,
+                     const std::string& _ip )
+{
+
+    run = _run_thread;
+    countsPerUnit = _countsPerUnit;
+    ati_iface_ip = _ip;
 
     // create udp socket
     if ( ( udp_sock = socket ( AF_INET, SOCK_DGRAM, IPPROTO_UDP ) ) < 0 ) {
@@ -101,6 +106,18 @@ void Ati_Sens::get_last_sample ( ati_log_t &sample ) {
     memcpy ( ( void* ) &sample, &last_sample, sizeof ( ati_log_t ) );
 }
 
+float Ati_Sens::getCountsPerUnit() const
+{
+    std::unique_lock<std::mutex> ( mtx );
+    return countsPerUnit;
+}
+
+void Ati_Sens::setCountsPerUnit(float value)
+{
+    std::unique_lock<std::mutex> ( mtx );
+    countsPerUnit = value;
+}
+
 int Ati_Sens::recv_data() {
 
     int         size;
@@ -120,7 +137,7 @@ int Ati_Sens::recv_data() {
     for ( int i = 0; i < 6; i++ ) {
         // small sensor 1000000 big sensor 1000
         //log_item.ft[i] = (float) ((int32_t)ntohl(data.ft[i]))/1000000;
-        log_item.ft[i] = ( float ) ( ( int32_t ) ntohl ( data.ft[i] ) ) /1000;
+        log_item.ft[i] = ( float ) ( ( int32_t ) ntohl ( data.ft[i] ) ) /countsPerUnit;
     }
     ati_log.push_back ( log_item );
 
