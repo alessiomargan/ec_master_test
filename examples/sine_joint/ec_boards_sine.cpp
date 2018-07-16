@@ -97,14 +97,14 @@ void Ec_Boards_sine::init_preOP ( void ) {
         //assert ( moto->start ( CTRL_SET_IMPED_MODE ) == EC_BOARD_OK );
         //assert ( moto->start ( CTRL_SET_CURR_MODE ) == EC_BOARD_OK );
         //assert ( moto->start ( CTRL_SET_VEL_MODE ) == EC_BOARD_OK );
-        assert ( moto->start ( ) == EC_BOARD_OK );
+        ( moto->start ( ) == EC_BOARD_OK );
     }
 
     advr::Trj_ptr_map tmp_trj;
     float teta, A, freq;
     A = 3.0; freq = 0.1;
     //for ( int c=10; c<=1; c-- ) {
-    for ( int c=1; c<=10; c++ ) {
+    for ( int c=1; c<=15; c++ ) {
         for ( auto const& item : motors_to_start ) {
             slave_pos = item.first;
             moto = item.second;
@@ -114,7 +114,6 @@ void Ec_Boards_sine::init_preOP ( void ) {
             tmp_trj[slave_pos] = std::make_shared<advr::Sine_trajectory> (  c*freq, A/c, teta, std::initializer_list<double> { 0, 1/(c*freq) } );
         }
         ptr_map_vec.push_back(tmp_trj);
-        //trj_queue.push_back(tmp_trj);
         tmp_trj.clear();
     }
     

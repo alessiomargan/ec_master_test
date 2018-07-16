@@ -12,7 +12,8 @@ ec_board_ctrl:
   #sync_cycle_time_ns: 0
   #sync_cycle_offset_ns: 4000000000
   sync_cycle_offset_ns: 1000000000
-  power_off_boards: false
+  sync_point_ns : 600000
+  power_off_boards : false
   reset_micro : true
 
 ec_boards_base :
@@ -22,7 +23,7 @@ ec_boards_base :
   log_level : 1
   fault_power_off : true
   #
-  urdf_config_file: ../configs/centauro_urdf.yaml
+  urdf_config_file : ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
 
 zmq_pub :

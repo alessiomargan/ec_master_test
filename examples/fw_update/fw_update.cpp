@@ -193,6 +193,10 @@ int main ( int argc, char * const argv[] ) try {
             case F28M36_TEST :
                 esc_type = firmware_update["test_f28m36"];
                 break;
+            case TIVA_TEST :
+            case TIVA_HUB_TEST :
+                esc_type = firmware_update["test_tiva"];
+                break;
             default :
                 break;
             }

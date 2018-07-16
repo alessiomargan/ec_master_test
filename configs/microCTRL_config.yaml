@@ -12,8 +12,8 @@ firmware_update:
   # all LowPower motor
   #slave_pos_list: [-3]
   # all CentAC motor
-  slave_pos_list: [-4]
-  #slave_pos_list: [1]
+  #slave_pos_list: [-4]
+  slave_pos_list: [1]
   
   big_motor:
     bin_file: BigMotor.bin
@@ -46,11 +46,18 @@ firmware_update:
       passwd: 0xF3F3
   test_f28m36:
     m3:
-      bin_file: soes_m3.bin
-      passwd: 0xF0F0
+      #bin_file: soes_m3.bin
+      #passwd: 0xF0F0
+      bin_file: ama_m3.bin
+      passwd: 0xCACA
     c28:
-      bin_file: soes_c28.bin
-      passwd: 0xF1F1
+      #bin_file: soes_c28.bin
+      #passwd: 0xF1F1
+      bin_file: ama_c28.bin
+      passwd: 0xCAC0
+  test_tiva:
+    bin_file: soes_tm4c.bin
+    passwd: 0xb007
 
       
       

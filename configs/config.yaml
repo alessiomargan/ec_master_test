@@ -30,12 +30,12 @@ zmq_pub :
 
 microCTRL_stuff: ../configs/microCTRL_config.yaml
 
-ati_config:
-  ft_ecat_pos: 1
-  save_calib_matrix: false
-  #calib_mat_file: ../examples/ati_ft6_calib/data/ones.txt
-  calib_mat_file: ../examples/ati_ft6_calib/data/Calib_matrix_Cogimon_right_Foot_ft_147_sens8.txt
-  dump_log: true
+ati_config :
+  ft_ecat_pos : 1
+  save_calib_matrix : false
+  #calib_mat_file : ../examples/ati_ft6_calib/data/ones.txt
+  calib_mat_file : ../examples/ati_ft6_calib/data/Calib_matrix_Cogimon_right_Foot_ft_147_sens8.txt
+  dump_log : true
 
 
 #############################
@@ -63,7 +63,6 @@ HeriHandESC_X:
   pid :
     position: [100000.0 , 0.0 , 1.0]
     
-    
 HpESC_X: &HpESC_X
   sign: 1
   pos_offset: 0
@@ -80,8 +79,8 @@ CentAcESC_X: &CentAcESC_X
   enable_sandbox: false
   enable_pos_filter: false
   #control_mode : 00_idle_ctrl
-  #control_mode : 3B_motor_pos_ctrl
-  control_mode : D4_impedance_ctrl
+  control_mode : 3B_motor_pos_ctrl
+  #control_mode : D4_impedance_ctrl
   pid :
     position: [220.0 , 0.0 , 5.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
@@ -136,7 +135,11 @@ CentAcESC_123:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     #impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
     impedance:   [250.0, 5.0, 2.0, 0.01, 0.8]
-
+  upd_params:
+    sandBoxAngle : 0.05
+    sandBoxFriction : 0.5
+    
+        
 __CentAcESC_1:
   sign: 1
   pos_offset: 0
