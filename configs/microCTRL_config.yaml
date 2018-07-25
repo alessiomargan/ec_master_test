@@ -58,6 +58,9 @@ firmware_update:
   test_tiva:
     bin_file: soes_tm4c.bin
     passwd: 0xb007
+  test_msp432:
+    bin_file: soes_msp432.bin
+    passwd: 0xbefa
 
       
       

@@ -197,6 +197,9 @@ int main ( int argc, char * const argv[] ) try {
             case TIVA_HUB_TEST :
                 esc_type = firmware_update["test_tiva"];
                 break;
+            case MSP432_TEST :
+                esc_type = firmware_update["test_msp432"];
+                break;
             default :
                 break;
             }
