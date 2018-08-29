@@ -177,7 +177,7 @@ void EC_boards_walkman_test::init_preOP ( void ) {
     
         slave_pos = item.first;
         moto = item.second;
-        moto->readSDO ( "link_pos", start_pos[slave_pos] );
+        moto->readSDO ( "motor_pos", start_pos[slave_pos] );
         // home
         try {
             home[slave_pos] = DEG2RAD ( joints_pose_deg.at("home").at((robot::Robot_IDs)pos2Rid(slave_pos)) );
@@ -278,7 +278,9 @@ void EC_boards_walkman_test::init_preOP ( void ) {
             motor_start = moto->start ( CTRL_SET_CURR_MODE );
         } 
 
-        assert( motor_start == EC_BOARD_OK );
+        if ( motor_start != EC_BOARD_OK ) {
+            DPRINTF("....\n");
+        }
         
     }
 

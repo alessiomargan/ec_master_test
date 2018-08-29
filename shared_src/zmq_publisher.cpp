@@ -93,6 +93,7 @@ void ZMQ_Pub_thread::th_init ( void * ) {
 
     int base_port = 5000; 
     std::string uri ( "tcp://*:" );
+    uint32_t fd_timeout_us = 999999;
     std::string robot_prefix ( "void@" );
 
     try {
@@ -100,6 +101,9 @@ void ZMQ_Pub_thread::th_init ( void * ) {
     } catch ( YAML::Exception ) {  }
     try {
         uri = yaml_cfg["zmq_pub"]["uri"].as<std::string>();
+    } catch ( YAML::Exception ) { }
+    try {
+        fd_timeout_us = yaml_cfg["zmq_pub"]["fd_timeout_us"].as<uint32_t>();
     } catch ( YAML::Exception ) { }
     try {
         robot_prefix = yaml_cfg["ec_boards_base"]["robot_name"].as<std::string>() + "@";
@@ -132,7 +136,7 @@ void ZMQ_Pub_thread::th_init ( void * ) {
             continue;
         } 
  
-        zpub_factory(new SimplePublisher(uri+std::to_string(base_port+id), filename), path, filename);           
+        zpub_factory(new SimplePublisher(uri+std::to_string(base_port+id), filename, fd_timeout_us), path, filename);           
 /*
         if ( path.find(motor_prefix) != std::string::npos ) {
             zpub_factory<McPub>(uri+std::to_string(base_port+id), path, filename);

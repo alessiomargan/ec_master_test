@@ -40,6 +40,7 @@ void Ec_Boards_sine::init_preOP ( void ) {
     
         123,
         1,
+        100,
         //2,
         //6,
         //7,

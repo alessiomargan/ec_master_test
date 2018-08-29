@@ -201,6 +201,7 @@ class SimplePublisher : public Abs_Publisher {
 
 private:
 
+    uint32_t                fd_timeout_us;
     uint32_t                pb_size;
     uint8_t                 pb_buf[PB_BUFF_SIZE];     
     std::string             pb_str;
@@ -208,7 +209,9 @@ private:
     
 public:    
 
-    SimplePublisher ( std::string uri, std::string zkey ) : Abs_Publisher ( uri, zkey ) {
+    SimplePublisher ( std::string uri, std::string zkey, uint32_t timeout_us ) : Abs_Publisher ( uri, zkey ) {
+    
+        fd_timeout_us = timeout_us;
     }
 
     virtual ~SimplePublisher() {
@@ -223,8 +226,8 @@ public:
         
         FD_ZERO ( &rfds );
         FD_SET ( xddp_sock, &rfds );
-        tv.tv_sec = 3;
-        tv.tv_usec = 0;
+        tv.tv_sec = 0;
+        tv.tv_usec = fd_timeout_us;
 
         if ( select ( xddp_sock+1, &rfds, NULL, NULL, &tv ) > 0 ) {
 
@@ -314,7 +317,6 @@ public:
             assert ( 0 );
         }
         yaml_cfg = YAML::LoadFile ( config );
-        
         
     }
 

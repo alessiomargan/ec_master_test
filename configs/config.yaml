@@ -10,7 +10,7 @@ ec_board_ctrl :
   #sync_cycle_time_ns: 100000000
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 1000000000
-  sync_point_ns : 500000
+  sync_point_ns : 400000
   power_off_boards: false
   reset_micro : true
   
@@ -22,11 +22,13 @@ ec_boards_base :
   fault_power_off : true
   #
   urdf_config_file: ../configs/centauro_urdf.yaml
-  joints_poses_file : ../configs/test_poses.yaml
+  joints_poses_file : ../configs/walkimon_poses.yaml
+  #joints_poses_file : ../configs/test_poses.yaml
 
 zmq_pub :
   base_port : 9000
-  uri: "tcp://*:"
+  uri : "tcp://*:"
+  fd_timeout_us : 100000
 
 microCTRL_stuff: ../configs/microCTRL_config.yaml
 
@@ -135,7 +137,7 @@ CentAcESC_123:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     #impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
     impedance:   [250.0, 5.0, 2.0, 0.01, 0.8]
-  upd_params:
+  NO_upd_params:
     sandBoxAngle : 0.05
     sandBoxFriction : 0.5
     

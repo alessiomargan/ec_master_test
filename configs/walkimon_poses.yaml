@@ -15,6 +15,8 @@ joint_group_by_controller :
         [ ]
     direct_ctrl :
         [ ]
+    idle_ctrl :
+        [ ]
     # always subtract from above sets    
     NO_ctrl :
         [ WAIST_Y, WAIST_R ]
@@ -28,9 +30,9 @@ trjs_map :
    home2fw2back2fw2home :
      - [home,  0]
      - [fw,    3]
-     - [back,  7]
-     - [fw,   10]
-     - [home, 13]
+     - [back,  5]
+     - [fw,    8]
+     - [home, 10]
      
 # #####################################
 # position in degrees

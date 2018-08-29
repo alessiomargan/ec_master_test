@@ -2,10 +2,11 @@
 ec_board_ctrl:
   #eth_iface: eth1
   #eth_iface: enp2s0
-  eth_iface: enp35s0
+  eth_iface: enp33s0
+  #eth_iface: enp35s0
   #sync_cycle_time_ns: 500000
-  sync_cycle_time_ns: 1000000
-  #sync_cycle_time_ns: 2000000
+  #sync_cycle_time_ns: 1000000
+  sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 5000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 50000000
@@ -29,7 +30,8 @@ ec_boards_base :
 zmq_pub :
   base_port : 9000
   uri: "tcp://*:"
-
+  fd_timeout_us : 100000 
+  
 microCTRL_stuff: ../configs/microCTRL_config.yaml
       
 ati_config :
@@ -78,6 +80,7 @@ CentAcESC_X:
   max_current_A: 5.0
   enable_sandbox: false
   enable_pos_filter: false
+  control_mode : 3B_motor_pos_ctrl
   pid :
     position: [220.0 , 0.0 , 5.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
