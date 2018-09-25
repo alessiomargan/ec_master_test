@@ -86,46 +86,70 @@ int CalibGui::requestInitialData()
 
 int CalibGui::gatherDataThread()
 {
-
+    int result;
+    std::ostringstream      oss;
+    uint32_t                pb_size;
+    uint8_t                 pb_buf[2048];     
+    std::string             pb_str;
+    iit::advr::Ec_slave_pdo pb_msg;
+  
     pipeControl.init("controlOut");
 
     requestInitialData();
 
-    pipeMotor.init("Motor_id_"+std::to_string(bid));
+    // TODO get robot name from config
+    pipeMotor.init("NoNe@Motor_id_"+std::to_string(bid));
     pipeAti.init("atiSens");
 
     emit enableGui();
 
-
+    fd_set readset;
     auto starttime = iit::ecat::get_time_ns();
     auto originalTime = starttime;
+    iit::ecat::advr::McEscPdoTypes::pdo_rx pdrx;
+        
+    struct timeval tv;
+    // Initialize time out struct
+    tv.tv_sec = 0;
+    tv.tv_usec = 1000;
+
     while(running) {
-        fd_set readset;
 
         // Initialize the set
         FD_ZERO(&readset);
         FD_SET(pipeMotor.get_fd(), &readset);
         FD_SET(pipeAti.get_fd(), &readset);
         FD_SET(pipeControl.get_fd(), &readset);
-
-        struct timeval tv;
-        // Initialize time out struct
-        tv.tv_sec = 0;
-        tv.tv_usec = 1000;
-
+       
         int maxFd = std::max({pipeMotor.get_fd(),pipeAti.get_fd(), pipeControl.get_fd() });
-        auto result = select(maxFd + 1, &readset, NULL, NULL, &tv);
+        //int maxFd = std::max({pipeMotor.get_fd() });
+        result = select(maxFd + 1, &readset, NULL, NULL, &tv);
+        if ( result ==  -1 ) {
+            perror("select()");
+            continue;
+        } else if (result == 0 ) {
+            // No data on FDs
+            continue;
+        }
 
-        iit::ecat::advr::McEscPdoTypes::pdo_rx pdrx;
-        auto bytes = pipeMotor.xddp_read((uint8_t *)&pdrx, sizeof(pdrx));
         auto now = iit::ecat::get_time_ns();
         auto absSec = ( now - originalTime) / ( (1.0)  * NSEC_PER_SEC);
         auto sec = ( now - starttime) / ( (1.0)  * NSEC_PER_SEC);
-
-        if ( bytes > 0)
+        pb_size = 0;
+        
+        auto bytes = read ( pipeMotor.get_fd(), (void*)&pb_size, sizeof ( pb_size ) );
+        if ( bytes > 0 && pb_size > 0)
         {
-            std::lock_guard< std::mutex > lock(data_mutex);
-            vec2.append(QPointF(absSec, pdrx.torque));
+            if ( pb_size < sizeof(pb_buf) ) {
+                std::lock_guard< std::mutex > lock(data_mutex);
+                bytes = read ( pipeMotor.get_fd(), (void*)pb_buf, pb_size );
+                pb_msg.ParseFromArray(pb_buf, pb_size);
+                std::cout << pb_msg.DebugString() <<  std::endl;
+                vec2.append(QPointF(absSec, pb_msg.mutable_motor_xt_rx_pdo()->torque()));
+                
+            } else {
+                std::cout << "CAZZO " << pb_size << std::endl;
+            }
         }
 
         float ft[6] = {};
@@ -173,6 +197,7 @@ int CalibGui::gatherDataThread()
                 break;
             }
         }
+
         if (absSec > axMax)
         {
 
