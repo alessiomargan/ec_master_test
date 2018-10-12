@@ -158,10 +158,12 @@ public:
 
     virtual int publish ( void ) {
         
-        if ( read_pipe ( pub_data ) <= 0 ) {
-            std::cout << "[0Q] Error read from pipe" << std::endl;
+        int retval = read_pipe( pub_data );
+        if ( retval <= 0 ) {
+            std::cout << "[0MQ] Error " << retval << " read from pipe " << zmsg_id << std::endl;
             return -1;
         }
+
         return publish ( pub_data );
     }
 
@@ -251,6 +253,7 @@ public:
     }
 
     int publish ( void ) {
+        
         int retval = read_pipe();
         if ( retval <= 0 ) {
             std::cout << "[0MQ] Error " << retval << " read from pipe " << zmsg_id << std::endl;

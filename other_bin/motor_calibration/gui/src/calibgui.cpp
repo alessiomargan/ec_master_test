@@ -87,6 +87,7 @@ int CalibGui::requestInitialData()
 int CalibGui::gatherDataThread()
 {
     int result;
+    uint32_t bytes;
     std::ostringstream      oss;
     uint32_t                pb_size;
     uint8_t                 pb_buf[2048];     
@@ -137,67 +138,76 @@ int CalibGui::gatherDataThread()
         auto sec = ( now - starttime) / ( (1.0)  * NSEC_PER_SEC);
         pb_size = 0;
         
-        auto bytes = read ( pipeMotor.get_fd(), (void*)&pb_size, sizeof ( pb_size ) );
-        if ( bytes > 0 && pb_size > 0)
+        if ( FD_ISSET( pipeMotor.get_fd(), &readset) ) 
         {
-            if ( pb_size < sizeof(pb_buf) ) {
-                std::lock_guard< std::mutex > lock(data_mutex);
-                bytes = read ( pipeMotor.get_fd(), (void*)pb_buf, pb_size );
-                pb_msg.ParseFromArray(pb_buf, pb_size);
-                std::cout << pb_msg.DebugString() <<  std::endl;
-                vec2.append(QPointF(absSec, pb_msg.mutable_motor_xt_rx_pdo()->torque()));
-                
-            } else {
-                std::cout << "CAZZO " << pb_size << std::endl;
-            }
-        }
-
-        float ft[6] = {};
-        bytes = pipeAti.xddp_read((uint8_t *)&ft[0], sizeof(ft));
-        if ( bytes > 0)
-        {
-            std::lock_guard< std::mutex > lock(data_mutex);
-            vec.append(QPointF(absSec, ft[5]));
-        }
-
-        Msg buffControl;
-        bytes = pipeControl.xddp_read((uint8_t *)&buffControl, sizeof(buffControl));
-        if ( bytes > 0)
-        {
-            switch (buffControl.id)
+            bytes = read ( pipeMotor.get_fd(), (void*)&pb_size, sizeof ( pb_size ) );
+            if ( bytes > 0 && pb_size > 0)
             {
-                case ID::ID_SAMPLE:
-                {
-                    double sam = buffControl.curr.sample;
+                if ( pb_size < sizeof(pb_buf) ) {
                     std::lock_guard< std::mutex > lock(data_mutex);
-                    vec3.append(QPointF(absSec,sam));
+                    bytes = read ( pipeMotor.get_fd(), (void*)pb_buf, pb_size );
+                    pb_msg.ParseFromArray(pb_buf, pb_size);
+                    std::cout << pb_msg.DebugString() <<  std::endl;
+                    vec2.append(QPointF(absSec, pb_msg.mutable_motor_xt_rx_pdo()->torque()));
+                    
+                } else {
+                    std::cout << "CAZZO " << bytes << " " << pb_size << std::endl;
                 }
-                break;
-                case ID::ID_ACK:
-                {
-                    switch (buffControl.ack.command)
-                    {
-                        case Commands::CMD_STARTCALIB:
-                        {
-                            DPRINTF("StartCalibration OK\n");
-                            emit calibration(true);
-                        }
-                        break;
-
-                    }
-                }
-                break;
-                case ID::ID_REGRESULT:
-                {
-                    DPRINTF("StopCalibration OK\n");
-                    emit calibration(false);
-                    M = buffControl.res.M;
-                    emit mChanged();
-                }
-                break;
             }
         }
 
+        if ( FD_ISSET( pipeAti.get_fd(), &readset) ) 
+        {
+            float ft[6] = {};
+            bytes = pipeAti.xddp_read((uint8_t *)&ft[0], sizeof(ft));
+            if ( bytes > 0)
+            {
+                std::lock_guard< std::mutex > lock(data_mutex);
+                vec.append(QPointF(absSec, ft[5]));
+            }
+        }
+        
+        if ( FD_ISSET( pipeControl.get_fd(), &readset) ) 
+        {
+            Msg buffControl;
+            bytes = pipeControl.xddp_read((uint8_t *)&buffControl, sizeof(buffControl));
+            if ( bytes > 0)
+            {
+                switch (buffControl.id)
+                {
+                    case ID::ID_SAMPLE:
+                    {
+                        double sam = buffControl.curr.sample;
+                        std::lock_guard< std::mutex > lock(data_mutex);
+                        vec3.append(QPointF(absSec,sam));
+                    }
+                    break;
+                    case ID::ID_ACK:
+                    {
+                        switch (buffControl.ack.command)
+                        {
+                            case Commands::CMD_STARTCALIB:
+                            {
+                                DPRINTF("StartCalibration OK\n");
+                                emit calibration(true);
+                            }
+                            break;
+
+                        }
+                    }
+                    break;
+                    case ID::ID_REGRESULT:
+                    {
+                        DPRINTF("StopCalibration OK\n");
+                        emit calibration(false);
+                        M = buffControl.res.M;
+                        emit mChanged();
+                    }
+                    break;
+                }
+            }
+        }
+        
         if (absSec > axMax)
         {
 
