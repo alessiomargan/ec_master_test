@@ -78,16 +78,18 @@ int Ec_Boards_ft_ati::user_input ( C &user_cmd ) {
 
 int Ec_Boards_ft_ati::user_loop ( void ) {
     
+    //
+    sens_data.ts = iit::ecat::get_time_ns() - start;
+    
     // get ati data
     ati->get_last_sample ( sample );
     for ( int i=0; i < 6; i++ ) sample.ft[i] = sample.ft[i] / 1000 ;
+    memcpy ( ( void* ) &sens_data.ati, &sample.ft, sizeof ( float ) * 6 );
+    
     // get ft data
     auto ft_pdo_rx = ft->getRxPDO();
-    
-    //
-    sens_data.ts = iit::ecat::get_time_ns() - start;
-    memcpy ( ( void* ) &sens_data.ati, &sample.ft, sizeof ( float ) * 6 );
     memcpy ( ( void* ) &sens_data.iit, &ft_pdo_rx.force_X, sizeof ( float ) * 6 );
+
     sens_log.push_back ( sens_data );
 
     serializeToXddp(&sens_data);

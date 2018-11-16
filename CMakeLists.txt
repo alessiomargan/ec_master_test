@@ -72,4 +72,5 @@ optional_build(xddp_proto       other_bin/xddp_proto OFF)
 optional_build(xeno-3_test      other_bin/xeno-3_test OFF)
 optional_build(cgos_gpio        other_bin/cgos_gpio OFF)
 optional_build(motor_calibration other_bin/motor_calibration OFF)
+optional_build(ati_test other_bin/ati_test OFF)
 

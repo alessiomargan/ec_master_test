@@ -135,9 +135,11 @@ int Ati_Sens::recv_data() {
     log_item.rtd_seq = ntohl ( data.rtd_seq );
     log_item.ts = iit::ecat::get_time_ns() - start_time;
     for ( int i = 0; i < 6; i++ ) {
-        // small sensor 1000000 big sensor 1000
-        //log_item.ft[i] = (float) ((int32_t)ntohl(data.ft[i]))/1000000;
         log_item.ft[i] = ( float ) ( ( int32_t ) ntohl ( data.ft[i] ) ) /countsPerUnit;
+    }
+    
+    if ( ati_log.full() ) {
+        DPRINTF ( "!! ati_log full, overwriting sample\n"); 
     }
     ati_log.push_back ( log_item );
 
@@ -145,7 +147,7 @@ int Ati_Sens::recv_data() {
     DPRINTF ( ">> %d %d 0x%04X \n", ntohl ( data.rtd_seq ), ntohl ( data.ft_seq ), ntohl ( data.status ) );
     for ( int i = 0; i < 6; i++ ) {
         //DPRINTF("%d\t", ntohl(data.ft[i]) );
-        DPRINTF ( "%f\t", ( float ) ( ( int32_t ) ntohl ( data.ft[i] ) ) /1000 );
+        DPRINTF ( "%f\t", ( float ) ( ( int32_t ) ntohl ( data.ft[i] ) ) /countsPerUnit );
     }
     DPRINTF ( "\n" );
 #endif
