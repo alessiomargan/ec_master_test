@@ -181,8 +181,8 @@ int main ( int argc, char * const argv[] ) try {
             case FT6 :
                 esc_type = firmware_update["force_torque_6"];
                 break;
-            case FT6_LAN9252 :
-                esc_type = firmware_update["ft6_lan9252"];
+            case FT6_MSP432 :
+                esc_type = firmware_update["ft6_msp432"];
                 break;
             case POW_BOARD  :
                 esc_type = firmware_update["power_hub"];

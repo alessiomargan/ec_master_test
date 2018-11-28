@@ -30,6 +30,9 @@ firmware_update:
   force_torque_6:
     bin_file: FT6.bin
     passwd: 0xbeef
+  imu:
+    bin_file: FT6.bin
+    passwd: 0xbeef
   cent_AC:
     m3:
       bin_file: cent_AC_m3.bin
@@ -60,6 +63,12 @@ firmware_update:
     passwd: 0xb007
   test_msp432:
     bin_file: soes_msp432.bin
+    passwd: 0xbefa
+  test_lan9252:
+    bin_file: soes_msp432.bin
+    passwd: 0xbefa
+  ft6_msp432:
+    bin_file: ft6_msp432.bin
     passwd: 0xbefa
 
       
