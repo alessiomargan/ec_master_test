@@ -151,7 +151,8 @@ private :
     virtual void init_preOP ( void );
     virtual void init_OP ( void );
 
-    XDDP_pipe jsInXddp, navInXddp;
+    XDDP_pipe jsInXddp, navInXddp, termInXddp;
+    
 
     advr::Trj_ptr_map spline_start2home;
 

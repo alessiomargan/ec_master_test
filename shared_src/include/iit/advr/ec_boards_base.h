@@ -40,6 +40,7 @@ public:
     virtual void th_loop ( void * );
 
     virtual int user_loop ( void ) = 0;
+    virtual int repl_loop ( void );
 
 protected :
 
@@ -59,7 +60,7 @@ protected :
     uint32_t    emergency_active;
     
     XDDP_pipe   emergencyInXddp;
-    XDDP_pipe   termInXddp;
+    XDDP_pipe   replInXddp;
     XDDP_pipe   debugOutXddp;
     
     std::map<int, iit::ecat::advr::Motor*>          motors;
@@ -117,6 +118,10 @@ protected :
 private:
 
     iit::ecat::ec_timing_t  timing;
+    
+    // YAML_Node()["ec_boards_base"]["app_mode"] = "run_mode OR "config_mode"
+    bool run_mode;
+
 
 };
 

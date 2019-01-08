@@ -36,7 +36,8 @@ private :
     virtual void init_preOP ( void );
     virtual void init_OP ( void );
 
-
+    XDDP_pipe   termInXddp;
+    
     advr::Trj_ptr_map trj_start2home;
     advr::Trj_ptr_map trj_zero2up2extend2zero;
     advr::Trj_ptr_map trj_home2zero;

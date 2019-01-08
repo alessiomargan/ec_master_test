@@ -36,6 +36,8 @@ EC_boards_centAC_test::EC_boards_centAC_test ( const char* config_yaml ) :
     priority = sched_get_priority_max ( schedpolicy )-10;
     stacksize = ECAT_PTHREAD_STACK_SIZE;
 
+    termInXddp.init ( "terminal" );
+    
 }
 
 EC_boards_centAC_test::~EC_boards_centAC_test() {

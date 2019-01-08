@@ -49,7 +49,8 @@ EC_boards_walkman_test::EC_boards_walkman_test(const char* config_yaml) :
     stacksize = ECAT_PTHREAD_STACK_SIZE;
 
     // open pipe ... xeno xddp or fifo
-    jsInXddp.init ( "EC_board_js_input" );
+    termInXddp.init( "terminal" );
+    jsInXddp.init  ( "EC_board_js_input" );
     navInXddp.init ( "EC_board_nav_input" );
     imuInXddp.init ( "Lpms_imu" );
 }

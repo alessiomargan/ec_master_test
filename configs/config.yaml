@@ -10,16 +10,19 @@ ec_board_ctrl :
   #sync_cycle_time_ns: 100000000
   #sync_cycle_time_ns: 0
   sync_cycle_offset_ns: 1000000000
-  sync_point_ns : 400000
+  sync_point_ns : 500000
   power_off_boards: false
   reset_micro : true
   
 ec_boards_base :
+  app_mode : run_mode
   robot_name : NoNe
   read_SDOs : false
   use_pipes : true
   log_level : 1
-  fault_power_off : true
+  #fault_power_off : true
+  # only for TestESC
+  use_ecat_pos_as_id : true
   #
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/walkimon_poses.yaml
@@ -33,6 +36,7 @@ zmq_pub :
 microCTRL_stuff: ../configs/microCTRL_config.yaml
 
 ati_config :
+  ati_ip_addr : 192.168.1.1
   ft_ecat_pos : 1
   save_calib_matrix : false
   #calib_mat_file : ../examples/ati_ft6_calib/data/ones.txt
@@ -95,7 +99,7 @@ CentAcESC_X: &CentAcESC_X
      _rd :  [ iq_ref_fb, id_ref_fb ]
      _wr :  [ ]
      _wrd : [ "iq_offset&&iq_out_fb" ]
-     wrd : [ "ts&&rtt" ]
+     _wrd : [ "ts&&rtt" ]
   
   NO_upd_params :
     # orange
@@ -117,6 +121,12 @@ CentAcESC_X: &CentAcESC_X
     motorDirectInductance : 0
     motorQuadratureInductance : 0
     crossTermCCGain : 0
+
+Ft6Msp432ESC_X:
+  analog_sample_freq_HZ: 10000
+
+Ft6Msp432ESC_111:
+  analog_sample_freq_HZ: 20000
 
 #############################
 # TEST JOINT

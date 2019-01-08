@@ -40,6 +40,7 @@ EC_boards_urdf::EC_boards_urdf ( const char* config_yaml ) :
     // open pipe ... xeno xddp or fifo
     jsInXddp.init ( "EC_board_js_input" );
     navInXddp.init ( "EC_board_nav_input" );
+    termInXddp.init ( "terminal" );
 
     init_urdf ( get_config_YAML_Node() ["ec_boards_base"]["urdf_config_file"].as<std::string>() );
 

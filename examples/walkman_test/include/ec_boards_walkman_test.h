@@ -41,7 +41,7 @@ private :
 
 //     advr::ImpTrj_ptr_map imp_trj;
 
-    XDDP_pipe jsInXddp, navInXddp, imuInXddp;
+    XDDP_pipe jsInXddp, navInXddp, imuInXddp, termInXddp;
 
     std::map<int, iit::ecat::advr::Motor*>  head;
     std::map<int, iit::ecat::advr::Motor*>  left_arm;;

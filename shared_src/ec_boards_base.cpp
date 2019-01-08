@@ -15,7 +15,7 @@
 Ec_Thread_Boards_base::Ec_Thread_Boards_base ( std::string config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
     
     emergencyInXddp.init ( "emergency" );
-    termInXddp.init ( "terminal" );
+    replInXddp.init("repl");
     debugOutXddp.init ( "debugOut" );
 
 }
@@ -31,8 +31,20 @@ Ec_Thread_Boards_base::~Ec_Thread_Boards_base() {
 void Ec_Thread_Boards_base::th_init ( void * ) {
 
     int retval;
-    const YAML::Node config = get_config_YAML_Node();
-
+    YAML::Node app_mode;
+    /* "run_mode"       --> OP
+     * "config_mode"    --> PREOP
+     */
+    run_mode = true;
+    try {
+        app_mode = get_config_YAML_Node()["ec_boards_base"]["app_mode"];
+        std::string application_mode = get_config_YAML_Node()["ec_boards_base"]["app_mode"].as<std::string>();
+        run_mode = (application_mode == std::string("run_mode"));
+        DPRINTF ("%s %s\n", __FUNCTION__, application_mode.c_str());
+    } catch ( YAML::Exception &e ) {
+        std::cout << e.what() << std::endl;
+    }
+    
     // init Ec_Boards_ctrl
     retval = Ec_Boards_ctrl::init();
     if ( retval != iit::ecat::advr::EC_BOARD_OK ) {
@@ -63,7 +75,6 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
         if ( retval != iit::ecat::advr::EC_BOARD_OK ) {
             throw iit::ecat::advr::EcBoardsError(retval,"something wrong in Ec_Boards_ctrl::init()");
         }
-
     }
 
     get_esc_map_byclass ( motors );
@@ -87,7 +98,7 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     
     init_preOP();
 
-    if ( Ec_Boards_ctrl::set_operative() <= 0 ) {
+    if ( Ec_Boards_ctrl::set_operative() < 0 ) {
         throw iit::ecat::advr::EcBoardsError(iit::ecat::advr::EC_BOARD_NOK,"something wrong in Ec_Boards_ctrl::set_operative()");;
     }
 
@@ -106,17 +117,18 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
 void Ec_Thread_Boards_base::th_loop ( void * ) {
 
     uint32_t emg = 0;
-
+    
     tNow = iit::ecat::get_time_ns();
     s_loop ( tNow - tPre );
     tPre = tNow;
 
     try {
 
-        if ( recv_from_slaves ( timing ) != iit::ecat::advr::EC_BOARD_OK ) {
-            // TODO
-            DPRINTF ( "recv_from_slaves FAIL !\n" );
-            return;
+        if ( run_mode ) {
+            if ( recv_from_slaves ( timing ) != iit::ecat::advr::EC_BOARD_OK ) {
+                // TODO
+                return;
+            }
         }
 
         if ( emergencyInXddp.xddp_read ( emg ) > 0 ) {
@@ -129,18 +141,25 @@ void Ec_Thread_Boards_base::th_loop ( void * ) {
             while ( ! trj_queue.empty() ) { trj_queue.pop_front(); }
         }
         
+        repl_loop();
+        
         user_loop();
         
-        // emergency_active DO NOT write tx_pdo
-        // send_to_slaves( false ); DO NOT write
-        send_to_slaves( ! emergency_active );
-
+        if ( run_mode ) {
+            // emergency_active DO NOT write tx_pdo
+            // send_to_slaves( false ); DO NOT write
+            send_to_slaves( ! emergency_active );
+        }
+        
     } catch ( iit::ecat::EscWrpError &e ) {
         std::cout << e.what() << std::endl;
     }
 
 }
 
+int Ec_Thread_Boards_base::repl_loop ( void ) {
+
+}
 
 void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_dest, const std::vector<int> &to_remove)
 {

@@ -152,7 +152,7 @@ private :
     virtual void init_preOP ( void );
     virtual void init_OP ( void );
 
-    XDDP_pipe jsInXddp, navInXddp;
+    XDDP_pipe jsInXddp, navInXddp, termInXddp;
 
     std::map<int, iit::ecat::advr::Motor*>  left_arm;;
     std::map<int, iit::ecat::advr::Motor*>  right_arm;

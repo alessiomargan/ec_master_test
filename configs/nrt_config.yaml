@@ -2,27 +2,32 @@
 ec_board_ctrl:
   #eth_iface: eth1
   #eth_iface: enp2s0
-  eth_iface: enp33s0
-  #eth_iface: enp35s0
+  #eth_iface: enp33s0
+  eth_iface: enp35s0
   #sync_cycle_time_ns: 500000
-  #sync_cycle_time_ns: 1000000
-  sync_cycle_time_ns: 2000000
+  sync_cycle_time_ns: 1000000
+  #sync_cycle_time_ns: 2000000
   #sync_cycle_time_ns: 5000000
   #sync_cycle_time_ns: 10000000
   #sync_cycle_time_ns: 50000000
   #sync_cycle_time_ns: 0
+  #sync_cycle_offset_ns: 0
   #sync_cycle_offset_ns: 4000000000
   sync_cycle_offset_ns: 1000000000
-  sync_point_ns : 600000
+  sync_point_ns : 500000
   power_off_boards : false
   reset_micro : true
 
 ec_boards_base :
+  app_mode : run_mode
+  #app_mode : config_mode
   robot_name : NoNe
   read_SDOs : false
   use_pipes : true
   log_level : 1
   fault_power_off : true
+  # only for CentAcESC and TestESC
+  use_ecat_pos_as_id : true
   #
   urdf_config_file : ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
@@ -86,6 +91,11 @@ CentAcESC_X:
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
     #impedance:  [0.0, 0.0, 5.0, 0.01, 0.8]
     impedance:  [30.0, 5, 5.0, 0.01, 0.8]
+   
+  NO_upd_params :
+    Hardware_config : 0x3236
+    Joint_robot_id : 88
+    Serial_Number_A : 3
     
   NO_upd_params :
     posRefFilterFreq : 1
@@ -110,7 +120,10 @@ CentAcESC_X:
      _wr :  [ ]
      _wrd : [ "iq_offset&&iq_out_fb" ]
      wrd : [ "ts&&rtt" ]
-     
+
+Ft6Msp432ESC_X:
+  analog_sample_freq_HZ: 10000
+
 #############################
 # TEST JOINT
 #############################
