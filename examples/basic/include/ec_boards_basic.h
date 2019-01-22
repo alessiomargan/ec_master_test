@@ -19,7 +19,7 @@
 /**
  */
 
-typedef struct js_event 		input_t;
+typedef struct js_event     input_t;
 
 class Ec_Boards_basic : public Ec_Thread_Boards_base {
 public:

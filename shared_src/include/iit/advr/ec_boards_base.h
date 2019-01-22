@@ -20,6 +20,8 @@
 #include <iit/ecat/advr/pipes.h>
 #include <iit/advr/trajectory.h>
 
+#include <protobuf/ec_boards_base_input.pb.h>
+
 #include <queue>
 
 #define ECAT_PTHREAD_STACK_SIZE (16*1024*1024) // 16MB

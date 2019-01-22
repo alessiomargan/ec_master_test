@@ -1,3 +1,5 @@
+syntax = "proto2";
+
 package iit.advr;
 
 import "header.proto";
@@ -15,7 +17,6 @@ message Gains {
         IMPEDANCE   = 2;
         TORQUE      = 3;
     }
-
     // Identifies which field is filled in.
     required Type   type = 1;
     
@@ -28,13 +29,38 @@ message Gains {
     
 }
 
+message Ctrl_cmd {
+    
+    enum Type { 
+        CTRL_CMD_DAC_TUNE = 1;
+    }
+    // Identifies which field is filled in.
+    required Type   type        = 1;
+    required int32  board_id    = 2;
+
+}
+
+message Flash_cmd {
+
+    enum Type { 
+        SAVE_PARAMS_TO_FLASH    = 1;
+        LOAD_PARAMS_FROM_FLASH  = 2;
+        LOAD_DEFAULT_PARAMS     = 3;
+        
+    }
+    // Identifies which field is filled in.
+    required Type   type        = 1;
+    required int32  board_id    = 2;
+}
+
 message Ec_board_base_input {
 
    enum Type { 
-        SET_SMOOTHER_STEP = 1;
-        SET_GAINS = 2;
+        SET_SMOOTHER_STEP   = 1;
+        SET_GAINS           = 2;
+        SET_CTRL_CMD        = 3;
+        SET_FLASH_CMD       = 4;        
     }
-
     // Identifies which field is filled in.
     required Type   type = 1;
     
@@ -43,6 +69,8 @@ message Ec_board_base_input {
     // One of the following will be filled in.
     optional Smoother_step      smoother_step = 3;
     optional Gains              gains = 4;
-
+    optional Ctrl_cmd           ctrl_cmd = 5;
+    optional Flash_cmd          flash_cmd = 6;
+        
 }
 

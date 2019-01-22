@@ -57,7 +57,7 @@ void Ec_Boards_ft_ati::init_preOP ( void ) {
             std::string calib_file = ati_config["calib_mat_file"].as<std::string>();
             if ( ! load_matrix( calib_file, cal_matrix ) && ati_config["save_calib_matrix"].as<bool>() ) {
                 ft->set_cal_matrix ( cal_matrix );
-                set_flash_cmd_X ( ft, FLASH_SAVE );
+                set_flash_cmd_X ( ft, SAVE_PARAMS_TO_FLASH );
             }
         } catch ( YAML::Exception &e ) {
             DPRINTF ( "Catch Exception ... %s\n", e.what() );
