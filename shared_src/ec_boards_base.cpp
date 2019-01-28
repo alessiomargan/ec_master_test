@@ -15,7 +15,8 @@
 Ec_Thread_Boards_base::Ec_Thread_Boards_base ( std::string config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
     
     emergencyInXddp.init ( "emergency" );
-    replInXddp.init("repl");
+    replInXddp.init("repl_in");
+    replOutXddp.init("repl_out");
     debugOutXddp.init ( "debugOut" );
 
 }
@@ -155,31 +156,6 @@ void Ec_Thread_Boards_base::th_loop ( void * ) {
         std::cout << e.what() << std::endl;
     }
 
-}
-
-int Ec_Thread_Boards_base::repl_loop ( void ) {
-    
-    int                             bytes = 0;
-    uint32_t                        msg_size;
-    iit::advr::Ec_board_base_input  pb_msg;
-    uint8_t                         pb_buf[1024];    
-    std::string                     pb_str;
-
-    if ( ( bytes = replInXddp.xddp_read(msg_size) ) <= 0 ) {
-        return bytes;
-    }
-
-    DPRINTF(">>> %d\n", msg_size);
-    bytes += replInXddp.xddp_read(pb_buf, msg_size);
-    pb_msg.ParseFromArray(pb_buf, msg_size);
-    std::cout << pb_msg.DebugString() <<  std::endl;
-    
-    // get slave_id from msg_size
-    uint16_t pos = 1;
-    iit::ecat::advr::Ft6Msp432ESC * slave = slave_as<iit::ecat::advr::Ft6Msp432ESC>(pos);
-    if ( slave != 0 ) {
-        iit::ecat::advr::set_flash_cmd_X ( slave, iit::ecat::advr::LOAD_DEFAULT_PARAMS );
-    }
 }
 
 void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_dest, const std::vector<int> &to_remove)

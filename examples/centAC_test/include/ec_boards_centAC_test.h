@@ -26,7 +26,7 @@ public:
     EC_boards_centAC_test ( const char * config_yaml );
     virtual ~EC_boards_centAC_test();
 
-    int xddp_input ( iit::advr::Ec_board_base_input & );
+    int xddp_input ( iit::advr::Repl_cmd & );
     int user_loop ( void );
 
     void tune_gains( std::vector<float> gains_incr );

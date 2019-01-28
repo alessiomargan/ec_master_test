@@ -37,9 +37,9 @@ class RT_thread : public Thread_hook {
     XDDP_pipe               outXddp, inXddp;
     std::string             pipe_name;
     
-    iit::advr::Ec_board_base_input  pb_msg;
-    uint8_t                         pb_buf[1024];    
-    std::string                     pb_str;
+    iit::advr::Repl_cmd  pb_msg;
+    uint8_t              pb_buf[1024];    
+    std::string          pb_str;
     
 public:
 
@@ -86,7 +86,7 @@ public:
         
         ///////////////////////////////////////////////////////////////////////
         // write to NRT
-        pb_msg.set_type(iit::advr::Ec_board_base_input_Type_SET_GAINS);
+        pb_msg.set_type(iit::advr::Repl_cmd_Type_SET_GAINS);
         pb_msg.mutable_gains()->set_type(iit::advr::Gains_Type_POSITION);
         pb_msg.mutable_gains()->set_kp(cnt);
         pb_msg.mutable_gains()->set_ki(cnt);
@@ -110,9 +110,9 @@ class UI_thread : public Thread_hook {
     int                     inXddp_fd, outXddp_fd;
     std::string             pipe_name;
     
-    iit::advr::Ec_board_base_input  pb_msg;
-    uint8_t                         pb_buf[1024];    
-    std::string                     pb_str;
+    iit::advr::Repl_cmd pb_msg;
+    uint8_t             pb_buf[1024];    
+    std::string         pb_str;
     
 public:
 

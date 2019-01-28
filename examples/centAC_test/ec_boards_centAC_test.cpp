@@ -170,7 +170,7 @@ void EC_boards_centAC_test::init_OP ( void ) {
 
 int EC_boards_centAC_test::user_loop ( void ) {
 
-    static iit::advr::Ec_board_base_input pbEcInput;
+    static iit::advr::Repl_cmd pbEcInput;
     static uint64_t count;
     const float trj_error = 0.07;
 
@@ -221,7 +221,7 @@ void EC_boards_centAC_test::tune_gains( std::vector<float> gains_incr ) {
 }
 
 
-int EC_boards_centAC_test::xddp_input ( iit::advr::Ec_board_base_input &pbEcInput ) {
+int EC_boards_centAC_test::xddp_input ( iit::advr::Repl_cmd &pbEcInput ) {
 
         uint32_t msg_size;
         uint8_t  msg_buff[1024];

@@ -1,4 +1,3 @@
-#cmake_minimum_required(VERSION 2.8.3)
 cmake_minimum_required(VERSION 3.2)
 project(protos_master)
 
@@ -33,9 +32,9 @@ set(msgs
 add_definitions(-fPIC)
 protobuf_generate_cpp(PROTO_SRC PROTO_HEADER ${msgs})
 protobuf_generate_python(PROTO_PY ${msgs})
-add_library (ec_master_pb ${PROTO_HEADER} ${PROTO_SRC} ${PROTO_PY})
+add_library (ec_master_pb ${PROTO_HEADER} ${PROTO_SRC} ${PROTO_PY} )
 
 install(TARGETS ec_master_pb DESTINATION lib)
 install(FILES ${PROTO_HEADER}  DESTINATION include/protobuf)
-
+install(FILES ${PROTO_PY} DESTINATION /usr/local/lib/python3.6/dist-packages)
 

@@ -62,7 +62,7 @@ protected :
     uint32_t    emergency_active;
     
     XDDP_pipe   emergencyInXddp;
-    XDDP_pipe   replInXddp;
+    XDDP_pipe   replInXddp, replOutXddp;
     XDDP_pipe   debugOutXddp;
     
     std::map<int, iit::ecat::advr::Motor*>          motors;

@@ -29,6 +29,10 @@ message Gains {
     
 }
 
+message Repl_hdr {
+
+}
+
 message Ctrl_cmd {
     
     enum Type { 
@@ -53,7 +57,7 @@ message Flash_cmd {
     required int32  board_id    = 2;
 }
 
-message Ec_board_base_input {
+message Repl_cmd {
 
    enum Type { 
         SET_SMOOTHER_STEP   = 1;
@@ -74,3 +78,16 @@ message Ec_board_base_input {
         
 }
 
+message Cmd_reply {
+
+   enum Type { 
+        ACK  = 1;
+        NACK = 2;
+    }
+    // Identifies which field is filled in.
+    required Type   type = 1;
+    required string msg = 2;
+    
+    optional gazebo.msgs.Header header = 3;
+    
+}

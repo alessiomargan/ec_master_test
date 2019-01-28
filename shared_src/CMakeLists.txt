@@ -14,6 +14,7 @@ set(LIB_NAME ${PROJECT_NAME}${LIB_TYPE})
 add_library(${LIB_NAME} SHARED
     ${SHARED_SRC}/wrap_thread.cpp
     ${SHARED_SRC}/ec_boards_base.cpp
+    ${SHARED_SRC}/repl_loop.cpp
     ${SHARED_SRC}/test_common.cpp
     ${SHARED_SRC}/spline.cpp
     ${SHARED_SRC}/ati_iface.cpp
