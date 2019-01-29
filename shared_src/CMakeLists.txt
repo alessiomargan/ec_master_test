@@ -18,7 +18,7 @@ add_library(${LIB_NAME} SHARED
     ${SHARED_SRC}/test_common.cpp
     ${SHARED_SRC}/spline.cpp
     ${SHARED_SRC}/ati_iface.cpp
-    ${SHARED_SRC}/zmq_publisher.cpp    
+    ${SHARED_SRC}/zmq_pub_th.cpp    
 )
 
 if ( Xenomai_FOUND )
