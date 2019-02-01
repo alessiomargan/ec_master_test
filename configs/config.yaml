@@ -142,6 +142,7 @@ CentAcESC_123:
   #control_mode : 00_idle_ctrl
   #control_mode : 3B_motor_pos_ctrl
   control_mode : D4_impedance_ctrl
+  ram _cmd : [0x0026]
   pid :
     position: [220.0 , 0.0 , 5.0]
     #  .... tor_K divided by 10000 to respect the int range [0..65536]

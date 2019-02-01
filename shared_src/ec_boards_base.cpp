@@ -12,6 +12,10 @@
 */
 #include <iit/advr/ec_boards_base.h>
 
+static inline void printRidMap() {
+
+}
+
 Ec_Thread_Boards_base::Ec_Thread_Boards_base ( std::string config_yaml ) : Ec_Boards_ctrl ( config_yaml ) {
     
     emergencyInXddp.init ( "emergency" );
@@ -82,6 +86,8 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     DPRINTF ( "found %lu motors\n", motors.size() );
     get_esc_map_byclass ( fts );
     DPRINTF ( "found %lu fts\n", fts.size() );
+    get_esc_map_byclass ( ftsMsp );
+    DPRINTF ( "found %lu ftsMsp\n", ftsMsp.size() );
     get_esc_map_byclass ( foot_10x5 );
     DPRINTF ( "found %lu foot_10x5\n", foot_10x5.size() );
     get_esc_map_byclass ( skin_8x3 );
@@ -89,13 +95,14 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     get_esc_map_byclass ( tests );
     DPRINTF ( "found %lu tests\n", tests.size() );
 
-//     for ( auto const& item : fts ) {
-//         DPRINTF ("pos %d == %d rid2Pos() rid %d ==  %d pos2Rid()\n",
-//                  item.first, rid2Pos(item.second->get_robot_id()),
-//                  item.second->get_robot_id(), pos2Rid(item.first) );
-//         assert( item.first == rid2Pos(item.second->get_robot_id()) && item.second->get_robot_id() == pos2Rid(item.first) );
-//     }
-
+    /*
+    for ( auto const& item : ftsMsp ) {
+         DPRINTF ("pos %d == %d rid2Pos() rid %d == %d pos2Rid()\n",
+                  item.first, rid2Pos(item.second->get_robot_id()),
+                  item.second->get_robot_id(), pos2Rid(item.first) );
+         assert( item.first == rid2Pos(item.second->get_robot_id()) && item.second->get_robot_id() == pos2Rid(item.first) );
+     }
+    */
     
     init_preOP();
 

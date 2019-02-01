@@ -67,6 +67,7 @@ protected :
     
     std::map<int, iit::ecat::advr::Motor*>          motors;
     std::map<int, iit::ecat::advr::Ft6ESC*>         fts;
+    std::map<int, iit::ecat::advr::Ft6Msp432ESC*>   ftsMsp;
     iit::ecat::advr::FootSensor_16x8_SlavesMap      foot_16x8;
     iit::ecat::advr::FootSensor_10x5_SlavesMap      foot_10x5;
     iit::ecat::advr::SkinSensor_8x3_SlavesMap       skin_8x3;

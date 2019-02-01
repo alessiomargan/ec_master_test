@@ -35,13 +35,18 @@ message Repl_hdr {
 
 message Ctrl_cmd {
     
-    enum Type { 
-        CTRL_CMD_DAC_TUNE = 1;
+    enum Type {
+        CTRL_DAC_TUNE           = 1;
+        CTRL_REMOVE_TORQUE_OFFS = 2;
+        CTRL_SET_ZERO_POSITION  = 3;
+        CTRL_TEST_DONE          = 4;
+        CTRL_TEST_ERROR         = 5;
     }
     // Identifies which field is filled in.
     required Type   type        = 1;
     required int32  board_id    = 2;
 
+    optional float  value       = 3;
 }
 
 message Flash_cmd {
