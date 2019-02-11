@@ -6,7 +6,8 @@
 #include <iostream>
 
 #include <ec_boards_basic.h>
-#include <iit/advr/zmq_publisher.h>
+#include <iit/advr/zmq_pub_th.h>
+#include <iit/advr/zmq_rep_th.h>
 
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 
@@ -35,11 +36,16 @@ int main ( int argc, char * const argv[] ) try {
 
     threads["boards_basic"] = new Ec_Boards_basic ( argv[1] );
     threads["ZMQ_pub"] =      new ZMQ_Pub_thread( argv[1] );
+    threads["ZMQ_rep"] =      new ZMQ_Rep_thread( argv[1], threads["boards_basic"]);
     
+    /*
+     * !!!! CHECK ... each thread must call
+     * pthread_barrier_wait(&threads_barrier);
+    */
     pthread_barrier_init(&threads_barrier, NULL, threads.size());
     
     threads["boards_basic"]->create ( true );
-    pthread_barrier_wait(&threads_barrier);
+    threads["ZMQ_rep"]->create ( false, 3 );
     threads["ZMQ_pub"]->create ( false, 3 );
     
 #ifdef __COBALT__

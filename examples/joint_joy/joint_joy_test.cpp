@@ -4,7 +4,7 @@
 #include <exception>
 
 #include <ec_boards_joint_joy.h>
-#include <iit/advr/zmq_publisher.h>
+#include <iit/advr/zmq_pub_th.h>
 
 std::map<std::string, Thread_hook*> threads;
 

@@ -169,7 +169,6 @@ void set_main_sched_policy ( int priority ) {
 }
 
 void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler ) {
-    int ret;
 
     set_signal_handler ( sig_handler );
 
@@ -179,7 +178,7 @@ void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler )
 
     /* Prevent any memory-swapping for this program */
     //ret = mlockall(MCL_CURRENT | MCL_FUTURE);
-    ret = lock_mem ( MEM_LOCKED );
+    int ret = lock_mem ( MEM_LOCKED );
     if ( ret < 0 ) {
         printf ( "mlockall failed (ret=%d) %s\n", ret, strerror ( ret ) );
         exit ( 0 );

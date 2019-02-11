@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <exception>
 
-#include <iit/advr/zmq_publisher.h>
+#include <iit/advr/zmq_pub_th.h>
 
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 

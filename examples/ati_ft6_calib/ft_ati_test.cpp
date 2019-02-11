@@ -6,7 +6,7 @@
 #include <iostream>
 
 #include <ec_boards_ft_ati.h>
-#include <iit/advr/zmq_publisher.h>
+#include <iit/advr/zmq_pub_th.h>
 
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 
@@ -37,7 +37,7 @@ int main ( int argc, char * const argv[] ) try {
     threads["ZMQ_pub"] =      new ZMQ_Pub_thread( argv[1] );
     
     pthread_barrier_init(&threads_barrier, NULL, threads.size());
-    
+                                                                                                    
     threads["ati_ft6_test"]->create ( true );
     pthread_barrier_wait(&threads_barrier);
     threads["ZMQ_pub"]->create ( false, 3 );

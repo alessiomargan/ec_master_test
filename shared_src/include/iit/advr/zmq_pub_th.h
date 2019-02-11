@@ -1,4 +1,4 @@
-file:///home/amargan/work/code/ecat_dev/ec_master_test/shared_src/include/iit/advr/zmq_pub_th.h/*
+/*
 
   Copyright (C) 2015 Italian Institute of Technology
 
@@ -146,7 +146,7 @@ public:
 
             nbytes = read ( xddp_sock, ( void* ) &t, expected_bytes );
             if ( nbytes != expected_bytes ) {
-                printf("[0MQ] rx %d expected %d\n", nbytes, expected_bytes);
+                printf("[0MQ Pub] rx %d expected %d\n", nbytes, expected_bytes);
                 return -1;
             }
         } else {
@@ -160,7 +160,7 @@ public:
         
         int retval = read_pipe( pub_data );
         if ( retval <= 0 ) {
-            std::cout << "[0MQ] Error " << retval << " read from pipe " << zmsg_id << std::endl;
+            std::cout << "[0MQ Pub] Error " << retval << " read from pipe " << zmsg_id << std::endl;
             return -1;
         }
 
@@ -256,7 +256,7 @@ public:
         
         int retval = read_pipe();
         if ( retval <= 0 ) {
-            std::cout << "[0MQ] Error " << retval << " read from pipe " << zmsg_id << std::endl;
+            std::cout << "[0MQ Pub] Error " << retval << " read from pipe " << zmsg_id << std::endl;
             return -1;
         }
 
@@ -316,7 +316,7 @@ public:
        
         std::ifstream fin ( config );
         if ( fin.fail() ) {
-            DPRINTF ( "[0MQ] Can not open %s\n", config.c_str() );
+            DPRINTF ( "[0MQ Pub] Can not open %s\n", config.c_str() );
             assert ( 0 );
         }
         yaml_cfg = YAML::LoadFile ( config );

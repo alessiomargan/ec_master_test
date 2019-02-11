@@ -14,7 +14,7 @@
 #include <iit/ecat/advr/pipes.h>
 #include <iit/advr/thread_util.h>
 #include <iit/advr/ati_iface.h>
-#include <iit/advr/zmq_publisher.h>
+#include <iit/advr/zmq_pub_th.h>
 
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );

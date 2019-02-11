@@ -1,12 +1,14 @@
 #include <iit/advr/ec_boards_base.h>
 
+#define MAX_PB_BUFF_SIZE    1024
+
 using namespace iit::ecat::advr;
 
 int Ec_Thread_Boards_base::repl_loop ( void ) {
     
     int                 bytes = 0;
     uint32_t            msg_size;
-    uint8_t             pb_buf[1024];    
+    uint8_t             pb_buf[MAX_PB_BUFF_SIZE];    
     iit::advr::Repl_cmd pb_msg;
     
     CentAcESC *     moto = 0;
@@ -15,8 +17,9 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
     if ( ( bytes = replInXddp.xddp_read(msg_size) ) <= 0 ) {
         return bytes;
     }
+    
     DPRINTF("[REPL] cmd size >>> %d\n", msg_size);
-    if ( bytes > 1024 ) {
+    if ( bytes > MAX_PB_BUFF_SIZE ) {
         DPRINTF("[REPL] cmd size too big >>> %d\n", msg_size);
         return bytes;
     }
@@ -125,6 +128,7 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
     pb_reply.SerializeToString(&reply_str);
     reply_size = reply_str.length();
     bytes  = replOutXddp.xddp_write ( ( void* )&reply_size, sizeof( reply_size ) );
-    bytes  = replOutXddp.xddp_write ( ( void* )reply_str.c_str(), reply_str.length() );    
+    bytes += replOutXddp.xddp_write ( ( void* )reply_str.c_str(), reply_str.length() );    
     
+    return bytes;
 }

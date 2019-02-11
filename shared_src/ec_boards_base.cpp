@@ -107,7 +107,8 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     init_preOP();
 
     if ( Ec_Boards_ctrl::set_operative() < 0 ) {
-        throw iit::ecat::advr::EcBoardsError(iit::ecat::advr::EC_BOARD_NOK,"something wrong in Ec_Boards_ctrl::set_operative()");;
+        throw iit::ecat::advr::EcBoardsError(iit::ecat::advr::EC_BOARD_NOK,
+                                             "something wrong in Ec_Boards_ctrl::set_operative()");
     }
 
     pthread_barrier_wait(&threads_barrier);
