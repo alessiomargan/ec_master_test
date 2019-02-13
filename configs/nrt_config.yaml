@@ -123,7 +123,10 @@ CentAcESC_X:
 
 Ft6Msp432ESC_X:
   analog_sample_freq_HZ: 10000
-
+  
+HyQ_IOv5ESC_X:
+    un_cazzo : true
+    
 #############################
 # TEST JOINT
 #############################

@@ -144,7 +144,7 @@ inline void Thread_hook::create ( int rt=true, int cpu_nr=-1 ) {
     if (ret != 0) handle_error_en(ret, "pthread_attr_setschedparam");
 
     pthread_attr_getstacksize ( &attr, &dflt_stacksize );
-    DPRINTF ( "default stack size %ld\n", dflt_stacksize );
+    //DPRINTF ( "default stack size %ld\n", dflt_stacksize );
     if ( stacksize > 0 ) {
         ret = pthread_attr_setstacksize ( &attr, stacksize );
         if (ret != 0) handle_error_en(ret, "pthread_attr_setstacksize");

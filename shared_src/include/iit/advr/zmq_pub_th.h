@@ -39,17 +39,6 @@
 #endif
 
 #define PB_BUFF_SIZE    2048
-/*
-#include <iit/ecat/advr/esc.h>
-#include <iit/ecat/advr/ft6_esc.h>
-#include <iit/ecat/advr/pressure_sensor_esc.h>
-#include <iit/ecat/advr/imu_Vn_esc.h>
-#include <iit/ecat/advr/power_board.h>
-#include <iit/ecat/advr/power_coman_board.h>
-#include <iit/ecat/advr/mc_hand_esc.h>
-#include <iit/ecat/advr/heri_hand_esc.h>
-#include <iit/ecat/advr/test_esc.h>
-*/
 
 #include <iit/advr/thread_util.h>
 #include <iit/advr/ati_iface.h>

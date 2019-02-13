@@ -135,8 +135,10 @@ void ZMQ_Pub_thread::th_init ( void * ) {
         zpub_factory(new SimplePublisher(uri+std::to_string(base_port+id), filename, fd_timeout_us), path, filename);           
     }
 
-    pthread_barrier_wait(&threads_barrier);
-    
+    if ( zmap.size() == 0 ) {
+        std::cout << "[0MQ Pub] " << __pipe_prefix << " empty or invalid Id "<< std::endl;
+    }
+        
 }
 
 void ZMQ_Pub_thread::th_loop ( void * ) {

@@ -29,30 +29,9 @@ extern zmq::context_t zmq_ctx;
 
 class ZMQ_Rep_thread : public Thread_hook {
 
-    YAML::Node  yaml_cfg;
-
 public:
 
-    ZMQ_Rep_thread( std::string config, void *_ec_th_base ) {
-
-        name = "ZMQ_Rep_thread";
-        // non periodic
-        period.period = {0,1};
-
-        schedpolicy = SCHED_OTHER;
-        priority = sched_get_priority_max ( schedpolicy );
-        stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
-       
-        std::ifstream fin ( config );
-        if ( fin.fail() ) {
-            DPRINTF ( "[0MQ Rep] Can not open %s\n", config.c_str() );
-            assert ( 0 );
-        }
-        yaml_cfg = YAML::LoadFile ( config );
-        
-        _ec_th_base = static_cast<Ec_Thread_Boards_base*>(ec_th_base);
-    }
-
+    ZMQ_Rep_thread( std::string config, void *_ec_th_base );
     ~ZMQ_Rep_thread() {
         delete rep_sock;
     }
@@ -62,10 +41,32 @@ public:
 
 private:
 
+    YAML::Node              yaml_cfg;
     zmq::socket_t *         rep_sock;
     Ec_Thread_Boards_base * ec_th_base;
     
 };
+
+
+ZMQ_Rep_thread::ZMQ_Rep_thread( std::string config, void *_ec_th_base ) {
+
+    name = "ZMQ_Rep_thread";
+    // non periodic
+    period.period = {0,1};
+
+    schedpolicy = SCHED_OTHER;
+    priority = sched_get_priority_max ( schedpolicy );
+    stacksize = 0; // not set stak size !!!! YOU COULD BECAME CRAZY !!!!!!!!!!!!
+    
+    std::ifstream fin ( config );
+    if ( fin.fail() ) {
+        DPRINTF ( "[0MQ Rep] Can not open %s\n", config.c_str() );
+        assert ( 0 );
+    }
+    yaml_cfg = YAML::LoadFile ( config );
+    
+    ec_th_base = static_cast<Ec_Thread_Boards_base*>(_ec_th_base);
+}
 
 inline void ZMQ_Rep_thread::th_init( void * _) {
     
@@ -77,19 +78,18 @@ inline void ZMQ_Rep_thread::th_init( void * _) {
     DPRINTF ( "[0MQ Rep] bind to %s\n", uri.c_str() );
     //rep_sock->connect( uri );
     //DPRINTF ( "[0MQ Rep] connect to %s\n", uri.c_str() );
-    
-    pthread_barrier_wait(&threads_barrier);
-                
+                    
 }
 
 inline void ZMQ_Rep_thread::th_loop( void * _) {
 
-    std::string hello_world("Hello World !"); 
+    std::string reply("Hello World !"); 
     zmq::message_t z_msg;
     
     if ( rep_sock->recv(&z_msg) ) {
         DPRINTF ( "[0MQ Rep] recv %s\n", (const char *)z_msg.data() );
-        rep_sock->send((void*)hello_world.c_str(), hello_world.length());
+        //ec_th_base->get_esc
+        rep_sock->send((void*)reply.c_str(), reply.length());
     }
 }
 

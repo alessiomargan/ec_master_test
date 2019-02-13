@@ -37,14 +37,14 @@ int main ( int argc, char * const argv[] ) try {
     threads["boards_basic"] = new Ec_Boards_basic ( argv[1] );
     threads["ZMQ_pub"] =      new ZMQ_Pub_thread( argv[1] );
     threads["ZMQ_rep"] =      new ZMQ_Rep_thread( argv[1], threads["boards_basic"]);
-    
     /*
-     * !!!! CHECK ... each thread must call
-     * pthread_barrier_wait(&threads_barrier);
-    */
-    pthread_barrier_init(&threads_barrier, NULL, threads.size());
+     * The barrier is opened when COUNT waiters arrived.
+     * we want to wait just Ec_Boards_base when reach OP
+     */ 
+    pthread_barrier_init(&threads_barrier, NULL, 1+1 );
     
     threads["boards_basic"]->create ( true );
+    pthread_barrier_wait(&threads_barrier);
     threads["ZMQ_rep"]->create ( false, 3 );
     threads["ZMQ_pub"]->create ( false, 3 );
     
