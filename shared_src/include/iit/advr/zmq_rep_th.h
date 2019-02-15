@@ -44,7 +44,7 @@ private:
     YAML::Node              yaml_cfg;
     zmq::socket_t *         rep_sock;
     Ec_Thread_Boards_base * ec_th_base;
-    
+    int repl_in_fd, repl_out_fd;
 };
 
 
@@ -78,17 +78,44 @@ inline void ZMQ_Rep_thread::th_init( void * _) {
     DPRINTF ( "[0MQ Rep] bind to %s\n", uri.c_str() );
     //rep_sock->connect( uri );
     //DPRINTF ( "[0MQ Rep] connect to %s\n", uri.c_str() );
+    
+    std::string repl_in_path("/tmp/nrt_pipes/repl_in");
+    std::cout << "[0MQ Rep] Opening xddp " << repl_in_path << std::endl;
+    repl_in_fd = open ( repl_in_path.c_str(), O_WRONLY );
+    if ( repl_in_fd < 0 ) {
+        printf ( "repl_in_fd %d - %s %s : %s\n", repl_in_fd, __FILE__, __FUNCTION__, strerror ( errno ) );
+    }
+
+    std::string repl_out_path("/tmp/nrt_pipes/repl_out");
+    std::cout << "[0MQ Rep] Opening xddp " << repl_out_path << std::endl;
+    repl_out_fd = open ( repl_out_path.c_str(), O_RDONLY );
+    if ( repl_out_fd < 0 ) {
+        printf ( "repl_out_fd %d - %s %s : %s\n", repl_out_fd, __FILE__, __FUNCTION__, strerror ( errno ) );
+    }
                     
 }
 
 inline void ZMQ_Rep_thread::th_loop( void * _) {
 
+    uint32_t reply_size, msg_size, nbytes;
     std::string reply("Hello World !"); 
     zmq::message_t z_msg;
     
     if ( rep_sock->recv(&z_msg) ) {
-        DPRINTF ( "[0MQ Rep] recv %s\n", (const char *)z_msg.data() );
-        //ec_th_base->get_esc
+        msg_size = z_msg.size();
+        DPRINTF ( "[0MQ Rep] recv %d bytes\n", msg_size );
+        
+        // 
+        write( repl_in_fd, (void*)&msg_size, sizeof(msg_size) );
+        write( repl_in_fd, (void*)z_msg.data(), msg_size );
+        
+        //
+        nbytes = read( repl_out_fd, (void*)&reply_size, sizeof(reply_size) );
+        if ( nbytes > 0 ) {
+            reply.resize(reply_size);
+            nbytes = read( repl_out_fd, (void*)reply.c_str(), reply_size );
+        }
+        
         rep_sock->send((void*)reply.c_str(), reply.length());
     }
 }

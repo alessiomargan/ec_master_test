@@ -19,7 +19,7 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
     }
     
     DPRINTF("[REPL] cmd size >>> %d\n", msg_size);
-    if ( bytes > MAX_PB_BUFF_SIZE ) {
+    if ( msg_size > MAX_PB_BUFF_SIZE ) {
         DPRINTF("[REPL] cmd size too big >>> %d\n", msg_size);
         return bytes;
     }

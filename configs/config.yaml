@@ -22,7 +22,7 @@ ec_boards_base :
   log_level : 1
   #fault_power_off : true
   # only for TestESC
-  use_ecat_pos_as_id : true
+  #use_ecat_pos_as_id : true
   #
   urdf_config_file: ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/walkimon_poses.yaml
@@ -123,7 +123,7 @@ CentAcESC_X: &CentAcESC_X
     crossTermCCGain : 0
 
 Ft6Msp432ESC_X:
-  analog_sample_freq_HZ: 10000
+  analog_sample_freq_HZ: 20000
 
 Ft6Msp432ESC_111:
   analog_sample_freq_HZ: 20000
