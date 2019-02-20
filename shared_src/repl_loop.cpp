@@ -13,6 +13,7 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
     
     CentAcESC *     moto = 0;
     Ft6Msp432ESC *  ft = 0;
+    TestESC *       test = 0;
     
     if ( ( bytes = replInXddp.xddp_read(msg_size) ) <= 0 ) {
         return bytes;
@@ -72,8 +73,9 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
             slave_pos = rid2Pos(board_id);
             moto = slave_as<CentAcESC>(slave_pos);
             ft = slave_as<Ft6Msp432ESC>(slave_pos);
+            test = slave_as<TestESC>(slave_pos);
             
-            if ( ! (moto || ft) ) {
+            if ( ! (moto || ft || test) ) {
                 // set error string once for all cases
                 error_msg = std::string( "Invalid slave_pos " + std::to_string(slave_pos));
             }
@@ -93,11 +95,13 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
                     break;
                 
                 case iit::advr::Ctrl_cmd::CTRL_TEST_DONE :
-                    if ( ft ) { ret_val = set_ctrl_status_X ( ft, CTRL_TEST_DONE ); }
+                    if ( ft )   { ret_val = set_ctrl_status_X ( ft, CTRL_TEST_DONE ); }
+                    if ( test ) { ret_val = set_ctrl_status_X ( test, CTRL_TEST_DONE ); }
                     break;
  
                 case iit::advr::Ctrl_cmd::CTRL_TEST_ERROR :
-                    if ( ft ) { ret_val = set_ctrl_status_X ( ft, CTRL_TEST_ERROR ); }
+                    if ( ft )   { ret_val = set_ctrl_status_X ( ft, CTRL_TEST_ERROR ); }
+                    if ( test ) { ret_val = set_ctrl_status_X ( test, CTRL_TEST_ERROR ); }
                     break;
                 
                 default:

@@ -70,12 +70,23 @@ ZMQ_Rep_thread::ZMQ_Rep_thread( std::string config, void *_ec_th_base ) {
 
 inline void ZMQ_Rep_thread::th_init( void * _) {
     
+    // default values
     int recv_timeout_ms = 500;
-    const std::string uri("tcp://*:5555");
+    std::string uri("tcp://*:5555");
+    YAML::Node zmq_rep;
+    
+    try {
+        zmq_rep = yaml_cfg['zmq_rep'];
+        recv_timeout_ms = zmq_rep['zmq_rcvtimeo_ms'].as<int>();
+        uri = zmq_rep['zmq_rcvtimeo_ms'].as<std::string>();
+    } catch (YAML::Exception &e ) {
+        std::cout << e.what() << std::endl;
+    }
+    
     rep_sock = new zmq::socket_t(zmq_ctx, ZMQ_REP);
     rep_sock->setsockopt ( ZMQ_RCVTIMEO, &recv_timeout_ms, sizeof ( recv_timeout_ms ) );
     rep_sock->bind( uri );
-    DPRINTF ( "[0MQ Rep] bind to %s\n", uri.c_str() );
+    DPRINTF ( "[0MQ Rep] bind to %s, zmq_rcvtimeo_ms %d\n", uri.c_str(), recv_timeout_ms );
     //rep_sock->connect( uri );
     //DPRINTF ( "[0MQ Rep] connect to %s\n", uri.c_str() );
     
