@@ -36,11 +36,19 @@ message Repl_hdr {
 message Ctrl_cmd {
     
     enum Type {
-        CTRL_DAC_TUNE           = 1;
-        CTRL_REMOVE_TORQUE_OFFS = 2;
-        CTRL_SET_ZERO_POSITION  = 3;
-        CTRL_TEST_DONE          = 4;
-        CTRL_TEST_ERROR         = 5;
+        CTRL_TEST_DONE          = 1;
+        CTRL_TEST_ERROR         = 2;
+        CTRL_DAC_TUNE           = 3;
+        CTRL_REMOVE_TORQUE_OFFS = 4;
+        CTRL_SET_ZERO_POSITION  = 5;
+        CTRL_FAN                = 6;
+        CTRL_LED                = 7;
+        CTRL_SANDBOX            = 8;
+        CTRL_REF_FILTER         = 9;
+        CTRL_POWER_MOD          = 10;
+        CTRL_CMD_START          = 11;
+        CTRL_CMD_STOP           = 12;
+        
     }
     // Identifies which field is filled in.
     required Type   type        = 1;
@@ -62,13 +70,24 @@ message Flash_cmd {
     required int32  board_id    = 2;
 }
 
+message Ecat_Master_cmd {
+
+    enum Type { 
+        GET_SLAVES_DESCR        = 1;
+        
+    }
+    // Identifies which field is filled in.
+    required Type   type        = 1;
+}
+
 message Repl_cmd {
 
    enum Type { 
         SET_SMOOTHER_STEP   = 1;
         SET_GAINS           = 2;
-        SET_CTRL_CMD        = 3;
-        SET_FLASH_CMD       = 4;        
+        CTRL_CMD            = 3;
+        FLASH_CMD           = 4;
+        ECAT_MASTER_CMD     = 5;    
     }
     // Identifies which field is filled in.
     required Type   type = 1;
@@ -76,10 +95,11 @@ message Repl_cmd {
     optional gazebo.msgs.Header header = 2;
     
     // One of the following will be filled in.
-    optional Smoother_step      smoother_step = 3;
-    optional Gains              gains = 4;
-    optional Ctrl_cmd           ctrl_cmd = 5;
-    optional Flash_cmd          flash_cmd = 6;
+    optional Smoother_step      smoother_step   = 3;
+    optional Gains              gains           = 4;
+    optional Ctrl_cmd           ctrl_cmd        = 5;
+    optional Flash_cmd          flash_cmd       = 6;
+    optional Ecat_Master_cmd    ecat_master_cmd = 7;
         
 }
 

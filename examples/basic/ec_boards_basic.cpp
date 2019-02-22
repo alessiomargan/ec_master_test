@@ -93,7 +93,7 @@ void Ec_Boards_basic::init_OP ( void ) {
     };
 #endif
     //get_esc_map_byclass ( motors,  motor_rid );
-
+#if 0
     int slave_pos;
     Motor * moto;
     float pos_ref;
@@ -110,10 +110,8 @@ void Ec_Boards_basic::init_OP ( void ) {
             set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_POWER_MOD_ON );
             set_ctrl_status_X ( dynamic_cast<CentAcESC*>(moto), CTRL_FAN_ON );
         }
-        
-        
     }
-
+#endif
 }
 
 template<class C>

@@ -11,6 +11,7 @@
 #define __ZMQ_REP_H__
 
 #include <zmq.hpp>
+#include <zmq_addon.hpp>
 
 #include <yaml-cpp/yaml.h>
 #include <iit/advr/thread_util.h>
@@ -41,8 +42,10 @@ public:
 
 private:
 
-    YAML::Node              yaml_cfg;
-    zmq::socket_t *         rep_sock;
+    YAML::Node                  yaml_cfg;
+    zmq::socket_t *             rep_sock;
+    std::vector<zmq::message_t> multi_zmsg;
+    
     Ec_Thread_Boards_base * ec_th_base;
     int repl_in_fd, repl_out_fd;
 };
@@ -73,12 +76,15 @@ inline void ZMQ_Rep_thread::th_init( void * _) {
     // default values
     int recv_timeout_ms = 500;
     std::string uri("tcp://*:5555");
+    std::string pipe_prefix("/proc/xenomai/registry/rtipc/xddp/");
     YAML::Node zmq_rep;
     
     try {
-        zmq_rep = yaml_cfg['zmq_rep'];
-        recv_timeout_ms = zmq_rep['zmq_rcvtimeo_ms'].as<int>();
-        uri = zmq_rep['zmq_rcvtimeo_ms'].as<std::string>();
+        zmq_rep = yaml_cfg["zmq_rep"];
+        recv_timeout_ms = zmq_rep["zmq_rcvtimeo_ms"].as<int>();
+        uri = zmq_rep["uri"].as<std::string>();
+        pipe_prefix = zmq_rep["uri"].as<std::string>();
+        
     } catch (YAML::Exception &e ) {
         std::cout << e.what() << std::endl;
     }
@@ -90,14 +96,14 @@ inline void ZMQ_Rep_thread::th_init( void * _) {
     //rep_sock->connect( uri );
     //DPRINTF ( "[0MQ Rep] connect to %s\n", uri.c_str() );
     
-    std::string repl_in_path("/tmp/nrt_pipes/repl_in");
+    std::string repl_in_path(pipe_prefix+"repl_in");
     std::cout << "[0MQ Rep] Opening xddp " << repl_in_path << std::endl;
     repl_in_fd = open ( repl_in_path.c_str(), O_WRONLY );
     if ( repl_in_fd < 0 ) {
         printf ( "repl_in_fd %d - %s %s : %s\n", repl_in_fd, __FILE__, __FUNCTION__, strerror ( errno ) );
     }
 
-    std::string repl_out_path("/tmp/nrt_pipes/repl_out");
+    std::string repl_out_path(pipe_prefix+"repl_out");
     std::cout << "[0MQ Rep] Opening xddp " << repl_out_path << std::endl;
     repl_out_fd = open ( repl_out_path.c_str(), O_RDONLY );
     if ( repl_out_fd < 0 ) {
@@ -110,25 +116,63 @@ inline void ZMQ_Rep_thread::th_loop( void * _) {
 
     uint32_t reply_size, msg_size, nbytes;
     std::string reply("Hello World !"); 
-    zmq::message_t z_msg;
+    std::string msg_header;
+    zmq::message_t zmsg;
+    zmq::multipart_t multi_zmsg;
+    int msg_parts = 0;
+        
+    // receive a multipart message : header + protobuf content
+#if 0
+    do {
+        
+        if ( ! rep_sock->recv(&zmsg) ) {
+            continue;
+        }
+        multi_zmsg.addmem(zmsg.data(),zmsg.size());
+        msg_parts++;
+        msg_size = zmsg.size();
+        DPRINTF ( "[0MQ Rep] {%d}recv %d bytes\n", msg_parts, msg_size );
+        
+    } while (zmsg.more());
+#else
+    multi_zmsg.recv(*rep_sock);
+#endif
     
-    if ( rep_sock->recv(&z_msg) ) {
-        msg_size = z_msg.size();
-        DPRINTF ( "[0MQ Rep] recv %d bytes\n", msg_size );
-        
-        // 
-        write( repl_in_fd, (void*)&msg_size, sizeof(msg_size) );
-        write( repl_in_fd, (void*)z_msg.data(), msg_size );
-        
+    if ( multi_zmsg.empty() ) {
+        return;
+    }
+    
+    // extract header part as string
+    msg_header = multi_zmsg.popstr();
+    DPRINTF ( "[0MQ Rep] hdr %s \n", msg_header.c_str() );
+    
+    if ( msg_header == "ESC_CMD" ) {
+    
+        zmsg = multi_zmsg.pop();
+        msg_size = zmsg.size();
+        nbytes = write( repl_in_fd, (void*)&msg_size, sizeof(msg_size) );
+        if ( nbytes > 0 ) {
+            nbytes = write( repl_in_fd, (void*)zmsg.data(), msg_size );
+        }
         //
         nbytes = read( repl_out_fd, (void*)&reply_size, sizeof(reply_size) );
         if ( nbytes > 0 ) {
             reply.resize(reply_size);
             nbytes = read( repl_out_fd, (void*)reply.c_str(), reply_size );
         }
-        
-        rep_sock->send((void*)reply.c_str(), reply.length());
     }
+    
+    if ( msg_header == "ECAT_MASTER_CMD" ) {
+
+        reply = std::string("Super cazzola");
+    }
+
+    multi_zmsg.clear();
+
+    // TODO reply with multipart_t mesg
+    
+    rep_sock->send((void*)reply.c_str(), reply.length());
+
 }
 
 #endif
