@@ -27,8 +27,6 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
     
     int                 bytes = 0;
     uint32_t            msg_size;
-    uint8_t             pb_buf[MAX_PB_BUFF_SIZE];    
-    iit::advr::Repl_cmd pb_msg;
         
     if ( ( bytes = replInXddp.xddp_read(msg_size) ) <= 0 ) {
         return bytes;
@@ -39,6 +37,9 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
         DPRINTF("[REPL] cmd size too big >>> %d\n", msg_size);
         return bytes;
     }
+    
+    uint8_t                 pb_buf[MAX_PB_BUFF_SIZE];    
+    iit::advr::Repl_cmd     pb_msg;
     
     bytes += replInXddp.xddp_read(pb_buf, msg_size);
     pb_msg.ParseFromArray(pb_buf, msg_size);
@@ -58,7 +59,7 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
         /**********************************************************************
          *          Flash commands
          *********************************************************************/
-        case iit::advr::Repl_cmd::FLASH_CMD :
+        case iit::advr::CmdType::FLASH_CMD :
             board_id = pb_msg.mutable_flash_cmd()->board_id();
             slave_pos = rid2Pos(board_id);
             switch ( pb_msg.mutable_flash_cmd()->type() ) {
@@ -86,7 +87,7 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
         /**********************************************************************
          * Control commands
          *********************************************************************/
-        case iit::advr::Repl_cmd::CTRL_CMD :
+        case iit::advr::CmdType::CTRL_CMD :
             board_id = pb_msg.mutable_ctrl_cmd()->board_id();
             slave_pos = rid2Pos(board_id);
             moto = slave_as<CentAcESC>(slave_pos);
@@ -165,10 +166,12 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
      *          Reply
      * 
      *************************************************************************/
-    iit::advr::Cmd_reply    pb_reply;
     std::string             reply_str;
     uint32_t                reply_size;
-    
+    iit::advr::Cmd_reply    pb_reply;
+
+    pb_reply.set_cmd_type(pb_msg.type());
+                
     if ( ret_val != 0 ) {
         //fail
         pb_reply.set_type(iit::advr::Cmd_reply::NACK);

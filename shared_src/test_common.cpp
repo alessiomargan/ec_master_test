@@ -87,6 +87,7 @@ static void set_signal_handler ( __sighandler_t sig_handler ) {
         signal ( SIGINT, sig_handler );
         signal ( SIGTERM, sig_handler );
         signal ( SIGKILL, sig_handler );
+        printf ("## Set sig_handler ##\n");
     }
 #ifdef __COBALT__
     // call pthread_set_mode_np(0, PTHREAD_WARNSW) to cause a SIGDEBUG

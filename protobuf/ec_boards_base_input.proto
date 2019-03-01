@@ -73,24 +73,27 @@ message Flash_cmd {
 message Ecat_Master_cmd {
 
     enum Type { 
-        GET_SLAVES_DESCR        = 1;
+        START_MASTER        = 1;
+        STOP_MASTER         = 2;
+        GET_SLAVES_DESCR    = 3;
         
     }
     // Identifies which field is filled in.
     required Type   type        = 1;
 }
 
+enum CmdType { 
+    SET_SMOOTHER_STEP   = 1;
+    SET_GAINS           = 2;
+    CTRL_CMD            = 3;
+    FLASH_CMD           = 4;
+    ECAT_MASTER_CMD     = 5;    
+}
+
 message Repl_cmd {
 
-   enum Type { 
-        SET_SMOOTHER_STEP   = 1;
-        SET_GAINS           = 2;
-        CTRL_CMD            = 3;
-        FLASH_CMD           = 4;
-        ECAT_MASTER_CMD     = 5;    
-    }
     // Identifies which field is filled in.
-    required Type   type = 1;
+    required CmdType            type = 1;
     
     optional gazebo.msgs.Header header = 2;
     
@@ -110,9 +113,10 @@ message Cmd_reply {
         NACK = 2;
     }
     // Identifies which field is filled in.
-    required Type   type = 1;
-    required string msg = 2;
+    required Type           type        = 1;
+    required CmdType        cmd_type    = 2;
+    required string         msg         = 3;
     
-    optional gazebo.msgs.Header header = 3;
+    optional gazebo.msgs.Header header  = 4;
     
 }

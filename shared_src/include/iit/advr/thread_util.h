@@ -20,6 +20,7 @@
 #include <typeinfo>
 #include <iostream>
 #include <sys/timerfd.h>
+#include <map>
 
 #include <iit/ecat/utils.h>
 
@@ -35,6 +36,7 @@ typedef struct {
 class Thread_hook;
 
 typedef Thread_hook* Thread_hook_Ptr;
+typedef std::map<std::string, Thread_hook_Ptr> ThreadsMap; 
 
 void * periodic_thread ( Thread_hook_Ptr );
 void * non_periodic_thread ( Thread_hook_Ptr );

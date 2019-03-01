@@ -8,7 +8,7 @@
 
 using namespace iit::ecat::advr;
 
-Ec_Boards_basic::Ec_Boards_basic ( const char* config_yaml ) : Ec_Thread_Boards_base ( config_yaml ) {
+Ec_Boards_basic::Ec_Boards_basic ( const std::string config_yaml ) : Ec_Thread_Boards_base ( config_yaml ) {
 
     name = "EC_boards_basic";
     // non periodic
@@ -150,18 +150,19 @@ int Ec_Boards_basic::user_loop ( void ) {
             if ( ! cm )
                 continue;
             
-            if ( cm ) { 
-                //set_ctrl_status_X ( cm, CTRL_POWER_MOD_ON );
-            }
+            //set_ctrl_status_X ( cm, CTRL_POWER_MOD_ON );
             
             auto tmp_it = rd_sdo_values.begin();
             for ( auto const sdo_name :  rd_sdos ) {
                 cm->readSDO_byname ( sdo_name, *tmp_it );
                 tmp_it++;
             }
-            DPRINTF ( ">> [%d] %f %f %f\n", pos2Rid( slave_pos ), rd_sdo_values[0], rd_sdo_values[1], rd_sdo_values[2] );
+            //DPRINTF ( ">> [%d] %f %f %f\n", pos2Rid( slave_pos ), rd_sdo_values[0], rd_sdo_values[1], rd_sdo_values[2] );
+            DPRINTF ( ">> [%d] %f\n", pos2Rid( slave_pos ), rd_sdo_values[0] );
         }
-    }        
+    }
+
+    return 0;
 }
    
 

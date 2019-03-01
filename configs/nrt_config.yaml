@@ -2,9 +2,9 @@
 ec_board_ctrl:
   #eth_iface: eth1
   #eth_iface: enp2s0
-  eth_iface: enp3s0
+  #eth_iface: enp3s0
   #eth_iface: enp33s0
-  #eth_iface: enp35s0
+  eth_iface: enp35s0
   #sync_cycle_time_ns: 500000
   sync_cycle_time_ns: 1000000
   #sync_cycle_time_ns: 2000000
@@ -28,7 +28,7 @@ ec_boards_base :
   log_level : 1
   fault_power_off : true
   # only for CentAcESC and TestESC
-  use_ecat_pos_as_id : true
+  #use_ecat_pos_as_id : true
   #
   urdf_config_file : ../configs/centauro_urdf.yaml
   joints_poses_file : ../configs/test_poses.yaml
@@ -40,8 +40,9 @@ zmq_pub :
 
 zmq_rep :
   uri: "tcp://*:5555"
-  zmq_rcvtimeo_ms : 500000
-
+  zmq_rcvtimeo_ms : 500
+  pipe_prefix : "/tmp/nrt_pipes/"
+  
 microCTRL_stuff: ../configs/microCTRL_config.yaml
       
 ati_config :

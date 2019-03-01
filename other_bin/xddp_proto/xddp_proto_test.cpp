@@ -86,7 +86,7 @@ public:
         
         ///////////////////////////////////////////////////////////////////////
         // write to NRT
-        pb_msg.set_type(iit::advr::Repl_cmd_Type_SET_GAINS);
+        pb_msg.set_type(iit::advr::CmdType::CTRL_CMD);
         pb_msg.mutable_gains()->set_type(iit::advr::Gains_Type_POSITION);
         pb_msg.mutable_gains()->set_kp(cnt);
         pb_msg.mutable_gains()->set_ki(cnt);

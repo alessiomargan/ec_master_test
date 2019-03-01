@@ -24,7 +24,7 @@ typedef struct js_event     input_t;
 class Ec_Boards_basic : public Ec_Thread_Boards_base {
 public:
 
-    Ec_Boards_basic ( const char * config_yaml );
+    Ec_Boards_basic ( const std::string config_yaml );
     virtual ~Ec_Boards_basic();
 
     template<class C>
