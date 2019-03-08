@@ -174,6 +174,7 @@ int EC_boards_joint_joy::user_loop ( void ) {
         break;
     }
 
+    return 0;
 }
 
 

@@ -197,6 +197,8 @@ int EC_boards_centAC_test::user_loop ( void ) {
             }
         }
     }
+    
+    return 0;
 }
 
 void EC_boards_centAC_test::tune_gains( std::vector<float> gains_incr ) {

@@ -244,6 +244,8 @@ int EC_boards_centAC_urdf::user_loop ( void ) {
 
         
     }
+    
+    return 0;
 
 }
 

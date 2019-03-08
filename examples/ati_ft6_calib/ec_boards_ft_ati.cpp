@@ -73,7 +73,7 @@ void Ec_Boards_ft_ati::init_OP ( void ) {
 
 template<class C>
 int Ec_Boards_ft_ati::user_input ( C &user_cmd ) {
-
+    return 0;
 }
 
 int Ec_Boards_ft_ati::user_loop ( void ) {
@@ -104,6 +104,8 @@ int Ec_Boards_ft_ati::user_loop ( void ) {
     sens_data.fprint ( stderr );
     printf(ANSI_COLOR_RESET);
 #endif
+
+    return 0;
 }
    
 

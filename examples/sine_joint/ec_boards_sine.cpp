@@ -187,7 +187,7 @@ int Ec_Boards_sine::user_loop ( void ) {
         moto->set_ivRef(0);
     }
 #endif
-    
+    return 0;
 }
 
 template<class C>
