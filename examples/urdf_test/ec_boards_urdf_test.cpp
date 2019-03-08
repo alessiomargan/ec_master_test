@@ -154,7 +154,8 @@ int EC_boards_urdf::user_loop ( void ) {
     } else { // trj_queue is empty
 
     }
-
+    
+    return 0;
 }
 
 template<class C>

@@ -23,6 +23,7 @@
 #include <protobuf/ec_boards_base_input.pb.h>
 
 #include <queue>
+#include <functional>
 
 #define ECAT_PTHREAD_STACK_SIZE (16*1024*1024) // 16MB
 
@@ -43,6 +44,7 @@ public:
 
     virtual int user_loop ( void ) = 0;
     virtual int repl_loop ( void );
+    
 
 protected :
 
@@ -50,6 +52,9 @@ protected :
     virtual void init_OP ( void ) = 0;
 
     virtual void stop_motors ( void );
+    
+    void run_mode_loop(void);
+    void config_mode_loop(void);
     
     iit::ecat::stat_t  s_loop;
     uint64_t start_time, tNow, tPre;

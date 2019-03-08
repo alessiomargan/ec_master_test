@@ -7,15 +7,15 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 include(FindPkgConfig)
 
-if (PKG_CONFIG_FOUND)
-  pkg_check_modules(GAZEBO gazebo)
-endif()
-set(PROTOBUF_IMPORT_DIRS "/home/embedded/gaz7_proto")
-foreach(ITR ${GAZEBO_INCLUDE_DIRS})
-  if(ITR MATCHES ".*gazebo-[0-9.]+$")
-    set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
-  endif()
-endforeach()
+#if (PKG_CONFIG_FOUND)
+#  pkg_check_modules(GAZEBO gazebo)
+#endif()
+#set(PROTOBUF_IMPORT_DIRS "/home/embedded/gaz7_proto")
+#foreach(ITR ${GAZEBO_INCLUDE_DIRS})
+#  if(ITR MATCHES ".*gazebo-[0-9.]+$")
+#    set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
+#  endif()
+#endforeach()
 
 set(msgs
   ec_boards_base_input.proto
@@ -23,10 +23,6 @@ set(msgs
   vector2d.proto
   header.proto
   time.proto
-#  ${PROTOBUF_IMPORT_DIRS}/quaternion.proto
-#  ${PROTOBUF_IMPORT_DIRS}/vector2d.proto
-#  ${PROTOBUF_IMPORT_DIRS}/header.proto
-#  ${PROTOBUF_IMPORT_DIRS}/time.proto
 )
 
 add_definitions(-fPIC)

@@ -17,6 +17,8 @@
 #include <iit/advr/thread_util.h>
 #include <protobuf/ecat_pdo.pb.h>
 
+#include <iit/advr/ec_boards_base.h>
+
 #define PB_BUFF_SIZE    2048
 
 
@@ -292,9 +294,11 @@ inline void ZMQ_Rep_thread::start_master(iit::advr::Cmd_reply &_pb_reply) {
 inline void ZMQ_Rep_thread::get_slaves_descr(iit::advr::Cmd_reply &_pb_reply) {
 
     try {
-
+        std::string result;
+        Ec_Thread_Boards_base * bb = dynamic_cast<Ec_Thread_Boards_base *>((*threads)["boards_basic"]);
+        bb->get_slaves_descr(result);
         _pb_reply.set_type(iit::advr::Cmd_reply::ACK);
-        _pb_reply.set_msg("Success");
+        _pb_reply.set_msg(result);
         
     } catch(std::exception &e) {
         _pb_reply.set_type(iit::advr::Cmd_reply::NACK);

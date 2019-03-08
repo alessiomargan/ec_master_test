@@ -106,24 +106,69 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     
     init_preOP();
 
-    if ( Ec_Boards_ctrl::set_operative() < 0 ) {
-        throw iit::ecat::advr::EcBoardsError(iit::ecat::advr::EC_BOARD_NOK,
-                                             "something wrong in Ec_Boards_ctrl::set_operative()");
+    if ( run_mode ) {
+        if ( Ec_Boards_ctrl::set_operative() < 0 ) {
+            throw iit::ecat::advr::EcBoardsError(iit::ecat::advr::EC_BOARD_NOK,
+                                                "something wrong in Ec_Boards_ctrl::set_operative()");
+        }
+        // >>> actual ECAT state is OP ...
+        init_OP();
+        
     }
 
     pthread_barrier_wait(&threads_barrier);
-    // >>> actual ECAT state is OP ...
-
+    
     start_time = iit::ecat::get_time_ns();
     tNow, tPre = start_time;
-
-    init_OP();
     
     emergency_active = 0;
 
 }
 
 void Ec_Thread_Boards_base::th_loop ( void * ) {
+
+    if ( run_mode ) {
+        run_mode_loop();
+    } else {
+        config_mode_loop();
+    }
+    
+}
+
+void Ec_Thread_Boards_base::config_mode_loop ( void ) {
+
+    uint32_t emg = 0;
+    
+    tNow = iit::ecat::get_time_ns();
+    s_loop ( tNow - tPre );
+    tPre = tNow;
+
+    try {
+        // give a breath 
+        osal_usleep(1000);
+
+        if ( emergencyInXddp.xddp_read ( emg ) > 0 ) {
+            DPRINTF ( "EMG 0x%X\n", emg );
+            emergency_active = (emg == 0xE);
+        }
+        
+        if  ( emergency_active ) {
+            // empty queue
+            while ( ! trj_queue.empty() ) { trj_queue.pop_front(); }
+        }
+        
+        repl_loop();
+        
+        user_loop();
+        
+    } catch ( iit::ecat::EscWrpError &e ) {
+        std::cout << e.what() << std::endl;
+    }
+
+    return;
+}
+
+void Ec_Thread_Boards_base::run_mode_loop ( void ) {
 
     uint32_t emg = 0;
     
@@ -133,11 +178,9 @@ void Ec_Thread_Boards_base::th_loop ( void * ) {
 
     try {
 
-        if ( run_mode ) {
-            if ( recv_from_slaves ( timing ) != iit::ecat::advr::EC_BOARD_OK ) {
-                // TODO
-                return;
-            }
+        if ( recv_from_slaves ( timing ) != iit::ecat::advr::EC_BOARD_OK ) {
+            // TODO
+            return;
         }
 
         if ( emergencyInXddp.xddp_read ( emg ) > 0 ) {
@@ -154,17 +197,17 @@ void Ec_Thread_Boards_base::th_loop ( void * ) {
         
         user_loop();
         
-        if ( run_mode ) {
-            // emergency_active DO NOT write tx_pdo
-            // send_to_slaves( false ); DO NOT write
-            send_to_slaves( ! emergency_active );
-        }
+        // emergency_active DO NOT write tx_pdo
+        // send_to_slaves( false ); DO NOT write
+        send_to_slaves( ! emergency_active );
         
     } catch ( iit::ecat::EscWrpError &e ) {
         std::cout << e.what() << std::endl;
     }
 
+    return;
 }
+
 
 void Ec_Thread_Boards_base::remove_rids_intersection(std::vector<int> &start_dest, const std::vector<int> &to_remove)
 {

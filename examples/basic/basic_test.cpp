@@ -60,7 +60,8 @@ int main ( int argc, char * const argv[] ) try {
         // ZMQ specific exception
         std::cout << "catching .... " <<  e.what() << std::endl;
     }
-
+    
+    std::cout << "join threads .... " << std::endl;
     for ( auto const& item : threads ) {
         item.second->stop();
         item.second->join();

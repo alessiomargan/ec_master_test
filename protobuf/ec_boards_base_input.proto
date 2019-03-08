@@ -79,7 +79,7 @@ message Ecat_Master_cmd {
         
     }
     // Identifies which field is filled in.
-    required Type   type        = 1;
+    required Type   type    = 1;
 }
 
 enum CmdType { 
@@ -103,7 +103,7 @@ message Repl_cmd {
     optional Ctrl_cmd           ctrl_cmd        = 5;
     optional Flash_cmd          flash_cmd       = 6;
     optional Ecat_Master_cmd    ecat_master_cmd = 7;
-        
+    
 }
 
 message Cmd_reply {
