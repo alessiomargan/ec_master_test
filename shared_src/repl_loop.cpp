@@ -1,4 +1,5 @@
 #include <iit/advr/ec_boards_base.h>
+#include <protobuf/repl_cmd.pb.h>
 
 #define MAX_PB_BUFF_SIZE    1024
 

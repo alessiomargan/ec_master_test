@@ -185,6 +185,8 @@ void * Ati_Sens::rx_thread ( void *_ ) {
         kls->recv_data();
 
     }
+    
+    return 0;
 }
 
 

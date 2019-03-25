@@ -1,0 +1,46 @@
+cmake_minimum_required(VERSION 3.2)
+project(protobuf_test)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+
+#file(GLOB_RECURSE proto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}*.proto)
+#file(GLOB proto_file *.proto)
+set(PROTO_FILES
+  pb_msg/repl_cmd.proto
+  pb_msg/header.proto
+  pb_msg/time.proto
+)
+set(PROTOBUF_INPUT_DIRECTORY "${PROJECT_SOURCE_DIR}")
+set(PROTOBUF_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/pb_msg/")
+
+foreach(file ${PROTO_FILES})
+    set(PROTOBUF_ARGUMENTS "protoc --proto_path=\"${PROTOBUF_INPUT_DIRECTORY}\" --cpp_out=\"${PROTOBUF_OUTPUT_DIRECTORY}\" \"${file}\"")
+    execute_process(COMMAND ${PROTOBUF_ARGUMENTS}
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+            RESULT_VARIABLE PROTOBUF_RESULT
+            OUTPUT_VARIABLE PROTOBUF_OUTPUT_VARIABLE)
+endforeach()
+
+#file(GLOB PROTO_HEADER pb_msg/*.pb.h)
+#file(GLOB PROTO_SRC    pb_msg/*.pb.cc)
+
+set(PROTO_HEADER
+  ${PROJECT_SOURCE_DIR}/pb_msg/repl_cmd.pb.h
+  ${PROJECT_SOURCE_DIR}/pb_msg/header.pb.h
+  ${PROJECT_SOURCE_DIR}/pb_msg/time.pb.h
+)
+set(PROTO_SRC
+  ${PROJECT_SOURCE_DIR}/pb_msg/repl_cmd.pb.cc
+  ${PROJECT_SOURCE_DIR}/pb_msg/header.pb.cc
+  ${PROJECT_SOURCE_DIR}/pb_msg/time.pb.cc
+)
+
+
+add_definitions(-fPIC)
+add_library (ec_master_pb ${PROTO_HEADER} ${PROTO_SRC} )
+
+install(TARGETS ec_master_pb DESTINATION lib)
+install(FILES ${PROTO_HEADER}  DESTINATION include/protobuf)
+install(FILES ${PROTO_PY} DESTINATION /usr/local/lib/python3.6/dist-packages)
+

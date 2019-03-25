@@ -14,9 +14,10 @@
 #include <zmq_addon.hpp>
 
 #include <yaml-cpp/yaml.h>
+
 #include <iit/advr/thread_util.h>
 #include <protobuf/ecat_pdo.pb.h>
-
+#include <protobuf/repl_cmd.pb.h>
 #include <iit/advr/ec_boards_base.h>
 
 #define PB_BUFF_SIZE    2048

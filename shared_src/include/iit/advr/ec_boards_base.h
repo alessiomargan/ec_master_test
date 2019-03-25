@@ -20,8 +20,6 @@
 #include <iit/ecat/advr/pipes.h>
 #include <iit/advr/trajectory.h>
 
-#include <protobuf/ec_boards_base_input.pb.h>
-
 #include <queue>
 #include <functional>
 

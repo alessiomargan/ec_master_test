@@ -18,11 +18,7 @@ include(FindPkgConfig)
 #endforeach()
 
 set(msgs
-  ec_boards_base_input.proto
-  quaternion.proto
-  vector2d.proto
-  header.proto
-  time.proto
+  repl_cmd.proto
 )
 
 add_definitions(-fPIC)
