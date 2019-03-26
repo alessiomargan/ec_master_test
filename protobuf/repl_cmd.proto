@@ -16,6 +16,12 @@ message Header
   optional int32 index   = 3;
 }
 
+message Vector2d
+{
+  required double x = 1;
+  required double y = 2;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 message Trajectory_cmd {

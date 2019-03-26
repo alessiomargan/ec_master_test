@@ -15,7 +15,7 @@
 #include <iit/advr/thread_util.h>
 #include <iit/advr/spline.h>
 #include <iit/advr/trajectory.h>
-#include <protobuf/vector2d.pb.h>
+#include <protobuf/repl_cmd.pb.h>
 
 extern void main_common ( int *argcp, char *const **argvp, __sighandler_t sig_handler );
 extern void set_main_sched_policy ( int );
@@ -36,7 +36,7 @@ class RT_thread : public Thread_hook {
     XDDP_pipe               OutXddp;
     std::string             pipe_name;
     advr::Trj_ptr           trj;
-    gazebo::msgs::Vector2d  vector;
+    iit::advr::Vector2d     vector;
     std::string             pbStr;    
     
 public:
@@ -114,7 +114,7 @@ class UI_thread : public Thread_hook {
     int                     xddp_fd;
     std::string             pipe_name;
     
-    gazebo::msgs::Vector2d  vector;
+    iit::advr::Vector2d     vector;
     uint8_t  msg_buff[1024];
     
 public:
