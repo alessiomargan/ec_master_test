@@ -46,6 +46,7 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
     pb_msg.ParseFromArray(pb_buf, msg_size);
     DPRINTF("[REPL] pb_msg\n%s\n", pb_msg.DebugString().c_str());
     
+    iit::ecat::EscWrapper *    esc = 0;
     CentAcESC *     moto = 0;
     Ft6Msp432ESC *  ft = 0;
     TestESC *       test = 0;
@@ -160,6 +161,34 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
  
             }
             break;
+        
+        /**********************************************************************
+         * Control commands
+         *********************************************************************/
+        case iit::advr::CmdType::FOE_MASTER :
+            if ( pb_msg.mutable_foe_master()->has_board_id() ) {
+                board_id = pb_msg.mutable_foe_master()->board_id();
+                slave_pos = rid2Pos(board_id);
+            } else if ( pb_msg.mutable_foe_master()->has_slave_pos() ) {
+                slave_pos = pb_msg.mutable_foe_master()->slave_pos();
+            } else {
+                // 
+            }
+            
+            esc = slave_as_EscWrapper(slave_pos);
+            
+            if ( ! esc ) {
+                // set error string once for all cases
+                error_msg = std::string( "Slave Id "+std::to_string(board_id)+" NOT FOUND ==> pos " + std::to_string(slave_pos));
+            }
+            
+            // !! cmd ok need to start bootloader 
+            ret_val = esc->send_file(slave_pos,
+                                     pb_msg.mutable_foe_master()->filename(),
+                                     pb_msg.mutable_foe_master()->password());
+            
+            break;
+        
     }
 
     /**************************************************************************

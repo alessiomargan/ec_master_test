@@ -94,12 +94,22 @@ message Ecat_Master_cmd {
     required Type   type    = 1;
 }
 
+message FOE_Master {
+
+    required string filename    = 1;
+    required uint32 password    = 2; 
+    optional int32  slave_pos   = 3;
+    optional int32  board_id    = 4;
+}
+
+
 enum CmdType { 
     SET_SMOOTHER_STEP   = 1;
     SET_GAINS           = 2;
     CTRL_CMD            = 3;
     FLASH_CMD           = 4;
     ECAT_MASTER_CMD     = 5;    
+    FOE_MASTER          = 6;
 }
 
 message Repl_cmd {
@@ -115,6 +125,7 @@ message Repl_cmd {
     optional Ctrl_cmd           ctrl_cmd        = 5;
     optional Flash_cmd          flash_cmd       = 6;
     optional Ecat_Master_cmd    ecat_master_cmd = 7;
+    optional FOE_Master         foe_master      = 8;
     
 }
 
