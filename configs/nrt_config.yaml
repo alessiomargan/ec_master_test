@@ -20,8 +20,8 @@ ec_board_ctrl:
   reset_micro : true
 
 ec_boards_base :
-  app_mode : run_mode
-  #app_mode : config_mode
+  #app_mode : run_mode
+  app_mode : config_mode
   robot_name : NoNe
   read_SDOs : false
   use_pipes : true

@@ -290,7 +290,8 @@ class ZMQ_Pub_thread : public Thread_hook {
     PubMap_t    zmap;
     
     YAML::Node  yaml_cfg;
-
+    bool        run_mode;
+    
 public:
 
     ZMQ_Pub_thread( std::string config ) {
@@ -309,7 +310,7 @@ public:
             assert ( 0 );
         }
         yaml_cfg = YAML::LoadFile ( config );
-        
+        run_mode = true;
     }
 
     ~ZMQ_Pub_thread() {

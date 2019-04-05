@@ -104,6 +104,13 @@ void ZMQ_Pub_thread::th_init ( void * ) {
     try {
         robot_prefix = yaml_cfg["ec_boards_base"]["robot_name"].as<std::string>() + "@";
     } catch ( YAML::Exception ) { }
+    try {
+        std::string application_mode = yaml_cfg["ec_boards_base"]["app_mode"].as<std::string>();
+        run_mode = (application_mode == std::string("run_mode"));
+        DPRINTF ("%s %s\n", __FUNCTION__, application_mode.c_str());
+    } catch ( YAML::Exception &e ) {
+        std::cout << e.what() << std::endl;
+    }
     
     const std::string motor_prefix  ( "Motor_id_" );
     const std::string ft_prefix     ( "Ft_id_" );
@@ -145,9 +152,14 @@ void ZMQ_Pub_thread::th_loop ( void * ) {
 
     tNow = iit::ecat::get_time_ns();
 
-    for ( auto const& item : zmap ) {
-        item.second->publish();
-    }
+    if ( run_mode ) {
+        for ( auto const& item : zmap ) {
+            item.second->publish();
+        }
+    } else {
+        sleep(1);
+    } 
+    
 
     dt = iit::ecat::get_time_ns()-tNow;
     loop_time ( dt );
