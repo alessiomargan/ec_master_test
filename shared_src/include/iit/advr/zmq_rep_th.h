@@ -63,7 +63,7 @@ private:
     void stop_master(iit::advr::Cmd_reply &);
     void start_master(iit::advr::Cmd_reply &);
     void get_slaves_descr(iit::advr::Cmd_reply &);
-
+    void foe_send(iit::advr::Repl_cmd &, iit::advr::Cmd_reply &);
 };
 
 
@@ -198,11 +198,10 @@ inline void ZMQ_Rep_thread::th_loop( void * _) {
         }
         
     }
-    
     /**************************************************************************
      * 
      *************************************************************************/
-    if ( msg_header == "ECAT_MASTER_CMD" ) {
+    else if ( msg_header == "MASTER_CMD" ) {
 
         zmsg = multi_zmsg.pop();
         msg_size = zmsg.size();
@@ -231,7 +230,11 @@ inline void ZMQ_Rep_thread::th_loop( void * _) {
                         break;
                 }
                 break; // case iit::advr::CmdType::ECAT_MASTER_CMD
-                
+            
+            case iit::advr::CmdType::FOE_MASTER :
+                foe_send(pb_msg, pb_reply);
+                break; // case iit::advr::CmdType::FOE_MASTER :
+
             default :
                 break;
         }
@@ -241,7 +244,13 @@ inline void ZMQ_Rep_thread::th_loop( void * _) {
         reply_size = reply_str.length();
     
     }
-
+    /**************************************************************************
+     * 
+     *************************************************************************/
+    else { 
+        DPRINTF("[0MQ Rep] header NOT HANDLED\n");
+        
+    } 
     /**************************************************************************
      * 
      *************************************************************************/
@@ -303,13 +312,67 @@ inline void ZMQ_Rep_thread::get_slaves_descr(iit::advr::Cmd_reply &_pb_reply) {
         
     } catch(std::exception &e) {
         _pb_reply.set_type(iit::advr::Cmd_reply::NACK);
-        _pb_reply.set_msg(e.what()
-);        
+        _pb_reply.set_msg(e.what());        
     }
-    return; 
-
-    
+    return;     
 }
+
+inline void ZMQ_Rep_thread::foe_send(iit::advr::Repl_cmd &_pb_msg,
+                                     iit::advr::Cmd_reply &_pb_reply) {
+    int board_id, slave_pos, ret_val;
+    std::string result("Success");
+    bool fail;
+    
+    try {
+        Ec_Thread_Boards_base * bb = dynamic_cast<Ec_Thread_Boards_base *>((*threads)["boards_basic"]);
+        ZMQ_Pub_thread * zp = dynamic_cast<ZMQ_Pub_thread *>((*threads)["ZMQ_pub"]);
+        zp->stop();
+        zp->join();
+        delete zp;
+        
+        if ( _pb_msg.mutable_foe_master()->has_board_id() ) {
+            board_id = _pb_msg.mutable_foe_master()->board_id();
+            slave_pos = bb->rid2Pos(board_id);
+        } else if ( _pb_msg.mutable_foe_master()->has_slave_pos() ) {
+            slave_pos = _pb_msg.mutable_foe_master()->slave_pos();
+        } else {
+            slave_pos = 0; 
+        }
+        
+        if ( ! slave_pos ) {
+            // set error string once for all cases
+            result = std::string( "Slave Id "+std::to_string(board_id)+" NOT FOUND ==> pos " + std::to_string(slave_pos));
+            fail = true;
+        }
+        
+        ret_val = bb->update_board_firmware(slave_pos,
+                                        _pb_msg.mutable_foe_master()->filename(),
+                                        _pb_msg.mutable_foe_master()->password(),
+                                        _pb_msg.mutable_foe_master()->mcu_type());
+        
+        if ( ! ret_val ) { fail = true; }
+     
+        ((*threads)["ZMQ_pub"]) = new ZMQ_Pub_thread(config);
+        ((*threads)["ZMQ_pub"])->create(false, 4);
+        
+    } catch(std::exception &e) {
+        fail = true;
+        result = e.what();        
+    }
+
+    if ( fail  ) {
+        _pb_reply.set_type(iit::advr::Cmd_reply::NACK);
+    } else {
+        _pb_reply.set_type(iit::advr::Cmd_reply::ACK);
+    }       
+
+    _pb_reply.set_msg(result);
+
+    return;     
+}
+
+            
+
 
 #endif
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

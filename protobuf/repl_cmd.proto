@@ -98,8 +98,9 @@ message FOE_Master {
 
     required string filename    = 1;
     required uint32 password    = 2; 
-    optional int32  slave_pos   = 3;
-    optional int32  board_id    = 4;
+    optional string mcu_type    = 3;
+    optional int32  slave_pos   = 4;
+    optional int32  board_id    = 5;
 }
 
 
