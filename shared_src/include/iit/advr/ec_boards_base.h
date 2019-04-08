@@ -60,8 +60,9 @@ protected :
     std::map<int,float> home;
     std::map<int,float> start_pos;
 
-    std::deque<advr::Trj_ptr_map> trj_queue;
-
+    std::deque<advr::Trj_ptr_map>   trj_queue;
+    advr::Trj_name_ptr_map          trj_names;
+    
     uint32_t    emergency_active;
     
     XDDP_pipe   emergencyInXddp;

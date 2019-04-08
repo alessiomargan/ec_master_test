@@ -133,6 +133,8 @@ int Ec_Boards_basic::user_input ( C &user_cmd ) {
 
 int Ec_Boards_basic::user_loop ( void ) {
 
+    float trj_error = 0.07;
+    
     //auto const rd_sdos = { "motorEncBadReadPPM","linkEncBadReadPPM","torque_read" };
     auto const rd_sdos = { "torque_read" };
     std::vector<float> rd_sdo_values(rd_sdos.size());     
@@ -162,6 +164,21 @@ int Ec_Boards_basic::user_loop ( void ) {
         }
     }
 
+    
+    if ( ! trj_queue.empty() ) {
+        if ( go_there ( motors, trj_queue.at(0), trj_error, false) ) {
+            // running trj has finish ... remove from queue  !!
+            DPRINTF ( "running trj has finish ... remove from queue !!\n" );
+            trj_queue.pop_front();
+            try { advr::reset_trj ( trj_queue.at(0) ); }
+            catch ( const std::out_of_range &e ) {
+                // queue is empty ....
+                
+            }
+        }
+    }
+
+    
     return 0;
 }
    

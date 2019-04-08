@@ -15,7 +15,7 @@
 
 #include <iit/advr/ec_boards_base.h>
 #include <iit/advr/trajectory.h>
-#include <protobuf/ec_boards_base_input.pb.h>
+#include <protobuf/repl_cmd.pb.h>
 
 /**
  */

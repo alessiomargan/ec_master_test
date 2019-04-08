@@ -18,8 +18,22 @@ message Header
 
 ///////////////////////////////////////////////////////////////////////////////
 
-message Smoother_step {
+message Trajectory_cmd {
 
+    enum Type { 
+        SINE        = 1;
+        COSINE      = 2;
+        STEP        = 3;
+        SMOOTHER    = 4;
+        SPLINE      = 5;
+        HOME        = 6;
+    }
+    
+    required Type       type = 1;
+    required string     name = 2;
+    required int32      board_id = 3;
+    repeated double     x = 4;
+    repeated double     y = 5;
 }
 
 message Gains {
@@ -103,14 +117,18 @@ message FOE_Master {
     optional int32  board_id    = 5;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+///////////////////////////////////////////////////////////////////////////////
 
 enum CmdType { 
-    SET_SMOOTHER_STEP   = 1;
+    SEND_TRAJECTORY     = 1;
     SET_GAINS           = 2;
     CTRL_CMD            = 3;
     FLASH_CMD           = 4;
     ECAT_MASTER_CMD     = 5;    
     FOE_MASTER          = 6;
+    HOMING              = 7;
 }
 
 message Repl_cmd {
@@ -121,7 +139,7 @@ message Repl_cmd {
     optional Header             header = 2;
     
     // One of the following will be filled in.
-    optional Smoother_step      smoother_step   = 3;
+    optional Trajectory_cmd     trajectory_cmd  = 3;
     optional Gains              gains           = 4;
     optional Ctrl_cmd           ctrl_cmd        = 5;
     optional Flash_cmd          flash_cmd       = 6;

@@ -85,7 +85,7 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
             } else {
                 DPRINTF("[REPL] error, invalid slave_pos %d or board_id %d\n",slave_pos, board_id);
             }
-            break;
+            break; // case iit::advr::CmdType::FLASH_CMD
         /**********************************************************************
          * Control commands
          *********************************************************************/
@@ -159,6 +159,54 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
                 default:
                     break;
  
+            }
+            break; // case iit::advr::CmdType::CTRL_CMD
+        
+        /**********************************************************************
+         * Trajectory commands
+         *********************************************************************/
+        case iit::advr::CmdType::SEND_TRAJECTORY :
+            auto trj_cmd = pb_msg.mutable_trajectory_cmd();
+            board_id = pb_msg.mutable_trajectory_cmd()->board_id();
+            slave_pos = rid2Pos(board_id);
+            //Motor * moto = slave_as<Motor>(slave_pos);
+            moto = slave_as<CentAcESC>(slave_pos);
+            std::string trj_name = trj_cmd->name();
+                    
+            if ( ! moto ) {
+                // set error string once for all cases
+                error_msg = std::string( "Slave Id "+std::to_string(board_id)+" NOT FOUND ==> pos " + std::to_string(slave_pos));
+            }
+            
+            switch ( trj_cmd->type() ) {
+                
+                case iit::advr::Trajectory_cmd::HOME :
+                    float motor_pos;
+                    if ( moto && (iit::ecat::EC_WRP_OK == moto->readSDO ( "motor_pos", motor_pos ))) {
+                        start_pos[slave_pos] = motor_pos;
+                        std::vector<double> Xs(trj_cmd->x().begin(), trj_cmd->x().end());
+                        std::vector<double> Ys(trj_cmd->y().begin(), trj_cmd->y().end());
+                        Ys[0] = start_pos[slave_pos];
+                        trj_names[trj_name][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
+                        trj_queue.clear();
+                        trj_queue.push_back(trj_names[trj_name]);
+                        advr::reset_trj ( trj_queue.at(0) );
+                        ret_val = EC_BOARD_OK;
+                    }
+                    //
+                    break;
+                
+                case iit::advr::Trajectory_cmd::SINE :
+                    std::vector<double> Xs(trj_cmd->x().begin(), trj_cmd->x().end());
+                    std::vector<double> Ys(trj_cmd->y().begin(), trj_cmd->y().end());
+                    //
+                    trj_names[trj_name][slave_pos] = std::make_shared<advr::Smoother_trajectory>( Xs, Ys );
+                    trj_queue.clear();
+                    trj_queue.push_back(trj_names[name]); 
+                    break;
+                
+                //default:
+                //    break;
             }
             break;
         
