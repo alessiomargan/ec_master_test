@@ -5,18 +5,19 @@
 
 using namespace iit::ecat::advr;
 
-static inline int motor_ctrl_cmd(iit::advr::Repl_cmd& repl_cmd,
-                                 CentAcESC* moto,
-                                 Ctrl_cmd_type cmd_on, Ctrl_cmd_type cmd_off, 
-                                 std::string error_msg)
+int do_ctrl_cmd(iit::advr::Repl_cmd& repl_cmd, iit::ecat::EscWrapper * esc,
+                   Ctrl_cmd_type cmd_on, Ctrl_cmd_type cmd_off,
+                   std::string error_msg)
 {
     int ret_val = EC_BOARD_NOK;
     
+    if ( ! esc ) { return ret_val;}
+    
     if ( repl_cmd.mutable_ctrl_cmd()->has_value() ) {
         if ( repl_cmd.mutable_ctrl_cmd()->value() ) {
-            ret_val = set_ctrl_status_X(moto, cmd_on);
+            ret_val = esc->set_ctrl_status(cmd_on);
         } else {
-            ret_val = set_ctrl_status_X(moto, cmd_off);
+            ret_val = esc->set_ctrl_status(cmd_off);
         }
     } else {
         error_msg = std::string("CTRL_FAN should have a value");
@@ -46,10 +47,9 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
     pb_msg.ParseFromArray(pb_buf, msg_size);
     DPRINTF("[REPL] pb_msg\n%s\n", pb_msg.DebugString().c_str());
     
-    iit::ecat::EscWrapper *    esc = nullptr;
-    CentAcESC *     moto = nullptr;
-    Ft6Msp432ESC *  ft = nullptr;
-    TestESC *       test = nullptr;
+    iit::ecat::EscWrapper * esc = nullptr;
+    Motor *                 moto = nullptr;
+    Ft6Msp432ESC *          ft = nullptr;
     uint32_t        cmd_type = 0;
     int32_t         board_id = 0;
     uint32_t        slave_pos = 0;
@@ -64,6 +64,8 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
         case iit::advr::CmdType::FLASH_CMD :
             board_id = pb_msg.mutable_flash_cmd()->board_id();
             slave_pos = rid2Pos(board_id);
+            esc = slave_as_EscWrapper(slave_pos);
+            
             switch ( pb_msg.mutable_flash_cmd()->type() ) {
                 case iit::advr::Flash_cmd::SAVE_PARAMS_TO_FLASH :
                     cmd_type = SAVE_PARAMS_TO_FLASH;
@@ -77,11 +79,8 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
                 default :
                     break;
             }
-            if ( cmd_type && board_id ) {
-                // ok if at last one of set_flash_cmd_X return EC_BOARD_OK --> 0
-                ret_val  = set_flash_cmd_X ( slave_as<Ft6Msp432ESC>(slave_pos), cmd_type );
-                ret_val &= set_flash_cmd_X ( slave_as<CentAcESC>(slave_pos), cmd_type );
-                ret_val &= set_flash_cmd_X ( slave_as<TestESC>(slave_pos), cmd_type );
+            if ( cmd_type && board_id && slave_pos) {
+                ret_val = esc->set_flash_cmd ( cmd_type );
             } else {
                 DPRINTF("[REPL] error, invalid slave_pos %d or board_id %d\n",slave_pos, board_id);
             }
@@ -92,32 +91,35 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
         case iit::advr::CmdType::CTRL_CMD :
             board_id = pb_msg.mutable_ctrl_cmd()->board_id();
             slave_pos = rid2Pos(board_id);
-            moto = slave_as<CentAcESC>(slave_pos);
+            //
+            esc = slave_as_EscWrapper(slave_pos);
+            moto = slave_as<Motor>(slave_pos);
             ft = slave_as<Ft6Msp432ESC>(slave_pos);
-            test = slave_as<TestESC>(slave_pos);
             
-            if ( ! (moto || ft || test) ) {
+            if ( ! esc ) {
                 // set error string once for all cases
                 error_msg = std::string( "Slave Id "+std::to_string(board_id)+" NOT FOUND ==> pos " + std::to_string(slave_pos));
+                break;
             }
             
             switch ( pb_msg.mutable_ctrl_cmd()->type() ) {
-                
+                // 
                 case iit::advr::Ctrl_cmd::CTRL_FAN :
-                    if ( moto ) { ret_val = motor_ctrl_cmd(pb_msg, moto, CTRL_FAN_ON, CTRL_FAN_OFF, error_msg); }
+                    ret_val = do_ctrl_cmd(pb_msg, esc, CTRL_FAN_ON, CTRL_FAN_OFF, error_msg);
                     break;
                 case iit::advr::Ctrl_cmd::CTRL_LED :
-                    if ( moto ) { ret_val = motor_ctrl_cmd(pb_msg, moto, CTRL_LED_ON, CTRL_LED_OFF, error_msg); }
+                    ret_val = do_ctrl_cmd(pb_msg, esc, CTRL_LED_ON, CTRL_LED_OFF, error_msg);
                     break;
                 case iit::advr::Ctrl_cmd::CTRL_POWER_MOD :
-                    if ( moto ) { ret_val = motor_ctrl_cmd(pb_msg, moto, CTRL_POWER_MOD_ON, CTRL_POWER_MOD_OFF, error_msg); }
+                    ret_val = do_ctrl_cmd(pb_msg, esc, CTRL_POWER_MOD_ON, CTRL_POWER_MOD_OFF, error_msg);
                     break;
                 case iit::advr::Ctrl_cmd::CTRL_SANDBOX :
-                    if ( moto ) { ret_val = motor_ctrl_cmd(pb_msg, moto, CTRL_SAND_BOX_ON, CTRL_SAND_BOX_OFF, error_msg); }
+                    ret_val = do_ctrl_cmd(pb_msg, esc, CTRL_SAND_BOX_ON, CTRL_SAND_BOX_OFF, error_msg);
                     break;
                 case iit::advr::Ctrl_cmd::CTRL_REF_FILTER :
-                    if ( moto ) { ret_val = motor_ctrl_cmd(pb_msg, moto, CTRL_POS_REF_FILTER_ON, CTRL_POS_REF_FILTER_OFF, error_msg); }
+                    ret_val = do_ctrl_cmd(pb_msg, esc, CTRL_POS_REF_FILTER_ON, CTRL_POS_REF_FILTER_OFF, error_msg);
                     break;
+                    
                 case iit::advr::Ctrl_cmd::CTRL_SET_ZERO_POSITION :
                     if ( moto ) {
                         if ( pb_msg.mutable_ctrl_cmd()->has_value() ) {
@@ -131,10 +133,10 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
                     if ( moto ) {
                         if ( pb_msg.mutable_ctrl_cmd()->has_value() ) {
                             // start motor with controller's gains set in yaml file
-                            ret_val = dynamic_cast<Motor*>(moto)->start(pb_msg.mutable_ctrl_cmd()->value());
+                            ret_val = moto->start(pb_msg.mutable_ctrl_cmd()->value());
                         } else {
                             // start motor with controller type and gains set in yaml file
-                            ret_val = dynamic_cast<Motor*>(moto)->start();
+                            ret_val = moto->start();
                         }
                     }
                     break;
@@ -147,13 +149,11 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
                     break;
                 
                 case iit::advr::Ctrl_cmd::CTRL_TEST_DONE :
-                    if ( ft )   { ret_val = set_ctrl_status_X ( ft, CTRL_TEST_DONE ); }
-                    if ( test ) { ret_val = set_ctrl_status_X ( test, CTRL_TEST_DONE ); }
+                    ret_val = esc->set_ctrl_status( CTRL_TEST_DONE );
                     break;
  
                 case iit::advr::Ctrl_cmd::CTRL_TEST_ERROR :
-                    if ( ft )   { ret_val = set_ctrl_status_X ( ft, CTRL_TEST_ERROR ); }
-                    if ( test ) { ret_val = set_ctrl_status_X ( test, CTRL_TEST_ERROR ); }
+                    ret_val = esc->set_ctrl_status( CTRL_TEST_ERROR );
                     break;
                 
                 default:
@@ -169,8 +169,7 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
             auto trj_cmd = pb_msg.mutable_trajectory_cmd();
             board_id = pb_msg.mutable_trajectory_cmd()->board_id();
             slave_pos = rid2Pos(board_id);
-            //Motor * moto = slave_as<Motor>(slave_pos);
-            moto = slave_as<CentAcESC>(slave_pos);
+            Motor * moto = slave_as<Motor>(slave_pos);
             std::string trj_name = trj_cmd->name();
                     
             if ( ! moto ) {
