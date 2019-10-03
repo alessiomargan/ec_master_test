@@ -53,7 +53,9 @@ void Ec_Thread_Boards_base::th_init ( void * ) {
     // init Ec_Boards_ctrl
     retval = Ec_Boards_ctrl::init();
     if ( retval != iit::ecat::advr::EC_BOARD_OK ) {
-        throw iit::ecat::advr::EcBoardsError(retval,"something wrong in Ec_Boards_ctrl::init()");
+        //throw iit::ecat::advr::EcBoardsError(retval,"something wrong in Ec_Boards_ctrl::init()");
+        DPRINTF ("%s : force config_mode !!\n", __FUNCTION__);
+        run_mode = false;
     }
 
     get_esc_map_byclass ( pows );

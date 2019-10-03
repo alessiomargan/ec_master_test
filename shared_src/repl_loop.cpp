@@ -142,6 +142,8 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
                     break;
                 case iit::advr::Ctrl_cmd::CTRL_CMD_STOP :
                     if ( moto ) { ret_val = moto->stop(); }
+                    // empty trj queue
+                    trj_queue.clear();
                     break;
                 
                 case iit::advr::Ctrl_cmd::CTRL_DAC_TUNE :
@@ -207,7 +209,117 @@ int Ec_Thread_Boards_base::repl_loop ( void ) {
                 //default:
                 //    break;
             }
-            break;
+            break; // iit::advr::CmdType::TRJ_CMD
+        /**********************************************************************
+         * Trajectory queue commands
+         *********************************************************************/
+        case iit::advr::CmdType::TRJ_QUEUE_CMD :
+            trj_queue_cmd = pb_repl_msg.mutable_trj_queue_cmd();
+            for ( const auto &nm : trj_queue_cmd->trj_names() ) {
+                trj_queue_names.push_back(nm);
+            }
+            
+            switch ( trj_queue_cmd->type() ) {
+                //
+                // TODO check initial and final trj ...
+                //
+                case iit::advr::Trj_queue_cmd::PUSH_QUE :
+                    //trj_queue.clear();
+                    for ( auto const& name : trj_queue_names ) {
+                        try {
+                            trj_queue.push_back(trj_names.at(name));
+                        } catch (std::out_of_range ) {
+                            error_msg = std::string("Error trajectory ")+name+std::string(" is not defined !");
+                            // exit switch with error_msg
+                            break;
+                        }
+                    }
+                    if ( ! trj_queue.empty() ) {
+                        std::map<int, double> motors_pos, next_start_points;
+                        // get all actual motors position 
+                        for ( auto const &[slave_pos, moto] : motors ) {
+                            auto motor_pdo_rx = moto->getRxPDO();
+                            motors_pos[slave_pos] = motor_pdo_rx.motor_pos;
+                        }
+                        // check discontinuity in trjs
+                        advr::reset_trj ( trj_queue.front() );
+                        start_points_trj(trj_queue.front(), next_start_points);
+                        if ( motors_pos != next_start_points ) {
+                            // correct discontinuity, set start_point with actual motor_pos
+                            for (auto const &[slave_pos,start_pos] : next_start_points) {
+                                if ( motors_pos.at(slave_pos) != start_pos ) {
+                                    trj_queue.front()[slave_pos]->set_start_point(motors_pos[slave_pos]);
+                                }
+                            }
+                        }
+                    } 
+                    ret_val = EC_BOARD_OK;
+                    break;
+                case iit::advr::Trj_queue_cmd::EMPTY_QUE :
+                    trj_queue.clear();
+                    ret_val = EC_BOARD_OK;
+                    break;
+            }
+            break; // iit::advr::CmdType::TRJ_QUEUE_CMD
+        /**********************************************************************
+         * 
+         *********************************************************************/
+        case iit::advr::CmdType::SLAVE_SDO_CMD :
+            board_id = pb_repl_msg.mutable_slave_sdo_cmd()->board_id();
+            slave_pos = rid2Pos(board_id);
+            //
+            esc = slave_as_EscWrapper(slave_pos);
+            varEscPtr_t varEscPtr;
+            if ( slave_as<CentAcESC>(slave_pos) )       { varEscPtr = slave_as<CentAcESC>(slave_pos); }
+            if ( slave_as<Ft6Msp432ESC>(slave_pos) )    { varEscPtr = slave_as<Ft6Msp432ESC>(slave_pos); }
+            if ( slave_as<TestESC>(slave_pos) )         { varEscPtr = slave_as<TestESC>(slave_pos); }
+
+            if ( (slave_pos <= 0) && (!esc) ) {
+                // set error string once for all cases
+                error_msg = std::string( "Slave Id "+std::to_string(board_id)+" NOT FOUND ==> pos " + std::to_string(slave_pos));
+                // break case iit::advr::CmdType::SLAVE_SDO_CMD
+                break;
+            }
+
+            {
+                // read SDO from esc
+                float tmpf;
+                auto it = pb_repl_msg.mutable_slave_sdo_cmd()->rd_sdo().begin();
+                while ( it != pb_repl_msg.mutable_slave_sdo_cmd()->rd_sdo().end() ) {
+                    DPRINTF(">> rd_sdo >> %s\n", it->c_str());
+                    try {
+                        std::visit(overloaded{
+                                [&](CentAcESC* s)    { s->readSDO_byname(it->c_str()); },
+                                [&](Ft6Msp432ESC* s) { s->readSDO_byname(it->c_str()); },
+                                [&](TestESC* s)      { s->readSDO_byname(it->c_str()); },
+                            }, varEscPtr );    
+                    }
+                    catch (const std::exception& e) { DPRINTF(" && %s\n", e.what()); }
+                    
+                    it++;
+                }
+                ret_val = EC_BOARD_OK;
+            }
+            {
+                // write SDO to esc
+                auto it = pb_repl_msg.mutable_slave_sdo_cmd()->wr_sdo().begin();
+                while ( it != pb_repl_msg.mutable_slave_sdo_cmd()->wr_sdo().end() ) {
+                    DPRINTF(">> wr_sdo >> %s %f\n", it->name().c_str(), it->value());
+                    try {
+                        try { std::get<CentAcESC*>(varEscPtr)->writeSDO_byname(it->name().c_str()); }
+                        catch (const std::bad_variant_access& e) { DPRINTF(" ** %s\n", e.what()); }
+                        
+                        try { std::get<Ft6Msp432ESC*>(varEscPtr)->writeSDO_byname(it->name().c_str()); }
+                        catch (const std::bad_variant_access& e) { DPRINTF(" ** %s\n", e.what()); }
+                    }
+                    catch (const std::exception& e) { DPRINTF(" && %s\n", e.what());  }
+                    
+                    it++;
+                }
+                ret_val = EC_BOARD_OK;
+            }
+
+            break; // iit::advr::CmdType::SLAVE_SDO_CMD
         
     }
 
